@@ -1,5 +1,12 @@
+#Imports
 from flask import Flask, request, render_template, json
 from github import Github
+import xml.etree.ElementTree as ET
+import requests
+
+#Config
+jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
+
 app = Flask(__name__)
 
 @app.route("/")
@@ -25,7 +32,8 @@ def search():
 			"git_url": "https" + repo.git_url[3:],
 			"size_kb": repo.size,
 			"last_update": str(repo.updated_at),
-			"language": repo.language
+			"language": repo.language,
+			"default_branch": repo.default_branch
 		})
 	return json.jsonify(status="ok", results=results)
 
@@ -33,14 +41,48 @@ def search():
 def createJob():
 	# Ensure we have all the post arguments we need
 	try:
-		name = request.form["name"]
+		name = "(PortAutoTool) " + request.form["name"]
 		github_url = request.form["github_url"]
 		git_url = request.form["git_url"]
+		default_branch = request.form["default_branch"]
 	except KeyError:
 		return json.jsonify(status="failure",
 			error="missing name, github_url, or git_url")
-		
-	return json.jsonify(status="ok")
+
+	# Read template XML file
+	tree = ET.parse("config_template.xml")
+	root = tree.getroot()
+	xml_github_url = root.find(
+		"./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
+	xml_git_url = root.find(
+		"./scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url")
+	xml_default_branch = root.find(
+		"./scm/branches/hudson.plugins.git.BranchSpec/name")
+
+	# Modify selected elements
+	xml_github_url.text = github_url
+	xml_git_url.text = git_url
+	xml_default_branch.text = "*/" + default_branch
+
+	#Send Jenkins the config file
+	configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
+
+	r = requests.post(
+		jenkinsUrl + "/createItem",
+		headers={
+			'Content-Type': 'application/xml'
+		},
+		params={
+			'name': name
+		},
+		data=configXml
+	)
+
+	jobUrl = jenkinsUrl + "/job/" + name + "/"
+	if r.status_code == 200:
+		return json.jsonify(status="ok", jobUrl=jobUrl)
+
+	return json.jsonify(status="failure", error="jenkins error")
 
 if __name__ == "__main__":
     app.run(debug = True)
