@@ -28,7 +28,11 @@
       <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
     </div>
 
-    <div class="panel panel-default">
+    <div id="loadingPanel" class="panel panel-default" role="alert" rv-show="searchState.loading">
+      <h3 class="panel-body">Loading...</h3>
+    </div>
+
+    <div id="resultsPanel" class="panel panel-default" rv-show="searchState.ready">
       <table class="table">
         <thead>
           <tr>
@@ -36,7 +40,40 @@
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody id="resultsTable">
+        <tbody id="resultsTable" rv-each-result="searchState.results">
+          <tr>
+            <td>
+              <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
+               / 
+              <a title="resultsitory" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
+              <span title="Star count" class="tip label" rv-coding="result.coding.stars">
+                <span class="glyphicon glyphicon-star"></span>
+                { result.stars }
+              </span>
+              <span title="Fork count" class="tip label" rv-coding="result.coding.forks">
+                <span class="glyphicon glyphicon-random"></span>
+                { result.forks }
+              </span>
+              <span title="Primary language" class="tip label" rv-coding="result.coding.language">
+                <span class="glyphicon glyphicon-wrench"></span>
+                { result.language }
+              </span>
+              <span title="resultsitory size" class="tip label" rv-coding="result.coding.size">
+                <span class="glyphicon glyphicon-floppy-disk"></span>
+                { result.size_kb | size }
+              </span>
+              <span title="Last updated" class="tip label" rv-coding="result.coding.date">
+                <span class="glyphicon glyphicon-calendar"></span>
+                updated { result.last_update | date }
+              </span>
+            </td>
+            <td>
+            <button type="button" rv-on-click="result.addToJenkins" class="add-to-jenkins btn btn-primary">
+              <span class="glyphicon glyphicon-save"></span>
+              Add to Jenkins
+            </button>
+            </td>
+          </tr>
         </tbody>
       </table>
     </div>
