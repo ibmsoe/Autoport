@@ -1,10 +1,10 @@
-#Imports
+# Imports
 from flask import Flask, request, render_template, json
 from github import Github
 import xml.etree.ElementTree as ET
 import requests
 
-#Config
+# Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
 
 app = Flask(__name__)
@@ -19,6 +19,7 @@ def search():
 	query = request.args.get("q", "")
 	if query == "":
 		return json.jsonify(status="failure", error="missing query")
+	# Query Github and return a JSON file with results
 	g = Github()
 	results = []
 	for repo in g.search_repositories(query)[:10]:
@@ -78,8 +79,9 @@ def createJob():
 		data=configXml
 	)
 
-	jobUrl = jenkinsUrl + "/job/" + name + "/"
 	if r.status_code == 200:
+		# Success, send new job URL as response
+		jobUrl = jenkinsUrl + "/job/" + name + "/"
 		return json.jsonify(status="ok", jobUrl=jobUrl)
 
 	return json.jsonify(status="failure", error="jenkins error")

@@ -1,0 +1,4 @@
+- Fork to IBMSOE before making job
+- Provide a numeric difficulty estimate of porting difficulty
+- Automatically set up build steps based on README, leveraging build systems like maven. Allow user to check and correct these steps before adding to Jenkins.
+- Automatically set up test reporting for certain test suites like junit

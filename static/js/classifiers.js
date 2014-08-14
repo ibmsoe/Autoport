@@ -1,3 +1,26 @@
+var GOOD = 1;
+var NEUTRAL = 2;
+var BAD = 3;
+var UNCERTAIN = 4;
+
+rivets.binders.coding = function(el, value) {
+	var classToAdd;
+	switch(value) {
+		case GOOD:
+			classToAdd = "label-success";
+			break;
+		case NEUTRAL:
+			classToAdd = "label-warning";
+			break;
+		case BAD:
+			classToAdd = "label-danger";
+			break;
+		default:
+			classToAdd = "label-default";
+	}
+	$(el).addClass(classToAdd);
+}
+
 // Classifier generator for color coding
 function makeSimpleClassifier(higherIsBetter, warnCount, okCount)
 {
@@ -5,21 +28,21 @@ function makeSimpleClassifier(higherIsBetter, warnCount, okCount)
 	if(higherIsBetter) {
 		classifier = function(count) {
 			if(count > okCount) {
-				return "label-success";
+				return GOOD;
 			} else if(count > warnCount) {
-				return "label-warning";
+				return NEUTRAL;
 			} else {
-				return "label-danger";
+				return BAD;
 			}
 		}
 	} else {
 		classifier = function(count) {
 			if(count < okCount) {
-				return "label-success";
+				return GOOD;
 			} else if(count < warnCount) {
-				return "label-warning";
+				return NEUTRAL;
 			} else {
-				return "label-danger";
+				return BAD;
 			}
 		}
 	}
@@ -38,21 +61,21 @@ function langClassifier(language) {
 		case "C":
 		case "C++":
 		case "Objective-C":
-			return "label-danger"
+			return BAD;
 		case "Shell":
 		case "Java":
 		case "C#":
 		case "Scala":
 		case "Go":
-			return "label-warning"
+			return NEUTRAL;
 		case "JavaScript":
 		case "Ruby":
 		case "PHP":
 		case "Python":
 		case "Dart":
 		case "Lua":
-			return "label-success"
+			return GOOD;
 		default:
-			return 'label-default'
+			return UNCERTAIN;
 	}
 }
