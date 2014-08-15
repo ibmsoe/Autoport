@@ -1,3 +1,10 @@
+body {
+}
+
+.jumbotron {
+	margin-top: 10px;
+}
+
 .result-title {
 	font-weight: bold;
 }
@@ -8,6 +15,19 @@
 
 .glyphicon {
 	margin-right: 6px;
+}
+
+.description {
+	width: 80%;
+	margin: 4px 100px 0 0px;
+	float: left;
+	padding-left: 4px;
+	border-left: 4px solid #e5e5e5;
+	font-weight: 700;
+}
+
+.description:hover {
+	border-left: 4px solid #3498db;
 }
 
 .tip {

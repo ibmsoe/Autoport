@@ -60,6 +60,11 @@ rivets.formatters.date = function(value) {
 	return moment.utc(value).fromNow();
 }
 
+// rv-details formatter
+rivets.formatters.detail = function(value) {
+	return "/detail/" + value;
+}
+
 // Callback for when we recieve data from a search query request
 function processSearchResults(data) {
 	if(data.status !== "ok") {

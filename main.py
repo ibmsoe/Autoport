@@ -36,9 +36,14 @@ def search():
 			"size_kb": repo.size,
 			"last_update": str(repo.updated_at),
 			"language": repo.language,
+			"description": repo.description,
 			"classifications": classify(repo)
 		})
 	return json.jsonify(status="ok", results=results)
+
+@app.route("/detail/<int:id>")
+def detail(id):
+	return "This is the detail page for repo #" + str(id) + "!"
 
 @app.route("/createJob", methods=['POST'])
 def createJob():

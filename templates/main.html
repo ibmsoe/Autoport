@@ -66,12 +66,16 @@
                 <span class="glyphicon glyphicon-calendar"></span>
                 updated { result.last_update | date }
               </span>
+              <br />
+              <p class="description text-muted" rv-text="result.description"></p>
             </td>
             <td>
-            <button type="button" rv-on-click="result.addToJenkins" class="add-to-jenkins btn btn-primary">
-              <span class="glyphicon glyphicon-save"></span>
-              Add to Jenkins
-            </button>
+            <a rv-href="result.id | detail" >
+              <button type="button" class="btn btn-primary">
+                <span class="glyphicon glyphicon-ok"></span>
+                Select
+              </button>
+            </a>
             </td>
           </tr>
         </tbody>
