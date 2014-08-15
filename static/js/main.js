@@ -69,7 +69,7 @@ function processSearchResults(data) {
 		// Add addToJenkins function to each result
 		data.results.forEach(function(result) {
 			result.addToJenkins = function() {
-				addToJenkins(result);
+				$.post("/createJob", {id: result.id}, addToJenkinsCallback, "json");
 			};
 		});
 
@@ -89,17 +89,6 @@ $('#query').change(function(){
 		$.getJSON("/search", {q: query}, processSearchResults);
 	}
 });
-
-// This function gets added to each result object
-function addToJenkins(repo) {
-	var requestData = {
-		name: repo.name,
-		github_url: repo.url,
-		git_url: repo.git_url,
-		default_branch: repo.default_branch
-	};
-	$.post("/createJob", requestData, addToJenkinsCallback, "json");
-}
 
 function addToJenkinsCallback(data) {
 	if(data.status === "ok") {
