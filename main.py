@@ -3,6 +3,7 @@ from flask import Flask, request, render_template, json
 from github import Github
 import xml.etree.ElementTree as ET
 import requests
+from classifiers import classify
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
@@ -34,7 +35,8 @@ def search():
 			"size_kb": repo.size,
 			"last_update": str(repo.updated_at),
 			"language": repo.language,
-			"default_branch": repo.default_branch
+			"default_branch": repo.default_branch,
+			"classifications": classify(repo)
 		})
 	return json.jsonify(status="ok", results=results)
 

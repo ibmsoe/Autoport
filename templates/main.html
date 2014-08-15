@@ -7,7 +7,7 @@
     <title>Porting Automation Tool</title>
 
     <!-- Bootstrap -->
-    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}" rel="stylesheet">
 
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
 
@@ -45,24 +45,24 @@
             <td>
               <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
                / 
-              <a title="resultsitory" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
-              <span title="Star count" class="tip label" rv-coding="result.coding.stars">
+              <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
+              <span title="Star count" class="tip label" rv-classification="result.classifications.stars">
                 <span class="glyphicon glyphicon-star"></span>
                 { result.stars }
               </span>
-              <span title="Fork count" class="tip label" rv-coding="result.coding.forks">
+              <span title="Fork count" class="tip label" rv-classification="result.classifications.forks">
                 <span class="glyphicon glyphicon-random"></span>
                 { result.forks }
               </span>
-              <span title="Primary language" class="tip label" rv-coding="result.coding.language">
+              <span title="Primary language" class="tip label" rv-classification="result.classifications.language">
                 <span class="glyphicon glyphicon-wrench"></span>
                 { result.language }
               </span>
-              <span title="resultsitory size" class="tip label" rv-coding="result.coding.size">
+              <span title="Repository size" class="tip label" rv-classification="result.classifications.size">
                 <span class="glyphicon glyphicon-floppy-disk"></span>
                 { result.size_kb | size }
               </span>
-              <span title="Last updated" class="tip label" rv-coding="result.coding.date">
+              <span title="Last updated" class="tip label" rv-classification="result.classifications.date">
                 <span class="glyphicon glyphicon-calendar"></span>
                 updated { result.last_update | date }
               </span>
@@ -81,11 +81,9 @@
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
-    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/rivets.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/moment.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/classifiers.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/generators.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lib/rivets.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lib/moment.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     </div>
   </body>
