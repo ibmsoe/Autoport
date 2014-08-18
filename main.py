@@ -24,7 +24,10 @@ def search():
 		return json.jsonify(status="failure", error="missing query")
 	# Query Github and return a JSON file with results
 	results = []
+	isFirst = True
 	for repo in github.search_repositories(query)[:10]:
+		if isFirst and repo.name == query:
+			return detail(repo.id, repo)
 		results.append({
 			"id": repo.id,
 			"name": repo.name,
@@ -39,11 +42,32 @@ def search():
 			"description": repo.description,
 			"classifications": classify(repo)
 		})
-	return json.jsonify(status="ok", results=results)
+	return json.jsonify(status="ok", results=results, type="multiple")
 
 @app.route("/detail/<int:id>")
-def detail(id):
-	return "This is the detail page for repo #" + str(id) + "!"
+def detail(id, repo=None):
+	if repo is None:
+		try:
+			idInt = int(id)
+		except ValueError:
+			return json.jsonify(status="failure", error="bad id")
+
+		repo = github.get_repo(id)
+	repoData = {
+		"id": repo.id,
+		"name": repo.name,
+		"owner": repo.owner.login,
+		"owner_url": repo.owner.html_url,
+		"stars": repo.stargazers_count,
+		"forks": repo.forks_count,
+		"url": repo.html_url,
+		"size_kb": repo.size,
+		"last_update": str(repo.updated_at),
+		"language": repo.language,
+		"description": repo.description,
+		"classifications": classify(repo)
+	}
+	return json.jsonify(status="ok", repo=repoData, type="detail")
 
 @app.route("/createJob", methods=['POST'])
 def createJob():

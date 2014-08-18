@@ -1,76 +1,43 @@
 // Contains state of searching operations
 var searchState = {
 	ready: false,
-	loading: false,
 	results: {}
 };
+// Contains state of loading view
+var loadingState = {
+	loading: false
+}
+// Contains state of detail view
+var detailState = {
+	ready: false,
+	repo: null
+}
 
 // Rivets.js bindings
 // Hides / shows loading panel
 rivets.bind($('#loadingPanel'), {
-	searchState: searchState
+	loadingState: loadingState
 });
 // Hides / shows results panel
 rivets.bind($('#resultsPanel'), {
 	searchState: searchState
+});
+// Hides / shows detail panel
+rivets.bind($('#detailPanel'), {
+	detailState: detailState
 });
 // Populates results table
 rivets.bind($('#resultsTable'), {
 	searchState: searchState
 });
 
-// Rivets.js binders
-// rv-classification binder
-rivets.binders.classification = function(el, value) {
-	// Classification constants
-	var GOOD = 1;
-	var NEUTRAL = 2;
-	var BAD = 3;
-	var UNCERTAIN = 4;
-
-	var classToAdd;
-	switch(value) {
-		case GOOD:
-			classToAdd = "label-success";
-			break;
-		case NEUTRAL:
-			classToAdd = "label-warning";
-			break;
-		case BAD:
-			classToAdd = "label-danger";
-			break;
-		default:
-			classToAdd = "label-default";
-	}
-	$(el).addClass(classToAdd);
-}
-
-// Rivets.js formatters
-// rv-size formatter
-rivets.formatters.size = function(value) {
-	if(value > 1024) {
-		return Math.round(value / 1024) + " MB";
-	} else {
-		return value + " KB";
-	}
-}
-
-// rv-date formatter
-rivets.formatters.date = function(value) {
-	return moment.utc(value).fromNow();
-}
-
-// rv-details formatter
-rivets.formatters.detail = function(value) {
-	return "/detail/" + value;
-}
-
 // Callback for when we recieve data from a search query request
 function processSearchResults(data) {
 	if(data.status !== "ok") {
-		console.log("Bad response from /search!")
-		console.log(data)
-	} else {
+		console.log("Bad response from /search!");
+		console.log(data);
+	} else if (data.type === "multiple") {
+		// Got multiple results
 		// Add addToJenkins function to each result
 		data.results.forEach(function(result) {
 			result.addToJenkins = function() {
@@ -78,9 +45,22 @@ function processSearchResults(data) {
 			};
 		});
 
-		searchState.results = data.results
-		searchState.loading = false;
-		searchState.ready = true
+		searchState.results = data.results;
+		loadingState.loading = false;
+		searchState.ready = true;
+	} else if (data.type === "detail") {
+		// Got single repository result, show detail page
+		showDetail(data);
+	}
+}
+
+function showDetail(data) {
+	if(data.status !== "ok" || data.type !== "detail") {
+		console.log("Bad response while creating detail view!");
+	} else {
+		detailState.repo = data.repo;
+		loadingState.loading = false;
+		detailState.ready = true;
 	}
 }
 
@@ -88,7 +68,8 @@ function processSearchResults(data) {
 // /query
 $('#query').change(function(){
 	searchState.ready = false;
-	searchState.loading = true;
+	detailState.ready = false;
+	loadingState.loading = true;
 	var query = $(this).val();
 	if(query.length > 0) {
 		$.getJSON("/search", {q: query}, processSearchResults);

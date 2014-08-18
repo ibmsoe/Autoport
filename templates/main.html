@@ -28,12 +28,12 @@
       <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
     </div>
 
-    <div id="loadingPanel" class="panel panel-default" role="alert" rv-show="searchState.loading">
+    <div id="loadingPanel" class="panel panel-default" role="alert" rv-show="loadingState.loading">
       <h3 class="panel-body">Loading...</h3>
     </div>
 
     <div id="resultsPanel" class="panel panel-default" rv-show="searchState.ready">
-      <table class="table">
+      <table class="table table-hover">
         <thead>
           <tr>
             <th>Repositories</th>
@@ -82,12 +82,44 @@
       </table>
     </div>
 
+    <div id="detailPanel" class="panel panel-default" rv-show="detailState.ready">
+      <div class="panel-body">
+      <a title="Owner" class="tip" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
+               / 
+        <a title="Repository" class="tip result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
+        <span title="Star count" class="tip label" rv-classification="detailState.repo.classifications.stars">
+          <span class="glyphicon glyphicon-star"></span>
+          { detailState.repo.stars }
+        </span>
+        <span title="Fork count" class="tip label" rv-classification="detailState.repo.classifications.forks">
+          <span class="glyphicon glyphicon-random"></span>
+          { detailState.repo.forks }
+        </span>
+        <span title="Primary language" class="tip label" rv-classification="detailState.repo.classifications.language">
+          <span class="glyphicon glyphicon-wrench"></span>
+          { detailState.repo.language }
+        </span>
+        <span title="Repository size" class="tip label" rv-classification="detailState.repo.classifications.size">
+          <span class="glyphicon glyphicon-floppy-disk"></span>
+          { detailState.repo.size_kb | size }
+        </span>
+        <span title="Last updated" class="tip label" rv-classification="detailState.repo.classifications.date">
+          <span class="glyphicon glyphicon-calendar"></span>
+          updated { detailState.repo.last_update | date }
+        </span>
+        <br />
+        <p class="description text-muted" rv-text="detailState.repo.description"></p>
+      </div>
+    </div>
+
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lib/rivets.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lib/moment.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/binders.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/formatters.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
     </div>
   </body>
