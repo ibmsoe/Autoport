@@ -1,34 +1,14 @@
-body {
-}
-
+/* Global properties */
 .jumbotron {
 	margin-top: 10px;
 }
 
-.result-title {
-	font-weight: bold;
-}
-
 .label {
-	margin-left: 5px;
+    margin-right: 5px;
 }
 
-.glyphicon {
-	margin-right: 6px;
-}
-
-.description {
-	width: 80%;
-	margin: 4px 100px 0 0px;
-	float: left;
-	padding-left: 4px;
-	border-left: 4px solid #e5e5e5;
-	font-weight: 700;
-	display: none;
-}
-
-.result-row:hover .description {
-	display: inline;
+.first-label {
+    margin-left: 5px;
 }
 
 .tip {
@@ -48,7 +28,7 @@ body {
     position: absolute;
     z-index: 98;
     font-weight: normal;
-    font-size: 100%;
+    font-size: 12px;
 }
 
 .tip:hover:before {
@@ -60,4 +40,42 @@ body {
     left: 50%;
     position: absolute;
     z-index: 99;
+    font-size: 12px;
+}
+
+.result-title {
+	font-weight: bold;
+}
+
+.glyphicon {
+	margin-right: 6px;
+}
+
+/* Search result properties */
+
+.candidate-description {
+	width: 80%;
+	margin: 4px 100px 0 0px;
+	float: left;
+	padding-left: 4px;
+	border-left: 4px solid #e5e5e5;
+	font-weight: 700;
+	display: none;
+}
+
+.result-row:hover .candidate-description {
+	display: inline;
+}
+
+/* Detail properties */
+.addToJenkins {
+    float: right;
+}
+
+.fatLabel {
+    font-size: 14px;
+}
+
+.detail-description {
+    margin-top: 10px;
 }

@@ -1,6 +1,6 @@
 # Imports
 from flask import Flask, request, render_template, json
-from github import Github
+from github import Github, PaginatedList
 import xml.etree.ElementTree as ET
 import requests
 from classifiers import classify
@@ -18,16 +18,29 @@ def main():
 
 @app.route("/search")
 def search():
-	# Get and validate query
+	# Get and validate arguments
 	query = request.args.get("q", "")
 	if query == "":
 		return json.jsonify(status="failure", error="missing query")
+
+	searchArgs = None
+	sort = request.args.get("sort", "")
+	if sort in ['stars', 'forks', 'updated']:
+		searchArgs = {'sort': sort}
+	elif sort == 'relevance':
+		# Must pass no argument if we want to sort by relevance
+		searchArgs = {}
+	else:
+		return json.jsonify(status="failure", error="bad sort type")
+
 	# Query Github and return a JSON file with results
 	results = []
 	isFirst = True
-	for repo in github.search_repositories(query)[:10]:
-		if isFirst and repo.name == query:
+	print(searchArgs)
+	for repo in github.search_repositories(query, **searchArgs)[:10]:
+		if isFirst and repo.name == query and repo.stargazers_count > 500:
 			return detail(repo.id, repo)
+		isFirst = False
 		results.append({
 			"id": repo.id,
 			"name": repo.name,

@@ -20,17 +20,41 @@
   </head>
   <body>
     <div class="container">
+
+    <!-- HEADER AND SEARCH BOX -->
+
     <div class="jumbotron">
       <h1>Porting Automation Tool</h1>
       <p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
       <p>You can also setup a basic Jenkins job for the project with one click.</p>
       <h2>Search for a project</h2>
-      <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
+      <div class="input-group" id="searchBox">
+        <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
+        <div class="input-group-btn">
+          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
+          <ul class="dropdown-menu dropdown-menu-right" role="menu">
+            <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a href="#">Relevance</a></li>
+            <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Stars</a></li>
+            <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a href="#">Forks</a></li>
+            <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a href="#">Updated</a></li>
+          </ul>
+        </div>
+      </div>
     </div>
+
+    <!-- LOADING PANEL -->
 
     <div id="loadingPanel" class="panel panel-default" role="alert" rv-show="loadingState.loading">
       <h3 class="panel-body">Loading...</h3>
     </div>
+
+    <!-- MULTIPLE RESULTS ALERT BOX -->
+
+    <div class="alert alert-info multiple-alert" rv-show="searchState.ready" role="alert">
+      There are multiple results for <strong>{ searchState.query }</strong>. Please select one.
+    </div>
+
+    <!-- MULTIPLE RESULTS TABLE -->
 
     <div id="resultsPanel" class="panel panel-default" rv-show="searchState.ready">
       <table class="table table-hover">
@@ -46,7 +70,7 @@
               <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
                / 
               <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
-              <span title="Star count" class="tip label" rv-classification="result.classifications.stars">
+              <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
                 <span class="glyphicon glyphicon-star"></span>
                 { result.stars }
               </span>
@@ -67,10 +91,10 @@
                 updated { result.last_update | date }
               </span>
               <br />
-              <p class="description text-muted" rv-text="result.description"></p>
+              <p class="candidate-description text-muted" rv-text="result.description"></p>
             </td>
             <td>
-            <a rv-href="result.id | detail" >
+            <a rv-href="#" rv-on-click="result.select">
               <button type="button" class="btn btn-primary">
                 <span class="glyphicon glyphicon-ok"></span>
                 Select
@@ -82,33 +106,49 @@
       </table>
     </div>
 
+    <!-- AUTOSELECT ALERT BOX -->
+
+    <div class="alert alert-success autoselect-alert" rv-show="detailState.autoSelected" role="alert">
+      This repository was <strong>automatically selected</strong> because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } stars</strong>.
+    </div>
+
+    <!-- DETAIL VIEW -->
+
     <div id="detailPanel" class="panel panel-default" rv-show="detailState.ready">
       <div class="panel-body">
-      <a title="Owner" class="tip" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
-               / 
-        <a title="Repository" class="tip result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
-        <span title="Star count" class="tip label" rv-classification="detailState.repo.classifications.stars">
-          <span class="glyphicon glyphicon-star"></span>
-          { detailState.repo.stars }
-        </span>
-        <span title="Fork count" class="tip label" rv-classification="detailState.repo.classifications.forks">
-          <span class="glyphicon glyphicon-random"></span>
-          { detailState.repo.forks }
-        </span>
-        <span title="Primary language" class="tip label" rv-classification="detailState.repo.classifications.language">
-          <span class="glyphicon glyphicon-wrench"></span>
-          { detailState.repo.language }
-        </span>
-        <span title="Repository size" class="tip label" rv-classification="detailState.repo.classifications.size">
-          <span class="glyphicon glyphicon-floppy-disk"></span>
-          { detailState.repo.size_kb | size }
-        </span>
-        <span title="Last updated" class="tip label" rv-classification="detailState.repo.classifications.date">
-          <span class="glyphicon glyphicon-calendar"></span>
-          updated { detailState.repo.last_update | date }
-        </span>
-        <br />
-        <p class="description text-muted" rv-text="detailState.repo.description"></p>
+      <h1>
+        <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
+        /
+        <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
+        <a href="#" class="addToJenkins" rv-on-click="detailState.repo.addToJenkins">
+          <button type="button" class="btn btn-primary">
+            <span class="glyphicon glyphicon-plus"></span>
+            Add to Jenkins
+          </button>
+        </a>
+      </h1>
+      <span title="Star count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.stars">
+        <span class="glyphicon glyphicon-star"></span>
+        { detailState.repo.stars }
+      </span>
+      <span title="Fork count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.forks">
+        <span class="glyphicon glyphicon-random"></span>
+        { detailState.repo.forks }
+      </span>
+      <span title="Primary language" class="tip label fatLabel" rv-classification="detailState.repo.classifications.language">
+        <span class="glyphicon glyphicon-wrench"></span>
+        { detailState.repo.language }
+      </span>
+      <span title="Repository size" class="tip label fatLabel" rv-classification="detailState.repo.classifications.size">
+        <span class="glyphicon glyphicon-floppy-disk"></span>
+        { detailState.repo.size_kb | size }
+      </span>
+      <span title="Last updated" class="tip label fatLabel" rv-classification="detailState.repo.classifications.date">
+        <span class="glyphicon glyphicon-calendar"></span>
+        updated { detailState.repo.last_update | date }
+      </span>
+      <br />
+      <p class="detail-description" rv-text="detailState.repo.description"></p>
       </div>
     </div>
 

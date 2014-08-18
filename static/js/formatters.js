@@ -17,3 +17,17 @@ rivets.formatters.date = function(value) {
 rivets.formatters.detail = function(value) {
 	return "/detail/" + value;
 }
+
+// For showing/hiding sorting methods in the dropdown
+rivets.formatters.isRelevance = function(value) {
+	return value === "relevance";
+}
+rivets.formatters.isStars = function(value) {
+	return value === "stars";
+}
+rivets.formatters.isForks = function(value) {
+	return value === "forks";
+}
+rivets.formatters.isUpdated = function(value) {
+	return value === "updated";
+}
