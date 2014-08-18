@@ -1,6 +1,6 @@
 # Imports
 from flask import Flask, request, render_template, json
-from github import Github, PaginatedList
+from github import Github
 import xml.etree.ElementTree as ET
 import requests
 from classifiers import classify
@@ -27,7 +27,7 @@ def search():
 	sort = request.args.get("sort", "")
 	if sort in ['stars', 'forks', 'updated']:
 		searchArgs = {'sort': sort}
-	elif sort == 'relevance':
+	elif sort == 'relevance' or sort == '':
 		# Must pass no argument if we want to sort by relevance
 		searchArgs = {}
 	else:
@@ -59,6 +59,7 @@ def search():
 
 @app.route("/detail/<int:id>")
 def detail(id, repo=None):
+	# Get the repo if it wasn't passed in
 	if repo is None:
 		try:
 			idInt = int(id)
@@ -66,6 +67,23 @@ def detail(id, repo=None):
 			return json.jsonify(status="failure", error="bad id")
 
 		repo = github.get_repo(id)
+	# Get language data
+	languages = repo.get_languages()
+	# Transform data so it's ready to graph on client side
+	colorDataFile = open('language_colors.json')
+	colorData = json.load(colorDataFile)
+	colorDataFile.close()
+	transformed_languages = []
+	for label, value in languages.items():
+		color = "#DDDDDD"
+		if label in colorData:
+			color = colorData[label]
+		transformed_languages.append({
+			'title': label,
+			'value': value,
+			'color': color
+		})
+	# Collect data
 	repoData = {
 		"id": repo.id,
 		"name": repo.name,
@@ -77,9 +95,11 @@ def detail(id, repo=None):
 		"size_kb": repo.size,
 		"last_update": str(repo.updated_at),
 		"language": repo.language,
+		"languages": transformed_languages,
 		"description": repo.description,
 		"classifications": classify(repo)
 	}
+	# Send
 	return json.jsonify(status="ok", repo=repoData, type="detail")
 
 @app.route("/createJob", methods=['POST'])

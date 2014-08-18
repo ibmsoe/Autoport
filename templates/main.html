@@ -116,39 +116,46 @@
 
     <div id="detailPanel" class="panel panel-default" rv-show="detailState.ready">
       <div class="panel-body">
-      <h1>
-        <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
-        /
-        <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
-        <a href="#" class="addToJenkins" rv-on-click="detailState.repo.addToJenkins">
-          <button type="button" class="btn btn-primary">
-            <span class="glyphicon glyphicon-plus"></span>
-            Add to Jenkins
-          </button>
-        </a>
-      </h1>
-      <span title="Star count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.stars">
-        <span class="glyphicon glyphicon-star"></span>
-        { detailState.repo.stars }
-      </span>
-      <span title="Fork count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.forks">
-        <span class="glyphicon glyphicon-random"></span>
-        { detailState.repo.forks }
-      </span>
-      <span title="Primary language" class="tip label fatLabel" rv-classification="detailState.repo.classifications.language">
-        <span class="glyphicon glyphicon-wrench"></span>
-        { detailState.repo.language }
-      </span>
-      <span title="Repository size" class="tip label fatLabel" rv-classification="detailState.repo.classifications.size">
-        <span class="glyphicon glyphicon-floppy-disk"></span>
-        { detailState.repo.size_kb | size }
-      </span>
-      <span title="Last updated" class="tip label fatLabel" rv-classification="detailState.repo.classifications.date">
-        <span class="glyphicon glyphicon-calendar"></span>
-        updated { detailState.repo.last_update | date }
-      </span>
-      <br />
-      <p class="detail-description" rv-text="detailState.repo.description"></p>
+        <h1>
+          <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
+          /
+          <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
+          <a href="#" class="addToJenkins" rv-on-click="detailState.repo.addToJenkins">
+            <button type="button" class="btn btn-primary">
+              <span class="glyphicon glyphicon-plus"></span>
+              Add to Jenkins
+            </button>
+          </a>
+        </h1>
+        <span title="Star count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.stars">
+          <span class="glyphicon glyphicon-star"></span>
+          { detailState.repo.stars }
+        </span>
+        <span title="Fork count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.forks">
+          <span class="glyphicon glyphicon-random"></span>
+          { detailState.repo.forks }
+        </span>
+        <span title="Primary language" class="tip label fatLabel" rv-classification="detailState.repo.classifications.language">
+          <span class="glyphicon glyphicon-wrench"></span>
+          { detailState.repo.language }
+        </span>
+        <span title="Repository size" class="tip label fatLabel" rv-classification="detailState.repo.classifications.size">
+          <span class="glyphicon glyphicon-floppy-disk"></span>
+          { detailState.repo.size_kb | size }
+        </span>
+        <span title="Last updated" class="tip label fatLabel" rv-classification="detailState.repo.classifications.date">
+          <span class="glyphicon glyphicon-calendar"></span>
+          updated { detailState.repo.last_update | date }
+        </span>
+        <h3>Description</h3>
+        <blockquote>
+        <p class="detail-description" rv-text="detailState.repo.description"></p>
+        </blockquote>
+        <span class=".clearfix chart-container">
+          <h3>Language Composition</h3>
+          <canvas class="chart" id="langChart" width="150" height="150"></canvas>
+          <ul id="langLegend"></ul>
+        </span>
       </div>
     </div>
 
@@ -157,6 +164,8 @@
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lib/rivets.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lib/chart.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lib/legend.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lib/moment.js') }}"></script>
     <script src="{{ url_for('static', filename='js/binders.js') }}"></script>
     <script src="{{ url_for('static', filename='js/formatters.js') }}"></script>

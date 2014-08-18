@@ -76,6 +76,19 @@
     font-size: 14px;
 }
 
-.detail-description {
+.legend {
+    display: inline-block;
+}
+
+.legend > .label {
+    margin-bottom: 5px;
+    display: list-item;
+    font-size: 12px;
+}
+
+.chart {
+    display: inline;
+    float: left;
+    margin-left: 10px;
     margin-top: 10px;
 }

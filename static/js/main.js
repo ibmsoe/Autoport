@@ -20,12 +20,6 @@ var detailState = {
 	autoSelected: false
 }
 
-function switchToLoadingState() {
-	searchState.ready = false;
-	detailState.ready = false;
-	loadingState.loading = true;
-}
-
 // Rivets.js bindings
 // Allows user to change sorting method
 rivets.bind($('#searchBox'), {
@@ -56,9 +50,12 @@ rivets.bind($('#resultsTable'), {
 	searchState: searchState
 });
 
-// When the query textbox is changed, make a request to
-// /query
-$('#query').change(doSearch);
+function switchToLoadingState() {
+	searchState.ready = false;
+	detailState.ready = false;
+	loadingState.loading = true;
+	detailState.autoSelected = false;
+}
 
 function doSearch() {
 	switchToLoadingState();
@@ -70,6 +67,10 @@ function doSearch() {
 		}, processSearchResults);
 	}
 }
+
+
+// When the query textbox is changed, do a search
+$('#query').change(doSearch);
 
 // Callback for when we recieve data from a search query request
 function processSearchResults(data) {
@@ -106,6 +107,12 @@ function showDetail(data) {
 		};
 		loadingState.loading = false;
 		detailState.ready = true;
+		// Make chart
+		var ctx = $("#langChart").get(0).getContext("2d");
+		var pie = new Chart(ctx).Pie(detailState.repo.languages, {
+			segmentShowStroke: false
+		});
+		legend(document.getElementById('langLegend'), detailState.repo.languages)
 	}
 }
 
@@ -117,7 +124,3 @@ function addToJenkinsCallback(data) {
 		console.log(data);
 	}
 }
-
-//debug
-$('#query').val("redis");
-$('#query').change();
