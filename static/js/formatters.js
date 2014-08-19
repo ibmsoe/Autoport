@@ -31,3 +31,8 @@ rivets.formatters.isForks = function(value) {
 rivets.formatters.isUpdated = function(value) {
 	return value === "updated";
 }
+
+// For showing/hiding build steps
+rivets.formatters.notEmpty = function(value) {
+	return value !== "";
+}

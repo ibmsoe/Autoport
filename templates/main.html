@@ -156,6 +156,11 @@
           <canvas class="chart" id="langChart" width="150" height="150"></canvas>
           <ul id="langLegend"></ul>
         </span>
+        <span rv-show="detailState.repo.build.success" class="build-steps">
+          <h3>Build steps</h3>
+          <small>Inferred based on the existence of <strong rv-text="detailState.repo.build.reason"></strong></small>
+          <pre rv-text="detailState.repo.build.steps"></pre>
+        </span>
       </div>
     </div>
 

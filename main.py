@@ -4,6 +4,7 @@ from github import Github
 import xml.etree.ElementTree as ET
 import requests
 from classifiers import classify
+from buildAnalyzer import inferBuildSteps
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
@@ -69,7 +70,7 @@ def detail(id, repo=None):
 		repo = github.get_repo(id)
 	# Get language data
 	languages = repo.get_languages()
-	# Transform data so it's ready to graph on client side
+	# Transform so it's ready to graph on client side
 	colorDataFile = open('language_colors.json')
 	colorData = json.load(colorDataFile)
 	colorDataFile.close()
@@ -83,6 +84,10 @@ def detail(id, repo=None):
 			'value': value,
 			'color': color
 		})
+	# Get directory listing to determine build steps
+	listing = repo.get_dir_contents('/')
+	# Look for certain files to figure out how to build
+	build = inferBuildSteps(repo)
 	# Collect data
 	repoData = {
 		"id": repo.id,
@@ -97,7 +102,8 @@ def detail(id, repo=None):
 		"language": repo.language,
 		"languages": transformed_languages,
 		"description": repo.description,
-		"classifications": classify(repo)
+		"classifications": classify(repo),
+		"build": build
 	}
 	# Send
 	return json.jsonify(status="ok", repo=repoData, type="detail")
@@ -126,14 +132,20 @@ def createJob():
 		"./scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url")
 	xml_default_branch = root.find(
 		"./scm/branches/hudson.plugins.git.BranchSpec/name")
+	xml_command = root.find("./builders/hudson.tasks.Shell/command")
 
 	# Get repository
 	repo = github.get_repo(id)
+
+	# Infer build steps if possible
+	build = inferBuildSteps(repo)
 
 	# Modify selected elements
 	xml_github_url.text = repo.html_url
 	xml_git_url.text = "https" + repo.git_url[3:]
 	xml_default_branch.text = "*/" + repo.default_branch
+	if build['success']:
+		xml_command.text = build['steps']
 
 	#Send Jenkins the config file
 	configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
