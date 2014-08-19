@@ -22,9 +22,12 @@ function legend(parent, data) {
         var title = document.createElement('li');
         title.className = 'label';
         title.style.backgroundColor = d.hasOwnProperty('strokeColor') ? d.strokeColor : d.color;
+        title.style.color = tinycolor.mostReadable(d.color, ["#FFFFFF", "#000000"]).toHexString();
+        title.style.listStyle = 'none'
         parent.appendChild(title);
 
         var text = document.createTextNode(d.title + " - " + humanizeBytes(d.value));
+
         title.appendChild(text);
     });
 }

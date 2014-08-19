@@ -124,3 +124,6 @@ function addToJenkinsCallback(data) {
 		console.log(data);
 	}
 }
+
+$('#query').val("redis");
+$('#query').change();
