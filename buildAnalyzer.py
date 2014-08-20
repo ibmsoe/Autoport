@@ -1,3 +1,5 @@
+# Looks for certain files (e.g. Makefile) and returns the corresponding build
+# steps
 def inferBuildSteps(repo):
 	listing = repo.get_dir_contents('/')
 	for f in listing:

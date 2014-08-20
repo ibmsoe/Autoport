@@ -17,7 +17,8 @@ var loadingState = {
 var detailState = {
 	ready: false,
 	repo: null,
-	autoSelected: false
+	autoSelected: false,
+	pie: null
 }
 
 // Rivets.js bindings
@@ -50,6 +51,7 @@ rivets.bind($('#resultsTable'), {
 	searchState: searchState
 });
 
+// Disables all views except loading view
 function switchToLoadingState() {
 	searchState.ready = false;
 	detailState.ready = false;
@@ -57,6 +59,7 @@ function switchToLoadingState() {
 	detailState.autoSelected = false;
 }
 
+// Does the above and makes a search query
 function doSearch() {
 	switchToLoadingState();
 	searchState.query = $('#query').val();
@@ -68,7 +71,6 @@ function doSearch() {
 	}
 }
 
-
 // When the query textbox is changed, do a search
 $('#query').change(doSearch);
 
@@ -79,8 +81,9 @@ function processSearchResults(data) {
 		console.log(data);
 	} else if (data.type === "multiple") {
 		// Got multiple results
-		// Add addToJenkins and select function to each result
+		// Add select function to each result
 		data.results.forEach(function(result) {
+			// Show detail view for repo upon selection
 			result.select = function () {
 				$.get("/detail/" + result.id, showDetail);
 				switchToLoadingState();
@@ -97,6 +100,7 @@ function processSearchResults(data) {
 	}
 }
 
+// Sets up and opens detail view for a repo
 function showDetail(data) {
 	if(data.status !== "ok" || data.type !== "detail") {
 		console.log("Bad response while creating detail view!");
@@ -109,7 +113,10 @@ function showDetail(data) {
 		detailState.ready = true;
 		// Make chart
 		var ctx = $("#langChart").get(0).getContext("2d");
-		var pie = new Chart(ctx).Pie(detailState.repo.languages, {
+		if(detailState.pie !== null) {
+			detailState.pie.destroy();
+		}
+		detailState.pie = new Chart(ctx).Pie(detailState.repo.languages, {
 			segmentShowStroke: false
 		});
 		legend(document.getElementById('langLegend'), detailState.repo.languages)
@@ -118,6 +125,7 @@ function showDetail(data) {
 
 function addToJenkinsCallback(data) {
 	if(data.status === "ok") {
+		// Redirect to newly created job
 		window.location.href = data.jobUrl;
 	} else {
 		console.log("Bad response from /createJob!");

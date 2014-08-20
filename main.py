@@ -1,8 +1,8 @@
 # Imports
-from flask import Flask, request, render_template, json
-from github import Github
 import xml.etree.ElementTree as ET
 import requests
+from flask import Flask, request, render_template, json
+from github import Github
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
 
@@ -13,10 +13,13 @@ jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
 app = Flask(__name__)
 github = Github()
 
+# Main page - just serve up main.html
 @app.route("/")
 def main():
     return render_template("main.html")
 
+# Search - return a JSON file with search results or the matched
+# repo if there's a solid candidate
 @app.route("/search")
 def search():
 	# Get and validate arguments
@@ -24,8 +27,8 @@ def search():
 	if query == "":
 		return json.jsonify(status="failure", error="missing query")
 
-	searchArgs = None
-	sort = request.args.get("sort", "")
+	searchArgs = None # Used to pass in sort argument to pygithub
+	sort = request.args.get("sort", "") # Check for optional sort argument
 	if sort in ['stars', 'forks', 'updated']:
 		searchArgs = {'sort': sort}
 	elif sort == 'relevance' or sort == '':
@@ -37,11 +40,15 @@ def search():
 	# Query Github and return a JSON file with results
 	results = []
 	isFirst = True
-	print(searchArgs)
+
 	for repo in github.search_repositories(query, **searchArgs)[:10]:
+		# If this is the top hit, and the name matches exactly, and
+		# it has greater than 500 stars, then just assume that's the
+		# repo the user is looking for
 		if isFirst and repo.name == query and repo.stargazers_count > 500:
 			return detail(repo.id, repo)
 		isFirst = False
+		# Otherwise add the repo to the list of results and move on
 		results.append({
 			"id": repo.id,
 			"name": repo.name,
@@ -58,15 +65,15 @@ def search():
 		})
 	return json.jsonify(status="ok", results=results, type="multiple")
 
+# Detail - returns a JSON file with detailed information about the repo
 @app.route("/detail/<int:id>")
 def detail(id, repo=None):
-	# Get the repo if it wasn't passed in
+	# Get the repo if it wasn't passed in (from Search auto picking one)
 	if repo is None:
 		try:
 			idInt = int(id)
 		except ValueError:
 			return json.jsonify(status="failure", error="bad id")
-
 		repo = github.get_repo(id)
 	# Get language data
 	languages = repo.get_languages()
@@ -76,18 +83,18 @@ def detail(id, repo=None):
 	colorDataFile.close()
 	transformed_languages = []
 	for label, value in languages.items():
-		color = "#DDDDDD"
+		color = "#DDDDDD" # default color
 		if label in colorData:
 			color = colorData[label]
 		transformed_languages.append({
-			'title': label,
-			'value': value,
-			'color': color
+			'title': label, # Language name (e.g. C++)
+			'value': value, # Size in bytes
+			'color': color  # Hexadecimal color value
 		})
 	# Get directory listing to determine build steps
 	listing = repo.get_dir_contents('/')
 	# Look for certain files to figure out how to build
-	build = inferBuildSteps(repo)
+	build = inferBuildSteps(repo) # buildAnalyzer.py
 	# Collect data
 	repoData = {
 		"id": repo.id,
@@ -108,9 +115,11 @@ def detail(id, repo=None):
 	# Send
 	return json.jsonify(status="ok", repo=repoData, type="detail")
 
+# Create Job - takes a repo id and creates a Jenkins job for it
+# Returns a JSON file with the new job URL on success
 @app.route("/createJob", methods=['POST'])
 def createJob():
-	# Ensure we have all the post arguments we need
+	# Ensure we have a valid id number as a post argument
 	try:
 		idStr = request.form["id"]
 	except KeyError:
@@ -126,6 +135,7 @@ def createJob():
 	# Read template XML file
 	tree = ET.parse("config_template.xml")
 	root = tree.getroot()
+	# Find elements we want to modify
 	xml_github_url = root.find(
 		"./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
 	xml_git_url = root.find(
@@ -147,11 +157,12 @@ def createJob():
 	if build['success']:
 		xml_command.text = build['steps']
 
-	#Send Jenkins the config file
+	# Add header to the config
 	configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
 
 	jobName = "(PortAutoTool) " + repo.name
 
+	# Send to Jenkins
 	r = requests.post(
 		jenkinsUrl + "/createItem",
 		headers={
