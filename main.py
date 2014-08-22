@@ -91,8 +91,7 @@ def detail(id, repo=None):
 			'value': value, # Size in bytes
 			'color': color  # Hexadecimal color value
 		})
-	# Get directory listing to determine build steps
-	listing = repo.get_dir_contents('/')
+		
 	# Look for certain files to figure out how to build
 	build = inferBuildSteps(repo) # buildAnalyzer.py
 	# Collect data

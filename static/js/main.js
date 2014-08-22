@@ -1,24 +1,24 @@
 // Contains state of searching operations
 var searchState = {
 	sorting: "relevance",
-	ready: false,
-	query: "",
-	results: {},
-	changeSort: function (ev) {
+	ready: false, // Whether or not to draw this view
+	query: "", // User's query
+	results: {}, // Search result data
+	changeSort: function (ev) { // Called upon changing sort type
 		searchState.sorting = $(ev.target).text().toLowerCase();
 		doSearch();
 	}
 };
 // Contains state of loading view
 var loadingState = {
-	loading: false
+	loading: false // Whether or not to draw this view
 }
 // Contains state of detail view
 var detailState = {
 	ready: false,
-	repo: null,
-	autoSelected: false,
-	pie: null
+	repo: null, // Repo data
+	autoSelected: false, // Was this repository autoselected from search query?
+	pie: null // Pie chart
 }
 
 // Rivets.js bindings
