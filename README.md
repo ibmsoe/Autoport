@@ -12,7 +12,7 @@ After installing dependencies, simply clone the repo and run:
 
     python main.py
 
-Navigate to http://127.0.0.1/ to access the app.
+Navigate to http://127.0.0.1:5000/ to access the app.
 
 Design Overview
 ========
