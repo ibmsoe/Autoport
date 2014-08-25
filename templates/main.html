@@ -117,8 +117,14 @@
 
     <!-- AUTOSELECT ALERT BOX -->
 
-    <div class="alert alert-success autoselect-alert" rv-show="detailState.autoSelected" role="alert">
-      This repository was <strong>automatically selected</strong> because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } stars</strong>.
+    <div class="alert alert-success autoselect-alert clearfix" rv-show="detailState.autoSelected" role="alert">
+      <span class="autoSelectText"><strong>Auto-selected</strong> this repository because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } stars</strong>.<span>
+      <a href="#" class="exitAutoSelect buttonRight" rv-show="detailState.autoSelected" rv-on-click="detailState.exitAutoSelect">
+        <button type="button" class="btn btn-default exitAutoSelectButton">
+        <span class="glyphicon glyphicon-list"></span>
+        See all results
+        </button>
+      </a>
     </div>
 
     <!-- DETAIL VIEW -->
@@ -129,7 +135,7 @@
           <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
           /
           <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
-          <a href="#" class="addToJenkins" rv-on-click="detailState.repo.addToJenkins">
+          <a href="#" class="addToJenkins buttonRight" rv-on-click="detailState.repo.addToJenkins">
             <button type="button" class="btn btn-primary">
               <span class="glyphicon glyphicon-plus"></span>
               Add to Jenkins
@@ -167,7 +173,10 @@
         </span>
         <span rv-show="detailState.repo.build.success" class="build-steps">
           <h3>Build steps</h3>
-          <small>Inferred based on the existence of <strong rv-text="detailState.repo.build.reason"></strong></small>
+          <small>
+            Inferred based on the existence of 
+            <strong rv-text="detailState.repo.build.reason"></strong>
+          </small>
           <pre rv-text="detailState.repo.build.steps"></pre>
         </span>
         <a href="#" class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">

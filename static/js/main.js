@@ -22,6 +22,9 @@ var detailState = {
 	backToResults: function() {
 		detailState.ready = false;
 		searchState.ready = true;
+	},
+	exitAutoSelect: function() {
+		doSearch(false);
 	}
 }
 
@@ -64,13 +67,17 @@ function switchToLoadingState() {
 }
 
 // Does the above and makes a search query
-function doSearch() {
+function doSearch(autoselect) {
+	if(typeof(autoselect)==='undefined') autoselect = true;
+	if(typeof(autoselect)!=='boolean') autoselect = true;
+	
 	switchToLoadingState();
 	searchState.query = $('#query').val();
 	if(searchState.query.length > 0) {
 		$.getJSON("/search", {
 			q: searchState.query,
-			sort: searchState.sorting
+			sort: searchState.sorting,
+			auto: autoselect
 		}, processSearchResults);
 	}
 }
@@ -136,6 +143,3 @@ function addToJenkinsCallback(data) {
 		console.log(data);
 	}
 }
-
-$('#query').val("hadoop")
-doSearch();

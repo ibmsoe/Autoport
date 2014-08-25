@@ -11,7 +11,7 @@ jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
 
 # Globals
 app = Flask(__name__)
-github = Github()
+github = Github("9294ace21922bf38fae227abaf3bc20cf0175b08")
 
 # Main page - just serve up main.html
 @app.route("/")
@@ -37,6 +37,12 @@ def search():
 	else:
 		return json.jsonify(status="failure", error="bad sort type")
 
+	autoselect = request.args.get("auto", "")
+	if autoselect != "false":
+		autoselect = True
+	else:
+		autoselect = False
+
 	# Query Github and return a JSON file with results
 	results = []
 	isFirst = True
@@ -45,7 +51,7 @@ def search():
 		# If this is the top hit, and the name matches exactly, and
 		# it has greater than 500 stars, then just assume that's the
 		# repo the user is looking for
-		if isFirst and repo.name == query and repo.stargazers_count > 500:
+		if autoselect and isFirst and repo.name == query and repo.stargazers_count > 500:
 			return detail(repo.id, repo)
 		isFirst = False
 		# Otherwise add the repo to the list of results and move on
