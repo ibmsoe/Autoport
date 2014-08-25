@@ -156,7 +156,7 @@ def createJob():
 	repo = cache.getRepo(id)
 
 	# Infer build steps if possible
-	build = inferBuildSteps(repo)
+	build = inferBuildSteps(cache.getDir(repo))
 
 	# Modify selected elements
 	xml_github_url.text = repo.html_url
