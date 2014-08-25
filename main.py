@@ -102,7 +102,7 @@ def detail(id, repo=None):
 		})
 		
 	# Look for certain files to figure out how to build
-	build = inferBuildSteps(repo) # buildAnalyzer.py
+	build = inferBuildSteps(cache.getDir(repo)) # buildAnalyzer.py
 	# Collect data
 	repoData = {
 		"id": repo.id,
