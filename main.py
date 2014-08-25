@@ -5,6 +5,7 @@ from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
+from cache import Cache
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
@@ -12,6 +13,7 @@ jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
 # Globals
 app = Flask(__name__)
 github = Github("9294ace21922bf38fae227abaf3bc20cf0175b08")
+cache = Cache(github)
 
 # Main page - just serve up main.html
 @app.route("/")
@@ -48,6 +50,7 @@ def search():
 	isFirst = True
 
 	for repo in github.search_repositories(query, **searchArgs)[:10]:
+		cache.cacheRepo(repo)
 		# If this is the top hit, and the name matches exactly, and
 		# it has greater than 500 stars, then just assume that's the
 		# repo the user is looking for
@@ -80,9 +83,9 @@ def detail(id, repo=None):
 			idInt = int(id)
 		except ValueError:
 			return json.jsonify(status="failure", error="bad id")
-		repo = github.get_repo(id)
+		repo = cache.getRepo(id)
 	# Get language data
-	languages = repo.get_languages()
+	languages = cache.getLang(repo)
 	# Transform so it's ready to graph on client side
 	colorDataFile = open('language_colors.json')
 	colorData = json.load(colorDataFile)
@@ -150,7 +153,7 @@ def createJob():
 	xml_command = root.find("./builders/hudson.tasks.Shell/command")
 
 	# Get repository
-	repo = github.get_repo(id)
+	repo = cache.getRepo(id)
 
 	# Infer build steps if possible
 	build = inferBuildSteps(repo)
