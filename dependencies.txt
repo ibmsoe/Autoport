@@ -1,3 +1,0 @@
-Flask
-PyGithub-1.25.0
-requests
