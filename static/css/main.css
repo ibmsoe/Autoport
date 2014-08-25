@@ -72,6 +72,10 @@
     float: right;
 }
 
+.backToResults {
+    margin-top: 10px;
+}
+
 .fatLabel {
     font-size: 14px;
 }

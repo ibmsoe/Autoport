@@ -18,7 +18,11 @@ var detailState = {
 	ready: false,
 	repo: null, // Repo data
 	autoSelected: false, // Was this repository autoselected from search query?
-	pie: null // Pie chart
+	pie: null, // Pie chart
+	backToResults: function() {
+		detailState.ready = false;
+		searchState.ready = true;
+	}
 }
 
 // Rivets.js bindings
@@ -132,3 +136,6 @@ function addToJenkinsCallback(data) {
 		console.log(data);
 	}
 }
+
+$('#query').val("hadoop")
+doSearch();
