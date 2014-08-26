@@ -1,3 +1,14 @@
+Current Capabilities
+========
+ - Search GitHub for packages
+ - Automatic selection for searches where it's obvious which package the user is looking for
+ - Color coded repository properties to evaluate popularity and ease of porting
+ - Graph of language composition
+ - Attempts to infer build steps based on repository contents
+ - Can add a job to Jenkins and fill in configuration values with one click
+ - Caches repository data from GitHub API to reduce API usage and improve performance
+
+
 Dependencies
 ========
 Install [pip](https://pip.pypa.io/en/latest/installing.html) and then run these commands to install dependencies:
@@ -14,11 +25,23 @@ After installing dependencies, simply clone the repo and run:
 
 Navigate to http://127.0.0.1:5000/ to access the app.
 
+Deployment
+========
+See the [Flask documentation](http://flask.pocoo.org/docs/0.10/deploying/#deployment) for details on deploying.
+
+Recommended Reading
+========
+ - [Flask Quickstart](http://flask.pocoo.org/docs/0.10/quickstart/)
+ - [Rivets.js Guide / Binder Reference](http://rivetsjs.com/)
+ - [Bootstrap CSS / Components](http://getbootstrap.com/)
+ - [PyGithub Documentation](http://jacquev6.github.io/PyGithub/v1/)
+ - [GitHub API Rate Limiting](https://developer.github.com/v3/#rate-limiting)
+
 Design Overview
 ========
 Stack
 ------
-The backend runs on python using the Flask microframework. On the front end, bootstrap, rivets.js, jQuery, and a few other libraries are used to acquire and render content.
+The backend runs on Python using the Flask microframework. On the front end, Bootstrap, Rivets.js, jQuery, and a few other libraries are used to acquire and render content.
 
 Data Flow
 ------
@@ -38,3 +61,6 @@ Next Steps
 - Add an option to fork the repository to IBMSOE before creating a Jenkins job
 - Make build step inference more modular and robust
 - Set up test reporting for well known test suites such as JUnit
+- Replace the Chart.js library with something better to improve the charts / legend.
+- Better error handling for failed requests to Jenkins, GitHub, or the backend itself (currently just prints to debug console in most failure cases or does nothing at all).
+- Unit tests
