@@ -55,6 +55,22 @@ Frontend
 ------
 main.html defines the structure for the entire application. main.js defines a few state variables that contain data about the various views of the application (loading panel, search results, detail page). Rivets.js is used to bind data from these state variables to HTML. Bootstrap is heavily relied on for styling, icons, and other front end components.
 
+Complete list of libraries used
+==========
+Backend
+- [Flask](http://flask.pocoo.org/) - Web application microframework
+- [requests](http://docs.python-requests.org/en/latest/) - HTTP requests
+- [PyGitHub 1.2.5](https://github.com/jacquev6/PyGithub) - GitHub API wrapper
+
+Frontend
+- [Bootstrap](http://getbootstrap.com/) - Frontend framework
+- [Rivets.js](http://rivetsjs.com/) - Data binding
+- [Wave from SpinKit](https://github.com/tobiasahlin/SpinKit/blob/master/3-wave.html) - Loading animation
+- [Chart.js](http://www.chartjs.org/) - Pie chart
+- [legend.js](https://github.com/bebraw/Chart.js.legend/blob/master/src/legend.js) - Chart legends
+- [TinyColor](https://github.com/bgrins/TinyColor) - Readable text color selection for legend
+- [Moment.js](http://momentjs.com/) - Date manipulation
+
 Next Steps
 =========
 - Provide numeric estimates for project interest (how useful is this package?) and ease of porting (how hard is it to port?)
