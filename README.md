@@ -73,6 +73,7 @@ Frontend
 
 Next Steps
 =========
+- Allow searching for source code in other locations than just github
 - Provide numeric estimates for project interest (how useful is this package?) and ease of porting (how hard is it to port?)
 - Add an option to fork the repository to IBMSOE before creating a Jenkins job
 - Make build step inference more modular and robust
