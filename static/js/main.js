@@ -71,9 +71,10 @@ function doSearch(autoselect) {
 	if(typeof(autoselect)==='undefined') autoselect = true;
 	if(typeof(autoselect)!=='boolean') autoselect = true;
 	
-	switchToLoadingState();
+	// Do not switch to loading state if query is empty
 	searchState.query = $('#query').val();
 	if(searchState.query.length > 0) {
+		switchToLoadingState();
 		$.getJSON("/search", {
 			q: searchState.query,
 			sort: searchState.sorting,
