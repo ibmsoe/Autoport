@@ -82,3 +82,11 @@ Next Steps
 - Replace the Chart.js library with something better to improve the charts / legend.
 - Better error handling for failed requests to Jenkins, GitHub, or the backend itself (currently just prints to debug console in most failure cases or does nothing at all).
 - Unit tests
+
+
+More Things to do
+==========
+- Allow the app to be able to pick from latest stable to latest release.
+- Look into interpreted languages automation (they don't need to build so there should be an easy way to automate this right?)
+- Found a bug, the app doesn't actually sort by last updated correctly.
+- Recursively add project dependencies to jenkins if it is a maven project

@@ -4,7 +4,7 @@ import requests
 from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
-from buildAnalyzer import inferBuildSteps
+from buildAnalyzer import inferBuildSteps, inferMavenDependencies
 from cache import Cache
 
 # Config
@@ -125,7 +125,7 @@ def detail(id, repo=None):
 
 # Create Job - takes a repo id and creates a Jenkins job for it
 # Returns a JSON file with the new job URL on success
-@app.route("/createJob", methods=['POST'])
+@app.route("/createJob", methods=['GET', 'POST'])
 def createJob():
 	# Ensure we have a valid id number as a post argument
 	try:
@@ -167,6 +167,8 @@ def createJob():
 
 	# Add header to the config
 	configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
+
+	# TODO: Add jenkins build steps to the template -Axel
 
 	jobName = "(PortAutoTool) " + repo.name
 
