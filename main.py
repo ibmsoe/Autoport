@@ -1,10 +1,11 @@
 # Imports
 import xml.etree.ElementTree as ET
 import requests
+import webbrowser
 from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
-from buildAnalyzer import inferBuildSteps, inferMavenDependencies
+from buildAnalyzer import inferBuildSteps
 from cache import Cache
 
 # Config
@@ -168,8 +169,6 @@ def createJob():
 	# Add header to the config
 	configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
 
-	# TODO: Add jenkins build steps to the template -Axel
-
 	jobName = "(PortAutoTool) " + repo.name
 
 	# Send to Jenkins
@@ -187,7 +186,8 @@ def createJob():
 	if r.status_code == 200:
 		# Success, send new job URL as response
 		jobUrl = jenkinsUrl + "/job/" + jobName + "/"
-		return json.jsonify(status="ok", jobUrl=jobUrl)
+		webbrowser.open_new_tab(jobUrl)
+		return #json.jsonify(status="ok", returnUrl=returnUrl)
 
 	return json.jsonify(status="failure", error="jenkins error")
 
