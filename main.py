@@ -2,6 +2,7 @@
 import xml.etree.ElementTree as ET
 import requests
 import webbrowser
+import re
 from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
@@ -105,6 +106,17 @@ def detail(id, repo=None):
 	# Look for certain files to figure out how to build
 	build = inferBuildSteps(cache.getDir(repo)) # buildAnalyzer.py
 	# Collect data
+
+	tags = [tag.name for tag in cache.getTags(repo)]
+	tags.sort(key=tagSortKey, reverse=True)
+
+	if (not tags) or (len(tags) < 1):
+		recentTag, tags = "",      ""
+	elif len(tags) == 1:
+		recentTag, tags = tags[0], ""
+	else:
+		recentTag, tags = tags[0], tags[1:]
+
 	repoData = {
 		"id": repo.id,
 		"name": repo.name,
@@ -119,7 +131,9 @@ def detail(id, repo=None):
 		"languages": transformed_languages,
 		"description": repo.description,
 		"classifications": classify(repo),
-		"build": build
+		"build": build,
+		"recentTag": recentTag,
+		"tags": tags
 	}
 	# Send
 	return json.jsonify(status="ok", repo=repoData, type="detail")
@@ -140,6 +154,11 @@ def createJob():
 	except ValueError:
 		return json.jsonify(status="failure",
 			error="invalid id number")
+	
+	try:
+		tag = request.form["tag"]
+	except KeyError:
+		tag = "Current"
 
 	# Read template XML file
 	tree = ET.parse("config_template.xml")
@@ -162,14 +181,21 @@ def createJob():
 	# Modify selected elements
 	xml_github_url.text = repo.html_url
 	xml_git_url.text = "https" + repo.git_url[3:]
-	xml_default_branch.text = "*/" + repo.default_branch
+
+	jobName = "(PortAutoTool) " + repo.name
+
+	if (tag == "") or (tag == "Current"):
+		xml_default_branch.text = "*/" + repo.default_branch
+		jobName += "-current"
+	else:
+		xml_default_branch.text = "tags/" + tag
+		jobName += "-" + tag
+
 	if build['success']:
 		xml_command.text = build['steps']
 
 	# Add header to the config
 	configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
-
-	jobName = "(PortAutoTool) " + repo.name
 
 	# Send to Jenkins
 	r = requests.post(
@@ -190,6 +216,13 @@ def createJob():
 		return #json.jsonify(status="ok", returnUrl=returnUrl)
 
 	return json.jsonify(status="failure", error="jenkins error")
+
+def tagSortKey (tagName):
+	m = re.search(r'\d+(\.\d+)+', tagName)
+	if m:
+		return map(int, m.group().split('.'))
+	else:
+		return [0,0,0,0]
 
 if __name__ == "__main__":
     app.run(debug = True)

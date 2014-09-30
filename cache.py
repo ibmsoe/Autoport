@@ -8,6 +8,7 @@ class Cache:
 		self.repos = collections.deque(maxlen=128) # Cache repos
 		self.langs = collections.deque(maxlen=128) # Cache language data
 		self.dirs = collections.deque(maxlen=128) # Cache directory structure data
+		self.tags = collections.deque(maxlen=128) # Cache list of tags
 
 	# Returns a cached repo, or, if it's not in the cache
 	# it will acquire, cache, and return it
@@ -17,7 +18,7 @@ class Cache:
 			if repo.id == id:
 				return repo
 		# repo not in cache, so acquire it and add it
-		newRepo = github.get_repo(id)
+		newRepo = self.github.get_repo(id)
 		self.repos.append(newRepo)
 		return newRepo
 
@@ -47,3 +48,13 @@ class Cache:
 		newDir = repo.get_dir_contents('/')
 		self.dirs.append(RepoDataTuple(repo.name, newDir))
 		return newDir
+
+	def getTags(self, repo):
+		# Are tags for repo already cached?
+		for tagsTuple in self.tags:
+			if tagsTuple.repoName == repo.name:
+				return tagsTuple.data
+		# Not in cache, acquire and cache
+		newTags = repo.get_tags()
+		self.tags.append(RepoDataTuple(repo.name, newTags))
+		return newTags

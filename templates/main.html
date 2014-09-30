@@ -135,12 +135,21 @@
           <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
           /
           <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
-          <a href="#" class="addToJenkins buttonRight" rv-on-click="detailState.repo.addToJenkins">
-            <button type="button" class="btn btn-primary">
-              <span class="glyphicon glyphicon-plus"></span>
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle buttonRight" type="button" id="dropdownMenu1" data-toggle="dropdown">
               Add to Jenkins
+              <span class="caret"></span>
             </button>
-          </a>
+
+            <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="dropdownMenu1">
+              <li role="presentation" class="dropdown-header">Recent</li>
+              <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">Current</a></li>
+              <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ detailState.repo.recentTag }</a></li>
+              <li role="presentation" class="divider"></li>
+              <li role="presentation" class="dropdown-header">Older</li>
+              <li role="presentation" rv-each-tag="detailState.repo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ tag }</a></li>
+            </ul>
+          </div>
         </h1>
         <span title="Star count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.stars">
           <span class="glyphicon glyphicon-star"></span>

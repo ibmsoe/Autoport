@@ -118,8 +118,8 @@ function showDetail(data) {
 		console.log("Bad response while creating detail view!");
 	} else {
 		detailState.repo = data.repo;
-		detailState.repo.addToJenkins = function() {
-			$.post("/createJob", {id: detailState.repo.id}, addToJenkinsCallback, "json");
+		detailState.repo.addToJenkins = function(e) {
+			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML}, addToJenkinsCallback, "json");
 		};
 		loadingState.loading = false;
 		detailState.ready = true;
