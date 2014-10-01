@@ -1,8 +1,11 @@
+#!/usr/bin/env python
+
 # Imports
 import xml.etree.ElementTree as ET
 import requests
 import webbrowser
 import re
+import argparse
 from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
@@ -11,6 +14,7 @@ from cache import Cache
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
+jobNamePrefix = "(PortAutoTool) "
 
 # Globals
 app = Flask(__name__)
@@ -182,7 +186,7 @@ def createJob():
 	xml_github_url.text = repo.html_url
 	xml_git_url.text = "https" + repo.git_url[3:]
 
-	jobName = "(PortAutoTool) " + repo.name
+	jobName = jobNamePrefix + repo.name
 
 	if (tag == "") or (tag == "Current"):
 		xml_default_branch.text = "*/" + repo.default_branch
@@ -225,4 +229,18 @@ def tagSortKey (tagName):
 		return [0,0,0,0]
 
 if __name__ == "__main__":
-    app.run(debug = True)
+	p = argparse.ArgumentParser()
+	p.add_argument("-p", "--public",               action="store_true", help="specifies for the web server to listen over the public network, defaults to only listening on private localhost")
+	p.add_argument("-u", "--jenkinsURL",                                help="specifies the URL for the Jenkins server, defaults to '" + jenkinsUrl + "'")
+	p.add_argument("-n", "--jenkinsJobNamePrefix",                      help="specifies a string to prefix to the Jenkins job name, defaults to '" + jobNamePrefix + "'")
+	args = p.parse_args()
+
+	if args.jenkinsURL:
+		jenkinsUrl = args.jenkinsURL
+	if args.jenkinsJobNamePrefix:
+		jobNamePrefix = args.jenkinsJobNamePrefix
+
+	if args.public:
+		app.run(debug = True, host='0.0.0.0')
+	else:
+		app.run(debug = True)
