@@ -137,8 +137,10 @@ function showDetail(data) {
 
 function addToJenkinsCallback(data) {
 	if(data.status === "ok") {
-		// Redirect to newly created job
-		window.location.href = data.jobUrl;
+		// Preempt the newly created job.
+		$.get(data.sjobUrl);
+		// Open a new window with the job home page
+		startWindow = window.open(data.hjobUrl,'_blank');
 	} else {
 		console.log("Bad response from /createJob!");
 		console.log(data);

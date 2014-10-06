@@ -3,7 +3,6 @@
 # Imports
 import xml.etree.ElementTree as ET
 import requests
-import webbrowser
 import re
 import argparse
 from flask import Flask, request, render_template, json
@@ -143,7 +142,8 @@ def detail(id, repo=None):
 	return json.jsonify(status="ok", repo=repoData, type="detail")
 
 # Create Job - takes a repo id and creates a Jenkins job for it
-# Returns a JSON file with the new job URL on success
+# Opens a new tab with a new jenkins job URL on the client side on success,
+# while the current tab stays in the same place.
 @app.route("/createJob", methods=['GET', 'POST'])
 def createJob():
 	# Ensure we have a valid id number as a post argument
@@ -168,13 +168,13 @@ def createJob():
 	tree = ET.parse("config_template.xml")
 	root = tree.getroot()
 	# Find elements we want to modify
-	xml_github_url = root.find(
-		"./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
-	xml_git_url = root.find(
-		"./scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url")
-	xml_default_branch = root.find(
-		"./scm/branches/hudson.plugins.git.BranchSpec/name")
-	xml_command = root.find("./builders/hudson.tasks.Shell/command")
+	xml_github_url = root.find("./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
+	xml_git_url = root.find("./scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url")
+	xml_default_branch = root.find("./scm/branches/hudson.plugins.git.BranchSpec/name")
+	xml_build_command = root.find("./builders/hudson.tasks.Shell/command")
+	xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
+	xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
+	xml_dependency_artifact = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
 
 	# Get repository
 	repo = cache.getRepo(id)
@@ -196,7 +196,11 @@ def createJob():
 		jobName += "-" + tag
 
 	if build['success']:
-		xml_command.text = build['steps']
+		xml_build_command.text = build['build']
+		xml_test_command.text = build['test']
+		xml_env_command.text = build['env']
+		xml_dependency_artifact.text = build['dependency']
+
 
 	# Add header to the config
 	configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
@@ -214,10 +218,14 @@ def createJob():
 	)
 
 	if r.status_code == 200:
-		# Success, send new job URL as response
-		jobUrl = jenkinsUrl + "/job/" + jobName + "/"
-		webbrowser.open_new_tab(jobUrl)
-		return #json.jsonify(status="ok", returnUrl=returnUrl)
+		# Success, send the jenkins job and start it right away.
+		startJobUrl = jenkinsUrl + "/job/" + jobName + "/build?delay=0sec"
+
+		# But then redirect to job home to monitor job progress.
+		homeJobUrl = jenkinsUrl + "/job/" + jobName + "/"
+
+		# Stays on the same page, after creating a new jenkins job.
+		return json.jsonify(status="ok", sjobUrl=startJobUrl, hjobUrl=homeJobUrl)
 
 	return json.jsonify(status="failure", error="jenkins error")
 
