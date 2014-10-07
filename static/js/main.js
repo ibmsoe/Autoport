@@ -119,7 +119,7 @@ function showDetail(data) {
 	} else {
 		detailState.repo = data.repo;
 		detailState.repo.addToJenkins = function(e) {
-			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML}, addToJenkinsCallback, "json");
+			$.post("/createJobs", {id: detailState.repo.id, tag: e.target.innerHTML}, addToJenkinsCallback, "json");
 		};
 		loadingState.loading = false;
 		detailState.ready = true;
@@ -136,13 +136,16 @@ function showDetail(data) {
 }
 
 function addToJenkinsCallback(data) {
+    // TODO - need to take in a list of sjobUrls and hjobUrls and then iterate over the list
 	if(data.status === "ok") {
-		// Preempt the newly created job.
-		$.get(data.sjobUrl);
-		// Open a new window with the job home page
-		startWindow = window.open(data.hjobUrl,'_blank');
+		// Preempt the newly created jobs.
+		$.get(data.sjobUrlx86);
+        $.get(data.sjobUrlLE)
+		// Open new windows with the jobs' home pages
+		window.open(data.hjobUrlx86,'_blank');
+		window.open(data.hjobUrlLE,'_blank');
 	} else {
-		console.log("Bad response from /createJob!");
+		console.log("Bad response from /createJobs!");
 		console.log(data);
 	}
 }

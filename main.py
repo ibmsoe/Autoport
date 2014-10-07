@@ -13,12 +13,14 @@ from cache import Cache
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
-jobNamePrefix = "(PortAutoTool) "
+jobNamePrefix = "AutoPortTool"
 
 # Globals
 app = Flask(__name__)
 github = Github("9294ace21922bf38fae227abaf3bc20cf0175b08")
 cache = Cache(github)
+nodes = {'x86':'soe04x', 'LE':'cit117'}
+maxResults = 10
 
 # Main page - just serve up main.html
 @app.route("/")
@@ -29,226 +31,257 @@ def main():
 # repo if there's a solid candidate
 @app.route("/search")
 def search():
-	# Get and validate arguments
-	query = request.args.get("q", "")
-	if query == "":
-		return json.jsonify(status="failure", error="missing query")
+    # Get and validate arguments
+    query = request.args.get("q", "")
+    if query == "":
+        return json.jsonify(status="failure", error="missing query")
 
-	searchArgs = None # Used to pass in sort argument to pygithub
-	sort = request.args.get("sort", "") # Check for optional sort argument
-	if sort in ['stars', 'forks', 'updated']:
-		searchArgs = {'sort': sort}
-	elif sort == 'relevance' or sort == '':
-		# Must pass no argument if we want to sort by relevance
-		searchArgs = {}
-	else:
-		return json.jsonify(status="failure", error="bad sort type")
+    searchArgs = None # Used to pass in sort argument to pygithub
+    sort = request.args.get("sort", "") # Check for optional sort argument
+    if sort in ['stars', 'forks', 'updated']:
+        searchArgs = {'sort': sort}
+    elif sort == 'relevance' or sort == '':
+        # Must pass no argument if we want to sort by relevance
+        searchArgs = {}
+    else:
+        return json.jsonify(status="failure", error="bad sort type")
 
-	autoselect = request.args.get("auto", "")
-	if autoselect != "false":
-		autoselect = True
-	else:
-		autoselect = False
+    autoselect = request.args.get("auto", "")
+    if autoselect != "false":
+        autoselect = True
+    else:
+        autoselect = False
 
-	# Query Github and return a JSON file with results
-	results = []
-	isFirst = True
+    # Query Github and return a JSON file with results
+    results = []
+    isFirst = True
+    numResults = maxResults
 
-	for repo in github.search_repositories(query, **searchArgs)[:10]:
-		cache.cacheRepo(repo)
-		# If this is the top hit, and the name matches exactly, and
-		# it has greater than 500 stars, then just assume that's the
-		# repo the user is looking for
-		if autoselect and isFirst and repo.name == query and repo.stargazers_count > 500:
-			return detail(repo.id, repo)
-		isFirst = False
-		# Otherwise add the repo to the list of results and move on
-		results.append({
-			"id": repo.id,
-			"name": repo.name,
-			"owner": repo.owner.login,
-			"owner_url": repo.owner.html_url,
-			"stars": repo.stargazers_count,
-			"forks": repo.forks_count,
-			"url": repo.html_url,
-			"size_kb": repo.size,
-			"last_update": str(repo.updated_at),
-			"language": repo.language,
-			"description": repo.description,
-			"classifications": classify(repo)
-		})
-	return json.jsonify(status="ok", results=results, type="multiple")
+    repos = github.search_repositories(query, **searchArgs)
+
+    if repos.totalCount == 0:
+        # TODO - return no results page
+        return json.jsonify(status="failure", error="no results")
+    elif repos.totalCount <= maxResults:
+        numResults = len(repos)
+
+    for repo in repos[:numResults]: 
+        cache.cacheRepo(repo)
+        # If this is the top hit, and the name matches exactly, and
+        # it has greater than 500 stars, then just assume that's the
+        # repo the user is looking for
+        if autoselect and isFirst and repo.name == query and repo.stargazers_count > 500:
+            return detail(repo.id, repo)
+        isFirst = False
+        # Otherwise add the repo to the list of results and move on
+        results.append({
+            "id": repo.id,
+            "name": repo.name,
+            "owner": repo.owner.login,
+            "owner_url": repo.owner.html_url,
+            "stars": repo.stargazers_count,
+            "forks": repo.forks_count,
+            "url": repo.html_url,
+            "size_kb": repo.size,
+            "last_update": str(repo.updated_at),
+            "language": repo.language,
+            "description": repo.description,
+            "classifications": classify(repo)
+        })
+    return json.jsonify(status="ok", results=results, type="multiple")
 
 # Detail - returns a JSON file with detailed information about the repo
 @app.route("/detail/<int:id>")
 def detail(id, repo=None):
-	# Get the repo if it wasn't passed in (from Search auto picking one)
-	if repo is None:
-		try:
-			idInt = int(id)
-		except ValueError:
-			return json.jsonify(status="failure", error="bad id")
-		repo = cache.getRepo(id)
-	# Get language data
-	languages = cache.getLang(repo)
-	# Transform so it's ready to graph on client side
-	colorDataFile = open('language_colors.json')
-	colorData = json.load(colorDataFile)
-	colorDataFile.close()
-	transformed_languages = []
-	for label, value in languages.items():
-		color = "#DDDDDD" # default color
-		if label in colorData:
-			color = colorData[label]
-		transformed_languages.append({
-			'title': label, # Language name (e.g. C++)
-			'value': value, # Size in bytes
-			'color': color  # Hexadecimal color value
-		})
-		
-	# Look for certain files to figure out how to build
-	build = inferBuildSteps(cache.getDir(repo)) # buildAnalyzer.py
-	# Collect data
+    # Get the repo if it wasn't passed in (from Search auto picking one)
+    if repo is None:
+        try:
+            idInt = int(id)
+        except ValueError:
+            return json.jsonify(status="failure", error="bad id")
+        repo = cache.getRepo(id)
+    # Get language data
+    languages = cache.getLang(repo)
+    # Transform so it's ready to graph on client side
+    colorDataFile = open('language_colors.json')
+    colorData = json.load(colorDataFile)
+    colorDataFile.close()
+    transformed_languages = []
+    for label, value in languages.items():
+        color = "#DDDDDD" # default color
+        if label in colorData:
+            color = colorData[label]
+        transformed_languages.append({
+            'title': label, # Language name (e.g. C++)
+            'value': value, # Size in bytes
+            'color': color  # Hexadecimal color value
+        })
+        
+    # Look for certain files to figure out how to build
+    build = inferBuildSteps(cache.getDir(repo), repo) # buildAnalyzer.py
+    # Collect data
 
-	tags = [tag.name for tag in cache.getTags(repo)]
-	tags.sort(key=tagSortKey, reverse=True)
+    tags = [tag.name for tag in cache.getTags(repo)]
+    tags.sort(key=tagSortKey, reverse=True)
 
-	if (not tags) or (len(tags) < 1):
-		recentTag, tags = "",      ""
-	elif len(tags) == 1:
-		recentTag, tags = tags[0], ""
-	else:
-		recentTag, tags = tags[0], tags[1:]
+    if (not tags) or (len(tags) < 1):
+        recentTag, tags = "",      ""
+    elif len(tags) == 1:
+        recentTag, tags = tags[0], ""
+    else:
+        recentTag, tags = tags[0], tags[1:]
 
-	repoData = {
-		"id": repo.id,
-		"name": repo.name,
-		"owner": repo.owner.login,
-		"owner_url": repo.owner.html_url,
-		"stars": repo.stargazers_count,
-		"forks": repo.forks_count,
-		"url": repo.html_url,
-		"size_kb": repo.size,
-		"last_update": str(repo.updated_at),
-		"language": repo.language,
-		"languages": transformed_languages,
-		"description": repo.description,
-		"classifications": classify(repo),
-		"build": build,
-		"recentTag": recentTag,
-		"tags": tags
-	}
-	# Send
-	return json.jsonify(status="ok", repo=repoData, type="detail")
+    repoData = {
+        "id": repo.id,
+        "name": repo.name,
+        "owner": repo.owner.login,
+        "owner_url": repo.owner.html_url,
+        "stars": repo.stargazers_count,
+        "forks": repo.forks_count,
+        "url": repo.html_url,
+        "size_kb": repo.size,
+        "last_update": str(repo.updated_at),
+        "language": repo.language,
+        "languages": transformed_languages,
+        "description": repo.description,
+        "classifications": classify(repo),
+        "build": build,
+        "recentTag": recentTag,
+        "tags": tags
+    }
+    # Send
+    return json.jsonify(status="ok", repo=repoData, type="detail")
 
 # Create Job - takes a repo id and creates a Jenkins job for it
 # Opens a new tab with a new jenkins job URL on the client side on success,
 # while the current tab stays in the same place.
-@app.route("/createJob", methods=['GET', 'POST'])
-def createJob():
-	# Ensure we have a valid id number as a post argument
-	try:
-		idStr = request.form["id"]
-	except KeyError:
-		return json.jsonify(status="failure",
-			error="missing repo id")
+@app.route("/createJobs", methods=['GET', 'POST'])
+def createJobs():
+    # Ensure we have a valid id number as a post argument
+    try:
+        idStr = request.form["id"]
+    except KeyError:
+        return json.jsonify(status="failure",
+            error="missing repo id")
 
-	try:
-		id = int(idStr)
-	except ValueError:
-		return json.jsonify(status="failure",
-			error="invalid id number")
-	
-	try:
-		tag = request.form["tag"]
-	except KeyError:
-		tag = "Current"
+    try:
+        id = int(idStr)
+    except ValueError:
+        return json.jsonify(status="failure",
+            error="invalid id number")
+    
+    try:
+        tag = request.form["tag"]
+    except KeyError:
+        tag = "Current"
 
-	# Read template XML file
-	tree = ET.parse("config_template.xml")
-	root = tree.getroot()
-	# Find elements we want to modify
-	xml_github_url = root.find("./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
-	xml_git_url = root.find("./scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url")
-	xml_default_branch = root.find("./scm/branches/hudson.plugins.git.BranchSpec/name")
-	xml_build_command = root.find("./builders/hudson.tasks.Shell/command")
-	xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
-	xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
-	xml_dependency_artifact = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
+    # Create an x86 job
+    datax86 = createJob("x86", id, tag)
+    # Create an LE job
+    dataLE = createJob("LE", id, tag)
+        
+    # TODO - this is a bad way to do this, need to return a list, adding this for simplicity and to have something that works
+    if datax86['status'] == 'failure':
+            return json.jsonify(status="failure", error=datax86['error'])
+    elif dataLE['status'] == 'failure':
+            return json.jsonify(status="failure", error=dataLE['error'])
+    else:
+        return json.jsonify(status="ok", sjobUrlx86=datax86['sjobUrl'], hjobUrlx86=datax86['hjobUrl'], sjobUrlLE=dataLE['sjobUrl'], hjobUrlLE=dataLE['hjobUrl'])
 
-	# Get repository
-	repo = cache.getRepo(id)
+def createJob(arch, id, tag):
+    # Read template XML file
+    tree = ET.parse("config_template.xml")
+    root = tree.getroot()
+    # Find elements we want to modify
+    xml_github_url = root.find("./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
+    xml_git_url = root.find("./scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url")
+    xml_default_branch = root.find("./scm/branches/hudson.plugins.git.BranchSpec/name")
+    xml_build_command = root.find("./builders/hudson.tasks.Shell/command")
+    xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
+    xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
+    xml_dependency_artifact = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
+    xml_node = root.find("./assignedNode")
 
-	# Infer build steps if possible
-	build = inferBuildSteps(cache.getDir(repo))
+    # Get repository
+    repo = cache.getRepo(id)
 
-	# Modify selected elements
-	xml_github_url.text = repo.html_url
-	xml_git_url.text = "https" + repo.git_url[3:]
+    # Infer build steps if possible
+    build = inferBuildSteps(cache.getDir(repo), repo)
 
-	jobName = jobNamePrefix + repo.name
+    # Modify selected elements
+    archName = ""
+    if arch == "x86":
+        xml_node.text = nodes['x86']
+        archName = "x86"
+    elif arch == "LE":
+        xml_node.text = nodes['LE']
+        archName = "LE"
 
-	if (tag == "") or (tag == "Current"):
-		xml_default_branch.text = "*/" + repo.default_branch
-		jobName += "-current"
-	else:
-		xml_default_branch.text = "tags/" + tag
-		jobName += "-" + tag
+    xml_github_url.text = repo.html_url
+    xml_git_url.text = "https" + repo.git_url[3:]
 
-	if build['success']:
-		xml_build_command.text = build['build']
-		xml_test_command.text = build['test']
-		xml_env_command.text = build['env']
-		xml_dependency_artifact.text = build['dependency']
+    jobName = jobNamePrefix + ' - ' + archName + ' - ' + repo.name
 
+    if (tag == "") or (tag == "Current"):
+        xml_default_branch.text = "*/" + repo.default_branch
+        jobName += "-current"
+    else:
+        xml_default_branch.text = "tags/" + tag
+        jobName += "-" + tag
 
-	# Add header to the config
-	configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
+    if build['success']:
+        xml_build_command.text = build['build']
+        xml_test_command.text = build['test']
+        xml_env_command.text = build['env']
+        xml_dependency_artifact.text = build['dependency']
 
-	# Send to Jenkins
-	r = requests.post(
-		jenkinsUrl + "/createItem",
-		headers={
-			'Content-Type': 'application/xml'
-		},
-		params={
-			'name': jobName
-		},
-		data=configXml
-	)
+    # Add header to the config
+    configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
 
-	if r.status_code == 200:
-		# Success, send the jenkins job and start it right away.
-		startJobUrl = jenkinsUrl + "/job/" + jobName + "/build?delay=0sec"
+    # Send to Jenkins
+    r = requests.post(
+        jenkinsUrl + "/createItem",
+        headers={
+            'Content-Type': 'application/xml'
+        },
+        params={
+            'name': jobName
+        },
+        data=configXml
+    )
 
-		# But then redirect to job home to monitor job progress.
-		homeJobUrl = jenkinsUrl + "/job/" + jobName + "/"
+    if r.status_code == 200:
+        # Success, send the jenkins job and start it right away.
+        startJobUrl = jenkinsUrl + "/job/" + jobName + "/build?delay=0sec"
 
-		# Stays on the same page, after creating a new jenkins job.
-		return json.jsonify(status="ok", sjobUrl=startJobUrl, hjobUrl=homeJobUrl)
+        # But then redirect to job home to monitor job progress.
+        homeJobUrl = jenkinsUrl + "/job/" + jobName + "/"
 
-	return json.jsonify(status="failure", error="jenkins error")
+        # Stays on the same page, after creating a new jenkins job.
+        return {'status': 'ok', 'sjobUrl': startJobUrl, 'hjobUrl': homeJobUrl}
+
+    return {'status': 'failure', 'error': 'jenkins error'}
 
 def tagSortKey (tagName):
-	m = re.search(r'\d+(\.\d+)+', tagName)
-	if m:
-		return map(int, m.group().split('.'))
-	else:
-		return [0,0,0,0]
+    m = re.search(r'\d+(\.\d+)+', tagName)
+    if m:
+        return map(int, m.group().split('.'))
+    else:
+        return [0,0,0,0]
 
 if __name__ == "__main__":
-	p = argparse.ArgumentParser()
-	p.add_argument("-p", "--public",               action="store_true", help="specifies for the web server to listen over the public network, defaults to only listening on private localhost")
-	p.add_argument("-u", "--jenkinsURL",                                help="specifies the URL for the Jenkins server, defaults to '" + jenkinsUrl + "'")
-	p.add_argument("-n", "--jenkinsJobNamePrefix",                      help="specifies a string to prefix to the Jenkins job name, defaults to '" + jobNamePrefix + "'")
-	args = p.parse_args()
+    p = argparse.ArgumentParser()
+    p.add_argument("-p", "--public",               action="store_true", help="specifies for the web server to listen over the public network, defaults to only listening on private localhost")
+    p.add_argument("-u", "--jenkinsURL",                                help="specifies the URL for the Jenkins server, defaults to '" + jenkinsUrl + "'")
+    p.add_argument("-n", "--jenkinsJobNamePrefix",                      help="specifies a string to prefix to the Jenkins job name, defaults to '" + jobNamePrefix + "'")
+    args = p.parse_args()
 
-	if args.jenkinsURL:
-		jenkinsUrl = args.jenkinsURL
-	if args.jenkinsJobNamePrefix:
-		jobNamePrefix = args.jenkinsJobNamePrefix
+    if args.jenkinsURL:
+        jenkinsUrl = args.jenkinsURL
+    if args.jenkinsJobNamePrefix:
+        jobNamePrefix = args.jenkinsJobNamePrefix
 
-	if args.public:
-		app.run(debug = True, host='0.0.0.0')
-	else:
-		app.run(debug = True)
+    if args.public:
+        app.run(debug = True, host='0.0.0.0')
+    else:
+        app.run(debug = True)

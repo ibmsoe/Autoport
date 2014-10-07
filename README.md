@@ -4,8 +4,9 @@ Current Capabilities
  - Automatic selection for searches where it's obvious which package the user is looking for
  - Color coded repository properties to evaluate popularity and ease of porting
  - Graph of language composition
- - Attempts to infer build steps based on repository contents
- - Can add a job to Jenkins and fill in configuration values with one click
+ - Attempts to infer build and test steps based on repository contents
+ - Can add a job to Jenkins (currently adds x86 and LE jobs) and fill in configuration values with one click
+ - Allow the app to be able to pick from latest stable to latest release.
  - Caches repository data from GitHub API to reduce API usage and improve performance
 
 
@@ -16,6 +17,7 @@ Install [pip](https://pip.pypa.io/en/latest/installing.html) and then run these 
     pip install Flask
     pip install PyGithub
     pip install requests
+    pip argparse (not needed if Python >= 2.7)
 
 Running
 ========
@@ -86,7 +88,6 @@ Next Steps
 
 More Things to do
 ==========
-- Allow the app to be able to pick from latest stable to latest release.
 - Look into interpreted languages automation (they don't need to build so there should be an easy way to automate this right?)
 - Found a bug, the app doesn't actually sort by last updated correctly.
 - Recursively add project dependencies to jenkins if it is a maven project
