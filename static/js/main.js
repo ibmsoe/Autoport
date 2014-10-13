@@ -134,13 +134,15 @@ function processSearchResults(data) {
 }
 
 // Sets up and opens detail view for a repo
+// TODO - add check boxes for architectures wanted
 function showDetail(data) {
 	if(data.status !== "ok" || data.type !== "detail") {
 		console.log("Bad response while creating detail view!");
 	} else {
 		detailState.repo = data.repo;
 		detailState.repo.addToJenkins = function(e) {
-			$.post("/createJobs", {id: detailState.repo.id, tag: e.target.innerHTML}, addToJenkinsCallback, "json");
+			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, arch: "x86"}, addToJenkinsCallback, "json");
+			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, arch: "ppcle"}, addToJenkinsCallback, "json");
 		};
 		loadingState.loading = false;
 		detailState.ready = true;
@@ -164,13 +166,11 @@ function addToJenkinsCallback(data) {
     // TODO - need to take in a list of sjobUrls and hjobUrls and then iterate over the list
 	if(data.status === "ok") {
 		// Preempt the newly created jobs.
-		$.get(data.sjobUrlx86);
-        $.get(data.sjobUrlLE);
+		$.get(data.sjobUrl);
 		// Open new windows with the jobs' home pages
-		window.open(data.hjobUrlx86,'_blank');
-		window.open(data.hjobUrlLE,'_blank');
+		window.open(data.hjobUrl,'_blank');
 	} else {
-		console.log("Bad response from /createJobs!");
+		console.log("Bad response from /createJob!");
 		console.log(data);
 	}
 }

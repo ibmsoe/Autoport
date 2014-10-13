@@ -22,7 +22,7 @@ upload_folder = "./uploads/"
 app = Flask(__name__)
 github = Github("9294ace21922bf38fae227abaf3bc20cf0175b08")
 cache = Cache(github)
-nodes = {'x86': "soe04x", 'LE': "cit117"}
+nodes = {'x86': "x86", 'ppcle': "ppcle"}
 maxResults = 10
 
 # Main page - just serve up main.html
@@ -178,11 +178,11 @@ def uploadBatchFile():
 
     return json.jsonify(status="ok")
 
-# Create Job - takes a repo id and creates a Jenkins job for it
+# Create Job - takes a repo id, repo tag, and arch and creates a Jenkins job for it
 # Opens a new tab with a new jenkins job URL on the client side on success,
 # while the current tab stays in the same place.
-@app.route("/createJobs", methods=['GET', 'POST'])
-def createJobs():
+@app.route("/createJob", methods=['GET', 'POST'])
+def createJob():
     # Ensure we have a valid id number as a post argument
     try:
         idStr = request.form["id"]
@@ -195,26 +195,19 @@ def createJobs():
     except ValueError:
         return json.jsonify(status="failure",
             error="invalid id number")
-    
+
+    # Ensure we have a valid architecture as a post argument
+    try:
+        arch = request.form["arch"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing arch")
+
+    # Check to see if we have a valid tag number as a post argument    
     try:
         tag = request.form["tag"]
     except KeyError:
         tag = "Current"
-
-    # Create an x86 job
-    datax86 = createJob("x86", id, tag)
-    # Create an LE job
-    dataLE = createJob("LE", id, tag)
-        
-    # TODO - this is a bad way to do this, need to return a list, adding this for simplicity and to have something that works
-    if datax86['status'] == 'failure':
-            return json.jsonify(status="failure", error=datax86['error'])
-    elif dataLE['status'] == 'failure':
-            return json.jsonify(status="failure", error=dataLE['error'])
-    else:
-        return json.jsonify(status="ok", sjobUrlx86=datax86['sjobUrl'], hjobUrlx86=datax86['hjobUrl'], sjobUrlLE=dataLE['sjobUrl'], hjobUrlLE=dataLE['hjobUrl'])
-
-def createJob(arch, id, tag):
+    
     # Read template XML file
     tree = ET.parse("config_template.xml")
     root = tree.getroot()
@@ -239,9 +232,9 @@ def createJob(arch, id, tag):
     if arch == "x86":
         xml_node.text = nodes['x86']
         archName = "x86"
-    elif arch == "LE":
-        xml_node.text = nodes['LE']
-        archName = "LE"
+    elif arch == "ppcle":
+        xml_node.text = nodes['ppcle']
+        archName = "ppcle"
 
     xml_github_url.text = repo.html_url
     xml_git_url.text = "https" + repo.git_url[3:]
@@ -284,9 +277,9 @@ def createJob(arch, id, tag):
         homeJobUrl = jenkinsUrl + "/job/" + jobName + "/"
 
         # Stays on the same page, after creating a new jenkins job.
-        return {'status': 'ok', 'sjobUrl': startJobUrl, 'hjobUrl': homeJobUrl}
+        return json.jsonify(status = "ok", sjobUrl = startJobUrl, hjobUrl = homeJobUrl)
 
-    return {'status': 'failure', 'error': 'jenkins error'}
+    return json.jsonify(status = "failure", error = 'jenkins error')
 
 def tagSortKey (tagName):
     m = re.search(r'\d+(\.\d+)+', tagName)
