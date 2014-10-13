@@ -11,6 +11,7 @@ from github import Github
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
 from cache import Cache
+from os import path, makedirs
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
@@ -172,6 +173,9 @@ def uploadBatchFile():
         fileStr = request.form["file"]
     except KeyError:
         return json.jsonify(status="failure", error="missing file")
+
+    if not path.exists(upload_folder):
+        makedirs(upload_folder)
 
     f = open(upload_folder + "batch_file." + str(datetime.datetime.today()), "w")
     f.write(fileStr)

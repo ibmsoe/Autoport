@@ -31,22 +31,17 @@ def inferBuildSteps(listing, repo):
             }
         elif f.name == "pom.xml":
             # Get the readme
-            s = repo.get_readme().content.decode('base64', 'strict')
+            readmeStr = repo.get_readme().content.decode('base64', 'strict')
 
+            # Search for options related to maven
             opts = "MAVEN_OPTS" # maven options to look for
-            delim = "\n" # delimeter used to denote end of option
-            maven_export = "" # export command to be appended to the front of the build command
-
-            # Search the readme for opts
-            i = s.find(opts)
-
-            if i != -1:
-                # If opts found find the delimeter
-                j = s[i:].find(delim)
-
-                if j != -1:
-                    # If delimeter found store export command
-                    maven_export = "export " + s[i:][:j] + "; "
+            delim = ["`", "\n"] # delimeters used to denote end of option
+            strFound = buildFilesParser(readmeStr, opts, delim)
+            
+            if strFound != "":
+                maven_export = "export " + strFound + "; " # export command to be appended to the front of the build command
+            else:
+                maven_export = ""
                     
             return {
                 'build': maven_export + "mvn dependency:list -DexcludeTransitive > dependency_artifacts.txt; mvn clean compile",
@@ -57,3 +52,31 @@ def inferBuildSteps(listing, repo):
                 'success': True
             }
     return {'success': False}
+
+# Build Files Parser - Looks for string searchTerm in string fileBuf and then iterates over
+# list of delimeters and finds the one with the smallest index, returning the string found between the
+# two indices
+def buildFilesParser(fileBuf, searchTerm, delimeter):
+    # Get the length of the file     
+    lenFileBuf = len(fileBuf)
+
+    # Search the fileBuf for searchTerm
+    i = fileBuf.find(searchTerm)
+    
+    if i != -1:
+        smallestIndex = lenFileBuf # this is one bigger than the biggest index, acts as infinity
+        # If searchTerm found find the smallest index delimeter
+        for delim in delimeter:
+            if smallestIndex < lenFileBuf:
+                j = fileBuf[i:].find(delim, 0, smallestIndex)
+            else:
+                j = fileBuf[i:].find(delim)
+
+            if j != -1:
+                smallestIndex = j
+
+        # If smallest index is smaller than the length of the searchTerm we found a delimeter
+        if smallestIndex < lenFileBuf:
+            return fileBuf[i:][:smallestIndex]
+
+    return ""

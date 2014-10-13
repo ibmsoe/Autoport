@@ -10,7 +10,7 @@ var searchState = {
 	}
 };
 
-var fileUploadState = {
+var batchState = {
     upload: function (ev) {
         //Why do I need the [0] in the jQuery but not the getElementByID, those should be equivalent?
         //var file = document.getElementById('batch_file').files[0];
@@ -52,7 +52,7 @@ rivets.bind($('#searchBox'), {
 	searchState: searchState
 });
 rivets.bind($('#fileUploadBox'), {
-    fileUploadState: fileUploadState
+    batchState: batchState
 });
 // Multiple result alert box
 rivets.bind($('.multiple-alert'), {
