@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Porting Automation Tool</title>
+    <title>Autoport</title>
 
     <!-- Bootstrap -->
     <link href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}" rel="stylesheet">
@@ -22,29 +22,65 @@
   <body>
     <div class="container">
 
-    <!-- HEADER AND SEARCH BOX -->
+    <!-- HEADER -->
 
     <div class="jumbotron">
-      <h1>Porting Automation Tool</h1>
+      <h1>Autoport</h1>
       <p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
-      <p>You can also setup a basic Jenkins job for the project with one click.</p>
-      <h2>Search for a project</h2>
-      <div class="input-group" id="searchBox">
-        <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
-        <div class="input-group-btn">
-          <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
-          <ul class="dropdown-menu dropdown-menu-right" role="menu">
-            <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a href="#">Relevance</a></li>
-            <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Stars</a></li>
-            <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a href="#">Forks</a></li>
-            <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a href="#">Updated</a></li>
-          </ul>
-        </div>
-      </div>
+      <p>You can also setup a basic Jenkins job for the project with one click. </p>
+      <p>You also have the ability to create a batch file to process multiple projects with one click.</p>
     </div>
+    
+    <div class="jumbotron">
+        
+      <ul class="nav nav-tabs nav-justified">
+        <li class="active"><a data-toggle="tab" href="#searchProject">Search</a></li>
+        <li><a data-toggle="tab" href="#batchJobs">Batch Jobs</a></li>
+      </ul>
+
+      </br>
+
+      <div class="tab-content">
+        
+        <!-- SEARCH BOX -->
+        <div id="searchProject" class="tab-pane fade in active">
+          <div class="input-group" id="searchBox">
+            <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
+            <div class="input-group-btn">
+              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
+              <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a href="#">Relevance</a></li>
+                <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Stars</a></li>
+                <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a href="#">Forks</a></li>
+                <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a href="#">Updated</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- BATCH FILE PROCESSING-->
+        <div id="batchJobs" class="tab-pane fade">
+          
+          <div class="input-group" id="fileUploadBox">
+            <input type="text" class="form-control" placeholder="This will eventually show the currently selected file." id="filename"/>
+            <div class="input-group-btn">
+              <div class="btn btn-default btn-file">
+                Select File <input type="file" id="batch_file">
+              </div>
+            </div>
+            
+            <div class="input-group-btn">
+              <div rv-on-click="fileUploadState.upload" class="btn btn-default">
+                Upload
+              </div>
+            </div>
+          </div>
+          
+        </div>
+      </div> <!-- tab-content -->  
+    </div> <!-- jumbotron -->
 
     <!-- LOADING PANEL -->
-
     <div id="loadingPanel" class="panel panel-default" role="alert" rv-show="loadingState.loading">
       <div class="panel-body">
           <div class="spinner">

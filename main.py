@@ -5,6 +5,7 @@ import xml.etree.ElementTree as ET
 import requests
 import re
 import argparse
+import datetime
 from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
@@ -16,10 +17,12 @@ jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
 jobNamePrefix = "AutoPortTool"
 
 # Globals
+upload_folder = "./uploads/"
+
 app = Flask(__name__)
 github = Github("9294ace21922bf38fae227abaf3bc20cf0175b08")
 cache = Cache(github)
-nodes = {'x86':'soe04x', 'LE':'cit117'}
+nodes = {'x86': "soe04x", 'LE': "cit117"}
 maxResults = 10
 
 # Main page - just serve up main.html
@@ -160,6 +163,20 @@ def detail(id, repo=None):
     }
     # Send
     return json.jsonify(status="ok", repo=repoData, type="detail")
+
+
+# Upload Batch File - takes a file and uploads it to a permanent location (TBD)
+@app.route("/uploadBatchFile", methods=['GET', 'POST'])
+def uploadBatchFile():
+    try:
+        fileStr = request.form["file"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing file")
+
+    f = open(upload_folder + "batch_file." + str(datetime.datetime.today()), "w")
+    f.write(fileStr)
+
+    return json.jsonify(status="ok")
 
 # Create Job - takes a repo id and creates a Jenkins job for it
 # Opens a new tab with a new jenkins job URL on the client side on success,

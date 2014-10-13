@@ -9,6 +9,24 @@ var searchState = {
 		doSearch();
 	}
 };
+
+var fileUploadState = {
+    upload: function (ev) {
+        //Why do I need the [0] in the jQuery but not the getElementByID, those should be equivalent?
+        //var file = document.getElementById('batch_file').files[0];
+        var file = $('#batch_file')[0].files[0]; 
+        
+        if (file) {
+            var reader = new FileReader();
+            reader.readAsText(file);
+		
+            reader.onload = function(e) {
+                $.post("/uploadBatchFile", {file: e.target.result}, uploadBatchFileCallback, "json");
+            };	
+        }
+    }
+};
+
 // Contains state of loading view
 var loadingState = {
 	loading: false // Whether or not to draw this view
@@ -32,6 +50,9 @@ var detailState = {
 // Allows user to change sorting method
 rivets.bind($('#searchBox'), {
 	searchState: searchState
+});
+rivets.bind($('#fileUploadBox'), {
+    fileUploadState: fileUploadState
 });
 // Multiple result alert box
 rivets.bind($('.multiple-alert'), {
@@ -135,12 +156,16 @@ function showDetail(data) {
 	}
 }
 
+function uploadBatchFileCallback(data) {
+    console.log("In uploadBatchFileCallback");
+}
+
 function addToJenkinsCallback(data) {
     // TODO - need to take in a list of sjobUrls and hjobUrls and then iterate over the list
 	if(data.status === "ok") {
 		// Preempt the newly created jobs.
 		$.get(data.sjobUrlx86);
-        $.get(data.sjobUrlLE)
+        $.get(data.sjobUrlLE);
 		// Open new windows with the jobs' home pages
 		window.open(data.hjobUrlx86,'_blank');
 		window.open(data.hjobUrlLE,'_blank');
