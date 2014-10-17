@@ -147,5 +147,24 @@
 .nav-tabs > li.active > a:hover,
 .nav-tabs > li.active > a:focus {
     color: #000000;
-    background-color: #BBBBBB;  
+    background-color: #DDDDDD;  
 } 
+
+.tab-pane > .jumbotron {
+    margin-bottom: 10px;
+    background-color: #DDDDDD;  
+}
+
+.form-control[disabled],
+.form-control[readonly],
+fieldset[disabled] .form-control {
+  cursor: default;
+  background-color: #FFFFFF;
+  opacity: 1;
+}
+
+.jumbotron > h2 {
+    margin-top: -25px;
+    margin-bottom: 20px;
+    font-size: 20px;
+}

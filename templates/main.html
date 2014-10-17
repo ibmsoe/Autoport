@@ -44,40 +44,67 @@
         
         <!-- SEARCH BOX -->
         <div id="searchProject" class="tab-pane fade in active">
-          <div class="input-group" id="searchBox">
-            <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
-            <div class="input-group-btn">
-              <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
-              <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a href="#">Relevance</a></li>
-                <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Stars</a></li>
-                <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a href="#">Forks</a></li>
-                <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a href="#">Updated</a></li>
-              </ul>
+          <div class="jumbotron">
+            <h2 class="text-center">Search For Single Project</h2>
+            <div class="input-group" id="searchBox">
+              <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
+              <div class="input-group-btn">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
+                <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                  <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a href="#">Relevance</a></li>
+                  <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Stars</a></li>
+                  <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a href="#">Forks</a></li>
+                  <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a href="#">Updated</a></li>
+                </ul>
+              </div>
             </div>
-          </div>
+          </div> <!-- jumbotron -->
         </div>
 
         <!-- BATCH FILE PROCESSING-->
         <div id="batchJobs" class="tab-pane fade">
-          
-          <div class="input-group" id="fileUploadBox">
-            <input type="text" class="form-control" placeholder="This will eventually show the currently selected file." id="filename"/>
-            <div class="input-group-btn">
-              <div class="btn btn-default btn-file">
-                Select File <input type="file" id="batch_file">
+          <div class="jumbotron"> 
+            <h2 class="text-center">Upload Local File</h2>
+            <div class="input-group" id="fileUploadBox">
+              <input type="text" class="form-control" placeholder="No file selected for uploading." id="uploadFilename" disabled/>
+              <div class="input-group-btn">
+                <div class="btn btn-default btn-file">
+                  Select File <input type="file" id="batch_file">
+                </div>
               </div>
-            </div>
             
-            <div class="input-group-btn">
-              <div rv-on-click="batchState.upload" class="btn btn-default">
-                Upload
+              <div class="input-group-btn">
+                <div rv-on-click="batchState.upload" class="btn btn-default">
+                  Upload
+                </div>
               </div>
             </div>
-          </div>
-          
-        </div>
+          </div> <!-- jumbotron -->
+         
+          </br>
+ 
+          <div class="jumbotron"> 
+            <h2 class="text-center">Build And Test</h2>
+            <div class="input-group" id="buildAndTestBox">
+              <input type="text" class="form-control" placeholder="No batch file selected for processing." id="buildAndTestFilename" disabled/>
+              
+              <div class="input-group-btn">
+                <div rv-on-click="batchState.build" class="btn btn-default">
+                  Build
+                </div>
+              </div>
+            
+              <div class="input-group-btn">
+                <div rv-on-click="batchState.buildAndTest" class="btn btn-default">
+                  Build/Test
+                </div>
+              </div>
+            </div>
+          </div> <!-- jumbotron -->
+        
+        </div> <!-- tab-pane -->
       </div> <!-- tab-content -->  
+
     </div> <!-- jumbotron -->
 
     <!-- LOADING PANEL -->

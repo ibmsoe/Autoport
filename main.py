@@ -11,7 +11,7 @@ from github import Github
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
 from cache import Cache
-from os import path, makedirs
+from os import path, makedirs, walk
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
@@ -179,6 +179,7 @@ def uploadBatchFile():
 
     f = open(upload_folder + "batch_file." + str(datetime.datetime.today()), "w")
     f.write(fileStr)
+    f.close()
 
     return json.jsonify(status="ok")
 
@@ -186,31 +187,39 @@ def uploadBatchFile():
 # Opens a new tab with a new jenkins job URL on the client side on success,
 # while the current tab stays in the same place.
 @app.route("/createJob", methods=['GET', 'POST'])
-def createJob():
+def createJob(i_id = None, i_tag = None, i_arch = None):
     # Ensure we have a valid id number as a post argument
     try:
         idStr = request.form["id"]
-    except KeyError:
-        return json.jsonify(status="failure",
-            error="missing repo id")
+    
+        try:
+            id = int(idStr)
+        except ValueError:
+            return json.jsonify(status="failure", error="invalid id number")
 
-    try:
-        id = int(idStr)
-    except ValueError:
-        return json.jsonify(status="failure",
-            error="invalid id number")
+    except KeyError:
+        if i_id != None:
+            id = i_id
+        else:
+            return json.jsonify(status="failure", error="missing repo id")
 
     # Ensure we have a valid architecture as a post argument
     try:
         arch = request.form["arch"]
     except KeyError:
-        return json.jsonify(status="failure", error="missing arch")
+        if i_arch != None:
+            arch = i_arch
+        else:
+            return json.jsonify(status="failure", error="missing arch")
 
     # Check to see if we have a valid tag number as a post argument    
     try:
         tag = request.form["tag"]
     except KeyError:
-        tag = "Current"
+        if i_tag != None:
+            tag = i_tag
+        else:
+            tag = "Current"
     
     # Read template XML file
     tree = ET.parse("config_template.xml")
@@ -284,6 +293,43 @@ def createJob():
         return json.jsonify(status = "ok", sjobUrl = startJobUrl, hjobUrl = homeJobUrl)
 
     return json.jsonify(status = "failure", error = 'jenkins error')
+
+# Run Batch File - takes a batch file name and runs it
+@app.route("/runBatchFile", methods=["GET", "POST"])
+def runBatchFile ():
+    # Get the batch file name from POST
+    try:
+        bName = request.form["batchName"]
+    except KeyError:
+        return json.jsonify(status="failure",
+            error="missing batch file name")
+
+    # TODO - actually open the correct file, right now the user can't select a file
+    # so were just going to use the first file in the uploads directory
+
+    batchName = ""
+    for dirname, dirnames, filenames in walk(upload_folder):
+        for filename in sorted(filenames):
+            batchName = filename
+            break
+
+    if batchName != "":
+        # Read in the file and store as JSON
+        f = open(upload_folder + batchName)
+        fileBuf = json.load(f)
+        f.close()
+
+        for package in fileBuf['packages']:
+            p_repo = github.get_repo(package['id'])
+            tag = package['tag']
+            print str(p_repo) + " " + tag
+            createJob(package['id'], package['tag'], "x86")
+            createJob(package['id'], package['tag'], "ppcle")
+
+    else:
+        return json.jsonify(status = "failure", error = "could not find file")
+
+    return json.jsonify(status = "ok")
 
 def tagSortKey (tagName):
     m = re.search(r'\d+(\.\d+)+', tagName)

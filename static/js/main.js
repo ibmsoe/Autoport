@@ -24,6 +24,13 @@ var batchState = {
                 $.post("/uploadBatchFile", {file: e.target.result}, uploadBatchFileCallback, "json");
             };	
         }
+    },
+    build: function (ev) {
+        console.log("In batchState.build");
+    },
+    buildAndTest: function (ev) { 
+        console.log("In batchState.buildAndTest");
+	    $.post("/runBatchFile", {batchName: ""}, runBatchFileCallback, "json");
     }
 };
 
@@ -52,6 +59,9 @@ rivets.bind($('#searchBox'), {
 	searchState: searchState
 });
 rivets.bind($('#fileUploadBox'), {
+    batchState: batchState
+});
+rivets.bind($('#buildAndTestBox'), {
     batchState: batchState
 });
 // Multiple result alert box
@@ -107,6 +117,11 @@ function doSearch(autoselect) {
 // When the query textbox is changed, do a search
 $('#query').change(doSearch);
 
+$('#batch_file').change(function () {
+    console.log("Changed");
+    $('#uploadFilename').val("File selected:  " + $('#batch_file').val());
+});
+
 // Callback for when we recieve data from a search query request
 function processSearchResults(data) {
 	if(data.status !== "ok") {
@@ -160,6 +175,10 @@ function showDetail(data) {
 
 function uploadBatchFileCallback(data) {
     console.log("In uploadBatchFileCallback");
+}
+
+function runBatchFileCallback(data) {
+    console.log("In runBatchFileCallback");
 }
 
 function addToJenkinsCallback(data) {
