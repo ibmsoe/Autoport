@@ -38,7 +38,7 @@
         <li><a data-toggle="tab" href="#batchJobs">Batch Jobs</a></li>
       </ul>
 
-      </br>
+      <br />
 
       <div class="tab-content">
         
@@ -74,14 +74,14 @@
               </div>
             
               <div class="input-group-btn">
-                <div rv-on-click="batchState.upload" class="btn btn-default">
+                <div rv-on-click="batchState.upload" class="btn btn-primary">
                   Upload
                 </div>
               </div>
             </div>
           </div> <!-- jumbotron -->
          
-          </br>
+          <br />
  
           <div class="jumbotron"> 
             <h2 class="text-center">Build And Test</h2>
@@ -89,22 +89,87 @@
               <input type="text" class="form-control" placeholder="No batch file selected for processing." id="buildAndTestFilename" disabled/>
               
               <div class="input-group-btn">
-                <div rv-on-click="batchState.build" class="btn btn-default">
+                <div rv-on-click="batchState.build" class="btn btn-primary">
                   Build
                 </div>
               </div>
             
               <div class="input-group-btn">
-                <div rv-on-click="batchState.buildAndTest" class="btn btn-default">
+                <div rv-on-click="batchState.buildAndTest" class="btn btn-primary">
                   Build/Test
                 </div>
               </div>
             </div>
           </div> <!-- jumbotron -->
-        
+
+          <br />
+
+          <div class="jumbotron">
+            <h2 class="text-center">Generate Batch File</h2>
+            <div id="generateBox">
+              <div class="row">
+                <div class="col-lg-4">
+                  <div class="input-group">
+                    <span class="input-group-addon">Top</span>
+                    <input type="number" class="form-control" rv-value="batchState.query.limit">
+                    <span class="input-group-addon">Repositories</span>
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <div class="input-group">
+                    <span class="input-group-addon">Using</span>
+                    <select class="form-control" rv-value="batchState.query.sort">
+                      <option value="stars">Stars</option>
+                      <option value="forks">Forks</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <select class="form-control" rv-value="batchState.query.language">
+                    <option value="any">Any programming language</option>
+                    <option value="java">Java</option>
+                    <option value="python">Python</option>
+                    <option value="javascript">JavaScript</option>
+                    <option value="ruby">Ruby</option>
+                    <option value="c">C</option>
+                    <option value="c++">C++</option>
+                  </select>
+                </div>
+              </div>
+              <br />
+              <div class="row">
+                <div class="col-lg-3">
+                  <select class="form-control" rv-value="batchState.query.version">
+                    <option value="current">Current</option>
+                    <option value="recent">Recent release</option>
+                  </select>
+                </div>
+                <div class="col-lg-3">
+                  <div class="input-group">
+                    <span class="input-group-addon">></span>
+                    <input type="number" class="form-control" rv-value="batchState.query.stars">
+                    <span class="input-group-addon">Stars</span>
+                  </div>
+                </div>
+                <div class="col-lg-3">
+                  <div class="input-group">
+                    <span class="input-group-addon">></span>
+                    <input type="number" class="form-control" rv-value="batchState.query.forks">
+                    <span class="input-group-addon">Forks</span>
+                  </div>
+                </div>
+                <div class="col-lg-3">
+                  <button class="btn btn-primary" rv-on-click="batchState.query.generate">Generate Batch File</button>
+                </div>
+              </div>
+              <br />
+            </div>
+            <br />
+            <textarea id="batchFileTextArea" class="form-control" rows="20"></textarea>
+          </div> <!-- jumbotron -->
+
         </div> <!-- tab-pane -->
       </div> <!-- tab-content -->  
-
     </div> <!-- jumbotron -->
 
     <!-- LOADING PANEL -->

@@ -125,24 +125,8 @@ def detail(id, repo=None):
     build = inferBuildSteps(cache.getDir(repo), repo) # buildAnalyzer.py
     # Collect data
 
-    # Get list of tag names
-    tags = []
-    try:
-        for tag in cache.getTags(repo):
-            tags.append(tag.name)
-    except TypeError:
-        # PyGithub issue #278: Iterating through repo.get_tags() throws
-        # NoneType TypeError for repositories with lots of tags:
-        # https://github.com/jacquev6/PyGithub/issues/278
-        print "ERROR: PyGithub threw a TypeError while iterating through tags"
-    tags.sort(key=tagSortKey, reverse=True)
-
-    if (not tags) or (len(tags) < 1):
-        recentTag, tags = "",      ""
-    elif len(tags) == 1:
-        recentTag, tags = tags[0], ""
-    else:
-        recentTag, tags = tags[0], tags[1:]
+    # Get tag-related data
+    tags, recentTag = getTags(repo)
 
     repoData = {
         "id": repo.id,
@@ -165,6 +149,48 @@ def detail(id, repo=None):
     # Send
     return json.jsonify(status="ok", repo=repoData, type="detail")
 
+# Search repositories - return JSON search results for the GitHub
+# /search/repositories API call. See the following for details:
+#   https://developer.github.com/v3/search/
+@app.route("/search/repositories")
+def search_repositories():
+    # GitHub API parameters
+    q     = request.args.get("q",     "")
+    sort  = request.args.get("sort",  "stars")
+    order = request.args.get("order", "desc")
+
+    # AutoPort parameters
+    limit   = int(request.args.get("limit",   "25"))
+    version =     request.args.get("version", "current")
+
+    repositories = []
+    # TODO: debug-log parameters
+    for repo in github.search_repositories(q, sort=sort, order=order)[:limit]:
+        r = {
+            "id":   repo.id,
+            "name": repo.full_name
+        }
+
+        # add tag element
+        if version == "recent":
+            # TODO: this won't scale, we should get tags in another request
+            tags, recentTag = getTags(repo)
+            if recentTag:
+                r['tag'] = recentTag
+            else:
+                r['tag'] = "current"
+        else:
+            r['tag'] = "current"
+
+        repositories.append(r)
+
+    config = {
+        "general": {},
+        "java":    {},
+        "python":  {}
+    }
+
+    return json.jsonify(config=config, repositories=repositories)
 
 # Upload Batch File - takes a file and uploads it to a permanent location (TBD)
 @app.route("/uploadBatchFile", methods=['GET', 'POST'])
@@ -331,6 +357,29 @@ def runBatchFile ():
 
     return json.jsonify(status = "ok")
 
+# Get list of tag names
+def getTags (repo):
+    tags = []
+    try:
+        for tag in cache.getTags(repo):
+            tags.append(tag.name)
+    except TypeError:
+        # PyGithub issue #278: Iterating through repo.get_tags() throws
+        # NoneType TypeError for repositories with lots of tags:
+        # https://github.com/jacquev6/PyGithub/issues/278
+        print "ERROR: PyGithub threw a TypeError while iterating through tags"
+    tags.sort(key=tagSortKey, reverse=True)
+
+    if (not tags) or (len(tags) < 1):
+        recentTag, tags = "",      ""
+    elif len(tags) == 1:
+        recentTag, tags = tags[0], ""
+    else:
+        recentTag, tags = tags[0], tags[1:]
+
+    return (tags, recentTag)
+
+# Sort tag names
 def tagSortKey (tagName):
     m = re.search(r'\d+(\.\d+)+', tagName)
     if m:

@@ -31,6 +31,40 @@ var batchState = {
     buildAndTest: function (ev) { 
         console.log("In batchState.buildAndTest");
 	    $.post("/runBatchFile", {batchName: ""}, runBatchFileCallback, "json");
+    },
+    query: {
+        limit:    25,
+        sort:     "stars",
+        language: "any",
+        version:  "current",
+        stars:    0,
+        forks:    0,
+        generate: function (ev) {
+            console.log("limit    = " + batchState.query.limit);
+            console.log("sort     = " + batchState.query.sort);
+            console.log("language = " + batchState.query.language);
+            console.log("version  = " + batchState.query.version);
+            console.log("stars    = " + batchState.query.stars);
+            console.log("forks    = " + batchState.query.forks);
+
+            // TODO: remove redundant query qualifiers (stars/forks == 0)
+            var data = {
+                // GitHub API parameters
+                q:       " stars:>" + batchState.query.stars +
+                         " forks:>" + batchState.query.forks +
+                         (batchState.query.language == "any" ? "" : (" language:" + batchState.query.language)),
+                sort:    batchState.query.sort,
+
+                // AutoPort parameters
+                limit:   batchState.query.limit,
+                version: batchState.query.version
+            };
+
+            console.log(data);
+            $.getJSON("/search/repositories", data, function(data, textStatus, jqXHR) {
+                document.getElementById('batchFileTextArea').value = JSON.stringify(data, undefined, 4);
+            });
+        }
     }
 };
 
@@ -62,6 +96,9 @@ rivets.bind($('#fileUploadBox'), {
     batchState: batchState
 });
 rivets.bind($('#buildAndTestBox'), {
+    batchState: batchState
+});
+rivets.bind($('#generateBox'), {
     batchState: batchState
 });
 // Multiple result alert box
