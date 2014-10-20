@@ -90,6 +90,11 @@
     float: right;
 }
 
+.radioRight {
+    float: right;
+    margin-left: 5px;
+}
+
 .fatLabel {
     font-size: 14px;
 }

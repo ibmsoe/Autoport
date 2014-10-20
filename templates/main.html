@@ -261,14 +261,24 @@
       <div class="panel-body">
         <h1>
           <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
-          /
+           / 
           <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
           <div class="dropdown">
+
+            <!-- Radio buttons for choosing what kind of java to use. -->
+            <div class="btn-group radioRight" id="radio1" data-toggle="buttons">
+              <label class="btn btn-primary active" rv-on-click="detailState.selectJavaType">
+                <input type="radio" name="options" id="option1" checked> Open JDK
+              </label>
+              <label class="btn btn-primary" rv-on-click="detailState.selectJavaType">
+                <input type="radio" name="options" id="option2"> IBM Java
+              </label>
+            </div>
+
             <button class="btn btn-primary dropdown-toggle buttonRight" type="button" id="dropdownMenu1" data-toggle="dropdown">
               Add to Jenkins
               <span class="caret"></span>
             </button>
-
             <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="dropdownMenu1">
               <li role="presentation" class="dropdown-header">Recent</li>
               <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">Current</a></li>
@@ -277,6 +287,7 @@
               <li role="presentation" class="dropdown-header">Older</li>
               <li role="presentation" rv-each-tag="detailState.repo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ tag }</a></li>
             </ul>
+
           </div>
         </h1>
         <span title="Star count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.stars">

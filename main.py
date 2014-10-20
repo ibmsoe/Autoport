@@ -217,7 +217,6 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
     # Ensure we have a valid id number as a post argument
     try:
         idStr = request.form["id"]
-    
         try:
             id = int(idStr)
         except ValueError:
@@ -257,7 +256,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
     xml_build_command = root.find("./builders/hudson.tasks.Shell/command")
     xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
     xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
-    xml_dependency_artifact = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
+    xml_artifacts = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
     xml_node = root.find("./assignedNode")
 
     # Get repository
@@ -268,12 +267,27 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
 
     # Modify selected elements
     archName = ""
+    javaType = ""
     if arch == "x86":
         xml_node.text = nodes['x86']
         archName = "x86"
+        # Get javaType
+        try:
+            javaType = request.form["javaTypex86"]
+        # defaults to open JDK
+        except KeyError:
+            return json.jsonify(status="failure", error="missing java type")
+
     elif arch == "ppcle":
         xml_node.text = nodes['ppcle']
         archName = "ppcle"
+
+        # Get javaType
+        try:
+            javaType = request.form["javaTypeLE"]
+        # defaults to open JDK
+        except KeyError:
+            return json.jsonify(status="failure", error="missing java type")
 
     xml_github_url.text = repo.html_url
     xml_git_url.text = "https" + repo.git_url[3:]
@@ -291,7 +305,11 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
         xml_build_command.text = build['build']
         xml_test_command.text = build['test']
         xml_env_command.text = build['env']
-        xml_dependency_artifact.text = build['dependency']
+        xml_artifacts.text = build['artifacts']
+
+    # In addition to whatever other environmental variables I need to inject
+    # I should add whether to pick IBM Java or Open JDK
+    xml_env_command.text += javaType
 
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
@@ -314,6 +332,9 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
 
         # But then redirect to job home to monitor job progress.
         homeJobUrl = jenkinsUrl + "/job/" + jobName + "/"
+
+        # Start Jenkins job
+        requests.get(startJobUrl)
 
         # Stays on the same page, after creating a new jenkins job.
         return json.jsonify(status = "ok", sjobUrl = startJobUrl, hjobUrl = homeJobUrl)

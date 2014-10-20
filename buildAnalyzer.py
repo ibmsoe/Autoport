@@ -7,7 +7,7 @@ def inferBuildSteps(listing, repo):
                 'build': "./build.sh",
                 'test' : "make all",
                 'env' : "",
-                'dependency': "", 
+                'artifacts': "", 
                 'reason': "build.sh",
                 'success': True
             }
@@ -16,7 +16,7 @@ def inferBuildSteps(listing, repo):
                 'build': "./configure; make",
                 'test' : "make all",
                 'env' : "",
-                'dependency': "", 
+                'artifacts': "", 
                 'reason': "Makefile",
                 'success': True
             }
@@ -25,7 +25,7 @@ def inferBuildSteps(listing, repo):
                 'build': "ant",
                 'test' : "",
                 'env' : "",
-                'dependency': "",
+                'artifacts': "",
                 'reason': "build.xml",
                 'success': True
             }
@@ -45,9 +45,9 @@ def inferBuildSteps(listing, repo):
                     
             return {
                 'build': maven_export + "mvn dependency:list -DexcludeTransitive > dependency_artifacts.txt; mvn clean compile",
-                'test' : "mvn test -fn",
-                'env' : 'JAVA_HOME=/opt/ibm/java-ppc64le-71',
-                'dependency': "dependency_artifacts.txt",
+                'test' : "mvn test -fn > test_result_artifacts.txt",
+                'env' : '',
+                'artifacts': "*_artifacts.txt",
                 'reason': "pom.xml",
                 'success': True
             }
