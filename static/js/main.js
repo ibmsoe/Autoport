@@ -39,6 +39,10 @@ var batchState = {
         version:  "current",
         stars:    0,
         forks:    0,
+        upload: function (ev) {
+            var data = document.getElementById('batchFileTextArea').value;
+            $.post("/uploadBatchFile", {file: data}, uploadBatchFileCallback, "json");
+        },
         generate: function (ev) {
             console.log("limit    = " + batchState.query.limit);
             console.log("sort     = " + batchState.query.sort);
