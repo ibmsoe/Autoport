@@ -4,6 +4,7 @@ def inferBuildSteps(listing, repo):
     for f in listing:
         if f.name == "build.sh":
             return {
+                'build system': "custom build script",
                 'build': "./build.sh",
                 'test' : "make all",
                 'env' : "",
@@ -13,6 +14,7 @@ def inferBuildSteps(listing, repo):
             }
         elif f.name == "Makefile":
             return {
+                'build system': "make",
                 'build': "./configure; make",
                 'test' : "make all",
                 'env' : "",
@@ -22,6 +24,7 @@ def inferBuildSteps(listing, repo):
             }
         elif f.name == "build.xml":
             return {
+                'build system': "ant",
                 'build': "ant",
                 'test' : "",
                 'env' : "",
@@ -44,10 +47,11 @@ def inferBuildSteps(listing, repo):
                 maven_export = ""
                     
             return {
-                'build': maven_export + "mvn dependency:list -DexcludeTransitive > dependency_artifacts.txt; mvn clean compile",
-                'test' : "mvn test -fn > test_result_artifacts.txt",
+                'build system': "maven",
+                'build': maven_export + "mvn dependency:list -DexcludeTransitive > dependency.arti; mvn clean compile",
+                'test' : "mvn test -fn > test_result.arti",
                 'env' : '',
-                'artifacts': "*_artifacts.txt",
+                'artifacts': "*.arti",
                 'reason': "pom.xml",
                 'success': True
             }
