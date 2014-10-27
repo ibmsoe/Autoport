@@ -6,6 +6,7 @@ import requests
 import re
 import argparse
 import datetime
+from time import gmtime, strftime
 from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
@@ -257,7 +258,10 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
     xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
     xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
     xml_artifacts = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
+    xml_catalog_remote = root.find("./publishers/jenkins.plugins.publish__over__ssh.BapSshPublisherPlugin/delegate/publishers/jenkins.plugins.publish__over__ssh.BapSshPublisher/transfers/jenkins.plugins.publish__over__ssh.BapSshTransfer/remoteDirectory")
+    xml_catalog_source = root.find("./publishers/jenkins.plugins.publish__over__ssh.BapSshPublisherPlugin/delegate/publishers/jenkins.plugins.publish__over__ssh.BapSshPublisher/transfers/jenkins.plugins.publish__over__ssh.BapSshTransfer/sourceFiles")
     xml_node = root.find("./assignedNode")
+    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
     # Get repository
     repo = cache.getRepo(id)
@@ -301,15 +305,37 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
         xml_default_branch.text = "tags/" + tag
         jobName += "-" + tag
 
+    # Time job is created
+    time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+
+    # Name of new Folder
+    jobFolder = jobName + "." + time
+
     if build['success']:
         xml_build_command.text = build['build']
         xml_test_command.text = build['test']
         xml_env_command.text = build['env']
-        xml_artifacts.text = build['artifacts']
 
-    # In addition to whatever other environmental variables I need to inject
-    # I should add whether to pick IBM Java or Open JDK
-    xml_env_command.text += javaType
+        # In addition to whatever other environmental variables I need to inject
+        # I should add whether to pick IBM Java or Open JDK
+        xml_env_command.text += javaType
+
+        xml_artifacts.text = build['artifacts']
+        xml_catalog_remote.text += jobFolder
+        xml_catalog_source.text = build['artifacts']
+
+        # Job metadata as passed to jenkins
+        jobMetadataName = "meta.arti"
+        jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Build System\":\"" + build['build system'] + "\", \"Architecture\": \"" + arch + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
+
+        # add parameters information
+        i = 1
+        for param in xml_parameters:
+            if i == 1:
+                param.text = jobMetadataName
+            elif i == 2:
+                param.text = jobMetadata
+            i += 1
 
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
@@ -327,8 +353,9 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
     )
 
     if r.status_code == 200:
+
         # Success, send the jenkins job and start it right away.
-        startJobUrl = jenkinsUrl + "/job/" + jobName + "/build?delay=0sec"
+        startJobUrl = jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
 
         # But then redirect to job home to monitor job progress.
         homeJobUrl = jenkinsUrl + "/job/" + jobName + "/"
@@ -346,20 +373,10 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
 def runBatchFile ():
     # Get the batch file name from POST
     try:
-        bName = request.form["batchName"]
+        batchName = request.form["batchName"]
     except KeyError:
-        return json.jsonify(status="failure",
-            error="missing batch file name")
-
-    # TODO - actually open the correct file, right now the user can't select a file
-    # so were just going to use the first file in the uploads directory
-
-    batchName = ""
-    for dirname, dirnames, filenames in walk(upload_folder):
-        for filename in sorted(filenames):
-            batchName = filename
-            break
-
+        return json.jsonify(status="failure", error="missing batch file name")
+   
     if batchName != "":
         # Read in the file and store as JSON
         f = open(upload_folder + batchName)
@@ -369,7 +386,6 @@ def runBatchFile ():
         for package in fileBuf['packages']:
             p_repo = github.get_repo(package['id'])
             tag = package['tag']
-            print str(p_repo) + " " + tag
             createJob(package['id'], package['tag'], "x86")
             createJob(package['id'], package['tag'], "ppcle")
 
@@ -377,6 +393,16 @@ def runBatchFile ():
         return json.jsonify(status = "failure", error = "could not find file")
 
     return json.jsonify(status = "ok")
+
+@app.route("/listBatchFiles", methods=["GET", "POST"])
+def listBatchFiles ():
+    file_list = []
+
+    for dirname, dirnames, filenames in walk(upload_folder):
+        for filename in sorted(filenames):
+            file_list.append(filename)
+
+    return json.jsonify(status = "ok", files = file_list)
 
 # Get list of tag names
 def getTags (repo):

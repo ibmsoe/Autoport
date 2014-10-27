@@ -103,6 +103,19 @@
           </div> <!-- jumbotron -->
 
           <br />
+          
+          <div class="jumbotron"> 
+            <h2 class="text-center">List Batch Files</h2>
+              
+            <div id="listBox">
+              <div rv-on-click="batchState.listBatchFiles" class="btn btn-primary">
+                List
+              </div>
+            </div>
+            
+          </div> <!-- jumbotron -->
+
+          </br>
 
           <div class="jumbotron">
             <h2 class="text-center">Generate Batch File</h2>
@@ -138,31 +151,36 @@
               </div>
               <br />
               <div class="row">
-                <div class="col-lg-3">
+                <div class="col-lg-4">
                   <select class="form-control" rv-value="batchState.query.version">
                     <option value="current">Current</option>
                     <option value="recent">Recent release</option>
                   </select>
                 </div>
-                <div class="col-lg-3">
+                <div class="col-lg-4">
                   <div class="input-group">
                     <span class="input-group-addon">></span>
                     <input type="number" class="form-control" rv-value="batchState.query.stars">
                     <span class="input-group-addon">Stars</span>
                   </div>
                 </div>
-                <div class="col-lg-3">
+                <div class="col-lg-4">
                   <div class="input-group">
                     <span class="input-group-addon">></span>
                     <input type="number" class="form-control" rv-value="batchState.query.forks">
                     <span class="input-group-addon">Forks</span>
                   </div>
                 </div>
-                <div class="col-lg-3">
-                  <button class="btn btn-primary" rv-on-click="batchState.query.generate">Generate Batch File</button>
-                </div>
               </div>
               <br />
+              <div class="row">
+                <div class="col-lg-2">
+                  <button class="btn btn-primary" rv-on-click="batchState.query.generate">Generate Batch File</button>
+                </div>
+                <div class="col-lg-2">
+                  <button class="btn btn-primary" rv-on-click="batchState.query.upload">Upload Batch File</button>
+                </div>
+              </div>
             </div>
             <br />
             <textarea id="batchFileTextArea" class="form-control" rows="20"></textarea>
