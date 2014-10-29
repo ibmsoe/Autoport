@@ -373,20 +373,10 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
 def runBatchFile ():
     # Get the batch file name from POST
     try:
-        bName = request.form["batchName"]
+        batchName = request.form["batchName"]
     except KeyError:
-        return json.jsonify(status="failure",
-            error="missing batch file name")
-
-    # TODO - actually open the correct file, right now the user can't select a file
-    # so were just going to use the first file in the uploads directory
-
-    batchName = ""
-    for dirname, dirnames, filenames in walk(upload_folder):
-        for filename in sorted(filenames):
-            batchName = filename
-            break
-
+        return json.jsonify(status="failure", error="missing batch file name")
+   
     if batchName != "":
         # Read in the file and store as JSON
         f = open(upload_folder + batchName)
@@ -396,7 +386,6 @@ def runBatchFile ():
         for package in fileBuf['packages']:
             p_repo = github.get_repo(package['id'])
             tag = package['tag']
-            print str(p_repo) + " " + tag
             createJob(package['id'], package['tag'], "x86")
             createJob(package['id'], package['tag'], "ppcle")
 
@@ -404,6 +393,16 @@ def runBatchFile ():
         return json.jsonify(status = "failure", error = "could not find file")
 
     return json.jsonify(status = "ok")
+
+@app.route("/listBatchFiles", methods=["GET", "POST"])
+def listBatchFiles ():
+    file_list = []
+
+    for dirname, dirnames, filenames in walk(upload_folder):
+        for filename in sorted(filenames):
+            file_list.append(filename)
+
+    return json.jsonify(status = "ok", files = file_list)
 
 # Get list of tag names
 def getTags (repo):

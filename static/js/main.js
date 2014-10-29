@@ -11,6 +11,14 @@ var searchState = {
 };
 
 var batchState = {
+    currentBatchFile: "",
+    selectBatchFile: function (ev) {
+        batchState.currentBatchFile = $(ev.target).text();
+        console.log(batchState.currentBatchFile);
+    },
+    listBatchFiles: function (ev) {
+	    $.post("/listBatchFiles", {}, listBatchFilesCallback, "json");
+    },
     upload: function (ev) {
         //Why do I need the [0] in the jQuery but not the getElementByID, those should be equivalent?
         //var file = document.getElementById('batch_file').files[0];
@@ -30,7 +38,7 @@ var batchState = {
     },
     buildAndTest: function (ev) { 
         console.log("In batchState.buildAndTest");
-	    $.post("/runBatchFile", {batchName: ""}, runBatchFileCallback, "json");
+	    $.post("/runBatchFile", {batchName: batchState.currentBatchFile}, runBatchFileCallback, "json");
     },
     query: {
         limit:    25,
@@ -107,6 +115,9 @@ var detailState = {
 
 // Rivets.js bindings
 // Allows user to change sorting method
+rivets.bind($('#listBox'), {
+	batchState: batchState
+});
 rivets.bind($('#searchBox'), {
 	searchState: searchState
 });
@@ -173,7 +184,6 @@ function doSearch(autoselect) {
 $('#query').change(doSearch);
 
 $('#batch_file').change(function () {
-    console.log("Changed");
     $('#uploadFilename').val("File selected:  " + $('#batch_file').val());
 });
 
@@ -234,6 +244,21 @@ function uploadBatchFileCallback(data) {
 
 function runBatchFileCallback(data) {
     console.log("In runBatchFileCallback");
+}
+
+function listBatchFilesCallback(data) {
+    if(data.status === "ok") {
+        var file_list = data.files;
+    
+        for(var i = 0; i < file_list.length; i++) {
+            $("#listBox").append("<div rv-on-click=\"batchState.selectBatchFile\"" + 
+                "class=\"btn btn-primary list-batch-btn\">" + file_list[i] + "</div>");
+        }
+        
+        rivets.bind($('.list-batch-btn'), {
+            batchState: batchState
+        });
+    }
 }
 
 function addToJenkinsCallback(data) {
