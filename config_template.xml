@@ -95,7 +95,7 @@
             <verbose>false</verbose>
             <transfers>
               <jenkins.plugins.publish__over__ssh.BapSshTransfer>
-                <remoteDirectory>/projects/p/powersoe/autoport/catalog/</remoteDirectory>
+                <remoteDirectory></remoteDirectory>
                 <sourceFiles></sourceFiles>
                 <excludes/>
                 <removePrefix/>

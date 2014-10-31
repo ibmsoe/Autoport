@@ -90,6 +90,7 @@
     float: right;
 }
 
+/* Radio button styling*/
 .radioRight {
     float: right;
     margin-left: 5px;
@@ -172,4 +173,20 @@ fieldset[disabled] .form-control {
     margin-top: -25px;
     margin-bottom: 20px;
     font-size: 20px;
+}
+
+/* Modal Styling*/
+.modalButton {
+    float: right;
+}
+
+.modalAttributes span {
+    display: block;
+    overflow: hidden;
+    padding-right: 4px;
+    padding-bottom: 8px;
+}
+
+.modalAttributes span input {
+    width: 100%;
 }

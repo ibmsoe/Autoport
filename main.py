@@ -17,13 +17,16 @@ from os import path, makedirs, walk, getcwd
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
+gsaPathForCatalog = "/projects/p/powersoe/autoport/test_results/"
+gsaPathForUpload = "/projects/p/powersoe/autoport/batch_files/"
+githubToken = "9294ace21922bf38fae227abaf3bc20cf0175b08"
 jobNamePrefix = "AutoPortTool"
 
 # Globals
-upload_folder = "./uploads/"
+upload_folder = "./batch_files/"
 
 app = Flask(__name__)
-github = Github("9294ace21922bf38fae227abaf3bc20cf0175b08")
+github = Github(githubToken)
 cache = Cache(github)
 nodes = {'x86': "x86", 'ppcle': "ppcle"}
 maxResults = 10
@@ -32,6 +35,39 @@ maxResults = 10
 @app.route("/")
 def main():
     return render_template("main.html")
+
+# Settings function
+@app.route("/settings", methods=['POST'])
+def settings():
+    try:
+        jenkinsUrl = request.form["url"]
+    except ValueError:
+        return json.jsonify(status="failure", error="bad url")
+
+    try:
+        gsaPathForCatalog = request.form["test_results"]
+    except ValueError:
+        return json.jsonify(status="failure", error="bad test_results path")
+
+    try:
+        gsaPathForUpload = request.form["batch_files"]
+    except ValueError:
+        return json.jsonify(status="failure", error="bad batch_files path")
+
+    try:
+        # change githubToken from default, doesn't actually work right now
+        githubToken = request.form["github"]
+        # github = Github(githubToken)
+        # cache = Cache(github)
+    except ValueError:
+        return json.jsonify(status="failure", error="bad github token")
+
+    print jenkinsUrl
+    print gsaPathForCatalog
+    print gsaPathForUpload
+    print githubToken
+
+    return json.jsonify(status="ok")
 
 # Search - return a JSON file with search results or the matched
 # repo if there's a solid candidate
@@ -215,20 +251,15 @@ def uploadBatchFile():
     # Copy batch file to a predetermined spot in the GSA 
     # This portion of code requires paramiko installed.
     hostname = "ausgsa.ibm.com"
-    
-    username = ""
-    password = ""
-
-    # username = "jenkin01"
-    # password = "5PtS6dKP12f"
+    username = "jenkin01"
+    password = "5PtS6dKP12f"
 
     port = 22
-    localpath = getcwd() + "/uploads/" + name
+    localpath = getcwd() + "/batch_files/" + name
 
-    print localpath
     # Unfortunately, this will not create a folder that is not already in the gsa.
     # Having stfp trying to create a folder with the same name everytime does not work either.
-    remotepath = "/projects/p/powersoe/autoport/uploads/" + name
+    remotepath = gsaPathForUpload + name
 
     transport = paramiko.Transport((hostname, port))
     transport.connect(username=username, password=password)
@@ -350,7 +381,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
         xml_env_command.text += javaType
 
         xml_artifacts.text = build['artifacts']
-        xml_catalog_remote.text += jobFolder
+        xml_catalog_remote.text = gsaPathForCatalog + jobFolder
         xml_catalog_source.text = build['artifacts']
 
         # Job metadata as passed to jenkins
