@@ -77,6 +77,16 @@ var batchState = {
                 document.getElementById('batchFileTextArea').value = JSON.stringify(data, undefined, 4);
             });
         }
+    },
+    ready: false, // Whether or not to draw the batch file view
+    batchFile: {
+        config:   {},
+        packages: []
+    },
+    download: function (ev) {
+        var json = JSON.stringify(batchState.batchFile, undefined, 2);
+        var data = "data: text/json;charset=utf-8," + encodeURIComponent(json);
+        window.open(data);
     }
 };
 
@@ -154,6 +164,14 @@ rivets.bind($('#detailPanel'), {
 rivets.bind($('#resultsTable'), {
 	searchState: searchState
 });
+// Hides / shows batch file panel
+rivets.bind($('#batchFilePanel'), {
+	batchState: batchState
+});
+// Populates batch file table
+rivets.bind($('#batchFileTable'), {
+	batchState: batchState
+});
 
 // Disables all views except loading view
 function switchToLoadingState() {
@@ -200,7 +218,11 @@ function processSearchResults(data) {
 			result.select = function () {
 				$.get("/detail/" + result.id, showDetail);
 				switchToLoadingState();
-			}
+			};
+			result.addToBatchFile = function () {
+				batchState.batchFile.packages.push(result);
+				batchState.ready = true;
+			};
 		});
 		detailState.autoSelected = false;
 		searchState.results = data.results;
