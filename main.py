@@ -6,13 +6,14 @@ import requests
 import re
 import argparse
 import datetime
+import paramiko
 from time import gmtime, strftime
 from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
 from cache import Cache
-from os import path, makedirs, walk
+from os import path, makedirs, walk, getcwd
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
@@ -196,9 +197,37 @@ def uploadBatchFile():
     if not path.exists(upload_folder):
         makedirs(upload_folder)
 
-    f = open(upload_folder + "batch_file." + str(datetime.datetime.today()), "w")
+    name = "batch_file." + str(datetime.datetime.today()) 
+    openPath = upload_folder + name
+
+    f = open(openPath, "w")
     f.write(fileStr)
     f.close()
+
+    # Copy batch file to a predetermined spot in the GSA 
+    # This portion of code requires paramiko installed.
+    hostname = "ausgsa.ibm.com"
+    
+    username = ""
+    password = ""
+
+    # username = "jenkin01"
+    # password = "5PtS6dKP12f"
+
+    port = 22
+    localpath = getcwd() + "/uploads/" + name
+
+    print localpath
+    # Unfortunately, this will not create a folder that is not already in the gsa.
+    # Having stfp trying to create a folder with the same name everytime does not work either.
+    remotepath = "/projects/p/powersoe/autoport/uploads/" + name
+
+    transport = paramiko.Transport((hostname, port))
+    transport.connect(username=username, password=password)
+    sftp = paramiko.SFTPClient.from_transport(transport)
+    sftp.put(localpath, remotepath)
+    sftp.close()
+    transport.close()
 
     return json.jsonify(status="ok")
 
