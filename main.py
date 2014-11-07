@@ -266,7 +266,7 @@ def uploadBatchFile():
 # Opens a new tab with a new jenkins job URL on the client side on success,
 # while the current tab stays in the same place.
 @app.route("/createJob", methods=['GET', 'POST'])
-def createJob(i_id = None, i_tag = None, i_arch = None):
+def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     # Ensure we have a valid id number as a post argument
     try:
         idStr = request.form["id"]
@@ -298,6 +298,16 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
             tag = i_tag
         else:
             tag = "Current"
+        
+    # Get javaType
+    try:
+        javaType = request.form["javaType"]
+    # defaults to open JDK
+    except KeyError:
+        if i_javaType != None:
+            javaType = i_javaType
+        else:
+            return json.jsonify(status="failure", error="missing java type")
     
     # Read template XML file
     tree = ET.parse("config_template.xml")
@@ -323,27 +333,13 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
 
     # Modify selected elements
     archName = ""
-    javaType = ""
     if arch == "x86":
         xml_node.text = nodes['x86']
         archName = "x86"
-        # Get javaType
-        try:
-            javaType = request.form["javaTypex86"]
-        # defaults to open JDK
-        except KeyError:
-            return json.jsonify(status="failure", error="missing java type")
 
     elif arch == "ppcle":
         xml_node.text = nodes['ppcle']
         archName = "ppcle"
-
-        # Get javaType
-        try:
-            javaType = request.form["javaTypeLE"]
-        # defaults to open JDK
-        except KeyError:
-            return json.jsonify(status="failure", error="missing java type")
 
     xml_github_url.text = repo.html_url
     xml_git_url.text = "https" + repo.git_url[3:]
@@ -392,6 +388,8 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
 
+    print jenkinsUrl
+
     # Send to Jenkins
     r = requests.post(
         jenkinsUrl + "/createItem",
@@ -408,7 +406,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None):
 
         # Success, send the jenkins job and start it right away.
         startJobUrl = jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
-
+        
         # But then redirect to job home to monitor job progress.
         homeJobUrl = jenkinsUrl + "/job/" + jobName + "/"
 
@@ -428,18 +426,23 @@ def runBatchFile ():
         batchName = request.form["batchName"]
     except KeyError:
         return json.jsonify(status="failure", error="missing batch file name")
-   
+  
     if batchName != "":
         # Read in the file and store as JSON
         f = open(upload_folder + batchName)
         fileBuf = json.load(f)
         f.close()
 
-        for package in fileBuf['packages']:
+        javaType = ""
+
+        if fileBuf['config']['java'] == "ibm":
+            javaType = "JAVA_HOME=/opt/ibm/java"
+
+        for package in fileBuf['packages']:            
             p_repo = github.get_repo(package['id'])
             tag = package['tag']
-            createJob(package['id'], package['tag'], "x86")
-            createJob(package['id'], package['tag'], "ppcle")
+            createJob(package['id'], package['tag'], "x86", javaType)
+            createJob(package['id'], package['tag'], "ppcle", javaType)
 
     else:
         return json.jsonify(status = "failure", error = "could not find file")

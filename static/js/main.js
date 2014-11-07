@@ -112,8 +112,7 @@ var detailState = {
 	repo: null, // Repo data
 	autoSelected: false, // Was this repository autoselected from search query?
 	pie: null, // Pie chart
-	javaTypex86: "", // Open JDK or IBM Java
-	javaTypeLE:"",
+	javaType: "", // Open JDK or IBM Java
 	backToResults: function() {
 		detailState.ready = false;
 		searchState.ready = true;
@@ -125,12 +124,10 @@ var detailState = {
 	selectJavaType:	function() {
     	var radio = document.getElementById('radio');
     	if (!document.getElementById('option1').checked) {
-    		detailState.javaTypex86 = "";
-    		detailState.javaTypeLE = "";
+    		detailState.javaType = "";
     	}
     	else if (!document.getElementById('option2').checked) {
-    		detailState.javaTypex86 = "JAVA_HOME=/opt/ibm/java-x86_64-71";
-    		detailState.javaTypeLE = "JAVA_HOME=/opt/ibm/java-ppc64le-71";
+    		detailState.javaType = "JAVA_HOME=/opt/ibm/java";
     	}
 	}
 }
@@ -259,8 +256,8 @@ function showDetail(data) {
 	} else {
 		detailState.repo = data.repo;
 		detailState.repo.addToJenkins = function(e) {
-			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaTypex86: detailState.javaTypex86, arch: "x86"}, addToJenkinsCallback, "json");
-			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaTypeLE: detailState.javaTypeLE, arch: "ppcle"}, addToJenkinsCallback, "json");
+			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "x86"}, addToJenkinsCallback, "json");
+			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "ppcle"}, addToJenkinsCallback, "json");
 		};
 		loadingState.loading = false;
 		detailState.ready = true;
