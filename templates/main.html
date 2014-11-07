@@ -25,10 +25,54 @@
     <!-- HEADER -->
 
     <div class="jumbotron">
-      <h1>Autoport</h1>
+      <h1>
+        Autoport
+        <button class="btn btn-primary modalButton" data-toggle="modal" data-target="#settingsModal">
+          <span class="glyphicon glyphicon-wrench"></span> Settings
+        </button>
+      </h1>
+
       <p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
       <p>You can also setup a basic Jenkins job for the project with one click. </p>
       <p>You also have the ability to create a batch file to process multiple projects with one click.</p>
+
+      <!-- Modal -->
+      <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+              <h4 class="modal-title" id="modalLabel">Settings</h4>
+            </div>
+            <div class="modal-body" id="settingsModal">
+              <div class="attributes modalAttributes">
+                <div> 
+                  <label class="url">Jenkins Url </label> 
+                  <span> <input type="modalText" id="url" value="http://soe-test1.aus.stglabs.ibm.com:8080"> </span>
+                </div>
+                <div> 
+                  <label class="test_results">Test Results Path </label>
+                  <span> <input type="modalText" id="test_results" value="/projects/p/powersoe/autoport/test_results/"> </span>
+                </div>
+                <div> 
+                  <label class="batch_files">Batch Files Path </label>
+                  <span> <input type="modalText" id="batch_files" value="/projects/p/powersoe/autoport/batch_files/"> </span>
+                </div>
+                <div> 
+                  <label class="github">Github Token </label>
+                  <span> <input type="modalText" id="github" value="9294ace21922bf38fae227abaf3bc20cf0175b08"> </span>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              <button rv-on-click="globalState.reset" type="button" class="btn btn-primary">Reset to Default</button>
+              <button rv-on-click="globalState.updateParameters" type="button" class="btn btn-primary" data-dismiss="modal">Save Changes</button>
+            </div>
+          </div> <!-- modal-content -->
+        </div> <!-- modal-dialog -->
+      </div> <!-- modal fade -->
+
     </div>
     
     <div class="jumbotron">

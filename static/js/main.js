@@ -1,3 +1,27 @@
+var globalState = {
+	jenkinsUrl: "http://soe-test1.aus.stglabs.ibm.com:8080",
+	gsaPathForCatalog: "/projects/p/powersoe/autoport/test_results/",
+	gsaPathForUpload: "/projects/p/powersoe/autoport/batch_files/",
+	githubToken: "9294ace21922bf38fae227abaf3bc20cf0175b08",
+	reset: function() {
+		jenkinsUrl =  "http://soe-test1.aus.stglabs.ibm.com:8080";
+		gsaPathForCatalog = "/projects/p/powersoe/autoport/test_results/";
+		gsaPathForUpload = "/projects/p/powersoe/autoport/batch_files/";
+		githubToken = "9294ace21922bf38fae227abaf3bc20cf0175b08"
+		document.getElementById('url').value = jenkinsUrl;
+		document.getElementById('test_results').value = gsaPathForCatalog;
+		document.getElementById('batch_files').value = gsaPathForUpload;
+		document.getElementById('github').value = githubToken;
+	},
+	updateParameters: function () {
+		jenkinsUrl = document.getElementById('url').value;
+		gsaPathForCatalog = document.getElementById('test_results').value;
+		gsaPathForUpload = document.getElementById('batch_files').value;
+		githubToken = document.getElementById('github').value;
+		$.post("/settings", {url: jenkinsUrl, test_results: gsaPathForCatalog, batch_files: gsaPathForUpload, github: githubToken}, settingsCallback, "json");
+	}
+};
+
 // Contains state of searching operations
 var searchState = {
 	sorting: "relevance",
@@ -112,6 +136,10 @@ var detailState = {
 }
 
 // Rivets.js bindings
+// Allows user to change global settings
+rivets.bind($('#settingsModal'), {
+	globalState: globalState
+});
 // Allows user to change sorting method
 rivets.bind($('#listBox'), {
 	batchState: batchState
@@ -245,6 +273,13 @@ function showDetail(data) {
 			segmentShowStroke: false
 		});
 		legend(document.getElementById('langLegend'), detailState.repo.languages)
+	}
+}
+
+function settingsCallback(data) {
+	if (data.status != "ok") {
+		console.log("Bad response from /settings!");
+		console.log(data);
 	}
 }
 
