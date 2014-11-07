@@ -161,37 +161,29 @@ def search_repositories():
     order = request.args.get("order", "desc")
 
     # AutoPort parameters
-    limit   = int(request.args.get("limit",   "25"))
-    version =     request.args.get("version", "current")
+    limit = int(request.args.get("limit", "25"))
 
-    repositories = []
     # TODO: debug-log parameters
+
+    results = []
     for repo in github.search_repositories(q, sort=sort, order=order)[:limit]:
-        r = {
-            "id":   repo.id,
-            "name": repo.full_name
-        }
+        cache.cacheRepo(repo)
+        results.append({
+            "id": repo.id,
+            "name": repo.name,
+            "owner": repo.owner.login,
+            "owner_url": repo.owner.html_url,
+            "stars": repo.stargazers_count,
+            "forks": repo.forks_count,
+            "url": repo.html_url,
+            "size_kb": repo.size,
+            "last_update": str(repo.updated_at),
+            "language": repo.language,
+            "description": repo.description,
+            "classifications": classify(repo)
+        })
 
-        # add tag element
-        if version == "recent":
-            # TODO: this won't scale, we should get tags in another request
-            tags, recentTag = getTags(repo)
-            if recentTag:
-                r['tag'] = recentTag
-            else:
-                r['tag'] = "current"
-        else:
-            r['tag'] = "current"
-
-        repositories.append(r)
-
-    config = {
-        "general": {},
-        "java":    {},
-        "python":  {}
-    }
-
-    return json.jsonify(config=config, repositories=repositories)
+    return json.jsonify(status="ok", results=results, type="multiple")
 
 # Upload Batch File - takes a file and uploads it to a permanent location (TBD)
 @app.route("/uploadBatchFile", methods=['GET', 'POST'])

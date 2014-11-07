@@ -7,6 +7,32 @@ var searchState = {
 	changeSort: function (ev) { // Called upon changing sort type
 		searchState.sorting = $(ev.target).text().toLowerCase();
 		doSearch();
+	},
+	queryTop: {
+		limit:    25,
+		sort:     "stars",
+		language: "any",
+		version:  "current",
+		stars:    0,
+		forks:    0,
+		generate: function (ev) {
+			// TODO: remove redundant query qualifiers (stars/forks == 0)
+			var data = {
+				// GitHub API parameters
+				q:       " stars:>" + searchState.queryTop.stars +
+						 " forks:>" + searchState.queryTop.forks +
+						 (searchState.queryTop.language == "any" ? "" : (" language:" + searchState.queryTop.language)),
+				sort:    searchState.queryTop.sort,
+
+				// AutoPort parameters
+				limit:   searchState.queryTop.limit,
+				version: searchState.queryTop.version
+			};
+
+			console.log(data);
+			switchToLoadingState();
+			$.getJSON("/search/repositories", data, processSearchResults);
+		}
 	}
 };
 
@@ -40,44 +66,6 @@ var batchState = {
         console.log("In batchState.buildAndTest");
 	    $.post("/runBatchFile", {batchName: batchState.currentBatchFile}, runBatchFileCallback, "json");
     },
-    query: {
-        limit:    25,
-        sort:     "stars",
-        language: "any",
-        version:  "current",
-        stars:    0,
-        forks:    0,
-        upload: function (ev) {
-            var data = document.getElementById('batchFileTextArea').value;
-            $.post("/uploadBatchFile", {file: data}, uploadBatchFileCallback, "json");
-        },
-        generate: function (ev) {
-            console.log("limit    = " + batchState.query.limit);
-            console.log("sort     = " + batchState.query.sort);
-            console.log("language = " + batchState.query.language);
-            console.log("version  = " + batchState.query.version);
-            console.log("stars    = " + batchState.query.stars);
-            console.log("forks    = " + batchState.query.forks);
-
-            // TODO: remove redundant query qualifiers (stars/forks == 0)
-            var data = {
-                // GitHub API parameters
-                q:       " stars:>" + batchState.query.stars +
-                         " forks:>" + batchState.query.forks +
-                         (batchState.query.language == "any" ? "" : (" language:" + batchState.query.language)),
-                sort:    batchState.query.sort,
-
-                // AutoPort parameters
-                limit:   batchState.query.limit,
-                version: batchState.query.version
-            };
-
-            console.log(data);
-            $.getJSON("/search/repositories", data, function(data, textStatus, jqXHR) {
-                document.getElementById('batchFileTextArea').value = JSON.stringify(data, undefined, 4);
-            });
-        }
-    },
     ready: false, // Whether or not to draw the batch file view
     batchFile: {
         config:   {},
@@ -85,7 +73,7 @@ var batchState = {
     },
     download: function (ev) {
         var json = JSON.stringify(batchState.batchFile, undefined, 2);
-        var data = "data: text/json;charset=utf-8," + encodeURIComponent(json);
+        var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
         window.open(data);
     }
 };
@@ -138,7 +126,7 @@ rivets.bind($('#buildAndTestBox'), {
     batchState: batchState
 });
 rivets.bind($('#generateBox'), {
-    batchState: batchState
+    searchState: searchState
 });
 // Multiple result alert box
 rivets.bind($('.multiple-alert'), {
