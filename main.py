@@ -20,6 +20,8 @@ jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
 gsaPathForCatalog = "/projects/p/powersoe/autoport/test_results/"
 gsaPathForUpload = "/projects/p/powersoe/autoport/batch_files/"
 githubToken = "9294ace21922bf38fae227abaf3bc20cf0175b08"
+mavenPath = "/usr/local/apache-maven-3.2.3/bin"
+
 jobNamePrefix = "AutoPortTool"
 
 # Globals
@@ -366,7 +368,9 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
 
         # In addition to whatever other environmental variables I need to inject
         # I should add whether to pick IBM Java or Open JDK
-        xml_env_command.text += javaType
+        xml_env_command.text += javaType + "\n"
+        path_env = "PATH=" + mavenPath + ":$PATH\n"
+        xml_env_command.text += path_env
 
         xml_artifacts.text = build['artifacts']
         xml_catalog_remote.text = gsaPathForCatalog + jobFolder
