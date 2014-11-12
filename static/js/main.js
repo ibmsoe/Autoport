@@ -130,7 +130,60 @@ var detailState = {
     		detailState.javaType = "JAVA_HOME=/opt/ibm/java";
     	}
 	}
-}
+};
+
+var reportState = {
+    reportType:"batchResults",
+    reportLabel:"Test results by batch by date",
+    changeReportType: function(ev) {
+        reportState.reportType = $(ev.target).attr('id');
+        reportState.reportLabel = $(ev.target).text();
+        doGetResultList();
+    }
+};
+
+var projectCompareSelectState = {
+    prjCompareReady: false,
+    projects: [],
+    selectedProjects: [],
+    prjTableReady: false,
+    selectProject: function(id) {
+        // find the corresponding project object.
+        var projectName = "";
+        for (prj in projectCompareSelectState.projects) {
+            if (projectCompareSelectState.projects[prj].id == id) {
+                projectName = projectCompareSelectState.projects[prj].fullName;
+                break;
+            }
+        }
+        if (projectName === "") {
+            // Not found
+            return;
+        }
+        var pos = projectCompareSelectState.selectedProjects.indexOf(projectName);
+        if (pos != -1) {
+            $("#"+id).toggleClass('btn-primary');
+            projectCompareSelectState.selectedProjects.splice(pos, 1);
+        } else if (projectCompareSelectState.selectedProjects.length < 2) {
+            $("#"+id).toggleClass('btn-primary');
+            projectCompareSelectState.selectedProjects.push(projectName);
+        } else {
+            console.log("More than 2 lines ");
+            // TODO alert that only 2 lines can be selected or deselect the first?
+        }
+    },
+    compareResults: function() {
+        switchToLoadingState();
+        console.log("compareResults: left="+projectCompareSelectState.selectedProjects[0]+
+                    ",right="+projectCompareSelectState.selectedProjects[1]);
+        $.getJSON("/getTestResults?left="+projectCompareSelectState.selectedProjects[0]+
+                  "&right="+projectCompareSelectState.selectedProjects[1], {}, processBuildResults);
+    },
+    backToList: function(ev) {
+        // TODO hide table and show projects list
+        console.log("TODO backToList");
+    }
+};
 
 // Rivets.js bindings
 // Allows user to change global settings
@@ -186,10 +239,25 @@ rivets.bind($('#batchFileTable'), {
 	batchState: batchState
 });
 
+rivets.bind($('#reportSelector'), {
+    reportState: reportState
+});
+rivets.bind($('#testCompareSelectPanel'), {
+    projectCompareSelectState: projectCompareSelectState
+});
+rivets.bind($("#testCompareTablePanel"), {
+    projectCompareSelectState: projectCompareSelectState
+});
+rivets.bind($("#testCompareRunAlert"), {
+    projectCompareSelectState: projectCompareSelectState
+});
+
 // Disables all views except loading view
 function switchToLoadingState() {
 	searchState.ready = false;
 	detailState.ready = false;
+    projectCompareSelectState.prjCompareReady = false;
+    projectCompareSelectState.prjTableReady = false;
 	loadingState.loading = true;
 	detailState.autoSelected = false;
 }
@@ -246,6 +314,100 @@ function processSearchResults(data) {
 		detailState.autoSelected = true;
 		showDetail(data);
 	}
+}
+
+function doGetResultList() {
+    switch (reportState.reportType) {
+      case "projectCompare":
+        loadingState.loading = true;
+        $.getJSON("/listTestResults", {}, processResultList);
+        break;
+      default:
+        break;
+    }
+}
+
+function processResultList(data) {
+    projectCompareSelectState.selectedProjects = [];
+    projectCompareSelectState.projects = [];
+    if (data === undefined || data.status != "ok") {
+        console.log("Error");// TODO error message
+    } else {
+        prjRegex = /(.*?) - (.*?) - (.*?)-(.*)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)/;
+        for (var project in data.results) {
+            if (project !== undefined) {
+                prjObject = prjRegex.exec(data.results[project]);
+                if (prjObject === null) {
+                    continue;
+                }
+                var prjId = data.results[project];
+                // HTML element's 'id' attribute can't have spaces
+                prjId = CryptoJS.MD5(prjId);
+                projectCompareSelectState.projects.push({
+                     fullName: prjObject[0],
+                           id: prjId,
+                         name: prjObject[3],
+                          env: prjObject[2],
+                      version: prjObject[4],
+                    completed: prjObject[5],
+                       select: function(ev) {
+                           projectCompareSelectState.selectProject(ev.target.id);
+                       }
+                });
+            }
+        }
+        searchState.ready = false;
+        detailState.autoSelected = false;
+        loadingState.loading = false;
+        projectCompareSelectState.prjCompareReady = true;
+    }
+}
+
+function processBuildResults(data) {
+    var tableContent = "";
+    if (data.status != "ok") {
+        tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
+    } else {
+        tableContent = "<tr><th>Test</th><th colspan=\"4\">x86</th><th colspan=\"4\">LE</th></tr>";
+        tableContent += "<tr><th/><th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th>";
+        tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
+        var suiteKeys = Object.keys(data.results);
+        for (var key in suiteKeys) {
+            tableContent += "<tr><th class=\"testSuite\">" +
+                 suiteKeys[key] +
+                "</th><th class=\"testResultArch testSuite\" colspan=\"4\"/><th class=\"testResultArch testSuite\" colspan=\"4\"/></tr>";
+            var testKeys = Object.keys(data.results[suiteKeys[key]]);
+            for (testKey in testKeys) {
+                var tc = data.results[suiteKeys[key]][testKeys[testKey]];
+                var hlTotal = (tc["total"][data.leftCol] > tc["total"][data.rightCol] ?
+                            " testErr" : "");
+                var hlFail = (tc["failures"][data.leftCol] < tc["failures"][data.rightCol] ?
+                            " testErr" : "");
+                var hlErr = (tc["errors"][data.leftCol] < tc["errors"][data.rightCol] ?
+                            " testErr" : "");
+                var hlSkip = (tc["skipped"][data.leftCol] < tc["skipped"][data.rightCol] ?
+                            " testErr" : "");
+                var hlTest = (hlTotal.length !== 0 ||
+                    hlFail.length !== 0 ||
+                    hlErr.length !== 0 ||
+                    hlSkip.length !== 0 ? " testErr" : "");
+
+                tableContent += "<tr><td class=\"testClass"+hlTest+"\">"+testKeys[testKey]+
+                    "</td><td class=\"testResultArch\">"+
+                    tc["total"][data.leftCol]+"</td><td class=\"testResult\">"+
+                    tc["failures"][data.leftCol]+"</td><td class=\"testResult\">"+
+                    tc["errors"][data.leftCol]+"</td><td class=\"testResult\">"+
+                    tc["skipped"][data.leftCol]+"</td><td class=\"testResultArch"+hlTotal+"\">"+
+                    tc["total"][data.rightCol]+"</td><td class=\"testResult"+hlFail+"\">"+
+                    tc["failures"][data.rightCol]+"</td><td class=\"testResult"+hlErr+"\">"+
+                    tc["errors"][data.rightCol]+"</td><td class=\"testResult"+hlSkip+"\">"+
+                    tc["skipped"][data.rightCol]+"</td></tr>";
+            }
+        }
+    }
+    $("#testResultsTable").html(tableContent);
+    loadingState.loading = false;
+    projectCompareSelectState.prjTableReady = true;
 }
 
 // Sets up and opens detail view for a repo

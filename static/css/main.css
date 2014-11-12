@@ -190,3 +190,30 @@ fieldset[disabled] .form-control {
 .modalAttributes span input {
     width: 100%;
 }
+
+#testResultsTable td,th {
+    border-bottom: 1px solid grey;
+    border-left: 1px solid grey;
+    padding: 3px
+}
+
+#testResultsTable th.testSuite {
+    background-color: lightgrey
+}
+
+#testResultsTable td.testClass {
+}
+
+#testResultsTable td.testResult {
+    text-align: right
+}
+
+#testResultsTable td.testResultArch {
+    text-align: right;
+    border-left: 1px solid black
+}
+
+#testResultsTable td.testErr {
+    color: red;
+    font-weight: bold
+}

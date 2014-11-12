@@ -32,9 +32,9 @@
         </button>
       </h1>
 
-      <p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
+      <!-- p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
       <p>You can also setup a basic Jenkins job for the project with one click. </p>
-      <p>You also have the ability to create a batch file to process multiple projects with one click.</p>
+      <p>You also have the ability to create a batch file to process multiple projects with one click.</p -->
 
       <!-- Modal -->
       <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
@@ -80,6 +80,7 @@
       <ul class="nav nav-tabs nav-justified">
         <li class="active"><a data-toggle="tab" href="#searchProject">Search</a></li>
         <li><a data-toggle="tab" href="#batchJobs">Batch Jobs</a></li>
+        <li><a data-toggle="tab" href="#jobReports">Reports</a></li>
       </ul>
 
       <br />
@@ -220,6 +221,35 @@
             
           </div> <!-- jumbotron -->
         </div>
+
+        <!-- REPORTS PANEL -->
+        <div id="jobReports" class="tab-pane fade">
+          <div class="jumbotron"> 
+            <h2 class="text-center">Manage active jobs on the Jenkins server</h2>
+          </div>
+          <div class="jumbotron">
+            <h2 class="text-center">Show test results</h2>
+            <br/>
+            <div class="input-group" id="reportSelector">
+              <span class="input-group-addon">Report type</span>
+              <div class="input-group-btn">
+                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">{ reportState.reportLabel } <span class="caret"></span></button>
+                <ul class="dropdown-menu" role="menu">
+                  <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isBatchResults"><a href="#" id="batchResults">Test results by batch by date</a></li>
+                  <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isProjectResults"><a href="#" id="projectResults">Test results by project by date</a></li>
+                  <li class="divider"></li>
+                  <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isBatchHistory"><a href="#" id="batchHistory">Test history of a batch job</a></li>
+                  <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isProjectHistory"><a href="#" id="projectHistory">Test history of a project</a></li>
+                  <li class="divider"></li>
+                  <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isProjectCompare"><a href="#" id="projectCompare">Test comparison of two projects</a></li>
+                </ul>
+              </div>
+              &nbsp;
+              <span class="input-group-addon">Filter</span>
+              <input type="text" class="form-control" placeholder)="(i.e. project or batch file)" id="reportFilterQuery"/>
+            </div> <!-- input-group -->
+          </div> <!-- jumbotron -->
+        </div> <!-- tab pane -->
       </div>
     </div>
 
@@ -448,8 +478,83 @@
       </div>
     </div>
 
+    <!-- PROJECT COMPARE RESULTS SELECT TABLE -->
+
+    <div id="testCompareSelectPanel"
+        class="panel panel-default"
+        rv-show="projectCompareSelectState.prjCompareReady">
+      <div id="testCompareRunAlert" class="alert alert-success autoselect-alert clearfix">
+        <span class="autoSelectText">Select 2 projects below, and then press "Compare" at the right.</span>
+        <a href="#" class="backToResults buttonRight"
+            rv-on-click="projectCompareSelectState.compareResults">
+          <button type="button" class="btn btn-info">
+          Compare
+          </button>
+        </a>
+      </div>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Project name</th>
+            <th>Environment</th>
+            <th>Version</th>
+            <th>Completed</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="projectsTable" rv-each-project="projectCompareSelectState.projects">
+          <tr class="result-row">
+            <td>
+              { project.name }
+            </td>
+            <td>
+              { project.env }
+            </td>
+            <td>
+              { project.version }
+            </td>
+            <td>
+              { project.completed }
+            </td>
+            <td>
+            <a rv-href="#" rv-on-click="project.select">
+              <button type="button" class="btn" rv-id="project.id">
+                <span class="glyphicon glyphicon-ok"></span>
+                Select
+              </button>
+            </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="testCompareTablePanel"
+        class="panel panel-default"
+        rv-show="projectCompareSelectState.prjTableReady">
+      <!-- table for x86 / LE test results comparison // TODO change the position! -->
+      <span class="panel panel-primary" style="float: right">
+        <div class="panel-heading">Test results</div>
+        <table id="testResultsTable">
+          <tr id="testResultsTableHeader">
+            <th>Test</th>
+            <th>x86</th>
+            <th>LE</th>
+          </tr>
+        </table>
+      </span>
+      <a href="#" class="backToResults" rv-on-click="projectCompareSelectState.backToList">
+        <button type="button" class="btn btn-info">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+        Back to projects list
+        </button>
+      </a>
+    </div>
+
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Hashing algorithms, as element IDs can't have any special chars -->
+    <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lib/rivets.min.js') }}"></script>
