@@ -20,7 +20,9 @@ rivets.binders.classification = function(el, value) {
 			break;
 		default:
 			classToAdd = "label-default";
+            break;
 	}
 	$(el).removeClass("label-success label-warning label-danger label-default");
 	$(el).addClass(classToAdd);
-}
+};
+
