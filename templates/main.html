@@ -22,7 +22,7 @@
   <body>
     <div class="container">
 
-    <!-- HEADER -->
+    <!-- START HEADER -->
 
     <div class="jumbotron">
       <h1>
@@ -32,9 +32,9 @@
         </button>
       </h1>
 
-      <!-- p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
+      <p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
       <p>You can also setup a basic Jenkins job for the project with one click. </p>
-      <p>You also have the ability to create a batch file to process multiple projects with one click.</p -->
+      <p>You also have the ability to create a batch file to process multiple projects with one click.</p>
 
       <!-- Modal -->
       <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
@@ -75,6 +75,8 @@
 
     </div>
     
+    <!-- END HEADER -->
+    
     <div class="jumbotron">
         
       <ul class="nav nav-tabs nav-justified">
@@ -87,27 +89,38 @@
 
       <div class="tab-content">
         
-        <!-- SEARCH BOX -->
+        <!-- START SEARCH BOX -->
+        
         <div id="searchProject" class="tab-pane fade in active">
-          <div class="jumbotron">
-            <h2 class="text-center">Search For Single Project</h2>
-            <div class="input-group" id="searchBox">
-              <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
-              <div class="input-group-btn">
-                <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
-                <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                  <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a href="#">Relevance</a></li>
-                  <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Stars</a></li>
-                  <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a href="#">Forks</a></li>
-                  <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a href="#">Updated</a></li>
-                </ul>
+          <div class="jumbotron"> 
+            <div class="btn btn-default btn-block" rv-on-click="searchState.setSingleSearchBox" id="singleSearchButton">
+              <h2 class="text-center">Search For Single Project</h2>
+            </div>
+
+            <div class="jumbotron-button-content" id="searchBox" rv-show="searchState.singleSearchBox">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
+                <div class="input-group-btn">
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
+                  <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a href="#">Relevance</a></li>
+                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Stars</a></li>
+                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a href="#">Forks</a></li>
+                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a href="#">Updated</a></li>
+                  </ul>
+                </div>
               </div>
+
+              <br />
+    
             </div>
           </div> <!-- jumbotron -->
-
+        
           <div class="jumbotron">
-            <h2 class="text-center">Search For Top Repositories</h2>
-            <div id="generateBox">
+            <div class="btn btn-default btn-block" rv-on-click="searchState.setGenerateBatchBox" id="generateBatchButton">
+              <h2 class="text-center">Generate Batch File</h2>
+            </div>
+            <div id="generateBox" class="jumbotron-button-content" rv-show="searchState.generateBatchBox">
               <div class="row">
                 <div class="col-lg-4">
                   <div class="input-group">
@@ -163,176 +176,181 @@
                   <button class="btn btn-primary" rv-on-click="searchState.queryTop.generate">Search</button>
                 </div>
               </div>
+
+
             </div>
           </div> <!-- jumbotron -->
-        </div>
+        </div> <!-- tab-pane -->
+        
+        <!-- END SEARCH BOX -->
 
-        <!-- BATCH FILE PROCESSING-->
+        <!-- START BATCH FILE PROCESSING-->
+        
         <div id="batchJobs" class="tab-pane fade">
+          
+          <!-- START IMPORT BOX -->
+          
           <div class="jumbotron"> 
-            <h2 class="text-center">Upload Local File</h2>
-            <div class="input-group" id="fileUploadBox">
+          
+            <div class="btn btn-default btn-block" rv-on-click="batchState.setImportBox" id="importButton">
+              <h2 class="text-center">Import</h2>
+            </div>
+            
+            <div class="input-group jumbotron-button-content" id="fileUploadBox" rv-show="batchState.importBox">
               <input type="text" class="form-control" placeholder="No file selected for uploading." id="uploadFilename" disabled/>
               <div class="input-group-btn">
                 <div class="btn btn-default btn-file">
                   Select File <input type="file" id="batch_file">
                 </div>
-              </div>
-            
+              </div>          
               <div class="input-group-btn">
                 <div rv-on-click="batchState.upload" class="btn btn-primary">
                   Upload
                 </div>
               </div>
             </div>
-          </div> <!-- jumbotron -->
-         
-          <br />
- 
-          <div class="jumbotron"> 
-            <h2 class="text-center">Build And Test</h2>
-            <div class="input-group" id="buildAndTestBox">
-              <input type="text" class="form-control" placeholder="No batch file selected for processing." id="buildAndTestFilename" disabled/>
-              
-              <div class="input-group-btn">
-                <div rv-on-click="batchState.build" class="btn btn-primary">
-                  Build
-                </div>
-              </div>
-            
-              <div class="input-group-btn">
-                <div rv-on-click="batchState.buildAndTest" class="btn btn-primary">
-                  Build/Test
-                </div>
-              </div>
-            </div>
-          </div> <!-- jumbotron -->
 
-          <br />
+          </div> <!-- jumbotron -->
           
-          <div class="jumbotron"> 
-            <h2 class="text-center">List Batch Files</h2>
-              
-            <div id="listBox">
-              <div rv-on-click="batchState.listBatchFiles" class="btn btn-primary">
-                List
-              </div>
-            </div>
-            
-          </div> <!-- jumbotron -->
-        </div>
+          <!-- END IMPORT BOX -->
 
-        <!-- REPORTS PANEL -->
-        <div id="jobReports" class="tab-pane fade">
+          <!-- START LIST BATCH FILES -->
+         
           <div class="jumbotron"> 
-            <h2 class="text-center">Manage active jobs on the Jenkins server</h2>
-          </div>
+
+            <div class="btn btn-default btn-block" rv-on-click="batchState.listBatchFiles" id="listButton">
+              <h2 class="text-center">List/Select</h2>
+            </div>
+
+            <div id="batchListPanel" class="panel panel-default jumbotron-button-content" rv-show="batchState.ready">
+              <table class="table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Environment</th>
+                    <th>File Details</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody rv-each-result="batchState.file_list">
+                  <tr class="result-row">
+                    <td>
+                      { result.name }
+                    </td>
+                    <td>
+                      { result.environment }
+                    </td>
+                    <td>
+                      Size: { result.size } bytes
+                      <br /> 
+                      Date Modified: { result.datemodified }
+                    </td>
+                    <td>
+                      <a rv-href="#" rv-on-click="batchState.buildAndTest">
+                        <button type="button" class="btn btn-primary">
+                        Build + Test
+                        </button>
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div> <!-- jumbotron -->
+
+          <!-- END LIST BATCH FILES -->
+
+        </div> <!-- tab-pane -->
+        
+        <!-- END BATCH FILE PROCESSING-->
+
+        <!-- START REPORTING -->
+
+        <div id="jobReports" class="tab-pane fade">
+      
+          <!-- START JOB MANAGING ON JENKINS -->        
+
           <div class="jumbotron">
-            <h2 class="text-center">Show test results</h2>
-            <br/>
-            <div class="row">
-              <div class="col-lg-6">
-                <div class="input-group" id="reportSelector">
-                  <span class="input-group-addon">Report type</span>
-                  <div class="input-group-btn">
-                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">{ reportState.reportLabel } <span class="caret"></span></button>
-                    <ul class="dropdown-menu" role="menu">
-                      <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isBatchResults"><a href="#" id="batchResults">Test results by batch by date</a></li>
-                      <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isProjectResults"><a href="#" id="projectResults">Test results by project by date</a></li>
-                      <li class="divider"></li>
-                      <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isBatchHistory"><a href="#" id="batchHistory">Test history of a batch job</a></li>
-                      <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isProjectHistory"><a href="#" id="projectHistory">Test history of a project</a></li>
-                      <li class="divider"></li>
-                      <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isProjectCompare"><a href="#" id="projectCompare">Test comparison of two projects</a></li>
-                    </ul>
+            <div class="btn btn-default btn-block" rv-on-click="reportState.setJobManagePanel" id="jobManageButton">
+              <h2 class="text-center">Manage Active Jobs</h2>
+            </div>
+            <div id="jobManagePanel" class="jumbotron-button-content" rv-show="reportState.jobManagePanel">
+            </div>
+          </div>
+
+          <!-- END JOB MANAGING ON JENKINS -->
+
+          <!-- START TEST RESULT PROCESSING -->
+
+          <div class="jumbotron">
+            <div class="btn btn-default btn-block" rv-on-click="reportState.setTestResultsPanel" id="testResultsButton">
+              <h2 class="text-center">Test Results</h2>
+            </div>
+            <div class="jumbotron-button-content" id="testResultsPanel" rv-show="reportState.testResultsPanel">
+              <div class="row">
+                <div class="col-lg-6">
+                  <div class="input-group" id="reportSelector">
+                    <span class="input-group-addon">Report type</span>
+                    <div class="input-group-btn">
+                      <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">{ reportState.reportLabel } <span class="caret"></span></button>
+                      <ul class="dropdown-menu" role="menu">
+                        <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isBatchResults"><a href="#" id="batchResults">Test results by batch by date</a></li>
+                        <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isProjectResults"><a href="#" id="projectResults">Test results by project by date</a></li>
+                        <li class="divider"></li>
+                        <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isBatchHistory"><a href="#" id="batchHistory">Test history of a batch job</a></li>
+                        <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isProjectHistory"><a href="#" id="projectHistory">Test history of a project</a></li>
+                        <li class="divider"></li>
+                        <li rv-on-click="reportState.changeReportType" rv-hide="reportState.reportType | isProjectCompare"><a href="#" id="projectCompare">Test comparison of two projects</a></li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
+                <div class="col-lg-6">
+                  <div class="input-group">
+                    <span class="input-group-addon">Filter</span>
+                    <input type="text" class="form-control" placeholder)="(i.e. project or batch file)" id="reportFilterQuery"/>
+                  </div> <!-- input-group -->
+                </div>
               </div>
-              <div class="col-lg-6">
-                <div class="input-group">
-                  <span class="input-group-addon">Filter</span>
-                  <input type="text" class="form-control" placeholder)="(i.e. project or batch file)" id="reportFilterQuery"/>
-                </div> <!-- input-group -->
-              </div>
-            </div>
+            </div>          
+
           </div> <!-- jumbotron -->
+          
+          <!-- END TEST RESULT PROCESSING -->
+        
         </div> <!-- tab pane -->
-      </div>
-    </div>
 
-    <!-- BATCH FILE TABLE -->
+        <!-- END REPORTING -->
 
-    <div id="batchFilePanel" class="panel panel-default" rv-show="batchState.ready">
-      <a rv-href="#" rv-on-click="batchState.download">
-        <button type="button" class="btn btn-primary">
-          <span class="glyphicon glyphicon-download"></span>
-          Export
-        </button>
-      </a>
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Batch File Repositories</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="batchFileTable" rv-each-package="batchState.batchFile.packages">
-          <tr class="result-row">
-            <td>
-              <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
-               / 
-              <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
-              <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
-                <span class="glyphicon glyphicon-star"></span>
-                { package.stars }
-              </span>
-              <span title="Fork count" class="tip label" rv-classification="package.classifications.forks">
-                <span class="glyphicon glyphicon-random"></span>
-                { package.forks }
-              </span>
-              <span title="Primary language" class="tip label" rv-classification="package.classifications.language">
-                <span class="glyphicon glyphicon-wrench"></span>
-                { package.language }
-              </span>
-              <span title="Repository size" class="tip label" rv-classification="package.classifications.size">
-                <span class="glyphicon glyphicon-floppy-disk"></span>
-                { package.size_kb | size }
-              </span>
-              <span title="Last updated" class="tip label" rv-classification="package.classifications.date">
-                <span class="glyphicon glyphicon-calendar"></span>
-                updated { package.last_update | date }
-              </span>
-              <br />
-              <p class="candidate-description text-muted" rv-text="package.description"></p>
-            </td>
-            <td>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- LOADING PANEL -->
+      </div> <!-- tab-content -->  
+    </div> <!-- jumbotron -->
+    
+    <!-- START LOADING PANEL -->
 
     <div id="loadingPanel" class="panel panel-default" role="alert" rv-show="loadingState.loading">
       <div class="panel-body">
-          <div class="spinner">
-            <div class="rect1"></div>
-            <div class="rect2"></div>
-            <div class="rect3"></div>
-            <div class="rect4"></div>
-            <div class="rect5"></div>
-          </div>
+        <div class="spinner">
+          <div class="rect1"></div>
+          <div class="rect2"></div>
+          <div class="rect3"></div>
+          <div class="rect4"></div>
+          <div class="rect5"></div>
+        </div>
       </div>
     </div>
+    
+    <!-- END LOADING PANEL -->
 
-    <!-- MULTIPLE RESULTS ALERT BOX -->
+    <!-- START MULTIPLE RESULTS ALERT BOX -->
 
     <div class="alert alert-info multiple-alert" rv-show="searchState.ready" role="alert">
       There are multiple results for <strong>{ searchState.query }</strong>. Please select one.
     </div>
+    
+    <!-- END MULTIPLE RESULTS ALERT BOX -->
 
-    <!-- MULTIPLE RESULTS TABLE -->
+    <!-- START MULTIPLE RESULTS TABLE -->
 
     <div id="resultsPanel" class="panel panel-default" rv-show="searchState.ready">
       <table class="table table-hover">
@@ -346,7 +364,7 @@
           <tr class="result-row">
             <td>
               <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
-               / 
+              / 
               <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
               <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
                 <span class="glyphicon glyphicon-star"></span>
@@ -368,7 +386,9 @@
                 <span class="glyphicon glyphicon-calendar"></span>
                 updated { result.last_update | date }
               </span>
+           
               <br />
+
               <p class="candidate-description text-muted" rv-text="result.description"></p>
             </td>
             <td>
@@ -391,33 +411,37 @@
         </tbody>
       </table>
     </div>
+    
+    <!-- END MULTIPLE RESULTS TABLE -->
 
-    <!-- AUTOSELECT ALERT BOX -->
+    <!-- START AUTOSELECT ALERT BOX -->
 
     <div class="alert alert-success autoselect-alert clearfix" rv-show="detailState.autoSelected" role="alert">
-      <span class="autoSelectText"><strong>Auto-selected</strong> this repository because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } stars</strong>.<span>
+      <span class="autoSelectText"><strong>Auto-selected</strong> this repository because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } stars</strong>.</span>
       <a href="#" class="exitAutoSelect buttonRight" rv-show="detailState.autoSelected" rv-on-click="detailState.exitAutoSelect">
         <button type="button" class="btn btn-default exitAutoSelectButton">
-        <span class="glyphicon glyphicon-list"></span>
-        See all results
+          <span class="glyphicon glyphicon-list"></span>
+          See all results
         </button>
       </a>
     </div>
+    
+    <!-- END AUTOSELECT ALERT BOX -->
 
-    <!-- DETAIL VIEW -->
+    <!-- START DETAIL VIEW -->
 
     <div id="detailPanel" class="panel panel-default" rv-show="detailState.ready">
       <div class="panel-body">
         <h1>
           <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
-           / 
+          / 
           <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
           <div class="dropdown">
 
             <!-- Radio buttons for choosing what kind of java to use. -->
             <div class="btn-group radioRight" id="radio1" data-toggle="buttons">
               <label class="btn btn-primary active" rv-on-click="detailState.selectJavaType">
-                <input type="radio" name="options" id="option1" checked> Open JDK
+                <input type="radio" name="options" id="option1" checked> Open JDK 
               </label>
               <label class="btn btn-primary" rv-on-click="detailState.selectJavaType">
                 <input type="radio" name="options" id="option2"> IBM Java
@@ -435,10 +459,10 @@
               <li role="presentation" class="divider"></li>
               <li role="presentation" class="dropdown-header">Older</li>
               <li role="presentation" rv-each-tag="detailState.repo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ tag }</a></li>
-            </ul>
-
+            </ul>   
           </div>
         </h1>
+
         <span title="Star count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.stars">
           <span class="glyphicon glyphicon-star"></span>
           { detailState.repo.stars }
@@ -461,7 +485,7 @@
         </span>
         <h3>Description</h3>
         <blockquote>
-        <p class="detail-description" rv-text="detailState.repo.description"></p>
+          <p class="detail-description" rv-text="detailState.repo.description"></p>
         </blockquote>
         <span class=".clearfix chart-container">
           <h3>Language Composition</h3>
@@ -478,12 +502,70 @@
         </span>
         <a href="#" class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
           <button type="button" class="btn btn-info">
-          <span class="glyphicon glyphicon-chevron-left"></span>
-          Back to results
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            Back to results
           </button>
         </a>
       </div>
     </div>
+    
+    <!-- END DETAIL VIEW -->
+    
+    <!-- START BATCH FILE TABLE -->
+
+    <div id="batchFilePanel" class="panel panel-default" rv-show="batchState.ready">
+      <a rv-href="#" rv-on-click="batchState.download">
+        <button type="button" class="btn btn-primary">
+          <span class="glyphicon glyphicon-download"></span>
+          Export
+        </button>
+      </a>
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Batch File Repositories</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="batchFileTable" rv-each-package="batchState.batchFile.packages">
+          <tr class="result-row">
+            <td>
+              <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
+              / 
+              <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
+              <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
+                <span class="glyphicon glyphicon-star"></span>
+                { package.stars }
+              </span>
+              <span title="Fork count" class="tip label" rv-classification="package.classifications.forks">
+                <span class="glyphicon glyphicon-random"></span>
+                { package.forks }
+              </span>
+              <span title="Primary language" class="tip label" rv-classification="package.classifications.language">
+                <span class="glyphicon glyphicon-wrench"></span>
+                { package.language }
+              </span>
+              <span title="Repository size" class="tip label" rv-classification="package.classifications.size">
+                <span class="glyphicon glyphicon-floppy-disk"></span>
+                { package.size_kb | size }
+              </span>
+              <span title="Last updated" class="tip label" rv-classification="package.classifications.date">
+                <span class="glyphicon glyphicon-calendar"></span>
+                updated { package.last_update | date }
+              </span>
+              
+              <br />
+    
+              <p class="candidate-description text-muted" rv-text="package.description"></p>
+            </td>
+            <td>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- END BATCH FILE TABLE -->
 
     <!-- PROJECT COMPARE RESULTS SELECT TABLE -->
     <div class="alert alert-success clearfix"

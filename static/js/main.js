@@ -24,10 +24,18 @@ var globalState = {
 
 // Contains state of searching operations
 var searchState = {
+    singleSearchBox: false,
+    generateSearchBox: false,
 	sorting: "relevance",
 	ready: false, // Whether or not to draw this view
 	query: "", // User's query
 	results: {}, // Search result data
+	setSingleSearchBox: function (ev) {
+        searchState.singleSearchBox = (searchState.singleSearchBox) ? false : true;
+	},
+	setGenerateBatchBox: function (ev) {
+        searchState.generateBatchBox = (searchState.generateBatchBox) ? false : true;
+	},
 	changeSort: function (ev) { // Called upon changing sort type
 		searchState.sorting = $(ev.target).text().toLowerCase();
 		doSearch();
@@ -61,13 +69,20 @@ var searchState = {
 };
 
 var batchState = {
+    importBox: false,
+    file_list: [],
     currentBatchFile: "",
     selectBatchFile: function (ev) {
         batchState.currentBatchFile = $(ev.target).text();
         console.log(batchState.currentBatchFile);
     },
     listBatchFiles: function (ev) {
-	    $.post("/listBatchFiles", {}, listBatchFilesCallback, "json");
+        if (batchState.ready) {
+            batchState.ready = false;
+        }
+        else {
+	        $.post("/listBatchFiles", {}, listBatchFilesCallback, "json");
+        }
     },
     upload: function (ev) {
         //Why do I need the [0] in the jQuery but not the getElementByID, those should be equivalent?
@@ -86,9 +101,50 @@ var batchState = {
     build: function (ev) {
         console.log("In batchState.build");
     },
-    buildAndTest: function (ev) { 
+    buildAndTest: function (ev, el) { 
         console.log("In batchState.buildAndTest");
-	    $.post("/runBatchFile", {batchName: batchState.currentBatchFile}, runBatchFileCallback, "json");
+	    $.post("/runBatchFile", {batchName: el.result.filename}, runBatchFileCallback, "json");
+    },
+	setImportBox: function (ev) {
+        batchState.importBox = (batchState.importBox) ? false : true;
+	},
+    query: {
+        limit:    25,
+        sort:     "stars",
+        language: "any",
+        version:  "current",
+        stars:    0,
+        forks:    0,
+        upload: function (ev) {
+            var data = document.getElementById('batchFileTextArea').value;
+            $.post("/uploadBatchFile", {file: data}, uploadBatchFileCallback, "json");
+        },
+        generate: function (ev) {
+            console.log("limit    = " + batchState.query.limit);
+            console.log("sort     = " + batchState.query.sort);
+            console.log("language = " + batchState.query.language);
+            console.log("version  = " + batchState.query.version);
+            console.log("stars    = " + batchState.query.stars);
+            console.log("forks    = " + batchState.query.forks);
+
+            // TODO: remove redundant query qualifiers (stars/forks == 0)
+            var data = {
+                // GitHub API parameters
+                q:       " stars:>" + batchState.query.stars +
+                         " forks:>" + batchState.query.forks +
+                         (batchState.query.language == "any" ? "" : (" language:" + batchState.query.language)),
+                sort:    batchState.query.sort,
+
+                // AutoPort parameters
+                limit:   batchState.query.limit,
+                version: batchState.query.version
+            };
+
+            console.log(data);
+            $.getJSON("/search/repositories", data, function(data, textStatus, jqXHR) {
+                document.getElementById('batchFileTextArea').value = JSON.stringify(data, undefined, 4);
+            });
+        }
     },
     ready: false, // Whether or not to draw the batch file view
     batchFile: {
@@ -133,13 +189,21 @@ var detailState = {
 };
 
 var reportState = {
+    jobManagePanel: false,
+    testResultsPanel: false,
     reportType:"batchResults",
     reportLabel:"Test results by batch by date",
     changeReportType: function(ev) {
         reportState.reportType = $(ev.target).attr('id');
         reportState.reportLabel = $(ev.target).text();
         doGetResultList();
-    }
+    },
+	setJobManagePanel: function (ev) {
+        reportState.jobManagePanel = (reportState.jobManagePanel) ? false : true;
+	},
+	setTestResultsPanel: function (ev) {
+        reportState.testResultsPanel = (reportState.testResultsPanel) ? false : true;
+	}
 };
 
 var projectCompareSelectState = {
@@ -187,11 +251,37 @@ var projectCompareSelectState = {
 };
 
 // Rivets.js bindings
+rivets.bind($('#listButton'), {
+    batchState: batchState
+});
+rivets.bind($('#jobManageButton'), {
+    reportState: reportState
+});
+rivets.bind($('#jobManagePanel'), {
+    reportState: reportState
+});
+rivets.bind($('#testResultsButton'), {
+    reportState: reportState
+});
+rivets.bind($('#testResultsPanel'), {
+    reportState: reportState
+});
+rivets.bind($('#importButton'), {
+    batchState: batchState
+});
+rivets.bind($('#generateBatchButton'), {
+    searchState: searchState
+});
+rivets.bind($('#singleSearchButton'), {
+    searchState: searchState
+});
+rivets.bind($('#batchListPanel'), {
+    batchState: batchState
+});
 // Allows user to change global settings
 rivets.bind($('#settingsModal'), {
 	globalState: globalState
 });
-// Allows user to change sorting method
 rivets.bind($('#listBox'), {
 	batchState: batchState
 });
@@ -205,6 +295,7 @@ rivets.bind($('#buildAndTestBox'), {
     batchState: batchState
 });
 rivets.bind($('#generateBox'), {
+    batchState: batchState,
     searchState: searchState
 });
 // Multiple result alert box
@@ -463,16 +554,8 @@ function runBatchFileCallback(data) {
 
 function listBatchFilesCallback(data) {
     if(data.status === "ok") {
-        var file_list = data.files;
-    
-        for(var i = 0; i < file_list.length; i++) {
-            $("#listBox").append("<div rv-on-click=\"batchState.selectBatchFile\"" + 
-                "class=\"btn btn-primary list-batch-btn\">" + file_list[i] + "</div>");
-        }
-        
-        rivets.bind($('.list-batch-btn'), {
-            batchState: batchState
-        });
+        batchState.file_list = data.files;
+        batchState.ready = true;
     }
 }
 

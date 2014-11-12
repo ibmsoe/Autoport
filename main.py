@@ -7,7 +7,7 @@ import re
 import argparse
 import datetime
 import paramiko
-from time import gmtime, strftime
+from time import gmtime, strftime, localtime, asctime
 from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
@@ -15,7 +15,8 @@ from buildAnalyzer import inferBuildSteps
 from catalog import Catalog
 from resultParser import ResultParser
 from cache import Cache
-from os import path, makedirs, walk, getcwd
+from os import path, makedirs, walk, getcwd, stat
+from stat import ST_SIZE, ST_MTIME
 
 # Config
 jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
@@ -24,7 +25,7 @@ gsaPathForUpload = "/projects/p/powersoe/autoport/batch_files/"
 githubToken = "9294ace21922bf38fae227abaf3bc20cf0175b08"
 mavenPath = "/usr/local/apache-maven-3.2.3/bin"
 
-jobNamePrefix = "AutoPortTool"
+jobNamePrefix = "NewListTest"
 
 # Globals
 upload_folder = "./batch_files/"
@@ -465,7 +466,30 @@ def listBatchFiles ():
 
     for dirname, dirnames, filenames in walk(upload_folder):
         for filename in sorted(filenames):
-            file_list.append(filename)
+            st = stat(upload_folder + filename)
+            size = st[ST_SIZE]
+            datemodified = asctime(localtime(st[ST_MTIME]))
+
+            f = open(upload_folder + filename)
+            fileBuf = json.load(f)
+            f.close()
+
+            try:
+                name = fileBuf['config']['name']
+            except KeyError:
+                name = "{ MISSING NAME }"
+            try:
+                env = fileBuf['config']['java']
+            
+                if env == "ibm":
+                    environment = "IBM Java"
+                else:
+                    environment = "System Default"
+            except KeyError:
+                environment = "{ MISSING ENVIRONMENT }"
+
+            file_list.append({"name": name, "size": size, "datemodified": datemodified, \
+                "environment": environment, "filename": filename})
 
     return json.jsonify(status = "ok", files = file_list)
 

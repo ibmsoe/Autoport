@@ -175,6 +175,27 @@ fieldset[disabled] .form-control {
     font-size: 20px;
 }
 
+.jumbotron > .btn.btn-default.btn-block > h2 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    font-size: 20px;
+}
+
+.nav-tabs.nav-justified > li > a {
+    border-style: solid;
+    border-width: 1px;
+    border-color: #DDDDDD;
+}
+
+.jumbotron-button-content {
+    margin-top: 35px;
+    margin-bottom: 0px;
+}
+
+.tab-pane > .jumbotron {
+    padding: 1em;
+}
+
 /* Modal Styling*/
 .modalButton {
     float: right;
