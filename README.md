@@ -64,6 +64,7 @@ Backend
 - [Flask](http://flask.pocoo.org/) - Web application microframework
 - [requests](http://docs.python-requests.org/en/latest/) - HTTP requests
 - [PyGitHub 1.2.5](https://github.com/jacquev6/PyGithub) - GitHub API wrapper
+- [Paramiko](http://www.lag.net/paramiko/) - SSH API
 
 Frontend
 - [Bootstrap](http://getbootstrap.com/) - Frontend framework

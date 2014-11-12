@@ -68,6 +68,12 @@ class ResultParser:
                         projectResults["skipped"] = projectResults["skipped"] + int(resultMatch.group(4))
                         projectResults["duration"] = projectResults["duration"] + float(resultMatch.group(5))
 
+        if len(projectResults) > 0 and projectResults["total"] != 0:
+            results[curProject] = projectResults
+            totals["total"] = totals["total"] + projectResults["total"]
+            totals["failures"] = totals["failures"] + projectResults["failures"]
+            totals["errors"] = totals["errors"] + projectResults["errors"]
+            totals["duration"] = totals["duration"] + projectResults["duration"]
         f.close()
         totals["results"] = results
         return totals

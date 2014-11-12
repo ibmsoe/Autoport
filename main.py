@@ -12,6 +12,8 @@ from flask import Flask, request, render_template, json
 from github import Github
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
+from catalog import Catalog
+from resultParser import ResultParser
 from cache import Cache
 from os import path, makedirs, walk, getcwd
 
@@ -32,6 +34,10 @@ github = Github(githubToken)
 cache = Cache(github)
 nodes = {'x86': "x86", 'ppcle': "ppcle"}
 maxResults = 10
+resParser = ResultParser()
+catalog = Catalog("ausgsa.austin.ibm.com", "corentin", "gzyZvIrNyzR5")
+#test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
+resultPattern = re.compile('.*? - (.*?) - .*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
 
 # Main page - just serve up main.html
 @app.route("/")
@@ -462,6 +468,35 @@ def listBatchFiles ():
             file_list.append(filename)
 
     return json.jsonify(status = "ok", files = file_list)
+
+# List all results available on catalog
+@app.route("/listTestResults")
+def listTestResults():
+    return json.jsonify(status = "ok", results = catalog.listJobResults())
+
+# Get the jenkins build output
+# /getBuildResults?left=x&right=y
+@app.route("/getTestResults")
+def getTestResults():
+    leftbuild  = request.args.get("leftbuild", "")
+    rightbuild = request.args.get("rightbuild", "")
+    if (leftbuild == "" or rightbuild == ""):
+        return json.jsonify(status = "failure", error = "invalid argument")
+    leftdir = catalog.getResults(leftbuild)
+    rightdir = catalog.getResults(rightbuild)
+    if (leftdir == None or rightdir == None):
+        return json.jsonify(status = "failure", error = "result not found")
+    leftname = resultPattern.match(leftbuild).group(1)
+    rightname = resultPattern.match(rightbuild).group(1)
+
+    res = resParser.MavenBuildCompare(leftname, leftdir+"/test_result.arti",
+                                      rightname, rightdir+"/test_result.arti")
+
+    catalog.cleanTmp()
+    return json.jsonify(status = "ok",
+                        leftCol = leftname,
+                        rightCol = rightname,
+                        results = res)
 
 # Get list of tag names
 def getTags (repo):
