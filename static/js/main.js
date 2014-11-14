@@ -174,14 +174,15 @@ var projectCompareSelectState = {
     },
     compareResults: function() {
         switchToLoadingState();
-        console.log("compareResults: left="+projectCompareSelectState.selectedProjects[0]+
-                    ",right="+projectCompareSelectState.selectedProjects[1]);
-        $.getJSON("/getTestResults?left="+projectCompareSelectState.selectedProjects[0]+
-                  "&right="+projectCompareSelectState.selectedProjects[1], {}, processBuildResults);
+        if (projectCompareSelectState.selectedProjects.length === 2) {
+            $.getJSON("/getTestResults?leftbuild="+projectCompareSelectState.selectedProjects[0]+
+                      "&rightbuild="+projectCompareSelectState.selectedProjects[1],
+                      {}, processBuildResults);
+        }
     },
     backToList: function(ev) {
-        // TODO hide table and show projects list
-        console.log("TODO backToList");
+        projectCompareSelectState.prjCompareReady = true;
+        projectCompareSelectState.prjTableReady = false;
     }
 };
 
@@ -245,10 +246,10 @@ rivets.bind($('#reportSelector'), {
 rivets.bind($('#testCompareSelectPanel'), {
     projectCompareSelectState: projectCompareSelectState
 });
-rivets.bind($("#testCompareTablePanel"), {
+rivets.bind($("#testCompareRunAlert"), {
     projectCompareSelectState: projectCompareSelectState
 });
-rivets.bind($("#testCompareRunAlert"), {
+rivets.bind($("#testCompareTablePanel"), {
     projectCompareSelectState: projectCompareSelectState
 });
 
@@ -319,7 +320,7 @@ function processSearchResults(data) {
 function doGetResultList() {
     switch (reportState.reportType) {
       case "projectCompare":
-        loadingState.loading = true;
+        switchToLoadingState();
         $.getJSON("/listTestResults", {}, processResultList);
         break;
       default:
@@ -368,17 +369,27 @@ function processBuildResults(data) {
     if (data.status != "ok") {
         tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
     } else {
-        tableContent = "<tr><th>Test</th><th colspan=\"4\">x86</th><th colspan=\"4\">LE</th></tr>";
+        tableContent = "<tr><th>Test</th><th colspan=\"4\">";
+        tableContent += data.leftCol + "</th><th colspan=\"4\">";
+        tableContent += data.rightCol + "</th></tr>";
         tableContent += "<tr><th/><th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th>";
         tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
-        var suiteKeys = Object.keys(data.results);
+        var suiteKeys = Object.keys(data.results.results);
         for (var key in suiteKeys) {
+            console.log("Suite key: " + suiteKeys[key]);
             tableContent += "<tr><th class=\"testSuite\">" +
                  suiteKeys[key] +
                 "</th><th class=\"testResultArch testSuite\" colspan=\"4\"/><th class=\"testResultArch testSuite\" colspan=\"4\"/></tr>";
-            var testKeys = Object.keys(data.results[suiteKeys[key]]);
+            var testKeys = Object.keys(data.results.results[suiteKeys[key]]);
             for (testKey in testKeys) {
-                var tc = data.results[suiteKeys[key]][testKeys[testKey]];
+                console.log("testKey: "+testKeys[testKey]);
+                var tc = data.results.results[suiteKeys[key]][testKeys[testKey]];
+                if (tc === undefined ||
+                    tc["total"] === undefined ||
+                    tc["failures"] === undefined ||
+                    tc["errors"] === undefined ||
+                    tc["skipped"] === undefined)
+                    continue;
                 var hlTotal = (tc["total"][data.leftCol] > tc["total"][data.rightCol] ?
                             " testErr" : "");
                 var hlFail = (tc["failures"][data.leftCol] < tc["failures"][data.rightCol] ?

@@ -1,6 +1,7 @@
 import paramiko
 import tempfile
 import shutil
+import os
 
 # host: ausgsa.austin.ibm.com
 # user: jenkin01
@@ -58,7 +59,9 @@ class Catalog:
 
     def cleanTmp(self):
         for tmpdir in self.__tmpdirs:
-            shutil.rmtree(tmpdir)
+            if os.path.exists(tmpdir):
+                shutil.rmtree(tmpdir)
+        tmpdir = []
 
     def close(self):
         self.__ftpClient.close()
