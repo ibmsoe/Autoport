@@ -36,7 +36,7 @@ cache = Cache(github)
 nodes = {'x86': "x86", 'ppcle': "ppcle"}
 maxResults = 10
 resParser = ResultParser()
-catalog = Catalog("ausgsa.austin.ibm.com", "corentin", "gzyZvIrNyzR5")
+catalog = Catalog("ausgsa.austin.ibm.com")
 #test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
 resultPattern = re.compile('.*? - (.*?) - .*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
 
