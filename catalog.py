@@ -2,6 +2,7 @@ import paramiko
 import tempfile
 import shutil
 import os
+import globals
 
 # host: ausgsa.austin.ibm.com
 # user: jenkin01
@@ -20,9 +21,9 @@ import os
 
 # TODO change default dir to test_results
 class Catalog:
-    def __init__(self, hostname, username = "jenkin01",
-            password = "5PtS6dKP12f",
-            path = "/projects/p/powersoe/autoport/test_results"):
+    def __init__(self, hostname, username=globals.jenkinsGsaUsername,
+            password=globals.jenkinsGsaPassword,
+            path=globals.gsaPathForTestResults):
         assert(hostname != None and username != "" and password != "")
         self.__host = hostname
         self.__username = username

@@ -1,42 +1,31 @@
 #!/usr/bin/env python
 
+# Importing globals and initializing them is the top priority
+import globals
+globals.init()
+
 # Imports
 import xml.etree.ElementTree as ET
 import requests
-import re
 import argparse
 import datetime
 import paramiko
+import os
+import re
 from time import gmtime, strftime, localtime, asctime
 from flask import Flask, request, render_template, json
-from github import Github
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
+from status import determineProgress
+from tags import getTags
 from catalog import Catalog
 from resultParser import ResultParser
-from cache import Cache
-from os import path, makedirs, walk, getcwd, stat
 from stat import ST_SIZE, ST_MTIME
 
-# Config
-jenkinsUrl = "http://soe-test1.aus.stglabs.ibm.com:8080"
-gsaPathForCatalog = "/projects/p/powersoe/autoport/test_results/"
-gsaPathForUpload = "/projects/p/powersoe/autoport/batch_files/"
-githubToken = "9294ace21922bf38fae227abaf3bc20cf0175b08"
-mavenPath = "/usr/local/apache-maven-3.2.3/bin"
-
-jobNamePrefix = "NewListTest"
-
-# Globals
-upload_folder = "./batch_files/"
-
 app = Flask(__name__)
-github = Github(githubToken)
-cache = Cache(github)
-nodes = {'x86': "x86", 'ppcle': "ppcle"}
 maxResults = 10
 resParser = ResultParser()
-catalog = Catalog("ausgsa.austin.ibm.com")
+catalog = Catalog(globals.hostname)
 #test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
 resultPattern = re.compile('.*? - (.*?) - .*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
 
@@ -45,38 +34,52 @@ resultPattern = re.compile('.*? - (.*?) - .*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d'
 def main():
     return render_template("main.html")
 
+@app.route("/init", methods=['POST'])
+def init():
+    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, gsaPathForTestResults=globals.gsaPathForTestResults, gsaPathForBatchFiles=globals.gsaPathForBatchFiles, githubToken=globals.githubToken, jenkinsGsaUsername=globals.jenkinsGsaUsername, jenkinsGsaPassword=globals.jenkinsGsaPassword)
+
 # Settings function
 @app.route("/settings", methods=['POST'])
 def settings():
     try:
-        jenkinsUrl = request.form["url"]
+        globals.jenkinsUrl = request.form["url"]
     except ValueError:
         return json.jsonify(status="failure", error="bad url")
 
     try:
-        gsaPathForCatalog = request.form["test_results"]
+        globals.gsaPathForTestResults = request.form["test_results"]
     except ValueError:
         return json.jsonify(status="failure", error="bad test_results path")
 
     try:
-        gsaPathForUpload = request.form["batch_files"]
+        globals.gsaPathForBatchFiles = request.form["batch_files"]
     except ValueError:
         return json.jsonify(status="failure", error="bad batch_files path")
 
     try:
         # change githubToken from default, doesn't actually work right now
-        githubToken = request.form["github"]
-        # github = Github(githubToken)
-        # cache = Cache(github)
+        globals.githubToken = request.form["github"]
+        # globals.github = Github(githubToken)
+        # globals.cache = Cache(github)
     except ValueError:
         return json.jsonify(status="failure", error="bad github token")
 
-    print jenkinsUrl
-    print gsaPathForCatalog
-    print gsaPathForUpload
-    print githubToken
+    try:
+        globals.jenkinsGsaUsername = request.form["username"]
+    except ValueError:
+        return json.jsonify(status="failure", error="bad gsa username")
+
+    try:
+        globals.jenkinsGsaPassword = request.form["password"]
+    except ValueError:
+        return json.jsonify(status="failure", error="bad gsa password")
 
     return json.jsonify(status="ok")
+
+@app.route("/progress")
+def progress():
+    percentages = determineProgress()
+    return json.jsonify(status="ok", percentages=percentages)
 
 # Search - return a JSON file with search results or the matched
 # repo if there's a solid candidate
@@ -108,7 +111,7 @@ def search():
     isFirst = True
     numResults = maxResults
 
-    repos = github.search_repositories(query, **searchArgs)
+    repos = globals.github.search_repositories(query, **searchArgs)
 
     if repos.totalCount == 0:
         # TODO - return no results page
@@ -117,7 +120,7 @@ def search():
         numResults = len(repos)
 
     for repo in repos[:numResults]: 
-        cache.cacheRepo(repo)
+        globals.cache.cacheRepo(repo)
         # If this is the top hit, and the name matches exactly, and
         # it has greater than 500 stars, then just assume that's the
         # repo the user is looking for
@@ -150,9 +153,9 @@ def detail(id, repo=None):
             idInt = int(id)
         except ValueError:
             return json.jsonify(status="failure", error="bad id")
-        repo = cache.getRepo(id)
+        repo = globals.cache.getRepo(id)
     # Get language data
-    languages = cache.getLang(repo)
+    languages = globals.cache.getLang(repo)
     # Transform so it's ready to graph on client side
     colorDataFile = open('language_colors.json')
     colorData = json.load(colorDataFile)
@@ -169,7 +172,7 @@ def detail(id, repo=None):
         })
 
     # Look for certain files to figure out how to build
-    build = inferBuildSteps(cache.getDir(repo), repo) # buildAnalyzer.py
+    build = inferBuildSteps(globals.cache.getDir(repo), repo) # buildAnalyzer.py
     # Collect data
 
     # Get tag-related data
@@ -212,8 +215,8 @@ def search_repositories():
     # TODO: debug-log parameters
 
     results = []
-    for repo in github.search_repositories(q, sort=sort, order=order)[:limit]:
-        cache.cacheRepo(repo)
+    for repo in globals.github.search_repositories(q, sort=sort, order=order)[:limit]:
+        globals.cache.cacheRepo(repo)
         results.append({
             "id": repo.id,
             "name": repo.name,
@@ -239,11 +242,11 @@ def uploadBatchFile():
     except KeyError:
         return json.jsonify(status="failure", error="missing file")
 
-    if not path.exists(upload_folder):
-        makedirs(upload_folder)
+    if not os.path.exists(globals.batch_folder):
+        os.makedirs(globals.batch_folder)
 
     name = "batch_file." + str(datetime.datetime.today()) 
-    openPath = upload_folder + name
+    openPath = globals.batch_folder + name
 
     f = open(openPath, "w")
     f.write(fileStr)
@@ -251,19 +254,20 @@ def uploadBatchFile():
 
     # Copy batch file to a predetermined spot in the GSA 
     # This portion of code requires paramiko installed.
-    hostname = "ausgsa.ibm.com"
-    username = "jenkin01"
-    password = "5PtS6dKP12f"
-
     port = 22
-    localpath = getcwd() + "/batch_files/" + name
+    localpath = os.getcwd() + "/batch_files/" + name
 
     # Unfortunately, this will not create a folder that is not already in the gsa.
     # Having stfp trying to create a folder with the same name everytime does not work either.
-    remotepath = gsaPathForUpload + name
+    remotepath = globals.gsaPathForBatchFiles + name
 
-    transport = paramiko.Transport((hostname, port))
-    transport.connect(username=username, password=password)
+    transport = None
+    try:
+        transport = paramiko.Transport((globals.hostname, port))
+        transport.connect(username=globals.jenkinsGsaUsername, password=globals.jenkinsGsaPassword)
+    except paramiko.AuthenticationException:
+        return json.jsonify(status="failure", error="Authentication Failed")
+
     sftp = paramiko.SFTPClient.from_transport(transport)
     sftp.put(localpath, remotepath)
     sftp.close()
@@ -335,25 +339,25 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
     # Get repository
-    repo = cache.getRepo(id)
+    repo = globals.cache.getRepo(id)
 
     # Infer build steps if possible
-    build = inferBuildSteps(cache.getDir(repo), repo)
+    build = inferBuildSteps(globals.cache.getDir(repo), repo)
 
     # Modify selected elements
     archName = ""
     if arch == "x86":
-        xml_node.text = nodes['x86']
+        xml_node.text = globals.nodes['x86']
         archName = "x86"
 
     elif arch == "ppcle":
-        xml_node.text = nodes['ppcle']
+        xml_node.text = globals.nodes['ppcle']
         archName = "ppcle"
 
     xml_github_url.text = repo.html_url
     xml_git_url.text = "https" + repo.git_url[3:]
 
-    jobName = jobNamePrefix + ' - ' + archName + ' - ' + repo.name
+    jobName = globals.jobNamePrefix + ' - ' + archName + ' - ' + repo.name
 
     if (tag == "") or (tag == "Current"):
         xml_default_branch.text = "*/" + repo.default_branch
@@ -376,11 +380,11 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         # In addition to whatever other environmental variables I need to inject
         # I should add whether to pick IBM Java or Open JDK
         xml_env_command.text += javaType + "\n"
-        path_env = "PATH=" + mavenPath + ":$PATH\n"
+        path_env = "PATH=" + globals.mavenPath + ":$PATH\n"
         xml_env_command.text += path_env
 
         xml_artifacts.text = build['artifacts']
-        xml_catalog_remote.text = gsaPathForCatalog + jobFolder
+        xml_catalog_remote.text = globals.gsaPathForTestResults + jobFolder
         xml_catalog_source.text = build['artifacts']
 
         # Job metadata as passed to jenkins
@@ -399,11 +403,9 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
 
-    print jenkinsUrl
-
     # Send to Jenkins
     r = requests.post(
-        jenkinsUrl + "/createItem",
+        globals.jenkinsUrl + "/createItem",
         headers={
             'Content-Type': 'application/xml'
         },
@@ -416,10 +418,10 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     if r.status_code == 200:
 
         # Success, send the jenkins job and start it right away.
-        startJobUrl = jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
+        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
         
         # But then redirect to job home to monitor job progress.
-        homeJobUrl = jenkinsUrl + "/job/" + jobName + "/"
+        homeJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/"
 
         # Start Jenkins job
         requests.get(startJobUrl)
@@ -440,7 +442,7 @@ def runBatchFile ():
   
     if batchName != "":
         # Read in the file and store as JSON
-        f = open(upload_folder + batchName)
+        f = open(globals.batch_folder + batchName)
         fileBuf = json.load(f)
         f.close()
 
@@ -450,7 +452,7 @@ def runBatchFile ():
             javaType = "JAVA_HOME=/opt/ibm/java"
 
         for package in fileBuf['packages']:            
-            p_repo = github.get_repo(package['id'])
+            p_repo = globals.github.get_repo(package['id'])
             tag = package['tag']
             createJob(package['id'], package['tag'], "x86", javaType)
             createJob(package['id'], package['tag'], "ppcle", javaType)
@@ -464,13 +466,13 @@ def runBatchFile ():
 def listBatchFiles ():
     file_list = []
 
-    for dirname, dirnames, filenames in walk(upload_folder):
+    for dirname, dirnames, filenames in os.walk(globals.batch_folder):
         for filename in sorted(filenames):
-            st = stat(upload_folder + filename)
+            st = stat(globals.batch_folder + filename)
             size = st[ST_SIZE]
             datemodified = asctime(localtime(st[ST_MTIME]))
 
-            f = open(upload_folder + filename)
+            f = open(globals.batch_folder + filename)
             fileBuf = json.load(f)
             f.close()
 
@@ -522,47 +524,17 @@ def getTestResults():
                         rightCol = rightname,
                         results = res)
 
-# Get list of tag names
-def getTags (repo):
-    tags = []
-    try:
-        for tag in cache.getTags(repo):
-            tags.append(tag.name)
-    except TypeError:
-        # PyGithub issue #278: Iterating through repo.get_tags() throws
-        # NoneType TypeError for repositories with lots of tags:
-        # https://github.com/jacquev6/PyGithub/issues/278
-        print "ERROR: PyGithub threw a TypeError while iterating through tags"
-    tags.sort(key=tagSortKey, reverse=True)
-
-    if (not tags) or (len(tags) < 1):
-        recentTag, tags = "",      ""
-    elif len(tags) == 1:
-        recentTag, tags = tags[0], ""
-    else:
-        recentTag, tags = tags[0], tags[1:]
-
-    return (tags, recentTag)
-
-# Sort tag names
-def tagSortKey (tagName):
-    m = re.search(r'\d+(\.\d+)+', tagName)
-    if m:
-        return map(int, m.group().split('.'))
-    else:
-        return [0,0,0,0]
-
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("-p", "--public",               action="store_true", help="specifies for the web server to listen over the public network, defaults to only listening on private localhost")
-    p.add_argument("-u", "--jenkinsURL",                                help="specifies the URL for the Jenkins server, defaults to '" + jenkinsUrl + "'")
-    p.add_argument("-n", "--jenkinsJobNamePrefix",                      help="specifies a string to prefix to the Jenkins job name, defaults to '" + jobNamePrefix + "'")
+    p.add_argument("-u", "--jenkinsURL",                                help="specifies the URL for the Jenkins server, defaults to '" + globals.jenkinsUrl + "'")
+    p.add_argument("-n", "--jenkinsJobNamePrefix",                      help="specifies a string to prefix to the Jenkins job name, defaults to '" + globals.jobNamePrefix + "'")
     args = p.parse_args()
 
     if args.jenkinsURL:
-        jenkinsUrl = args.jenkinsURL
+        globals.jenkinsUrl = args.jenkinsURL
     if args.jenkinsJobNamePrefix:
-        jobNamePrefix = args.jenkinsJobNamePrefix
+        globals.jobNamePrefix = args.jenkinsJobNamePrefix
 
     if args.public:
         app.run(debug = True, host='0.0.0.0')

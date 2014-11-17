@@ -47,20 +47,28 @@
             <div class="modal-body" id="settingsModal">
               <div class="attributes modalAttributes">
                 <div> 
-                  <label class="url">Jenkins Url </label> 
-                  <span> <input type="modalText" id="url" value="http://soe-test1.aus.stglabs.ibm.com:8080"> </span>
+                  <label class="url">Jenkins Url</label> 
+                  <span> <input type="text" id="url" rv-value="globalState.jenkinsUrl"> </span>
                 </div>
                 <div> 
-                  <label class="test_results">Test Results Path </label>
-                  <span> <input type="modalText" id="test_results" value="/projects/p/powersoe/autoport/test_results/"> </span>
+                  <label class="test_results">Test Results Path</label>
+                  <span> <input type="text" id="test_results" rv-value="globalState.gsaPathForTestResults"> </span>
                 </div>
                 <div> 
-                  <label class="batch_files">Batch Files Path </label>
-                  <span> <input type="modalText" id="batch_files" value="/projects/p/powersoe/autoport/batch_files/"> </span>
+                  <label class="batch_files">Batch Files Path</label>
+                  <span> <input type="text" id="batch_files" rv-value="globalState.gsaPathForBatchFiles"> </span>
                 </div>
                 <div> 
-                  <label class="github">Github Token </label>
-                  <span> <input type="modalText" id="github" value="9294ace21922bf38fae227abaf3bc20cf0175b08"> </span>
+                  <label class="github">Github Token</label>
+                  <span> <input type="text" id="github" rv-value="globalState.githubToken"> </span>
+                </div>
+                <div> 
+                  <label class="github">Jenkins GSA Username</label>
+                  <span> <input type="text" id="username" rv-value="globalState.jenkinsGsaUsername"> </span>
+                </div>
+                <div> 
+                  <label class="github">Jenkins GSA Password</label>
+                  <span> <input type="password" id="password" rv-value="globalState.jenkinsGsaPassword"> </span>
                 </div>
               </div>
             </div>
@@ -73,7 +81,17 @@
         </div> <!-- modal-dialog -->
       </div> <!-- modal fade -->
 
-    </div>
+    <!-- Progress Bar Code, Work in Progress -->
+<!--     <div class="progressSettings" id="progressBar">
+      <div class="progress progress-bar-primary">
+        <div class="bar bar-success progress-bar progress-bar-success" rv-style="percentageState.successPercentage"></div>
+        <div class="bar bar-warning progress-bar progress-bar-warning" rv-style="percentageState.warningPercentage"></div>
+        <div class="bar bar-danger progress-bar progress-bar-danger" rv-style="percentageState.dangerPercentage"></div>
+      </div>
+      <button rv-on-click="percentageState.updateProgressBar" type="button" class="btn btn-primary progressButton">Check Progress</button>
+    </div> -->
+
+    </div> <!-- end of jumbotron -->
     
     <!-- END HEADER -->
     
@@ -309,7 +327,7 @@
                 <div class="col-lg-6">
                   <div class="input-group">
                     <span class="input-group-addon">Filter</span>
-                    <input type="text" class="form-control" placeholder)="(i.e. project or batch file)" id="reportFilterQuery"/>
+                    <input type="text" class="form-control" placeholder="(i.e. project or batch file)" id="reportFilterQuery"/>
                   </div> <!-- input-group -->
                 </div>
               </div>

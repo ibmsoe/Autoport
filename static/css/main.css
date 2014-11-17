@@ -212,6 +212,12 @@ fieldset[disabled] .form-control {
     width: 100%;
 }
 
+/* Progress Bar and Button Styling*/
+.progressButton {
+    float: right;
+}
+
+/* Test Results Table Styling */
 #testResultsTable td,th {
     border-bottom: 1px solid grey;
     border-left: 1px solid grey;
