@@ -468,7 +468,7 @@ def listBatchFiles ():
 
     for dirname, dirnames, filenames in os.walk(globals.batch_folder):
         for filename in sorted(filenames):
-            st = stat(globals.batch_folder + filename)
+            st = os.stat(globals.batch_folder + filename)
             size = st[ST_SIZE]
             datemodified = asctime(localtime(st[ST_MTIME]))
 

@@ -37,7 +37,8 @@ def init():
 
     # unchanging project configurations
     global jobNamePrefix
-    global upload_folder
+    global batch_folder
+    global test_folder
     global github
     global cache
     global nodes
