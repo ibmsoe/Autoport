@@ -496,9 +496,12 @@ def listBatchFiles ():
     return json.jsonify(status = "ok", files = file_list)
 
 # List all results available on catalog
-@app.route("/listTestResults")
-def listTestResults():
-    return json.jsonify(status = "ok", results = catalog.listJobResults())
+@app.route("/listTestResults/<repositoryType>")
+def listTestResults(repositoryType):
+    filt = request.args.get("filter", "")
+    if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
+        return json.jsonify(status = "failure", error = "Invalid repository type")
+    return json.jsonify(status = "ok", results = catalog.listJobResults(repositoryType, filt.lower()))
 
 # Get the jenkins build output
 # /getBuildResults?left=x&right=y
@@ -517,6 +520,8 @@ def getTestResults():
 
     res = resParser.MavenBuildCompare(leftname, leftdir+"/test_result.arti",
                                       rightname, rightdir+"/test_result.arti")
+
+    # TODO make use of meta.arti to add information for display
 
     catalog.cleanTmp()
     return json.jsonify(status = "ok",

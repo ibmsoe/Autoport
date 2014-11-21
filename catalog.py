@@ -4,22 +4,6 @@ import shutil
 import os
 import globals
 
-# host: ausgsa.austin.ibm.com
-# user: jenkin01
-# pass: 5PtS6dKP12f
-# dir: /ausgsa-p14/05/powersoe/autoport/catalog
-# http://docs.paramiko.org/en/1.15/api/sftp.html
-# http://jessenoller.com/blog/2009/02/05/ssh-programming-with-paramiko-completely-different
-
-# import paramiko
-# ssh = paramiko.SSHClient()
-# ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-# ssh.connect("ausgsa.austin.ibm.com", username="jenkin01", password="5PtS6dKP12f")
-# ftp = ssh.open_sftp()
-# ftp.chdir("/projects/p/powersoe/autoport/catalog/")
-# ftp.listdir()
-
-# TODO change default dir to test_results
 class Catalog:
     def __init__(self, hostname, username=globals.jenkinsGsaUsername,
             password=globals.jenkinsGsaPassword,
@@ -38,13 +22,29 @@ class Catalog:
         except IOError:
             assert(False)
 
-    def listJobResults(self):
-        try:
-            print "Getting list of jenkins job results"
-            self.__ftpClient.chdir(self.__path)
-            return self.__ftpClient.listdir()
-        except IOError:
-            return None
+    # TODO make use of repoType, also probably build a json object here instead of a list of strings
+    def listJobResults(self, repoType, filt):
+        filteredList = []
+        if repoType == "gsa" or repoType == "all":
+            try:
+                print "Getting list of archived jenkins job results"
+                self.__ftpClient.chdir(self.__path)
+                fullList = self.__ftpClient.listdir()
+                if filt == "":
+                    return fullList
+                filteredList = []
+                for item in fullList:
+                    print item
+                    if filt in item.lower():
+                        print filt," -> ",item
+                        filteredList.append({item, "gsa"})
+            except IOError:
+                pass
+        elif repoType == "local" or repoType == "all":
+            # TODO check if an archived version is already there
+            #      for each local one?
+            pass
+        return filteredList
 
     def getResults(self, build):
         try:

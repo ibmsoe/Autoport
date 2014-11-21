@@ -222,25 +222,53 @@ var reportState = {
         reportState.reportLabel = $(ev.target).text();
         doGetResultList();
     },
-	setJobManagePanel: function (ev) {
+    projectFilter: "",
+    batchFilter: "",
+    listLocalProjects: function(ev) {
+        switchToLoadingState();
+        projectReportState.compareType = "project";
+        projectReportState.compareRepo = "local";
+        $.getJSON("/listTestResults/local", { filter: $("#projectFilter").val() }, processResultList);
+    },
+    listGSAProjects: function(ev) {
+        switchToLoadingState();
+        projectReportState.compareType = "project";
+        projectReportState.compareRepo = "archived";
+        $.getJSON("/listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList);
+    },
+    listAllProjects: function(ev) {
+        switchToLoadingState();
+        projectReportState.compareType = "project";
+        projectReportState.compareRepo = "all";
+        $.getJSON("/listTestResults/all", { filter: $("#projectFilter").val() }, processResultList);
+    },
+    listLocalBatch: function(ev) {
+    },
+    listGSABatch: function(ev) {
+    },
+    listAllBatch: function(ev) {
+    },
+	setJobManagePanel: function(ev) {
         reportState.jobManagePanel = (reportState.jobManagePanel) ? false : true;
 	},
-	setTestResultsPanel: function (ev) {
+	setTestResultsPanel: function(ev) {
         reportState.testResultsPanel = (reportState.testResultsPanel) ? false : true;
 	}
 };
 
-var projectCompareSelectState = {
+var projectReportState = {
     prjCompareReady: false,
+    compareRepo: "local",
+    compareType: "project",
     projects: [],
     selectedProjects: [],
     prjTableReady: false,
     selectProject: function(id) {
         // find the corresponding project object.
         var projectName = "";
-        for (prj in projectCompareSelectState.projects) {
-            if (projectCompareSelectState.projects[prj].id == id) {
-                projectName = projectCompareSelectState.projects[prj].fullName;
+        for (prj in projectReportState.projects) {
+            if (projectReportState.projects[prj].id == id) {
+                projectName = projectReportState.projects[prj].fullName;
                 break;
             }
         }
@@ -248,29 +276,60 @@ var projectCompareSelectState = {
             // Not found
             return;
         }
-        var pos = projectCompareSelectState.selectedProjects.indexOf(projectName);
+        var pos = projectReportState.selectedProjects.indexOf(projectName);
         if (pos != -1) {
-            $("#"+id).toggleClass('btn-primary');
-            projectCompareSelectState.selectedProjects.splice(pos, 1);
-        } else if (projectCompareSelectState.selectedProjects.length < 2) {
-            $("#"+id).toggleClass('btn-primary');
-            projectCompareSelectState.selectedProjects.push(projectName);
+            projectReportState.selectedProjects.splice(pos, 1);
         } else {
-            console.log("More than 2 lines ");
-            // TODO alert that only 2 lines can be selected or deselect the first?
+            projectReportState.selectedProjects.push(projectName);
         }
+        $("#"+id).toggleClass('btn-primary');
+        $("#"+id+" span").toggleClass('glyphicon-ok glyphicon-remove');
+    },
+    selectAll: function() {
+        for (prj in projectReportState.projects) {
+            var projectName = projectReportState.projects[prj].fullName;
+            if (projectReportState.selectedProjects.indexOf(projectName) === -1) {
+                $("#"+projectReportState.projects[prj].id).toggleClass('btn-primary');
+                $("#"+projectReportState.projects[prj].id+" span").toggleClass('glyphicon-ok glyphicon-remove');
+                projectReportState.selectedProjects.push(projectName);
+            }
+        }
+    },
+    selectNone: function() {
+        for (prj in projectReportState.projects) {
+            var projectName = projectReportState.projects[prj].fullName;
+            if (projectReportState.selectedProjects.indexOf(projectName) !== -1) {
+                $("#"+projectReportState.projects[prj].id).toggleClass('btn-primary');
+                $("#"+projectReportState.projects[prj].id+" span").toggleClass('glyphicon-ok glyphicon-remove');
+            }
+        }
+        projectReportState.selectedProjects = [];
+    },
+    testHistory: function() {
+        console.log("TODO testHistory");
+    },
+    testDetail: function() {
+        console.log("TODO testDetail");
     },
     compareResults: function() {
-        switchToLoadingState();
-        if (projectCompareSelectState.selectedProjects.length === 2) {
-            $.getJSON("/getTestResults?leftbuild="+projectCompareSelectState.selectedProjects[0]+
-                      "&rightbuild="+projectCompareSelectState.selectedProjects[1],
-                      {}, processBuildResults);
+        if (projectReportState.selectedProjects.length === 2) {
+            switchToLoadingState();
+            $.getJSON("/getTestResults",
+                      {
+                        leftbuild: projectReportState.selectedProjects[0],
+                        rightbuild: projectReportState.selectedProjects[1]
+                      },
+                      processBuildResults);
+        } else {
+            $('#resultCompareSelectionAlert').modal();
         }
     },
+    archive: function() {
+        console.log("TODO archive");
+    },
     backToList: function(ev) {
-        projectCompareSelectState.prjCompareReady = true;
-        projectCompareSelectState.prjTableReady = false;
+        projectReportState.prjCompareReady = true;
+        projectReportState.prjTableReady = false;
     }
 };
 
@@ -364,21 +423,21 @@ rivets.bind($('#reportSelector'), {
     reportState: reportState
 });
 rivets.bind($('#testCompareSelectPanel'), {
-    projectCompareSelectState: projectCompareSelectState
+    projectReportState: projectReportState
 });
 rivets.bind($("#testCompareRunAlert"), {
-    projectCompareSelectState: projectCompareSelectState
+    projectReportState: projectReportState
 });
 rivets.bind($("#testCompareTablePanel"), {
-    projectCompareSelectState: projectCompareSelectState
+    projectReportState: projectReportState
 });
 
 // Disables all views except loading view
 function switchToLoadingState() {
 	searchState.ready = false;
 	detailState.ready = false;
-    projectCompareSelectState.prjCompareReady = false;
-    projectCompareSelectState.prjTableReady = false;
+    projectReportState.prjCompareReady = false;
+    projectReportState.prjTableReady = false;
 	loadingState.loading = true;
 	detailState.autoSelected = false;
 }
@@ -461,22 +520,26 @@ function doGetResultList() {
 }
 
 function processResultList(data) {
-    projectCompareSelectState.selectedProjects = [];
-    projectCompareSelectState.projects = [];
+    projectReportState.selectedProjects = [];
+    projectReportState.projects = [];
     if (data === undefined || data.status != "ok") {
         console.log("Error");// TODO error message
     } else {
-        prjRegex = /(.*?) - (.*?) - (.*?)-(.*)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)/;
+        var prjRegex = /(.*?) - (.*?) - (.*?)-(.*)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)/;
+        var filterRegex = new RegExp(reportState.projectFilter.toLowerCase());
         for (var project in data.results) {
             if (project !== undefined) {
                 prjObject = prjRegex.exec(data.results[project]);
                 if (prjObject === null) {
                     continue;
                 }
+                if (filterRegex.exec(data.results[project].toLowerCase()) === null) {
+                    continue;
+                }
                 var prjId = data.results[project];
                 // HTML element's 'id' attribute can't have spaces
                 prjId = CryptoJS.MD5(prjId);
-                projectCompareSelectState.projects.push({
+                projectReportState.projects.push({
                      fullName: prjObject[0],
                            id: prjId,
                          name: prjObject[3],
@@ -484,7 +547,7 @@ function processResultList(data) {
                       version: prjObject[4],
                     completed: prjObject[5],
                        select: function(ev) {
-                           projectCompareSelectState.selectProject(ev.target.id);
+                           projectReportState.selectProject(ev.target.id);
                        }
                 });
             }
@@ -492,7 +555,7 @@ function processResultList(data) {
         searchState.ready = false;
         detailState.autoSelected = false;
         loadingState.loading = false;
-        projectCompareSelectState.prjCompareReady = true;
+        projectReportState.prjCompareReady = true;
     }
 }
 
@@ -547,10 +610,20 @@ function processBuildResults(data) {
                     tc["skipped"][data.rightCol]+"</td></tr>";
             }
         }
+        // TODO add totals
+        tableContent += "<tr><th>Totals</th><th class=\"testResultArch\">"+
+            data.results["total"][data.leftCol]+"</th><th class=\"testResult\">"+
+            data.results["failures"][data.leftCol]+"</th><th class=\"testResult\">"+
+            data.results["errors"][data.leftCol]+"</th><th class=\"testResult\">"+
+            data.results["skipped"][data.leftCol]+"</th><th class=\"testResultArch\">"+
+            data.results["total"][data.rightCol]+"</th><th class=\"testResult\">"+
+            data.results["failures"][data.rightCol]+"</th><th class=\"testResult\">"+
+            data.results["errors"][data.rightCol]+"</th><th class=\"testResult\">"+
+            data.results["skipped"][data.rightCol]+"</th></tr>";
     }
     $("#testResultsTable").html(tableContent);
     loadingState.loading = false;
-    projectCompareSelectState.prjTableReady = true;
+    projectReportState.prjTableReady = true;
 }
 
 // Sets up and opens detail view for a repo

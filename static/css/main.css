@@ -244,3 +244,14 @@ fieldset[disabled] .form-control {
     color: red;
     font-weight: bold
 }
+
+#testResultsTable {
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid black
+}
+
+.table-container {
+    margin: 5px
+}
+
