@@ -529,14 +529,14 @@ function processResultList(data) {
         var filterRegex = new RegExp(reportState.projectFilter.toLowerCase());
         for (var project in data.results) {
             if (project !== undefined) {
-                prjObject = prjRegex.exec(data.results[project]);
+                prjObject = prjRegex.exec(data.results[project][0]);
                 if (prjObject === null) {
                     continue;
                 }
-                if (filterRegex.exec(data.results[project].toLowerCase()) === null) {
+                if (filterRegex.exec(data.results[project][0].toLowerCase()) === null) {
                     continue;
                 }
-                var prjId = data.results[project];
+                var prjId = data.results[project][0];
                 // HTML element's 'id' attribute can't have spaces
                 prjId = CryptoJS.MD5(prjId);
                 projectReportState.projects.push({
@@ -546,6 +546,7 @@ function processResultList(data) {
                           env: prjObject[2],
                       version: prjObject[4],
                     completed: prjObject[5],
+                   repository: project[1],
                        select: function(ev) {
                            projectReportState.selectProject(ev.target.id);
                        }
@@ -571,13 +572,11 @@ function processBuildResults(data) {
         tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
         var suiteKeys = Object.keys(data.results.results);
         for (var key in suiteKeys) {
-            console.log("Suite key: " + suiteKeys[key]);
             tableContent += "<tr><th class=\"testSuite\">" +
                  suiteKeys[key] +
                 "</th><th class=\"testResultArch testSuite\" colspan=\"4\"/><th class=\"testResultArch testSuite\" colspan=\"4\"/></tr>";
             var testKeys = Object.keys(data.results.results[suiteKeys[key]]);
             for (testKey in testKeys) {
-                console.log("testKey: "+testKeys[testKey]);
                 var tc = data.results.results[suiteKeys[key]][testKeys[testKey]];
                 if (tc === undefined ||
                     tc["total"] === undefined ||

@@ -22,31 +22,39 @@ class Catalog:
         except IOError:
             assert(False)
 
-    # TODO make use of repoType, also probably build a json object here instead of a list of strings
     def listJobResults(self, repoType, filt):
-        filteredList = []
+        res = []
         if repoType == "gsa" or repoType == "all":
-            try:
-                print "Getting list of archived jenkins job results"
-                self.__ftpClient.chdir(self.__path)
-                fullList = self.__ftpClient.listdir()
-                if filt == "":
-                    return fullList
-                filteredList = []
-                for item in fullList:
-                    print item
-                    if filt in item.lower():
-                        print filt," -> ",item
-                        filteredList.append({item, "gsa"})
-            except IOError:
-                pass
+            res = self.listGSAJobResults(filt)
         elif repoType == "local" or repoType == "all":
-            # TODO check if an archived version is already there
-            #      for each local one?
+            res = res + self.listLocalJobResults(filt)
+        return res
+
+    def listLocalJobResults(self, filt):
+        return []
+
+    # TODO make use of repoType, also probably build a json object here instead of a list of strings
+    def listGSAJobResults(self, filt):
+        filteredList = []
+        try:
+            print "Getting list of archived jenkins job results"
+            self.__ftpClient.chdir(self.__path)
+            fullList = self.__ftpClient.listdir()
+            filteredList = []
+            for item in fullList:
+                if filt in item.lower() or filt == "":
+                    filteredList.append([item, "gsa"])
+        except IOError:
             pass
         return filteredList
 
     def getResults(self, build):
+        return self.getGSAResults(build)
+
+    def getLocalResults(self, build):
+        pass
+
+    def getGSAResults(self, build):
         try:
             putdir = tempfile.mkdtemp(prefix="autoport_")
             self.__ftpClient.chdir(self.__path+"/"+build)
