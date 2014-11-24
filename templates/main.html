@@ -107,12 +107,15 @@
 
       <div class="tab-content">
         
-        <!-- START SEARCH BOX -->
+        <!-- START SEARCH TAB -->
         
         <div id="searchProject" class="tab-pane fade in active">
+
+          <!-- START SEARCH PROJECT BOX -->
+
           <div class="jumbotron"> 
             <div class="btn btn-default btn-block" rv-on-click="searchState.setSingleSearchBox" id="singleSearchButton">
-              <h2 class="text-center">Search For Single Project</h2>
+              <h2 class="text-center">Search for a single project</h2>
             </div>
 
             <div class="jumbotron-button-content" id="searchBox" rv-show="searchState.singleSearchBox">
@@ -134,9 +137,11 @@
             </div>
           </div> <!-- jumbotron -->
         
+          <!-- START SEARCH FOR MULTIPLE PROJECTS BOX -->
+
           <div class="jumbotron">
             <div class="btn btn-default btn-block" rv-on-click="searchState.setGenerateBatchBox" id="generateBatchButton">
-              <h2 class="text-center">Generate Batch File</h2>
+              <h2 class="text-center">Search for most commonly used projects</h2>
             </div>
             <div id="generateBox" class="jumbotron-button-content" rv-show="searchState.generateBatchBox">
               <div class="row">
@@ -200,9 +205,9 @@
           </div> <!-- jumbotron -->
         </div> <!-- tab-pane -->
         
-        <!-- END SEARCH BOX -->
+        <!-- END SEARCH TAB -->
 
-        <!-- START BATCH FILE PROCESSING-->
+        <!-- START BATCH JOB TAB -->
         
         <div id="batchJobs" class="tab-pane fade">
           
@@ -232,7 +237,7 @@
           
           <!-- END IMPORT BOX -->
 
-          <!-- START LIST BATCH FILES -->
+          <!-- START LIST/SELECT BATCH FILES -->
          
           <div class="jumbotron"> 
 
@@ -277,21 +282,21 @@
 
           </div> <!-- jumbotron -->
 
-          <!-- END LIST BATCH FILES -->
+          <!-- END LIST/SELECT BATCH FILES -->
 
         </div> <!-- tab-pane -->
         
-        <!-- END BATCH FILE PROCESSING-->
+        <!-- END BATCH TAB PROCESSING -->
 
-        <!-- START REPORTING -->
+        <!-- START REPORTING TAB -->
 
         <div id="jobReports" class="tab-pane fade">
       
-          <!-- START MANAGING PROJECTS RESULTS -->
+          <!-- START MANAGE PROJECT RESULTS -->
 
           <div class="jumbotron">
             <div class="btn btn-default btn-block" rv-on-click="reportState.setJobManagePanel" id="jobManageButton">
-              <h2 class="text-center">Manage project results</h2>
+              <h2 class="text-center">Manage/Compare project results</h2>
             </div>
             <div id="jobManagePanel"
                 class="jumbotron-button-content"
@@ -324,13 +329,13 @@
             </div>
           </div>
 
-          <!-- END MANAGING PROJECTS RESULTS -->
+          <!-- END MANAGE PROJECT RESULTS -->
 
-          <!-- START MANAGING BATCH RESULTS -->        
+          <!-- START MANAGING BATCH JOB RESULTS -->        
 
           <div class="jumbotron">
             <div class="btn btn-default btn-block" rv-on-click="reportState.setTestResultsPanel" id="testResultsButton">
-              <h2 class="text-center">Manage batch jobs results</h2>
+              <h2 class="text-center">Manage/Compare batch jobs results</h2>
             </div>
             <div id="testResultsPanel"
                 class="jumbotron-button-content"
@@ -363,11 +368,11 @@
             </div>
           </div>
 
-          <!-- END MANAGING BATCH RESULTS -->
+          <!-- END MANAGING BATCH JOB RESULTS -->
         
         </div> <!-- tab pane -->
 
-        <!-- END REPORTING -->
+        <!-- END REPORTS TAB -->
 
       </div> <!-- tab-content -->  
     </div> <!-- jumbotron -->
