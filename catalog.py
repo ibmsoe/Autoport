@@ -7,12 +7,14 @@ import globals
 class Catalog:
     def __init__(self, hostname, username=globals.jenkinsGsaUsername,
             password=globals.jenkinsGsaPassword,
-            path=globals.gsaPathForTestResults):
+            gsaPath=globals.gsaPathForTestResults,
+            localPath=globals.localPathForTestResults):
         assert(hostname != None and username != "" and password != "")
         self.__host = hostname
         self.__username = username
         self.__password = password
-        self.__path = path
+        self.__gsaPath = gsaPath
+        self.__localPath = localPath
         self.__tmpdirs = []
         try:
             self.__sshClient = paramiko.SSHClient()
@@ -26,19 +28,28 @@ class Catalog:
         res = []
         if repoType == "gsa" or repoType == "all":
             res = self.listGSAJobResults(filt)
-        elif repoType == "local" or repoType == "all":
+        if repoType == "local" or repoType == "all":
             res = res + self.listLocalJobResults(filt)
         return res
 
     def listLocalJobResults(self, filt):
-        return []
+        filteredList = []
+        try:
+            print "Getting list of archived jenkins job results"
+            fullList = os.listdir(self.__localPath)
+            filteredList = []
+            for item in fullList:
+                if filt in item.lower() or filt == "":
+                    filteredList.append([item, "local"])
+        except IOError:
+            pass
+        return filteredList
 
-    # TODO make use of repoType, also probably build a json object here instead of a list of strings
     def listGSAJobResults(self, filt):
         filteredList = []
         try:
             print "Getting list of archived jenkins job results"
-            self.__ftpClient.chdir(self.__path)
+            self.__ftpClient.chdir(self.__gsaPath)
             fullList = self.__ftpClient.listdir()
             filteredList = []
             for item in fullList:
@@ -48,16 +59,19 @@ class Catalog:
             pass
         return filteredList
 
-    def getResults(self, build):
-        return self.getGSAResults(build)
+    def getResults(self, build, repository):
+        if repository == "gsa":
+            return self.getGSAResults(build)
+        elif repository == "local":
+            return self.getLocalResults(build)
 
     def getLocalResults(self, build):
-        pass
+        return self.__localPath+"/"+build
 
     def getGSAResults(self, build):
         try:
             putdir = tempfile.mkdtemp(prefix="autoport_")
-            self.__ftpClient.chdir(self.__path+"/"+build)
+            self.__ftpClient.chdir(self.__gsaPath+"/"+build)
             self.__ftpClient.get("meta.arti", putdir+"/meta.arti")
             self.__ftpClient.get("dependency.arti", putdir+"/dependency.arti")
             self.__ftpClient.get("test_result.arti", putdir+"/test_result.arti")

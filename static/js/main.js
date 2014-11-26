@@ -261,14 +261,16 @@ var projectReportState = {
     compareRepo: "local",
     compareType: "project",
     projects: [],
-    selectedProjects: [],
+    selectedProjects: {},
     prjTableReady: false,
     selectProject: function(id) {
         // find the corresponding project object.
         var projectName = "";
+        var projectRepo = "";
         for (prj in projectReportState.projects) {
             if (projectReportState.projects[prj].id == id) {
                 projectName = projectReportState.projects[prj].fullName;
+                projectRepo = projectReportState.projects[prj].repository;
                 break;
             }
         }
@@ -276,11 +278,11 @@ var projectReportState = {
             // Not found
             return;
         }
-        var pos = projectReportState.selectedProjects.indexOf(projectName);
-        if (pos != -1) {
-            projectReportState.selectedProjects.splice(pos, 1);
+        var pos = projectReportState.selectedProjects[projectName];
+        if (pos !== undefined) {
+            delete projectReportState.selectedProjects[projectName];
         } else {
-            projectReportState.selectedProjects.push(projectName);
+            projectReportState.selectedProjects[projectName] = projectRepo;
         }
         $("#"+id).toggleClass('btn-primary');
         $("#"+id+" span").toggleClass('glyphicon-ok glyphicon-remove');
@@ -288,36 +290,44 @@ var projectReportState = {
     selectAll: function() {
         for (prj in projectReportState.projects) {
             var projectName = projectReportState.projects[prj].fullName;
+            var projectRepo = projectReportState.projects[prj].repository;
             if (projectReportState.selectedProjects.indexOf(projectName) === -1) {
                 $("#"+projectReportState.projects[prj].id).toggleClass('btn-primary');
                 $("#"+projectReportState.projects[prj].id+" span").toggleClass('glyphicon-ok glyphicon-remove');
-                projectReportState.selectedProjects.push(projectName);
+                projectReportState.selectedProjects[projectName] = projectRepo;
             }
         }
     },
     selectNone: function() {
         for (prj in projectReportState.projects) {
             var projectName = projectReportState.projects[prj].fullName;
-            if (projectReportState.selectedProjects.indexOf(projectName) !== -1) {
+            if (projectReportState.selectedProjects[projectName] !== undefined) {
                 $("#"+projectReportState.projects[prj].id).toggleClass('btn-primary');
                 $("#"+projectReportState.projects[prj].id+" span").toggleClass('glyphicon-ok glyphicon-remove');
             }
         }
-        projectReportState.selectedProjects = [];
+        projectReportState.selectedProjects = {};
     },
-    testHistory: function() {
+    testHistory: function() { // TODO single project or multiple?
         console.log("TODO testHistory");
     },
-    testDetail: function() {
+    testDetail: function() { // TODO single project or multiple?
         console.log("TODO testDetail");
     },
     compareResults: function() {
-        if (projectReportState.selectedProjects.length === 2) {
+        var sel = Object.keys(projectReportState.selectedProjects);
+        if (sel.length === 2) {
+            var leftProject = sel[0];
+            var rightProject = sel[1];
+            var leftRepo = projectReportState.selectedProjects[leftProject];
+            var rightRepo = projectReportState.selectedProjects[rightProject];
             switchToLoadingState();
             $.getJSON("/getTestResults",
                       {
-                        leftbuild: projectReportState.selectedProjects[0],
-                        rightbuild: projectReportState.selectedProjects[1]
+                        leftbuild: leftProject,
+                        rightbuild: rightProject,
+                        leftrepository: leftRepo,
+                        rightrepository: rightRepo
                       },
                       processBuildResults);
         } else {
@@ -326,6 +336,11 @@ var projectReportState = {
     },
     archive: function() {
         console.log("TODO archive");
+        $.post("/archiveProjects",
+            {
+                projects: selectedProjects
+            },
+            archiveCallback, "json");
     },
     backToList: function(ev) {
         projectReportState.prjCompareReady = true;
@@ -541,12 +556,12 @@ function processResultList(data) {
                 prjId = CryptoJS.MD5(prjId);
                 projectReportState.projects.push({
                      fullName: prjObject[0],
-                           id: prjId,
+                           id: prjId+data.results[project][1],
                          name: prjObject[3],
                           env: prjObject[2],
                       version: prjObject[4],
                     completed: prjObject[5],
-                   repository: project[1],
+                   repository: data.results[project][1],
                        select: function(ev) {
                            projectReportState.selectProject(ev.target.id);
                        }
@@ -623,6 +638,11 @@ function processBuildResults(data) {
     $("#testResultsTable").html(tableContent);
     loadingState.loading = false;
     projectReportState.prjTableReady = true;
+}
+
+function archiveCallback(data) {
+    // TODO show a confirmation or error dialog
+    console.log("TODO");
 }
 
 // Sets up and opens detail view for a repo

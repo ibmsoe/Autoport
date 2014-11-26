@@ -34,6 +34,7 @@ def init():
     global hostname
     global jenkinsGsaUsername
     global jenkinsGsaPassword
+    global localPathForTestResults
 
     # unchanging project configurations
     global jobNamePrefix
@@ -51,6 +52,7 @@ def init():
     hostname = configOptions['hostname']
     jenkinsGsaUsername = configOptions['jenkinsgsausername']
     jenkinsGsaPassword = configOptions['jenkinsgsapassword']
+    localPathForTestResults = configOptions['localpathfortestresults']
 
     jobNamePrefix = "NewListTest" #Autoport
     batch_folder = "./" + os.path.basename(gsaPathForBatchFiles) + "/"

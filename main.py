@@ -509,10 +509,12 @@ def listTestResults(repositoryType):
 def getTestResults():
     leftbuild  = request.args.get("leftbuild", "")
     rightbuild = request.args.get("rightbuild", "")
+    leftrepo = request.args.get("leftrepository", "local")
+    rightrepo = request.args.get("rightrepository", "local")
     if (leftbuild == "" or rightbuild == ""):
         return json.jsonify(status = "failure", error = "invalid argument")
-    leftdir = catalog.getResults(leftbuild)
-    rightdir = catalog.getResults(rightbuild)
+    leftdir = catalog.getResults(leftbuild, leftrepo)
+    rightdir = catalog.getResults(rightbuild, rightrepo)
     if (leftdir == None or rightdir == None):
         return json.jsonify(status = "failure", error = "result not found")
     leftname = resultPattern.match(leftbuild).group(1)
@@ -528,6 +530,18 @@ def getTestResults():
                         leftCol = leftname,
                         rightCol = rightname,
                         results = res)
+
+@app.route("/getTestHistory/<projectName>")
+def getTestHistory(projectName):
+    return json.jsonify(status = "ok", results = "work in progress.")
+
+@app.route("/getTestDetail/<projectName>")
+def getTestDetail(projectName):
+    return json.jsonify(status = "ok", results = "work in progress.")
+
+@app.route("/archiveProjects")
+def archiveProjects():
+    return json.jsonify(status = "ok", results = "work in progress.")
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
