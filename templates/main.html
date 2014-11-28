@@ -7,11 +7,14 @@
     <title>Autoport</title>
 
     <!-- Bootstrap -->
-    <link href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}" rel="stylesheet">
-    <link href="{{ url_for('static', filename='css/lib/wave.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/lib/wave.css') }}" rel="stylesheet"/>
 
-    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet"/>
 
+    <!-- datatable -->
+    <link rel="stylesheet" href="http://cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css"/>
+    <link rel="stylesheet" href="http://cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.css"/>
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
     <!--[if lt IE 9]>
@@ -641,43 +644,39 @@
       <span class="autoSelectText">This is the list of { projectReportState.compareRepo } { projectReportState.compareType } results. Select the project(s) and action you wish to perform.</span>
       <br/>
       <div class="row">
-        <a href="#"
+        <button type="button"
+            class="btn btn-primary disabled"
+            id="testHistoryBtn"
             rv-on-click="projectReportState.testHistory">
-          <button type="button" class="btn btn-primary">
-          Test History
-          </button>
-        </a>
-        <a href="#"
+        Test History
+        </button>
+        <button type="button"
+            class="btn btn-primary disabled"
+            id="testDetailBtn"
             rv-on-click="projectReportState.testDetail">
-          <button type="button" class="btn btn-primary">
-          Test Detail
-          </button>
-        </a>
-        <a href="#"
-            rv-on-click="projectReportState.compareResults">
-          <button type="button" class="btn btn-primary">
-          Test Compare (2)
-          </button>
-        </a>
-        <a href="#"
+        Test Detail
+        </button>
+        <button type="button"
+            class="btn btn-primary disabled"
+            rv-on-click="projectReportState.compareResults"
+            id="compareResultsBtn">
+        Test Compare (2)
+        </button>
+        <button type="button"
+            class="btn btn-primary disabled"
+            id="resultArchiveBtn"
             rv-on-click="projectReportState.archive">
-          <button type="button" class="btn btn-primary">
-          Archive
-          </button>
-        </a>
+        Archive
+        </button>
         <span class="buttonRight">
-          <a href="#"
-              rv-on-click="projectReportState.selectAll">
-            <button type="button" class="btn btn-primary">
-            Select All
-            </button>
-          </a>
-          <a href="#"
-              rv-on-click="projectReportState.selectNone">
-            <button type="button" class="btn btn-primary">
-            Select None
-            </button>
-          </a>
+          <button type="button" class="btn btn-primary"
+            rv-on-click="projectReportState.selectAll">
+          Select All
+          </button>
+          <button type="button" class="btn btn-primary"
+            rv-on-click="projectReportState.selectNone">
+          Select None
+          </button>
         </span>
       </div>
     </div>
@@ -685,7 +684,7 @@
     <div id="testCompareSelectPanel"
         class="panel panel-default"
         rv-show="projectReportState.prjCompareReady">
-      <table class="table table-hover">
+      <table class="table table-hover" id="projectListTable">
         <thead>
           <tr>
             <th>Project name</th>
@@ -696,32 +695,7 @@
             <th>Actions</th>
           </tr>
         </thead>
-        <tbody id="projectsTable" rv-each-project="projectReportState.projects">
-          <tr class="result-row">
-            <td>
-              { project.name }
-            </td>
-            <td>
-              { project.version }
-            </td>
-            <td>
-              { project.env }
-            </td>
-            <td>
-              { project.completed }
-            </td>
-            <td>
-              { project.repository }
-            </td>
-            <td>
-            <a rv-href="#" rv-on-click="project.select">
-              <button type="button" class="btn" rv-id="project.id">
-                <span class="glyphicon glyphicon-remove"></span>
-                Select
-              </button>
-            </a>
-            </td>
-          </tr>
+        <tbody id="projectsTable">
         </tbody>
       </table>
     </div>
@@ -753,8 +727,10 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Hashing algorithms, as element IDs can't have any special chars -->
     <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js"></script>
+    <script type="text/javascript" src="http://cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
+    <script src="http://cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.js"></script>
     <script src="{{ url_for('static', filename='js/lib/rivets.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lib/chart.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lib/legend.js') }}"></script>

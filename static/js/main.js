@@ -256,11 +256,29 @@ var reportState = {
 	}
 };
 
+function handleProjectListBtns() {
+    if (Object.keys(projectReportState.selectedProjects).length === 2) {
+        $("#compareResultsBtn").removeClass("disabled");
+    } else {
+        $("#compareResultsBtn").addClass("disabled");
+    }
+    if (Object.keys(projectReportState.selectedProjects).length === 0) {
+        $("#testHistoryBtn").addClass("disabled");
+        $("#testDetailBtn").addClass("disabled");
+        $("#resultArchiveBtn").addClass("disabled");
+    } else {
+        $("#testHistoryBtn").removeClass("disabled");
+        $("#testDetailBtn").removeClass("disabled");
+        $("#resultArchiveBtn").removeClass("disabled");
+    }
+}
+
 var projectReportState = {
     prjCompareReady: false,
     compareRepo: "local",
     compareType: "project",
     projects: [],
+    projectsTable: null,
     selectedProjects: {},
     prjTableReady: false,
     selectProject: function(id) {
@@ -286,6 +304,7 @@ var projectReportState = {
         }
         $("#"+id).toggleClass('btn-primary');
         $("#"+id+" span").toggleClass('glyphicon-ok glyphicon-remove');
+        handleProjectListBtns();
     },
     selectAll: function() {
         for (prj in projectReportState.projects) {
@@ -297,6 +316,7 @@ var projectReportState = {
                 projectReportState.selectedProjects[projectName] = projectRepo;
             }
         }
+        handleProjectListBtns();
     },
     selectNone: function() {
         for (prj in projectReportState.projects) {
@@ -307,6 +327,7 @@ var projectReportState = {
             }
         }
         projectReportState.selectedProjects = {};
+        handleProjectListBtns();
     },
     testHistory: function() { // TODO single project or multiple?
         console.log("TODO testHistory");
@@ -537,6 +558,7 @@ function doGetResultList() {
 function processResultList(data) {
     projectReportState.selectedProjects = [];
     projectReportState.projects = [];
+    projectReportState.projectsTable.clear();
     if (data === undefined || data.status != "ok") {
         console.log("Error");// TODO error message
     } else {
@@ -562,6 +584,29 @@ function processResultList(data) {
                       version: prjObject[4],
                     completed: prjObject[5],
                    repository: data.results[project][1],
+                    selectBtn: '<a rv-href="#" rv-on-click="project.select">'+
+                               '<button type="button" class="btn" rv-id="'+
+                               prjId+data.results[project][1]+
+                               '<span class="glyphicon glyphicon-remove"></span>'+
+                               'Select</button></a>',
+                       select: function(ev) {
+                           projectReportState.selectProject(ev.target.id);
+                       }
+                });
+                projectReportState.projectsTable.row.add({
+                     fullName: prjObject[0],
+                           id: prjId+data.results[project][1],
+                         name: prjObject[3],
+                          env: prjObject[2],
+                      version: prjObject[4],
+                    completed: prjObject[5],
+                   repository: data.results[project][1],
+                    selectBtn: '<a rv-href="#" onClick="projectReportState.selectProject(\''+
+                               prjId+data.results[project][1]+'\')">'+
+                               '<button type="button" class="btn" id="'+
+                               prjId+data.results[project][1]+'">'+
+                               '<span class="glyphicon glyphicon-remove"></span>'+
+                               'Select</button></a>',
                        select: function(ev) {
                            projectReportState.selectProject(ev.target.id);
                        }
@@ -572,6 +617,7 @@ function processResultList(data) {
         detailState.autoSelected = false;
         loadingState.loading = false;
         projectReportState.prjCompareReady = true;
+        projectReportState.projectsTable.draw();
     }
 }
 
@@ -727,3 +773,22 @@ function addToJenkinsCallback(data) {
 		console.log(data);
 	}
 }
+
+$(document).ready(function() {
+    projectReportState.projectsTable = $("#projectListTable").DataTable({
+        order: [[3, "desc"]],
+        ordering: true,
+        paging: true,
+        searching: false,
+        data: projectReportState.projects,
+        columns: [
+            { "data": "name", "ordering": "true" },
+            { "data": "version", "ordering": "true" },
+            { "data": "env", "ordering": "true" },
+            { "data": "completed", "ordering": "true" },
+            { "data": "repository", "ordering": "true" },
+            { "data": "selectBtn", "ordering": "false" }
+        ]
+    });
+});
+
