@@ -523,12 +523,19 @@ def getTestResults():
     res = resParser.MavenBuildCompare(leftname, leftdir+"/test_result.arti",
                                       rightname, rightdir+"/test_result.arti")
 
-    # TODO make use of meta.arti to add information for display
+    lf = open(leftdir+"/meta.arti")
+    rf = open(rightdir+"/meta.arti")
+    leftmeta = json.load(lf)
+    rightmeta = json.load(rf)
+    lf.close()
+    rf.close()
 
     catalog.cleanTmp()
     return json.jsonify(status = "ok",
                         leftCol = leftname,
                         rightCol = rightname,
+                        leftProject = leftmeta,
+                        rightProject = rightmeta,
                         results = res)
 
 @app.route("/getTestHistory/<projectName>")
@@ -537,7 +544,13 @@ def getTestHistory(projectName):
 
 @app.route("/getTestDetail/<projectName>")
 def getTestDetail(projectName):
-    return json.jsonify(status = "ok", results = "work in progress.")
+    repo = request.args.get("repository", "local")
+    resultDir = catalog.getResults(projectName, repo)
+    res = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+    f = open(resultDir+"/meta.arti")
+    meta = json.load(f)
+    f.close()
+    return json.jsonify(status = "ok", results = res, project = meta)
 
 @app.route("/archiveProjects")
 def archiveProjects():

@@ -333,7 +333,13 @@ var projectReportState = {
         console.log("TODO testHistory");
     },
     testDetail: function() { // TODO single project or multiple?
-        console.log("TODO testDetail");
+        var sel = Object.keys(projectReportState.selectedProjects);
+        switchToLoadingState();
+        $.getJSON("/getTestDetail/"+sel[0],
+                  {
+                    repository: projectReportState.selectedProjects[sel[0]]
+                  },
+                  processTestDetail);
     },
     compareResults: function() {
         var sel = Object.keys(projectReportState.selectedProjects);
@@ -626,9 +632,21 @@ function processBuildResults(data) {
     if (data.status != "ok") {
         tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
     } else {
+        var leftHeader = "";
+        var rightHeader = "";
+        if (data.leftProject.Architecture !== data.rightProject.Architecture) {
+            leftHeader = data.leftProject.Architecture;
+            rightHeader = data.rightProject.Architecture;
+        } else if (data.leftProject.Version !== data.rightProject.Version) {
+            leftHeader = data.leftProject.Version;
+            rightHeader = data.rightProject.Version;
+        } else {
+            leftHeader = data.leftProject.Date;
+            rightHeader = data.rightProject.Date;
+        }
         tableContent = "<tr><th>Test</th><th colspan=\"4\">";
-        tableContent += data.leftCol + "</th><th colspan=\"4\">";
-        tableContent += data.rightCol + "</th></tr>";
+        tableContent += leftHeader + "</th><th colspan=\"4\">";
+        tableContent += rightHeader + "</th></tr>";
         tableContent += "<tr><th/><th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th>";
         tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
         var suiteKeys = Object.keys(data.results.results);
@@ -670,7 +688,6 @@ function processBuildResults(data) {
                     tc["skipped"][data.rightCol]+"</td></tr>";
             }
         }
-        // TODO add totals
         tableContent += "<tr><th>Totals</th><th class=\"testResultArch\">"+
             data.results["total"][data.leftCol]+"</th><th class=\"testResult\">"+
             data.results["failures"][data.leftCol]+"</th><th class=\"testResult\">"+
@@ -682,6 +699,53 @@ function processBuildResults(data) {
             data.results["skipped"][data.rightCol]+"</th></tr>";
     }
     $("#testResultsTable").html(tableContent);
+    $("#prjHeader").html("for " + data.leftProject.Package + " version " +
+        data.leftProject.Version + " on " + data.leftProject.Architecture +
+        " / " + data.rightProject.Package + " version " +
+        data.rightProject.Version + " on " + data.rightProject.Architecture);
+    loadingState.loading = false;
+    projectReportState.prjTableReady = true;
+}
+
+function processTestDetail(data) {
+    if (data.status != "ok") {
+        tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
+    } else {
+        // based on the compare table
+        var tableContent = "<tr><th>Test</th>";
+        tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
+        var suiteKeys = Object.keys(data.results.results);
+        for (var key in suiteKeys) {
+            tableContent += "<tr><th class=\"testSuite\">" +
+                 suiteKeys[key] +
+                "</th><th class=\"testResultArch testSuite\" colspan=\"4\"/></tr>";
+            var testKeys = Object.keys(data.results.results[suiteKeys[key]]);
+            for (testKey in testKeys) {
+                var tc = data.results.results[suiteKeys[key]][testKeys[testKey]];
+                if (tc === undefined ||
+                    tc["total"] === undefined ||
+                    tc["failures"] === undefined ||
+                    tc["errors"] === undefined ||
+                    tc["skipped"] === undefined)
+                    continue;
+                tableContent += "<tr><td class=\"testClass\">"+testKeys[testKey]+
+                    "</td><td class=\"testResultArch\">"+
+                    tc["total"]+"</td><td class=\"testResult\">"+
+                    tc["failures"]+"</td><td class=\"testResult\">"+
+                    tc["errors"]+"</td><td class=\"testResult\">"+
+                    tc["skipped"]+"</td></tr>";
+                
+            }
+        }        
+        tableContent += "<tr><th>Totals</th><th class=\"testResultArch\">"+
+            data.results["total"]+"</th><th class=\"testResult\">"+
+            data.results["failures"]+"</th><th class=\"testResult\">"+
+            data.results["errors"]+"</th><th class=\"testResult\">"+
+            data.results["skipped"]+"</th></tr>";
+    }
+    $("#testResultsTable").html(tableContent);
+    $("#prjHeader").html("for " + data.project.Package + " version " +
+        data.project.Version + " on " + data.project.Architecture);
     loadingState.loading = false;
     projectReportState.prjTableReady = true;
 }
