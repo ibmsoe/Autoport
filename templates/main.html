@@ -54,7 +54,11 @@
                   <span> <input type="text" id="url" rv-value="globalState.jenkinsUrl"> </span>
                 </div>
                 <div> 
-                  <label class="test_results">Test Results Path</label>
+                  <label class="test_results">Local Test Results Path</label>
+                  <span> <input type="text" id="test_results" rv-value="globalState.gsaPathForTestResults"> </span>
+                </div>
+                <div> 
+                  <label class="test_results">Archived Test Results Path</label>
                   <span> <input type="text" id="test_results" rv-value="globalState.gsaPathForTestResults"> </span>
                 </div>
                 <div> 
@@ -690,6 +694,7 @@
             <th>Project name</th>
             <th>Version</th>
             <th>Environment</th>
+            <th>Operating System</th>
             <th>Completed</th>
             <th>Repository</th>
             <th>Actions</th>

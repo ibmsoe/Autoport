@@ -36,7 +36,7 @@ def main():
 
 @app.route("/init", methods=['POST'])
 def init():
-    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, gsaPathForTestResults=globals.gsaPathForTestResults, gsaPathForBatchFiles=globals.gsaPathForBatchFiles, githubToken=globals.githubToken, jenkinsGsaUsername=globals.jenkinsGsaUsername, jenkinsGsaPassword=globals.jenkinsGsaPassword)
+    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, gsaPathForTestResults=globals.gsaPathForTestResults, gsaPathForBatchFiles=globals.gsaPathForBatchFiles, localPathForTestResults=globals.localPathForTestResults, githubToken=globals.githubToken, jenkinsGsaUsername=globals.jenkinsGsaUsername, jenkinsGsaPassword=globals.jenkinsGsaPassword)
 
 # Settings function
 @app.route("/settings", methods=['POST'])
@@ -55,6 +55,11 @@ def settings():
         globals.gsaPathForBatchFiles = request.form["batch_files"]
     except ValueError:
         return json.jsonify(status="failure", error="bad batch_files path")
+
+    try:
+        globals.localPathForTestResults = request.form["local_test_results"]
+    except ValueError:
+        return json.jsonify(status = "failure", error="bad local_test_results path")
 
     try:
         # change githubToken from default, doesn't actually work right now
@@ -538,19 +543,23 @@ def getTestResults():
                         rightProject = rightmeta,
                         results = res)
 
-@app.route("/getTestHistory/<projectName>")
-def getTestHistory(projectName):
+@app.route("/getTestHistory")
+def getTestHistory():
     return json.jsonify(status = "ok", results = "work in progress.")
 
-@app.route("/getTestDetail/<projectName>")
-def getTestDetail(projectName):
-    repo = request.args.get("repository", "local")
-    resultDir = catalog.getResults(projectName, repo)
-    res = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
-    f = open(resultDir+"/meta.arti")
-    meta = json.load(f)
-    f.close()
-    return json.jsonify(status = "ok", results = res, project = meta)
+@app.route("/getTestDetail", methods=["POST"])
+def getTestDetail():
+    projects = request.json['projects']
+    out = []
+    for projectName in projects:
+        repo = projects[projectName]
+        resultDir = catalog.getResults(projectName, repo)
+        res = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+        f = open(resultDir+"/meta.arti")
+        meta = json.load(f)
+        f.close()
+        out.append({ "results": res, "project": meta, "repository": repo })
+    return json.jsonify(status = "ok", results = out)
 
 @app.route("/archiveProjects")
 def archiveProjects():

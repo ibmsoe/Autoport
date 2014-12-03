@@ -332,14 +332,22 @@ var projectReportState = {
     testHistory: function() { // TODO single project or multiple?
         console.log("TODO testHistory");
     },
-    testDetail: function() { // TODO single project or multiple?
+    testDetail: function() { // TODOmultiple projects! 
         var sel = Object.keys(projectReportState.selectedProjects);
+        var query = {};
+        for (proj in sel) {
+            query[sel[proj]] = projectReportState.selectedProjects[sel[proj]];
+        }
         switchToLoadingState();
-        $.getJSON("/getTestDetail/"+sel[0],
-                  {
-                    repository: projectReportState.selectedProjects[sel[0]]
-                  },
-                  processTestDetail);
+        $.ajax({
+                type: "POST",
+         contentType: "application/json; charset=utf-8",
+                 url: "/getTestDetail",
+                data: JSON.stringify({
+                        projects: query
+                      }),
+             success: processTestDetail,
+            dataType:'json'});
     },
     compareResults: function() {
         var sel = Object.keys(projectReportState.selectedProjects);
@@ -587,6 +595,7 @@ function processResultList(data) {
                            id: prjId+data.results[project][1],
                          name: prjObject[3],
                           env: prjObject[2],
+                           os: "",
                       version: prjObject[4],
                     completed: prjObject[5],
                    repository: data.results[project][1],
@@ -604,6 +613,7 @@ function processResultList(data) {
                            id: prjId+data.results[project][1],
                          name: prjObject[3],
                           env: prjObject[2],
+                           os: "",
                       version: prjObject[4],
                     completed: prjObject[5],
                    repository: data.results[project][1],
@@ -712,40 +722,47 @@ function processTestDetail(data) {
         tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
     } else {
         // based on the compare table
-        var tableContent = "<tr><th>Test</th>";
-        tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
-        var suiteKeys = Object.keys(data.results.results);
-        for (var key in suiteKeys) {
-            tableContent += "<tr><th class=\"testSuite\">" +
-                 suiteKeys[key] +
-                "</th><th class=\"testResultArch testSuite\" colspan=\"4\"/></tr>";
-            var testKeys = Object.keys(data.results.results[suiteKeys[key]]);
-            for (testKey in testKeys) {
-                var tc = data.results.results[suiteKeys[key]][testKeys[testKey]];
-                if (tc === undefined ||
-                    tc["total"] === undefined ||
-                    tc["failures"] === undefined ||
-                    tc["errors"] === undefined ||
-                    tc["skipped"] === undefined)
-                    continue;
-                tableContent += "<tr><td class=\"testClass\">"+testKeys[testKey]+
-                    "</td><td class=\"testResultArch\">"+
-                    tc["total"]+"</td><td class=\"testResult\">"+
-                    tc["failures"]+"</td><td class=\"testResult\">"+
-                    tc["errors"]+"</td><td class=\"testResult\">"+
-                    tc["skipped"]+"</td></tr>";
-                
+        var tableContent = "";
+        for (project in data.results) {
+            tableContent += "<tr><th colspan=\"5\"><h3>"+
+                data.results[project].project["Package"]+" version "+
+                data.results[project].project["Version"]+" on "+
+                data.results[project].project["Architecture"]+" / repository: "+
+                data.results[project].repository+"</h3></th></tr>";
+            tableContent += "<tr><th>Test</th>";
+            tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
+
+            var suiteKeys = Object.keys(data.results[project].results.results);
+            for (var key in suiteKeys) {
+                tableContent += "<tr><th class=\"testSuite\">" +
+                     suiteKeys[key] +
+                    "</th><th class=\"testResultArch testSuite\" colspan=\"4\"/></tr>";
+                var testKeys = Object.keys(data.results[project].results.results[suiteKeys[key]]);
+                for (testKey in testKeys) {
+                    var tc = data.results[project].results.results[suiteKeys[key]][testKeys[testKey]];
+                    if (tc === undefined ||
+                        tc["total"] === undefined ||
+                        tc["failures"] === undefined ||
+                        tc["errors"] === undefined ||
+                        tc["skipped"] === undefined)
+                        continue;
+                    tableContent += "<tr><td class=\"testClass\">"+testKeys[testKey]+
+                        "</td><td class=\"testResultArch\">"+
+                        tc["total"]+"</td><td class=\"testResult\">"+
+                        tc["failures"]+"</td><td class=\"testResult\">"+
+                        tc["errors"]+"</td><td class=\"testResult\">"+
+                        tc["skipped"]+"</td></tr>";
+                    
+                }
             }
-        }        
-        tableContent += "<tr><th>Totals</th><th class=\"testResultArch\">"+
-            data.results["total"]+"</th><th class=\"testResult\">"+
-            data.results["failures"]+"</th><th class=\"testResult\">"+
-            data.results["errors"]+"</th><th class=\"testResult\">"+
-            data.results["skipped"]+"</th></tr>";
+            tableContent += "<tr><th>Totals</th><th class=\"testResultArch\">"+
+                data.results[project].results["total"]+"</th><th class=\"testResult\">"+
+                data.results[project].results["failures"]+"</th><th class=\"testResult\">"+
+                data.results[project].results["errors"]+"</th><th class=\"testResult\">"+
+                data.results[project].results["skipped"]+"</th></tr>";
+        }
     }
     $("#testResultsTable").html(tableContent);
-    $("#prjHeader").html("for " + data.project.Package + " version " +
-        data.project.Version + " on " + data.project.Architecture);
     loadingState.loading = false;
     projectReportState.prjTableReady = true;
 }
@@ -840,7 +857,7 @@ function addToJenkinsCallback(data) {
 
 $(document).ready(function() {
     projectReportState.projectsTable = $("#projectListTable").DataTable({
-        order: [[3, "desc"]],
+        order: [[4, "desc"]],
         ordering: true,
         paging: true,
         searching: false,
@@ -849,6 +866,7 @@ $(document).ready(function() {
             { "data": "name", "ordering": "true" },
             { "data": "version", "ordering": "true" },
             { "data": "env", "ordering": "true" },
+            { "data": "os", "ordering": "true" },
             { "data": "completed", "ordering": "true" },
             { "data": "repository", "ordering": "true" },
             { "data": "selectBtn", "ordering": "false" }
