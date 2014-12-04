@@ -54,7 +54,7 @@ def init():
     jenkinsGsaPassword = configOptions['jenkinsgsapassword']
     localPathForTestResults = configOptions['localpathfortestresults']
 
-    jobNamePrefix = "NewListTest" #Autoport
+    jobNamePrefix = "AutoPort" #Autoport
     batch_folder = "./" + os.path.basename(gsaPathForBatchFiles) + "/"
     test_folder = "./" + os.path.basename(gsaPathForTestResults) + "/"
     github = Github(githubToken)
