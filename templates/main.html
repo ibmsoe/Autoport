@@ -37,16 +37,24 @@
       </h1>
 
       <div id="searchTabHeader" rv-show="globalState.isSearchTabActive">
-        <p>Search for a single project - Allows you to search for a single GitHub project by name or by owner/name.  Also allows you to sort the list returned by relevance, number of stars, number of forks, or by last time the project was updated.</p>
-        <p>Search for most commonly used projects - Generates a list of the top N projects on GitHub based on the number of star or forks, programming languages, and also allows you to specify current branch or latest stable release.  After the list is generated you can remove unwanted projects and export the list.</p>
+        <p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
+        <p>You can also setup a basic Jenkins job for the project with one click.</p>
+        <p>You also have the ability to create a batch file to build and test multiple projects.</p>
       </div>
+
       <div id="batchTabHeader" rv-show="globalState.isBatchTabActive">
-        <p>Import - Allows you to select a local batch file and then upload to the local batch files directory.</p>
-        <p>List/Select - Lists the batch files, along with their info, located locally and on the server.  Actions can then be selected to be performed on each individual batch file.</p>
+        <p>Import - Allows you to select a local batch file and upload it to the server where the tool is running.</p>
+        <p>List/Select - List and take action on batch files located on the server and the registered shared location.</p>
+        <ul>
+        <li>Submit - create a Jenkins job for each project listed in the batch file.</li>
+        <li>Archive - when a batch file is successfully built and tested, you can make it globally visible by copying it to the registered batch directory in gsa.</li>
+        <li>Remove - erase a batch file from the server or the shared location.</li>
       </div>
+
       <div id="reportsTabHeader" rv-show="globalState.isReportsTabActive">
-        <p>Manage/Compare project results - TODO</p>
-        <p>Manage/Compare batch jobs results - TODO</p>
+        <p>List and select the type of report that you would like generated.</p>
+        <p>You may look at the test history of a project or batch file and generate comparisons across platforms and project versions.
+        Like batch files, test results are stored locally on the server, until you archive them to shared location.</p>
       </div>
 
       <!-- Modal -->
