@@ -21,6 +21,7 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
+    
   </head>
   <body>
     <div class="container">
@@ -35,9 +36,18 @@
         </button>
       </h1>
 
-      <!-- TODO uncomment this!!! p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
-      <p>You can also setup a basic Jenkins job for the project with one click. </p>
-      <p>You also have the ability to create a batch file to process multiple projects with one click.</p -->
+      <div id="searchTabHeader" rv-show="globalState.isSearchTabActive">
+        <p>Search for a single project - Allows you to search for a single GitHub project by name or by owner/name.  Also allows you to sort the list returned by relevance, number of stars, number of forks, or by last time the project was updated.</p>
+        <p>Search for most commonly used projects - Generates a list of the top N projects on GitHub based on the number of star or forks, programming languages, and also allows you to specify current branch or latest stable release.  After the list is generated you can remove unwanted projects and export the list.</p>
+      </div>
+      <div id="batchTabHeader" rv-show="globalState.isBatchTabActive">
+        <p>Import - Allows you to select a local batch file and then upload to the local batch files directory.</p>
+        <p>List/Select - Lists the batch files, along with their info, located locally and on the server.  Actions can then be selected to be performed on each individual batch file.</p>
+      </div>
+      <div id="reportsTabHeader" rv-show="globalState.isReportsTabActive">
+        <p>Manage/Compare project results - TODO</p>
+        <p>Manage/Compare batch jobs results - TODO</p>
+      </div>
 
       <!-- Modal -->
       <div class="modal fade" id="settingsModal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
@@ -104,10 +114,10 @@
     
     <div class="jumbotron">
         
-      <ul class="nav nav-tabs nav-justified">
-        <li class="active"><a data-toggle="tab" href="#searchProject">Search</a></li>
-        <li><a data-toggle="tab" href="#batchJobs">Batch Jobs</a></li>
-        <li><a data-toggle="tab" href="#jobReports">Reports</a></li>
+      <ul id="testtest" class="nav nav-tabs nav-justified">
+        <li class="active"><a rv-on-click="globalState.headerChange" id="searchTab" data-toggle="tab" href="#searchProject">Search</a></li>
+        <li><a rv-on-click="globalState.headerChange" id="batchTab" data-toggle="tab" href="#batchJobs">Batch Jobs</a></li>
+        <li><a rv-on-click="globalState.headerChange" id="reportsTab" data-toggle="tab" href="#jobReports">Reports</a></li>
       </ul>
 
       <br />
@@ -253,10 +263,11 @@
             </div>
 
             <div id="batchListPanel" class="panel panel-default jumbotron-button-content" rv-show="batchState.ready">
-              <table class="table">
+              <table class="table" id="batchListTable">
                 <thead>
                   <tr>
                     <th>Name</th>
+                    <th>Location</th>
                     <th>Environment</th>
                     <th>File Details</th>
                     <th>Actions</th>
@@ -268,12 +279,17 @@
                       { result.name }
                     </td>
                     <td>
+                      { result.location }
+                    </td>
+                    <td>
                       { result.environment }
                     </td>
                     <td>
                       Size: { result.size } bytes
                       <br /> 
                       Date Modified: { result.datemodified }
+                      <br /> 
+                      Owner: { result.owner }
                     </td>
                     <td>
                       <a rv-href="#" rv-on-click="batchState.buildAndTest">
@@ -571,7 +587,7 @@
     
     <!-- START BATCH FILE TABLE -->
 
-    <div id="batchFilePanel" class="panel panel-default" rv-show="batchState.ready">
+    <div id="batchFilePanel" class="panel panel-default" rv-show="batchState.exportReady">
       <a rv-href="#" rv-on-click="batchState.download">
         <button type="button" class="btn btn-primary">
           <span class="glyphicon glyphicon-download"></span>
@@ -727,7 +743,6 @@
         </button>
       </a>
     </div>
-
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Hashing algorithms, as element IDs can't have any special chars -->

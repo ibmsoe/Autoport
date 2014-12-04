@@ -14,6 +14,27 @@ var globalState = {
     jenkinsGsaUsername: "",
     jenkinsGsaPassword: "",
 
+    isSearchTabActive: true,
+    isBatchTabActive: false,
+    isReportsTabActive: false,
+
+    headerChange: function(ev) {
+        if(ev.target.id === "searchTab") {
+            globalState.isSearchTabActive = true;
+            globalState.isBatchTabActive = false;
+            globalState.isReportsTabActive = false;
+        }
+        else if(ev.target.id === "batchTab") {
+            globalState.isSearchTabActive = false;
+            globalState.isBatchTabActive = true;
+            globalState.isReportsTabActive = false;
+        }
+        else if(ev.target.id === "reportsTab") {
+            globalState.isSearchTabActive = false;
+            globalState.isBatchTabActive = false;
+            globalState.isReportsTabActive = true;
+        }
+    },
     reset: function() {
         document.getElementById('url').value = globalState.jenkinsUrlInit;
         document.getElementById('test_results').value = globalState.gsaPathForTestResultsInit;
@@ -170,7 +191,8 @@ var batchState = {
             });
         }
     },
-    ready: false, // Whether or not to draw the batch file view
+    ready: false, // Whether or not to draw the list/select batch file view
+    exportReady: false, // Whether or not to draw the export batch file view
     batchFile: {
         config:   {},
         packages: []
@@ -384,58 +406,80 @@ var projectReportState = {
 };
 
 // Rivets.js bindings
-rivets.bind($('#listButton'), {
-    batchState: batchState
+// Binders for tab headers
+rivets.bind($('#searchTabHeader'), {
+    globalState: globalState
 });
+rivets.bind($('#batchTabHeader'), {
+    globalState: globalState
+});
+rivets.bind($('#reportsTabHeader'), {
+    globalState: globalState
+});
+// Binders for tabs
+rivets.bind($('#searchTab'), {
+    globalState: globalState
+});
+rivets.bind($('#batchTab'), {
+    globalState: globalState
+});
+rivets.bind($('#reportsTab'), {
+    globalState: globalState
+});
+// Binders for job manage box
 rivets.bind($('#jobManageButton'), {
     reportState: reportState
 });
 rivets.bind($('#jobManagePanel'), {
     reportState: reportState
 });
+
+// Binders for test results box
 rivets.bind($('#testResultsButton'), {
     reportState: reportState
 });
 rivets.bind($('#testResultsPanel'), {
     reportState: reportState
 });
-rivets.bind($('#importButton'), {
+
+// Binders for batch list box
+rivets.bind($('#listBox'), {
+	batchState: batchState
+});
+rivets.bind($('#listButton'), {
     batchState: batchState
 });
-rivets.bind($('#generateBatchButton'), {
-    searchState: searchState
+
+// Binders for list/select box
+rivets.bind($('#batchListPanel'), {
+    batchState: batchState
+});
+
+// Binders for single project search box
+rivets.bind($('#searchBox'), {
+	searchState: searchState
 });
 rivets.bind($('#singleSearchButton'), {
     searchState: searchState
 });
-rivets.bind($('#batchListPanel'), {
-    batchState: batchState
-});
-// Allows user to change global settings
-rivets.bind($('#settingsModal'), {
-	globalState: globalState
-});
-// Allows client to display progress on batch job
-rivets.bind($('#progressBar'), {
-    percentageState: percentageState
-});
-// Allows user to change sorting method
-rivets.bind($('#listBox'), {
-	batchState: batchState
-});
-rivets.bind($('#searchBox'), {
-	searchState: searchState
-});
-rivets.bind($('#fileUploadBox'), {
-    batchState: batchState
-});
-rivets.bind($('#buildAndTestBox'), {
-    batchState: batchState
+
+// Binders for multiple project search box
+rivets.bind($('#generateBatchButton'), {
+    searchState: searchState
 });
 rivets.bind($('#generateBox'), {
     batchState: batchState,
     searchState: searchState
 });
+
+// Binders for import box
+rivets.bind($('#fileUploadBox'), {
+    batchState: batchState
+});
+rivets.bind($('#importButton'), {
+    batchState: batchState
+});
+
 // Multiple result alert box
 rivets.bind($('.multiple-alert'), {
 	searchState: searchState
@@ -467,6 +511,15 @@ rivets.bind($('#batchFilePanel'), {
 // Populates batch file table
 rivets.bind($('#batchFileTable'), {
 	batchState: batchState
+});
+// Allows user to change global settings
+rivets.bind($('#settingsModal'), {
+	globalState: globalState
+});
+
+// Allows client to display progress on batch job
+rivets.bind($('#progressBar'), {
+    percentageState: percentageState
 });
 
 rivets.bind($('#reportSelector'), {
@@ -532,7 +585,7 @@ function processSearchResults(data) {
 			};
 			result.addToBatchFile = function () {
 				batchState.batchFile.packages.push(result);
-				batchState.ready = true;
+				batchState.exportReady = true;
 			};
 		});
 		detailState.autoSelected = false;

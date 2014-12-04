@@ -12,6 +12,7 @@ import datetime
 import paramiko
 import os
 import re
+import tempfile
 from time import gmtime, strftime, localtime, asctime
 from flask import Flask, request, render_template, json
 from classifiers import classify
@@ -25,6 +26,18 @@ from stat import ST_SIZE, ST_MTIME
 app = Flask(__name__)
 maxResults = 10
 resParser = ResultParser()
+
+# Need to put this somewhere else, but we need a global ssh_client/ftp_client so we can reuse
+# instead of openening multiple sessions
+try:
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    ssh_client.connect(globals.hostname, username=globals.jenkinsGsaUsername, \
+        password=globals.jenkinsGsaPassword)
+    ftp_client = ssh_client.open_sftp()
+except IOError:
+    assert(False)
+
 catalog = Catalog(globals.hostname)
 #test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
 resultPattern = re.compile('.*? - (.*?) - .*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
@@ -468,37 +481,64 @@ def runBatchFile ():
     return json.jsonify(status = "ok")
 
 @app.route("/listBatchFiles", methods=["GET", "POST"])
-def listBatchFiles ():
+def listBatchFiles():
     file_list = []
 
+    # Get local batch file info
     for dirname, dirnames, filenames in os.walk(globals.batch_folder):
         for filename in sorted(filenames):
-            st = os.stat(globals.batch_folder + filename)
-            size = st[ST_SIZE]
-            datemodified = asctime(localtime(st[ST_MTIME]))
+            file_list.append(parseBatchBuf(filename, "local"))
 
-            f = open(globals.batch_folder + filename)
-            fileBuf = json.load(f)
-            f.close()
-
-            try:
-                name = fileBuf['config']['name']
-            except KeyError:
-                name = "{ MISSING NAME }"
-            try:
-                env = fileBuf['config']['java']
-            
-                if env == "ibm":
-                    environment = "IBM Java"
-                else:
-                    environment = "System Default"
-            except KeyError:
-                environment = "{ MISSING ENVIRONMENT }"
-
-            file_list.append({"name": name, "size": size, "datemodified": datemodified, \
-                "environment": environment, "filename": filename})
+    # Get server batch file info
+    ftp_client.chdir(globals.gsaPathForBatchFiles)
+    flist = ftp_client.listdir()
+    for filename in sorted(flist):
+        putdir = tempfile.mkdtemp(prefix="autoport_")
+        #print("TEMP:"+putdir+"/"+filename)
+        ftp_client.get(filename, putdir + "/" + filename)
+        file_list.append(parseBatchBuf(putdir + "/" + filename, "gsa"))
 
     return json.jsonify(status = "ok", files = file_list)
+
+def parseBatchBuf(filename, location):
+    if location == "local":
+        st = os.stat(globals.batch_folder + filename)
+        f = open(globals.batch_folder + filename)
+    else:
+        st = os.stat(filename)
+        f = open(filename)
+    
+    size = st[ST_SIZE]
+    datemodified = asctime(localtime(st[ST_MTIME]))
+
+    try:
+        fileBuf = json.load(f)
+    except ValueError:
+        return {"location": "-", "owner": "-", "name": "INVALID BATCH FILE", "size": "-", \
+            "datemodified": "-", "environment": "-", "filename": "-"}
+    f.close()
+    
+    try:
+        name = fileBuf['config']['name']
+    except KeyError:
+        name = "{ MISSING NAME }"
+    try:
+        env = fileBuf['config']['java']
+    
+        if env == "ibm":
+            environment = "IBM Java"
+        else:
+            environment = "System Default"
+    except KeyError:
+        environment = "System Default"
+    
+    try:
+        owner = fileBuf['config']['owner']
+    except KeyError:
+        owner = "Anonymous"
+            
+    return {"location": location, "owner": owner, "name": name, "size": size, \
+        "datemodified": datemodified, "environment": environment, "filename": filename}
 
 # List all results available on catalog
 @app.route("/listTestResults/<repositoryType>")
