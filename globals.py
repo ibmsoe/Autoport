@@ -35,11 +35,10 @@ def init():
     global jenkinsGsaUsername
     global jenkinsGsaPassword
     global localPathForTestResults
+    global localPathForBatchFiles
+    global jobNamePrefix
 
     # unchanging project configurations
-    global jobNamePrefix
-    global batch_folder
-    global test_folder
     global github
     global cache
     global nodes
@@ -53,10 +52,9 @@ def init():
     jenkinsGsaUsername = configOptions['jenkinsgsausername']
     jenkinsGsaPassword = configOptions['jenkinsgsapassword']
     localPathForTestResults = configOptions['localpathfortestresults']
+    localPathForBatchFiles = configOptions['localpathforbatchfiles']
+    jobNamePrefix = configOptions['jobnameprefix']
 
-    jobNamePrefix = "AutoPort" #Autoport
-    batch_folder = "./" + os.path.basename(gsaPathForBatchFiles) + "/"
-    test_folder = "./" + os.path.basename(gsaPathForTestResults) + "/"
     github = Github(githubToken)
     cache = Cache(github)
     nodes = {'x86': "x86", 'ppcle': "ppcle"}

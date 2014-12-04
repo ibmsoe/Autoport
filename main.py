@@ -260,11 +260,11 @@ def uploadBatchFile():
     except KeyError:
         return json.jsonify(status="failure", error="missing file")
 
-    if not os.path.exists(globals.batch_folder):
-        os.makedirs(globals.batch_folder)
+    if not os.path.exists(globals.localPathForBatchFiles):
+        os.makedirs(globals.localPathForBatchFiles)
 
     name = "batch_file." + str(datetime.datetime.today()) 
-    openPath = globals.batch_folder + name
+    openPath = globals.localPathForBatchFiles + name
 
     f = open(openPath, "w")
     f.write(fileStr)
@@ -460,7 +460,7 @@ def runBatchFile ():
   
     if batchName != "":
         # Read in the file and store as JSON
-        f = open(globals.batch_folder + batchName)
+        f = open(globals.localPathForBatchFiles + batchName)
         fileBuf = json.load(f)
         f.close()
 
@@ -485,28 +485,23 @@ def listBatchFiles():
     file_list = []
 
     # Get local batch file info
-    for dirname, dirnames, filenames in os.walk(globals.batch_folder):
+    for dirname, dirnames, filenames in os.walk(globals.localPathForBatchFiles):
         for filename in sorted(filenames):
-            file_list.append(parseBatchBuf(filename, "local"))
+            file_list.append(parseBatchBuf(globals.localPathForBatchFiles + filename, "local"))
 
     # Get server batch file info
     ftp_client.chdir(globals.gsaPathForBatchFiles)
     flist = ftp_client.listdir()
     for filename in sorted(flist):
         putdir = tempfile.mkdtemp(prefix="autoport_")
-        #print("TEMP:"+putdir+"/"+filename)
         ftp_client.get(filename, putdir + "/" + filename)
         file_list.append(parseBatchBuf(putdir + "/" + filename, "gsa"))
 
     return json.jsonify(status = "ok", files = file_list)
 
 def parseBatchBuf(filename, location):
-    if location == "local":
-        st = os.stat(globals.batch_folder + filename)
-        f = open(globals.batch_folder + filename)
-    else:
-        st = os.stat(filename)
-        f = open(filename)
+    st = os.stat(filename)
+    f = open(filename)
     
     size = st[ST_SIZE]
     datemodified = asctime(localtime(st[ST_MTIME]))

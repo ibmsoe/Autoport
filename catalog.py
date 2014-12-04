@@ -35,7 +35,6 @@ class Catalog:
     def listLocalJobResults(self, filt):
         filteredList = []
         try:
-            print "Getting list of archived jenkins job results"
             fullList = os.listdir(self.__localPath)
             filteredList = []
             for item in fullList:
@@ -48,7 +47,6 @@ class Catalog:
     def listGSAJobResults(self, filt):
         filteredList = []
         try:
-            print "Getting list of archived jenkins job results"
             self.__ftpClient.chdir(self.__gsaPath)
             fullList = self.__ftpClient.listdir()
             filteredList = []
@@ -66,12 +64,12 @@ class Catalog:
             return self.getLocalResults(build)
 
     def getLocalResults(self, build):
-        return self.__localPath+"/"+build
+        return self.__localPath+build
 
     def getGSAResults(self, build):
         try:
             putdir = tempfile.mkdtemp(prefix="autoport_")
-            self.__ftpClient.chdir(self.__gsaPath+"/"+build)
+            self.__ftpClient.chdir(self.__gsaPath+build)
             self.__ftpClient.get("meta.arti", putdir+"/meta.arti")
             self.__ftpClient.get("dependency.arti", putdir+"/dependency.arti")
             self.__ftpClient.get("test_result.arti", putdir+"/test_result.arti")
