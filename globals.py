@@ -27,13 +27,15 @@ def init():
 
     # changeable project configurations
     global jenkinsUrl
-    global gsaPathForTestResults
-    global gsaPathForBatchFiles
     global mavenPath
     global githubToken
+
     global hostname
-    global jenkinsGsaUsername
-    global jenkinsGsaPassword
+
+    global configUsername
+    global configPassword
+    global pathForTestResults
+    global pathForBatchFiles
     global localPathForTestResults
     global localPathForBatchFiles
     global jobNamePrefix
@@ -44,13 +46,15 @@ def init():
     global nodes
 
     jenkinsUrl = configOptions['jenkinsurl']
-    gsaPathForTestResults = configOptions['gsapathfortestresults']
-    gsaPathForBatchFiles = configOptions['gsapathforbatchfiles']
     mavenPath = configOptions['mavenpath']
     githubToken = configOptions['githubtoken']
+
     hostname = configOptions['hostname']
-    jenkinsGsaUsername = configOptions['jenkinsgsausername']
-    jenkinsGsaPassword = configOptions['jenkinsgsapassword']
+
+    configUsername = configOptions['username']
+    configPassword = configOptions['password']
+    pathForTestResults = configOptions['pathfortestresults']
+    pathForBatchFiles = configOptions['pathforbatchfiles']
     localPathForTestResults = configOptions['localpathfortestresults']
     localPathForBatchFiles = configOptions['localpathforbatchfiles']
     jobNamePrefix = configOptions['jobnameprefix']

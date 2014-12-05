@@ -217,6 +217,15 @@ fieldset[disabled] .form-control {
     float: right;
 }
 
+.linkText {
+    font-size: 18px;
+}
+
+.progressText {
+    font-size: 18px;
+    list-style-position: inside;
+}
+
 /* Test Results Table Styling */
 #testResultsTable td,th {
     border-bottom: 1px solid grey;

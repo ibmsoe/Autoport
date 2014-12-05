@@ -80,7 +80,7 @@
                 </div>
                 <div>
                   <label class="test_results">Archived Test Results Path</label>
-                  <span> <input type="text" id="gtest_results" rv-value="globalState.gsaPathForTestResults"> </span>
+                  <span> <input type="text" id="gtest_results" rv-value="globalState.pathForTestResults"> </span>
                 </div>
                 <div>
                   <label class="batch_files">Local Batch Files Path</label>
@@ -88,22 +88,22 @@
                 </div>
                 <div>
                   <label class="batch_files">Archived Batch Files Path</label>
-                  <span> <input type="text" id="gbatch_files" rv-value="globalState.gsaPathForBatchFiles"> </span>
+                  <span> <input type="text" id="gbatch_files" rv-value="globalState.pathForBatchFiles"> </span>
                 </div>
                 <div>
                   <label class="github">Github Token</label>
                   <span> <input type="text" id="github" rv-value="globalState.githubToken"> </span>
                 </div>
-                <div>
-                  <label class="github">GSA Username</label>
-                  <span> <input type="text" id="username" rv-value="globalState.jenkinsGsaUsername"> </span>
+                <div> 
+                  <label class="github">Configuration Username</label>
+                  <span> <input type="text" id="username" rv-value="globalState.configUsername"> </span>
                 </div>
-                <div>
-                  <label class="github">GSA Password</label>
-                  <span> <input type="password" id="password" rv-value="globalState.jenkinsGsaPassword"> </span>
+                <div> 
+                  <label class="github">Configuration Password</label>
+                  <span> <input type="password" id="password" rv-value="globalState.configPassword"> </span>
                 </div>
-              </div>
-            </div>
+              </div> <!-- attributes --> 
+            </div> <!-- modal-body -->
             <div class="modal-footer">
               <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
               <button rv-on-click="globalState.reset" type="button" class="btn btn-primary">Reset to Default</button>
@@ -112,17 +112,6 @@
           </div> <!-- modal-content -->
         </div> <!-- modal-dialog -->
       </div> <!-- modal fade -->
-
-    <!-- Progress Bar Code, Work in Progress -->
-    <!--     <div class="progressSettings" id="progressBar">
-      <div class="progress progress-bar-primary">
-        <div class="bar bar-success progress-bar progress-bar-success" rv-style="percentageState.successPercentage"></div>
-        <div class="bar bar-warning progress-bar progress-bar-warning" rv-style="percentageState.warningPercentage"></div>
-        <div class="bar bar-danger progress-bar progress-bar-danger" rv-style="percentageState.dangerPercentage"></div>
-      </div>
-      <button rv-on-click="percentageState.updateProgressBar" type="button" class="btn btn-primary progressButton">Check Progress</button>
-    </div> -->
-
     </div> <!-- end of jumbotron -->
 
     <!-- END HEADER -->
@@ -133,6 +122,7 @@
         <li class="active"><a rv-on-click="globalState.headerChange" id="searchTab" data-toggle="tab" href="#searchProject">Search</a></li>
         <li><a rv-on-click="globalState.headerChange" id="batchTab" data-toggle="tab" href="#batchJobs">Batch Jobs</a></li>
         <li><a rv-on-click="globalState.headerChange" id="reportsTab" data-toggle="tab" href="#jobReports">Reports</a></li>
+        <li><a rv-on-click="globalState.headerChange" id="jenkinsTab" data-toggle="tab" href="#jenkinsStatus">Jenkins</a></li>
       </ul>
 
       <br />
@@ -336,31 +326,23 @@
             <div class="btn btn-default btn-block" rv-on-click="reportState.setJobManagePanel" id="jobManageButton">
               <h2 class="text-center">Project results</h2>
             </div>
-            <div id="jobManagePanel"
-                class="jumbotron-button-content"
-                rv-show="reportState.jobManagePanel">
+
+            <div id="jobManagePanel" class="jumbotron-button-content" rv-show="reportState.jobManagePanel">
+
               <div class="row">
                 <div class="col-lg-8">
-                  <input type="text"
-                      class="form-control"
-                      placeholder="(e.g. redis, cassandra, mongo)"
-                      id="projectFilter"/>
+                  <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="projectFilter"/>
                 </div>
+                
                 <div class="col-lg-4">
                   <a rv-href="#" rv-on-click="reportState.listLocalProjects">
-                    <button type="button" class="btn btn-primary">
-                      List local
-                    </button>
+                    <button type="button" class="btn btn-primary">List local</button>
                   </a>
                   <a rv-href="#" rv-on-click="reportState.listGSAProjects">
-                    <button type="button" class="btn btn-primary">
-                      List archived
-                    </button>
+                    <button type="button" class="btn btn-primary">List archived</button>
                   </a>
                   <a rv-href="#" rv-on-click="reportState.listAllProjects">
-                    <button type="button" class="btn btn-primary">
-                      List all
-                    </button>
+                    <button type="button" class="btn btn-primary">List all</button>
                   </a>
                 </div>
               </div>
@@ -411,6 +393,45 @@
         </div> <!-- tab pane -->
 
         <!-- END REPORTS TAB -->
+
+        <!-- START JENKINS TAB -->
+
+        <div id="jenkinsStatus" class="tab-pane fade">
+          <div class="jumbotron">
+            <div class="btn btn-default btn-block" rv-on-click="jenkinsState.setJenkinsPanel" id="jenkinsManageButton">
+              <h2 class="text-center">Show Jenkins Status</h2>
+            </div>
+
+            <div id="jenkinsPanel" class="jumbotron-button-content" rv-show="jenkinsState.jenkinsPanel">
+
+              <div class="jlink" id="jenkinsLink">
+                <ul class="text linkText" >
+                  Jenkins Page: <a rv-href="globalState.jenkinsUrl">{ globalState.jenkinsUrl }</a> 
+                </ul>
+              </div>
+
+              <button rv-on-click="percentageState.updateProgressBar" type="button" class="btn btn-primary progressButton">Check Progress</button>
+              <ul class="text progressText" >
+                Total Number of Jobs on this Tab: { percentageState.totalNumberOfJobs }
+                <li>Successful Jobs (green): { percentageState.successfulJobs }</li>
+                <li>Unstable Jobs (yellow): { percentageState.unstableJobs }</li>
+                <li>Failing Jobs (red): { percentageState.failingJobs }</li>
+                <li>Disabled or Unfinished Jobs (white): { percentageState.unfinishedJobs }</li>
+              </ul>
+
+              <div class="progressSettings" id="progressBar">
+                <div class="progress progress-bar-primary">
+                  <div class="bar bar-success progress-bar progress-bar-success" rv-style="percentageState.successPercentage"></div>
+                  <div class="bar bar-warning progress-bar progress-bar-warning" rv-style="percentageState.warningPercentage"></div>
+                  <div class="bar bar-danger progress-bar progress-bar-danger" rv-style="percentageState.dangerPercentage"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div> <!-- tab pane -->
+
+        <!-- END JENKINS TAB -->
 
       </div> <!-- tab-content -->
     </div> <!-- jumbotron -->

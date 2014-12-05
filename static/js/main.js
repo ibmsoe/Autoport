@@ -1,22 +1,23 @@
 var globalState = {
     hasInit: false,
+
     jenkinsUrlInit: "",
     localPathForTestResultsInit: "",
-    gsaPathForTestResultsInit: "",
+    pathForTestResultsInit: "",
     localPathForBatchFilesInit: "",
-    gsaPathForBatchFilesInit: "",
+    pathForBatchFilesInit: "",
     githubTokenInit: "",
-    jenkinsGsaUsernameInit: "",
-    jenkinsGsaPasswordInit: "",
+    configUsernameInit: "",
+    configPasswordInit: "",
 
     jenkinsUrl: "",
     localPathForTestResults: "",
-    gsaPathForTestResults: "",
+    pathForTestResults: "",
     localPathForBatchFiles: "",
-    gsaPathForBatchFiles: "",
+    pathForBatchFiles: "",
     githubToken: "",
-    jenkinsGsaUsername: "",
-    jenkinsGsaPassword: "",
+    configUsername: "",
+    configPassword: "",
 
     isSearchTabActive: true,
     isBatchTabActive: false,
@@ -42,26 +43,26 @@ var globalState = {
     reset: function() {
         document.getElementById('url').value = globalState.jenkinsUrlInit;
         document.getElementById('ltest_results').value = globalState.localPathForTestResultsInit;
-        document.getElementById('gtest_results').value = globalState.gsaPathForTestResultsInit;
+        document.getElementById('gtest_results').value = globalState.pathForTestResultsInit;
         document.getElementById('lbatch_files').value = globalState.localPathForBatchFilesInit;
-        document.getElementById('gbatch_files').value = globalState.gsaPathForBatchFilesInit;
+        document.getElementById('gbatch_files').value = globalState.pathForBatchFilesInit;
         document.getElementById('github').value = globalState.githubTokenInit;
-        document.getElementById('username').value = globalState.jenkinsGsaUsernameInit;
-        document.getElementById('password').value = globalState.jenkinsGsaPasswordInit;
+        document.getElementById('username').value = globalState.configUsernameInit;
+        document.getElementById('password').value = globalState.configPasswordInit;
     },
     updateParameters: function () {
         jenkinsUrl = document.getElementById('url').value;
         localPathForTestResults = document.getElementById('ltest_results').value;
-        gsaPathForTestResults = document.getElementById('gtest_results').value;
+        pathForTestResults = document.getElementById('gtest_results').value;
         localPathForBatchFiles = document.getElementById('lbatch_files').value;
-        gsaPathForBatchFiles = document.getElementById('gbatch_files').value;
+        pathForBatchFiles = document.getElementById('gbatch_files').value;
         githubToken = document.getElementById('github').value;
-        jenkinsGsaUsername = document.getElementById('username').value;
-        jenkinsGsaPassword = document.getElementById('password').value;
+        configUsername = document.getElementById('username').value;
+        configPassword = document.getElementById('password').value;
         $.post("/settings", {url: jenkinsUrl,
-               ltest_results: localPathForTestResults, gtest_results: gsaPathForTestResults,
-               lbatch_files: localPathForBatchFiles, gbatch_files: gsaPathForBatchFiles, github: githubToken,
-               username: jenkinsGsaUsername, password: jenkinsGsaPassword}, settingsCallback, "json");
+               ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
+               lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles, github: githubToken,
+               username: configUsername, password: configPassword}, settingsCallback, "json");
     }
 };
 
@@ -70,13 +71,21 @@ if (!globalState.hasInit) {
 }
 
 var percentageState = {
+    // Actual Numeric Values
+    totalNumberOfJobs: 0,
+    unfinishedJobs: 0,
+    failingJobs: 0,
+    unstableJobs: 0,
+    successfulJobs: 0,
+
+    // Percentages
     dangerPercentage: "width: 0%;",
     warningPercentage: "width: 0%;",
     successPercentage: "width: 0%;",
     updateProgressBar: function() {
         $.getJSON("/progress", {}, processProgressBar);
     }
-}
+};
 
 // Contains state of searching operations
 var searchState = {
@@ -218,7 +227,7 @@ var batchState = {
 // Contains state of loading view
 var loadingState = {
 	loading: false // Whether or not to draw this view
-}
+};
 // Contains state of detail view
 var detailState = {
 	ready: false,
@@ -287,6 +296,13 @@ var reportState = {
 	setTestResultsPanel: function(ev) {
         reportState.testResultsPanel = (reportState.testResultsPanel) ? false : true;
 	}
+};
+
+var jenkinsState = {
+    jenkinsPanel: false,
+    setJenkinsPanel: function(ev) {
+        jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
+    }
 };
 
 function handleProjectListBtns() {
@@ -441,8 +457,10 @@ rivets.bind($('#reportsTab'), {
 rivets.bind($('#jobManageButton'), {
     reportState: reportState
 });
+// Allows client to display progress on batch job
 rivets.bind($('#jobManagePanel'), {
-    reportState: reportState
+    reportState: reportState,
+    percentageState: percentageState
 });
 
 // Binders for test results box
@@ -546,6 +564,19 @@ rivets.bind($("#testCompareTablePanel"), {
     projectReportState: projectReportState
 });
 
+// Jenkins Tab Bindings
+rivets.bind($('#jenkinsManageButton'), {
+    jenkinsState: jenkinsState
+});
+rivets.bind($('#jenkinsLink'), {
+    globalState: globalState
+});
+
+rivets.bind($('#jenkinsPanel'), {
+    jenkinsState: jenkinsState,
+    percentageState: percentageState
+});
+
 // Disables all views except loading view
 function switchToLoadingState() {
 	searchState.ready = false;
@@ -616,9 +647,15 @@ function processProgressBar(data) {
         console.log("Bad response from /progress!");
         console.log(data);
     } else {
-        percentageState.dangerPercentage = "width: " + data.percentages[1] + "%;";
-        percentageState.warningPercentage = "width: " + data.percentages[2] + "%;";
-        percentageState.successPercentage = "width: " + data.percentages[3] + "%;";
+        percentageState.totalNumberOfJobs = data.results[0][0] + data.results[0][1] + data.results[0][2] + data.results[0][3];
+        percentageState.unfinishedJobs = data.results[0][0];
+        percentageState.failingJobs = data.results[0][1];
+        percentageState.unstableJobs = data.results[0][2];
+        percentageState.successfulJobs = data.results[0][3];
+
+        percentageState.dangerPercentage = "width: " + data.results[1][1] + "%;";
+        percentageState.warningPercentage = "width: " + data.results[1][2] + "%;";
+        percentageState.successPercentage = "width: " + data.results[1][3] + "%;";
     }
 }
 
@@ -870,21 +907,21 @@ function initCallback(data) {
     globalState.hasInit = true;
     globalState.jenkinsUrlInit = data.jenkinsUrl;
     globalState.localPathForTestResultsInit = data.localPathForTestResults;
-    globalState.gsaPathForTestResultsInit = data.gsaPathForTestResults;
+    globalState.pathForTestResultsInit = data.pathForTestResults;
     globalState.localPathForBatchFilesInit = data.localPathForBatchFiles;
-    globalState.gsaPathForBatchFilesInit = data.gsaPathForBatchFiles;
+    globalState.pathForBatchFilesInit = data.pathForBatchFiles;
     globalState.githubTokenInit = data.githubToken;
-    globalState.jenkinsGsaUsernameInit = data.jenkinsGsaUsername;
-    globalState.jenkinsGsaPasswordInit = data.jenkinsGsaPassword;
+    globalState.configUsernameInit = data.configUsername;
+    globalState.configPasswordInit = data.configPassword;
 
     globalState.jenkinsUrl = data.jenkinsUrl;
     globalState.localPathForTestResults = data.localPathForTestResults;
-    globalState.gsaPathForTestResults = data.gsaPathForTestResults;
+    globalState.pathForTestResults = data.pathForTestResults;
     globalState.localPathForBatchFiles = data.localPathForBatchFiles;
-    globalState.gsaPathForBatchFiles = data.gsaPathForBatchFiles;
+    globalState.pathForBatchFiles = data.pathForBatchFiles;
     globalState.githubToken = data.githubToken;
-    globalState.jenkinsGsaUsername = data.jenkinsGsaUsername;
-    globalState.jenkinsGsaPassword = data.jenkinsGsaPassword;
+    globalState.configUsername = data.configUsername;
+    globalState.configPassword = data.configPassword;
 }
 
 function settingsCallback(data) {
@@ -917,6 +954,7 @@ function addToJenkinsCallback(data) {
 	if(data.status === "ok") {
 		// Open new windows with the jobs' home pages
 		window.open(data.hjobUrl,'_blank');
+        percentageState.updateProgressBar();
 	} else {
 		console.log("Bad response from /createJob!");
 		console.log(data);
@@ -941,4 +979,3 @@ $(document).ready(function() {
         ]
     });
 });
-

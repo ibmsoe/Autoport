@@ -5,15 +5,15 @@ import os
 import globals
 
 class Catalog:
-    def __init__(self, hostname, username=globals.jenkinsGsaUsername,
-            password=globals.jenkinsGsaPassword,
-            gsaPath=globals.gsaPathForTestResults,
+    def __init__(self, hostname, username=globals.configUsername,
+            password=globals.configPassword,
+            copyPath=globals.pathForTestResults,
             localPath=globals.localPathForTestResults):
-        assert(hostname != None and username != "" and password != "")
+        #assert(hostname != None and username != "" and password != "")
         self.__host = hostname
         self.__username = username
         self.__password = password
-        self.__gsaPath = gsaPath
+        self.__copyPath = copyPath
         self.__localPath = localPath
         self.__tmpdirs = []
         try:
@@ -47,7 +47,7 @@ class Catalog:
     def listGSAJobResults(self, filt):
         filteredList = []
         try:
-            self.__ftpClient.chdir(self.__gsaPath)
+            self.__ftpClient.chdir(self.__copyPath)
             fullList = self.__ftpClient.listdir()
             filteredList = []
             for item in fullList:
@@ -69,7 +69,7 @@ class Catalog:
     def getGSAResults(self, build):
         try:
             putdir = tempfile.mkdtemp(prefix="autoport_")
-            self.__ftpClient.chdir(self.__gsaPath+build)
+            self.__ftpClient.chdir(self.__copyPath+build)
             self.__ftpClient.get("meta.arti", putdir+"/meta.arti")
             self.__ftpClient.get("dependency.arti", putdir+"/dependency.arti")
             self.__ftpClient.get("test_result.arti", putdir+"/test_result.arti")

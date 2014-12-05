@@ -32,8 +32,8 @@ resParser = ResultParser()
 try:
     ssh_client = paramiko.SSHClient()
     ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(globals.hostname, username=globals.jenkinsGsaUsername, \
-        password=globals.jenkinsGsaPassword)
+    ssh_client.connect(globals.hostname, username=globals.configUsername, \
+        password=globals.configPassword)
     ftp_client = ssh_client.open_sftp()
 except IOError:
     assert(False)
@@ -49,7 +49,7 @@ def main():
 
 @app.route("/init", methods=['POST'])
 def init():
-    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, localPathForTestResults=globals.localPathForTestResults, gsaPathForTestResults=globals.gsaPathForTestResults, localPathForBatchFiles=globals.localPathForBatchFiles, gsaPathForBatchFiles=globals.gsaPathForBatchFiles, githubToken=globals.githubToken, jenkinsGsaUsername=globals.jenkinsGsaUsername, jenkinsGsaPassword=globals.jenkinsGsaPassword)
+    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, localPathForTestResults=globals.localPathForTestResults, pathForTestResults=globals.pathForTestResults, localPathForBatchFiles=globals.localPathForBatchFiles, pathForBatchFiles=globals.pathForBatchFiles, githubToken=globals.githubToken, configUsername=globals.configUsername, configPassword=globals.configPassword)
 
 # Settings function
 @app.route("/settings", methods=['POST'])
@@ -65,7 +65,7 @@ def settings():
         return json.jsonify(status="failure", error="bad local_test_results path")
 
     try:
-        globals.gsaPathForTestResults = request.form["gtest_results"]
+        globals.pathForTestResults = request.form["gtest_results"]
     except ValueError:
         return json.jsonify(status="failure", error="bad test_results path")
 
@@ -75,7 +75,7 @@ def settings():
         return json.jsonify(status="failure", error="bad local_batch_files path")
 
     try:
-        globals.gsaPathForBatchFiles = request.form["gbatch_files"]
+        globals.pathForBatchFiles = request.form["gbatch_files"]
     except ValueError:
         return json.jsonify(status="failure", error="bad batch_files path")
 
@@ -88,21 +88,21 @@ def settings():
         return json.jsonify(status="failure", error="bad github token")
 
     try:
-        globals.jenkinsGsaUsername = request.form["username"]
+        globals.configUsername = request.form["username"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad gsa username")
+        return json.jsonify(status="failure", error="bad configuration username")
 
     try:
-        globals.jenkinsGsaPassword = request.form["password"]
+        globals.configPassword = request.form["password"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad gsa password")
+        return json.jsonify(status="failure", error="bad configuration password")
 
     return json.jsonify(status="ok")
 
 @app.route("/progress")
 def progress():
-    percentages = determineProgress()
-    return json.jsonify(status="ok", percentages=percentages)
+    results = determineProgress()
+    return json.jsonify(status="ok", results=results)
 
 # Search - return a JSON file with search results or the matched
 # repo if there's a solid candidate
@@ -278,16 +278,16 @@ def uploadBatchFile():
     # Copy batch file to a predetermined spot in the GSA 
     # This portion of code requires paramiko installed.
     port = 22
-    localpath = os.getcwd() + "/batch_files/" + name
+    localpath = os.getcwd() + "/data/batch_files/" + name
 
     # Unfortunately, this will not create a folder that is not already in the gsa.
     # Having stfp trying to create a folder with the same name everytime does not work either.
-    remotepath = globals.gsaPathForBatchFiles + name
+    remotepath = globals.pathForBatchFiles + name
 
     transport = None
     try:
         transport = paramiko.Transport((globals.hostname, port))
-        transport.connect(username=globals.jenkinsGsaUsername, password=globals.jenkinsGsaPassword)
+        transport.connect(username=globals.configUsername, password=globals.configPassword)
     except paramiko.AuthenticationException:
         return json.jsonify(status="failure", error="Authentication Failed")
 
@@ -405,9 +405,9 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         xml_env_command.text += javaType + "\n"
         path_env = "PATH=" + globals.mavenPath + ":$PATH\n"
         xml_env_command.text += path_env
-
         xml_artifacts.text = build['artifacts']
-        xml_catalog_remote.text = globals.gsaPathForTestResults + jobFolder
+
+        xml_catalog_remote.text = globals.pathForTestResults + jobFolder
         xml_catalog_source.text = build['artifacts']
 
         # Job metadata as passed to jenkins
@@ -450,9 +450,9 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         requests.get(startJobUrl)
 
         # Stays on the same page, after creating a new jenkins job.
-        return json.jsonify(status = "ok", sjobUrl = startJobUrl, hjobUrl = homeJobUrl)
+        return json.jsonify(status="ok", sjobUrl=startJobUrl, hjobUrl=homeJobUrl)
 
-    return json.jsonify(status = "failure", error = 'jenkins error')
+    return json.jsonify(status="failure", error='jenkins error')
 
 # Run Batch File - takes a batch file name and runs it
 @app.route("/runBatchFile", methods=["GET", "POST"])
@@ -481,9 +481,9 @@ def runBatchFile ():
             createJob(package['id'], package['tag'], "ppcle", javaType)
 
     else:
-        return json.jsonify(status = "failure", error = "could not find file")
+        return json.jsonify(status="failure", error="could not find file")
 
-    return json.jsonify(status = "ok")
+    return json.jsonify(status="ok")
 
 @app.route("/listBatchFiles", methods=["GET", "POST"])
 def listBatchFiles():
@@ -495,14 +495,14 @@ def listBatchFiles():
             file_list.append(parseBatchBuf(globals.localPathForBatchFiles + filename, "local"))
 
     # Get server batch file info
-    ftp_client.chdir(globals.gsaPathForBatchFiles)
+    ftp_client.chdir(globals.pathForBatchFiles)
     flist = ftp_client.listdir()
     for filename in sorted(flist):
         putdir = tempfile.mkdtemp(prefix="autoport_")
         ftp_client.get(filename, putdir + "/" + filename)
         file_list.append(parseBatchBuf(putdir + "/" + filename, "gsa"))
 
-    return json.jsonify(status = "ok", files = file_list)
+    return json.jsonify(status="ok", files=file_list)
 
 def parseBatchBuf(filename, location):
     st = os.stat(filename)
@@ -545,8 +545,8 @@ def parseBatchBuf(filename, location):
 def listTestResults(repositoryType):
     filt = request.args.get("filter", "")
     if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
-        return json.jsonify(status = "failure", error = "Invalid repository type")
-    return json.jsonify(status = "ok", results = catalog.listJobResults(repositoryType, filt.lower()))
+        return json.jsonify(status="failure", error="Invalid repository type")
+    return json.jsonify(status="ok", results=catalog.listJobResults(repositoryType, filt.lower()))
 
 # Get the jenkins build output
 # /getBuildResults?left=x&right=y
@@ -556,12 +556,16 @@ def getTestResults():
     rightbuild = request.args.get("rightbuild", "")
     leftrepo = request.args.get("leftrepository", "local")
     rightrepo = request.args.get("rightrepository", "local")
+    
     if (leftbuild == "" or rightbuild == ""):
-        return json.jsonify(status = "failure", error = "invalid argument")
+        return json.jsonify(status="failure", error="invalid argument")
+    
     leftdir = catalog.getResults(leftbuild, leftrepo)
     rightdir = catalog.getResults(rightbuild, rightrepo)
+    
     if (leftdir == None or rightdir == None):
-        return json.jsonify(status = "failure", error = "result not found")
+        return json.jsonify(status="failure", error="result not found")
+    
     leftname = resultPattern.match(leftbuild).group(1)
     rightname = resultPattern.match(rightbuild).group(1)
 
@@ -603,7 +607,7 @@ def getTestDetail():
 
 @app.route("/archiveProjects")
 def archiveProjects():
-    return json.jsonify(status = "ok", results = "work in progress.")
+    return json.jsonify(status="ok", results="work in progress.")
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()

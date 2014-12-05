@@ -6,8 +6,11 @@ import globals
 # Progress Bar Report
 def determineProgress ():
     url = str(globals.jenkinsUrl)
+
     xml_input_no_filter = ast.literal_eval(urllib.urlopen(url + "/api/python?depth=1&tree=jobs[displayName,lastBuild[result]]").read())
+
     all_jobs = xml_input_no_filter['jobs']
+
 
     success = 0
     unstable = 0
@@ -26,11 +29,13 @@ def determineProgress ():
         elif row['lastBuild']['result'] == 'SUCCESS':
             progressResults[3] += 1
         else:
-            print "Unknown Status Encountered"
+            print "Unknown Status Encountered " + str(row['lastBuild'])
 
     total = 0
     for status in progressResults:
         total += status
+
+    print total
 
     neverBeenBuiltP = progressResults[0] * 100 / total
     failureP = progressResults[1] * 100 / total
@@ -39,4 +44,6 @@ def determineProgress ():
 
     percentages = [neverBeenBuiltP, failureP, unstableP, successP]
 
-    return percentages
+    results = [progressResults, percentages]
+
+    return results
