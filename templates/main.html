@@ -21,7 +21,7 @@
       <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
       <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
     <![endif]-->
-    
+
   </head>
   <body>
     <div class="container">
@@ -37,7 +37,8 @@
       </h1>
 
       <div id="searchTabHeader" rv-show="globalState.isSearchTabActive">
-        <p>This tool allows you to locate and evaluate projects for porting. It displays and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
+        <p>This tool allows you to locate and evaluate projects for porting. It displays 
+           and color codes relevant information, allowing you to quickly estimate how much effort a port might take.</p>
         <p>You can also setup a basic Jenkins job for the project with one click.</p>
         <p>You also have the ability to create a batch file to build and test multiple projects.</p>
       </div>
@@ -47,14 +48,16 @@
         <p>List/Select - List and take action on batch files located on the server and the registered shared location.</p>
         <ul>
         <li>Submit - create a Jenkins job for each project listed in the batch file.</li>
-        <li>Archive - when a batch file is successfully built and tested, you can make it globally visible by copying it to the registered batch directory in gsa.</li>
+        <li>Archive - when a batch file is successfully built and tested, you can make it globally 
+            visible by copying it to the registered batch directory in gsa.</li>
         <li>Remove - erase a batch file from the server or the shared location.</li>
+        </ul>
       </div>
 
       <div id="reportsTabHeader" rv-show="globalState.isReportsTabActive">
-        <p>List and select the type of report that you would like generated.</p>
         <p>You may look at the test history of a project or batch file and generate comparisons across platforms and project versions.
-        Like batch files, test results are stored locally on the server, until you archive them to shared location.</p>
+           Like batch files, test results are stored locally on the server, until you archive them to the shared location.</p>
+        <p>Select the type of report that you would like generated.</p>
       </div>
 
       <!-- Modal -->
@@ -67,31 +70,35 @@
             </div>
             <div class="modal-body" id="settingsModal">
               <div class="attributes modalAttributes">
-                <div> 
-                  <label class="url">Jenkins Url</label> 
+                <div>
+                  <label class="url">Jenkins Url</label>
                   <span> <input type="text" id="url" rv-value="globalState.jenkinsUrl"> </span>
                 </div>
-                <div> 
+                <div>
                   <label class="test_results">Local Test Results Path</label>
-                  <span> <input type="text" id="test_results" rv-value="globalState.gsaPathForTestResults"> </span>
+                  <span> <input type="text" id="ltest_results" rv-value="globalState.localPathForTestResults"> </span>
                 </div>
-                <div> 
+                <div>
                   <label class="test_results">Archived Test Results Path</label>
-                  <span> <input type="text" id="test_results" rv-value="globalState.gsaPathForTestResults"> </span>
+                  <span> <input type="text" id="gtest_results" rv-value="globalState.gsaPathForTestResults"> </span>
                 </div>
-                <div> 
-                  <label class="batch_files">Batch Files Path</label>
-                  <span> <input type="text" id="batch_files" rv-value="globalState.gsaPathForBatchFiles"> </span>
+                <div>
+                  <label class="batch_files">Local Batch Files Path</label>
+                  <span> <input type="text" id="lbatch_files" rv-value="globalState.localPathForBatchFiles"> </span>
                 </div>
-                <div> 
+                <div>
+                  <label class="batch_files">Archived Batch Files Path</label>
+                  <span> <input type="text" id="gbatch_files" rv-value="globalState.gsaPathForBatchFiles"> </span>
+                </div>
+                <div>
                   <label class="github">Github Token</label>
                   <span> <input type="text" id="github" rv-value="globalState.githubToken"> </span>
                 </div>
-                <div> 
+                <div>
                   <label class="github">GSA Username</label>
                   <span> <input type="text" id="username" rv-value="globalState.jenkinsGsaUsername"> </span>
                 </div>
-                <div> 
+                <div>
                   <label class="github">GSA Password</label>
                   <span> <input type="password" id="password" rv-value="globalState.jenkinsGsaPassword"> </span>
                 </div>
@@ -107,7 +114,7 @@
       </div> <!-- modal fade -->
 
     <!-- Progress Bar Code, Work in Progress -->
-<!--     <div class="progressSettings" id="progressBar">
+    <!--     <div class="progressSettings" id="progressBar">
       <div class="progress progress-bar-primary">
         <div class="bar bar-success progress-bar progress-bar-success" rv-style="percentageState.successPercentage"></div>
         <div class="bar bar-warning progress-bar progress-bar-warning" rv-style="percentageState.warningPercentage"></div>
@@ -117,11 +124,11 @@
     </div> -->
 
     </div> <!-- end of jumbotron -->
-    
+
     <!-- END HEADER -->
-    
+
     <div class="jumbotron">
-        
+
       <ul id="testtest" class="nav nav-tabs nav-justified">
         <li class="active"><a rv-on-click="globalState.headerChange" id="searchTab" data-toggle="tab" href="#searchProject">Search</a></li>
         <li><a rv-on-click="globalState.headerChange" id="batchTab" data-toggle="tab" href="#batchJobs">Batch Jobs</a></li>
@@ -131,14 +138,14 @@
       <br />
 
       <div class="tab-content">
-        
+
         <!-- START SEARCH TAB -->
-        
+
         <div id="searchProject" class="tab-pane fade in active">
 
           <!-- START SEARCH PROJECT BOX -->
 
-          <div class="jumbotron"> 
+          <div class="jumbotron">
             <div class="btn btn-default btn-block" rv-on-click="searchState.setSingleSearchBox" id="singleSearchButton">
               <h2 class="text-center">Search for a single project</h2>
             </div>
@@ -158,10 +165,10 @@
               </div>
 
               <br />
-    
+
             </div>
           </div> <!-- jumbotron -->
-        
+
           <!-- START SEARCH FOR MULTIPLE PROJECTS BOX -->
 
           <div class="jumbotron">
@@ -229,28 +236,28 @@
             </div>
           </div> <!-- jumbotron -->
         </div> <!-- tab-pane -->
-        
+
         <!-- END SEARCH TAB -->
 
         <!-- START BATCH JOB TAB -->
-        
+
         <div id="batchJobs" class="tab-pane fade">
-          
+
           <!-- START IMPORT BOX -->
-          
+
           <div class="jumbotron"> 
           
             <div class="btn btn-default btn-block" rv-on-click="batchState.setImportBox" id="importButton">
               <h2 class="text-center">Import</h2>
             </div>
-            
+
             <div class="input-group jumbotron-button-content" id="fileUploadBox" rv-show="batchState.importBox">
               <input type="text" class="form-control" placeholder="No file selected for uploading." id="uploadFilename" disabled/>
               <div class="input-group-btn">
                 <div class="btn btn-default btn-file">
                   Select File <input type="file" id="batch_file">
                 </div>
-              </div>          
+              </div>
               <div class="input-group-btn">
                 <div rv-on-click="batchState.upload" class="btn btn-primary">
                   Upload
@@ -259,12 +266,12 @@
             </div>
 
           </div> <!-- jumbotron -->
-          
+
           <!-- END IMPORT BOX -->
 
           <!-- START LIST/SELECT BATCH FILES -->
-         
-          <div class="jumbotron"> 
+
+          <div class="jumbotron">
 
             <div class="btn btn-default btn-block" rv-on-click="batchState.listBatchFiles" id="listButton">
               <h2 class="text-center">List/Select</h2>
@@ -294,9 +301,9 @@
                     </td>
                     <td>
                       Size: { result.size } bytes
-                      <br /> 
+                      <br />
                       Date Modified: { result.datemodified }
-                      <br /> 
+                      <br />
                       Owner: { result.owner }
                     </td>
                     <td>
@@ -322,12 +329,12 @@
         <!-- START REPORTING TAB -->
 
         <div id="jobReports" class="tab-pane fade">
-      
+
           <!-- START MANAGE PROJECT RESULTS -->
 
           <div class="jumbotron">
             <div class="btn btn-default btn-block" rv-on-click="reportState.setJobManagePanel" id="jobManageButton">
-              <h2 class="text-center">Manage/Compare project results</h2>
+              <h2 class="text-center">Project results</h2>
             </div>
             <div id="jobManagePanel"
                 class="jumbotron-button-content"
@@ -362,11 +369,11 @@
 
           <!-- END MANAGE PROJECT RESULTS -->
 
-          <!-- START MANAGING BATCH JOB RESULTS -->        
+          <!-- START MANAGING BATCH JOB RESULTS -->
 
           <div class="jumbotron">
             <div class="btn btn-default btn-block" rv-on-click="reportState.setTestResultsPanel" id="testResultsButton">
-              <h2 class="text-center">Manage/Compare batch jobs results</h2>
+              <h2 class="text-center">Batch jobs results</h2>
             </div>
             <div id="testResultsPanel"
                 class="jumbotron-button-content"
@@ -400,14 +407,14 @@
           </div>
 
           <!-- END MANAGING BATCH JOB RESULTS -->
-        
+
         </div> <!-- tab pane -->
 
         <!-- END REPORTS TAB -->
 
-      </div> <!-- tab-content -->  
+      </div> <!-- tab-content -->
     </div> <!-- jumbotron -->
-    
+
     <!-- START LOADING PANEL -->
 
     <div id="loadingPanel" class="panel panel-default" role="alert" rv-show="loadingState.loading">
@@ -421,7 +428,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- END LOADING PANEL -->
 
     <!-- START MULTIPLE RESULTS ALERT BOX -->
@@ -429,7 +436,7 @@
     <div class="alert alert-info multiple-alert" rv-show="searchState.ready" role="alert">
       There are multiple results for <strong>{ searchState.query }</strong>. Please select one.
     </div>
-    
+
     <!-- END MULTIPLE RESULTS ALERT BOX -->
 
     <!-- START MULTIPLE RESULTS TABLE -->
@@ -446,7 +453,7 @@
           <tr class="result-row">
             <td>
               <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
-              / 
+              /
               <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
               <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
                 <span class="glyphicon glyphicon-star"></span>
@@ -468,7 +475,7 @@
                 <span class="glyphicon glyphicon-calendar"></span>
                 updated { result.last_update | date }
               </span>
-           
+
               <br />
 
               <p class="candidate-description text-muted" rv-text="result.description"></p>
@@ -493,7 +500,7 @@
         </tbody>
       </table>
     </div>
-    
+
     <!-- END MULTIPLE RESULTS TABLE -->
 
     <!-- START AUTOSELECT ALERT BOX -->
@@ -507,7 +514,7 @@
         </button>
       </a>
     </div>
-    
+ 
     <!-- END AUTOSELECT ALERT BOX -->
 
     <!-- START DETAIL VIEW -->
@@ -516,14 +523,14 @@
       <div class="panel-body">
         <h1>
           <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
-          / 
+          /
           <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
           <div class="dropdown">
 
             <!-- Radio buttons for choosing what kind of java to use. -->
             <div class="btn-group radioRight" id="radio1" data-toggle="buttons">
               <label class="btn btn-primary active" rv-on-click="detailState.selectJavaType">
-                <input type="radio" name="options" id="option1" checked> Open JDK 
+                <input type="radio" name="options" id="option1" checked> Open JDK
               </label>
               <label class="btn btn-primary" rv-on-click="detailState.selectJavaType">
                 <input type="radio" name="options" id="option2"> IBM Java
@@ -541,7 +548,7 @@
               <li role="presentation" class="divider"></li>
               <li role="presentation" class="dropdown-header">Older</li>
               <li role="presentation" rv-each-tag="detailState.repo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ tag }</a></li>
-            </ul>   
+            </ul>
           </div>
         </h1>
 
@@ -590,9 +597,9 @@
         </a>
       </div>
     </div>
-    
+
     <!-- END DETAIL VIEW -->
-    
+
     <!-- START BATCH FILE TABLE -->
 
     <div id="batchFilePanel" class="panel panel-default" rv-show="batchState.exportReady">
@@ -613,7 +620,7 @@
           <tr class="result-row">
             <td>
               <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
-              / 
+              /
               <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
               <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
                 <span class="glyphicon glyphicon-star"></span>
@@ -635,9 +642,9 @@
                 <span class="glyphicon glyphicon-calendar"></span>
                 updated { package.last_update | date }
               </span>
-              
+ 
               <br />
-    
+
               <p class="candidate-description text-muted" rv-text="package.description"></p>
             </td>
             <td>
@@ -646,7 +653,7 @@
         </tbody>
       </table>
     </div>
-    
+
     <!-- END BATCH FILE TABLE -->
 
     <!-- PROJECT COMPARE RESULTS SELECT TABLE -->

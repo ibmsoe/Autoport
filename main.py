@@ -49,7 +49,7 @@ def main():
 
 @app.route("/init", methods=['POST'])
 def init():
-    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, gsaPathForTestResults=globals.gsaPathForTestResults, gsaPathForBatchFiles=globals.gsaPathForBatchFiles, localPathForTestResults=globals.localPathForTestResults, githubToken=globals.githubToken, jenkinsGsaUsername=globals.jenkinsGsaUsername, jenkinsGsaPassword=globals.jenkinsGsaPassword)
+    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, localPathForTestResults=globals.localPathForTestResults, gsaPathForTestResults=globals.gsaPathForTestResults, localPathForBatchFiles=globals.localPathForBatchFiles, gsaPathForBatchFiles=globals.gsaPathForBatchFiles, githubToken=globals.githubToken, jenkinsGsaUsername=globals.jenkinsGsaUsername, jenkinsGsaPassword=globals.jenkinsGsaPassword)
 
 # Settings function
 @app.route("/settings", methods=['POST'])
@@ -60,19 +60,24 @@ def settings():
         return json.jsonify(status="failure", error="bad url")
 
     try:
-        globals.gsaPathForTestResults = request.form["test_results"]
+        globals.localPathForTestResults = request.form["ltest_results"]
+    except ValueError:
+        return json.jsonify(status="failure", error="bad local_test_results path")
+
+    try:
+        globals.gsaPathForTestResults = request.form["gtest_results"]
     except ValueError:
         return json.jsonify(status="failure", error="bad test_results path")
 
     try:
-        globals.gsaPathForBatchFiles = request.form["batch_files"]
+        globals.localPathForBatchFiles = request.form["lbatch_files"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad batch_files path")
+        return json.jsonify(status="failure", error="bad local_batch_files path")
 
     try:
-        globals.localPathForTestResults = request.form["local_test_results"]
+        globals.gsaPathForBatchFiles = request.form["gbatch_files"]
     except ValueError:
-        return json.jsonify(status = "failure", error="bad local_test_results path")
+        return json.jsonify(status="failure", error="bad batch_files path")
 
     try:
         # change githubToken from default, doesn't actually work right now

@@ -1,14 +1,18 @@
 var globalState = {
     hasInit: false,
     jenkinsUrlInit: "",
+    localPathForTestResultsInit: "",
     gsaPathForTestResultsInit: "",
+    localPathForBatchFilesInit: "",
     gsaPathForBatchFilesInit: "",
     githubTokenInit: "",
     jenkinsGsaUsernameInit: "",
     jenkinsGsaPasswordInit: "",
 
     jenkinsUrl: "",
+    localPathForTestResults: "",
     gsaPathForTestResults: "",
+    localPathForBatchFiles: "",
     gsaPathForBatchFiles: "",
     githubToken: "",
     jenkinsGsaUsername: "",
@@ -37,20 +41,27 @@ var globalState = {
     },
     reset: function() {
         document.getElementById('url').value = globalState.jenkinsUrlInit;
-        document.getElementById('test_results').value = globalState.gsaPathForTestResultsInit;
-        document.getElementById('batch_files').value = globalState.gsaPathForBatchFilesInit;
+        document.getElementById('ltest_results').value = globalState.localPathForTestResultsInit;
+        document.getElementById('gtest_results').value = globalState.gsaPathForTestResultsInit;
+        document.getElementById('lbatch_files').value = globalState.localPathForBatchFilesInit;
+        document.getElementById('gbatch_files').value = globalState.gsaPathForBatchFilesInit;
         document.getElementById('github').value = globalState.githubTokenInit;
         document.getElementById('username').value = globalState.jenkinsGsaUsernameInit;
         document.getElementById('password').value = globalState.jenkinsGsaPasswordInit;
     },
     updateParameters: function () {
         jenkinsUrl = document.getElementById('url').value;
-        gsaPathForTestResults = document.getElementById('test_results').value;
-        gsaPathForBatchFiles = document.getElementById('batch_files').value;
+        localPathForTestResults = document.getElementById('ltest_results').value;
+        gsaPathForTestResults = document.getElementById('gtest_results').value;
+        localPathForBatchFiles = document.getElementById('lbatch_files').value;
+        gsaPathForBatchFiles = document.getElementById('gbatch_files').value;
         githubToken = document.getElementById('github').value;
         jenkinsGsaUsername = document.getElementById('username').value;
         jenkinsGsaPassword = document.getElementById('password').value;
-        $.post("/settings", {url: jenkinsUrl, test_results: gsaPathForTestResults, batch_files: gsaPathForBatchFiles, github: githubToken, username: jenkinsGsaUsername, password: jenkinsGsaPassword}, settingsCallback, "json");
+        $.post("/settings", {url: jenkinsUrl,
+               ltest_results: localPathForTestResults, gtest_results: gsaPathForTestResults,
+               lbatch_files: localPathForBatchFiles, gbatch_files: gsaPathForBatchFiles, github: githubToken,
+               username: jenkinsGsaUsername, password: jenkinsGsaPassword}, settingsCallback, "json");
     }
 };
 
@@ -858,14 +869,18 @@ function initCallback(data) {
     }
     globalState.hasInit = true;
     globalState.jenkinsUrlInit = data.jenkinsUrl;
+    globalState.localPathForTestResultsInit = data.localPathForTestResults;
     globalState.gsaPathForTestResultsInit = data.gsaPathForTestResults;
+    globalState.localPathForBatchFilesInit = data.localPathForBatchFiles;
     globalState.gsaPathForBatchFilesInit = data.gsaPathForBatchFiles;
     globalState.githubTokenInit = data.githubToken;
     globalState.jenkinsGsaUsernameInit = data.jenkinsGsaUsername;
     globalState.jenkinsGsaPasswordInit = data.jenkinsGsaPassword;
 
     globalState.jenkinsUrl = data.jenkinsUrl;
+    globalState.localPathForTestResults = data.localPathForTestResults;
     globalState.gsaPathForTestResults = data.gsaPathForTestResults;
+    globalState.localPathForBatchFiles = data.localPathForBatchFiles;
     globalState.gsaPathForBatchFiles = data.gsaPathForBatchFiles;
     globalState.githubToken = data.githubToken;
     globalState.jenkinsGsaUsername = data.jenkinsGsaUsername;
