@@ -28,7 +28,7 @@ class ResultParser:
         curClass = ""
         projectPattern = re.compile('\[INFO\] Building (.*)')
         classPattern = re.compile('Running (.*)')
-        resultsPattern = re.compile('Tests run: (\d*), Failures: (\d*), Errors: (\d*), Skipped: (\d*), Time elapsed: (\d*\.\d*) sec[ \<\<\< FAILURE\!]?')
+        resultsPattern = re.compile('Tests run: (\d*), Failures: (\d*), Errors: (\d*), Skipped: (\d*), Time elapsed: (\d*\.?\d*) sec[ \<\<\< FAILURE\!]?')
 
         for line in f.readlines():
             projectMatch = projectPattern.match(line)
@@ -39,6 +39,7 @@ class ResultParser:
                     totals["total"] = totals["total"] + projectResults["total"]
                     totals["failures"] = totals["failures"] + projectResults["failures"]
                     totals["errors"] = totals["errors"] + projectResults["errors"]
+                    totals["skipped"] = totals["skipped"] + projectResults["skipped"]
                     totals["duration"] = totals["duration"] + projectResults["duration"]
                 projectResults = {}
                 projectResults["total"] = 0
@@ -73,6 +74,7 @@ class ResultParser:
             totals["total"] = totals["total"] + projectResults["total"]
             totals["failures"] = totals["failures"] + projectResults["failures"]
             totals["errors"] = totals["errors"] + projectResults["errors"]
+            totals["skipped"] = totals["skipped"] + projectResults["skipped"]
             totals["duration"] = totals["duration"] + projectResults["duration"]
         f.close()
         totals["results"] = results
