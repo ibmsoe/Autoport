@@ -492,7 +492,8 @@ def listBatchFiles():
     # Get local batch file info
     for dirname, dirnames, filenames in os.walk(globals.localPathForBatchFiles):
         for filename in sorted(filenames):
-            file_list.append(parseBatchBuf(globals.localPathForBatchFiles + filename, "local"))
+            if filename != ".gitignore":
+                file_list.append(parseBatchBuf(globals.localPathForBatchFiles + filename, "local"))
 
     # Get server batch file info
     ftp_client.chdir(globals.pathForBatchFiles)
