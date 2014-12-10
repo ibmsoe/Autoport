@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Autoport</title>
+    <title>AutoPort</title>
 
     <!-- Bootstrap -->
     <link href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}" rel="stylesheet"/>
@@ -30,7 +30,7 @@
 
     <div class="jumbotron">
       <h1>
-        Autoport
+        AutoPort
         <button class="btn btn-primary modalButton" data-toggle="modal" data-target="#settingsModal">
           <span class="glyphicon glyphicon-wrench"></span> Settings
         </button>
@@ -147,7 +147,7 @@
                   <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
                   <ul class="dropdown-menu dropdown-menu-right" role="menu">
                     <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a href="#">Relevance</a></li>
-                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Stars</a></li>
+                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Popularity Stars</a></li>
                     <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a href="#">Forks</a></li>
                     <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a href="#">Updated</a></li>
                   </ul>
@@ -178,7 +178,7 @@
                   <div class="input-group">
                     <span class="input-group-addon">Using</span>
                     <select class="form-control" rv-value="searchState.queryTop.sort">
-                      <option value="stars">Stars</option>
+                      <option value="stars">Popularity Stars</option>
                       <option value="forks">Forks</option>
                     </select>
                   </div>
@@ -207,7 +207,7 @@
                   <div class="input-group">
                     <span class="input-group-addon">></span>
                     <input type="number" class="form-control" rv-value="searchState.queryTop.stars">
-                    <span class="input-group-addon">Stars</span>
+                    <span class="input-group-addon">Popularity Stars</span>
                   </div>
                 </div>
                 <div class="col-lg-3">
@@ -527,7 +527,7 @@
     <!-- START AUTOSELECT ALERT BOX -->
 
     <div class="alert alert-success autoselect-alert clearfix" rv-show="detailState.autoSelected" role="alert">
-      <span class="autoSelectText"><strong>Auto-selected</strong> this repository because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } stars</strong>.</span>
+      <span class="autoSelectText"><strong>Auto-selected</strong> this repository because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } popularity stars</strong>.</span>
       <a href="#" class="exitAutoSelect buttonRight" rv-show="detailState.autoSelected" rv-on-click="detailState.exitAutoSelect">
         <button type="button" class="btn btn-default exitAutoSelectButton">
           <span class="glyphicon glyphicon-list"></span>
