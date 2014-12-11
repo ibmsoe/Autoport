@@ -23,6 +23,14 @@ var globalState = {
     isBatchTabActive: false,
     isReportsTabActive: false,
 
+    isHelpDisplayed: true,
+
+    toggleHelp: function() {
+        globalState.isHelpDisplayed = !globalState.isHelpDisplayed;
+        $("#toggleHelpBtn").text((globalState.isHelpDisplayed?"Hide":"Show")+" help");
+        $("#helpViewer").css("display", globalState.isHelpDisplayed?"block":"none");
+    },
+
     headerChange: function(ev) {
         if(ev.target.id === "searchTab") {
             globalState.isSearchTabActive = true;
