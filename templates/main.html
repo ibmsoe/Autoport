@@ -324,25 +324,34 @@
 
           <div class="jumbotron">
             <div class="btn btn-default btn-block" rv-on-click="reportState.setJobManagePanel" id="jobManageButton">
-              <h2 class="text-center">Project results</h2>
+              <h2 class="text-center">Manage/Compare project results</h2>
             </div>
-
-            <div id="jobManagePanel" class="jumbotron-button-content" rv-show="reportState.jobManagePanel">
-
+            <div id="jobManagePanel"
+                class="jumbotron-button-content"
+                rv-show="reportState.jobManagePanel">
               <div class="row">
                 <div class="col-lg-8">
-                  <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="projectFilter"/>
+                  <input type="text"
+                      class="form-control"
+                      placeholder="(e.g. redis, cassandra, mongo)"
+                      id="projectFilter"/>
                 </div>
                 
                 <div class="col-lg-4">
                   <a rv-href="#" rv-on-click="reportState.listLocalProjects">
-                    <button type="button" class="btn btn-primary">List local</button>
+                    <button type="button" class="btn btn-primary">
+                      List local
+                    </button>
                   </a>
                   <a rv-href="#" rv-on-click="reportState.listGSAProjects">
-                    <button type="button" class="btn btn-primary">List archived</button>
+                    <button type="button" class="btn btn-primary">
+                      List archived
+                    </button>
                   </a>
                   <a rv-href="#" rv-on-click="reportState.listAllProjects">
-                    <button type="button" class="btn btn-primary">List all</button>
+                    <button type="button" class="btn btn-primary">
+                      List all
+                    </button>
                   </a>
                 </div>
               </div>
@@ -355,7 +364,7 @@
 
           <div class="jumbotron">
             <div class="btn btn-default btn-block" rv-on-click="reportState.setTestResultsPanel" id="testResultsButton">
-              <h2 class="text-center">Batch jobs results</h2>
+              <h2 class="text-center">Manage/Compare batch jobs results</h2>
             </div>
             <div id="testResultsPanel"
                 class="jumbotron-button-content"

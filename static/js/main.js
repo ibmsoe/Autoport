@@ -271,18 +271,21 @@ var reportState = {
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "local";
         $.getJSON("/listTestResults/local", { filter: $("#projectFilter").val() }, processResultList);
+        $("#resultArchiveBtn").show();
     },
     listGSAProjects: function(ev) {
         switchToLoadingState();
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "archived";
         $.getJSON("/listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList);
+        $("#resultArchiveBtn").hide();
     },
     listAllProjects: function(ev) {
         switchToLoadingState();
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "all";
         $.getJSON("/listTestResults/all", { filter: $("#projectFilter").val() }, processResultList);
+        $("#resultArchiveBtn").show();
     },
     listLocalBatch: function(ev) {
     },
@@ -334,10 +337,19 @@ var projectReportState = {
         // find the corresponding project object.
         var projectName = "";
         var projectRepo = "";
+        var isSelected = false;
         for (prj in projectReportState.projects) {
             if (projectReportState.projects[prj].id == id) {
                 projectName = projectReportState.projects[prj].fullName;
                 projectRepo = projectReportState.projects[prj].repository;
+                isSelected = projectReportState.projects[prj].selectStatus;
+                projectReportState.projects[prj].selectStatus = !isSelected;
+                // Find the entry in the table
+                projectReportState.projectsTable.data().each(function(d){
+                    if (d.id == id) {
+                        d.selectStatus = !isSelected;
+                    }
+                });
                 break;
             }
         }
@@ -351,8 +363,7 @@ var projectReportState = {
         } else {
             projectReportState.selectedProjects[projectName] = projectRepo;
         }
-        $("#"+id).toggleClass('btn-primary');
-        $("#"+id+" span").toggleClass('glyphicon-ok glyphicon-remove');
+        projectReportState.projectsTable.rows().invalidate().draw();
         handleProjectListBtns();
     },
     selectAll: function() {
@@ -360,28 +371,50 @@ var projectReportState = {
             var projectName = projectReportState.projects[prj].fullName;
             var projectRepo = projectReportState.projects[prj].repository;
             if (projectReportState.selectedProjects.indexOf(projectName) === -1) {
-                $("#"+projectReportState.projects[prj].id).toggleClass('btn-primary');
-                $("#"+projectReportState.projects[prj].id+" span").toggleClass('glyphicon-ok glyphicon-remove');
                 projectReportState.selectedProjects[projectName] = projectRepo;
+                projectReportState.projects[prj].selectStatus = true;
             }
         }
+        projectReportState.projectsTable.data().each(function(d) {
+            d.selectStatus = true;
+        });
+        projectReportState.projectsTable.rows().invalidate().draw();
         handleProjectListBtns();
     },
     selectNone: function() {
         for (prj in projectReportState.projects) {
             var projectName = projectReportState.projects[prj].fullName;
+            projectReportState.projects[prj].selectStatus = false;
             if (projectReportState.selectedProjects[projectName] !== undefined) {
-                $("#"+projectReportState.projects[prj].id).toggleClass('btn-primary');
-                $("#"+projectReportState.projects[prj].id+" span").toggleClass('glyphicon-ok glyphicon-remove');
+                delete projectReportState.selectedProjects[projectName];
             }
         }
+        projectReportState.projectsTable.data().each( function(d) {
+            d.selectStatus = false;
+        });
         projectReportState.selectedProjects = {};
+        projectReportState.projectsTable.rows().invalidate().draw();
         handleProjectListBtns();
     },
     testHistory: function() { // TODO single project or multiple?
-        console.log("TODO testHistory");
+        var sel = Object.keys(projectReportState.selectedProjects);
+        var query = {};
+        for (proj in sel) {
+            query[sel[proj]] = projectReportState.selectedProjects[sel[proj]];
+        }
+        switchToLoadingState();
+        $.ajax({
+                type: "POST",
+         contentType: "application/json; charset=utf-8",
+                 url: "/getTestHistory",
+                data: JSON.stringify({
+                        projects: query
+                      }),
+             success: processTestHistory,
+            dataType:'json'
+        });
     },
-    testDetail: function() { // TODOmultiple projects! 
+    testDetail: function() {
         var sel = Object.keys(projectReportState.selectedProjects);
         var query = {};
         for (proj in sel) {
@@ -396,7 +429,8 @@ var projectReportState = {
                         projects: query
                       }),
              success: processTestDetail,
-            dataType:'json'});
+            dataType:'json'
+        });
     },
     compareResults: function() {
         var sel = Object.keys(projectReportState.selectedProjects);
@@ -696,10 +730,11 @@ function processResultList(data) {
                            id: prjId+data.results[project][1],
                          name: prjObject[3],
                           env: prjObject[2],
-                           os: "",
+                           os: "", // TODO
                       version: prjObject[4],
                     completed: prjObject[5],
                    repository: data.results[project][1],
+                 selectStatus: false,
                     selectBtn: '<a rv-href="#" rv-on-click="project.select">'+
                                '<button type="button" class="btn" rv-id="'+
                                prjId+data.results[project][1]+
@@ -718,6 +753,7 @@ function processResultList(data) {
                       version: prjObject[4],
                     completed: prjObject[5],
                    repository: data.results[project][1],
+                 selectStatus: false,
                     selectBtn: '<a rv-href="#" onClick="projectReportState.selectProject(\''+
                                prjId+data.results[project][1]+'\')">'+
                                '<button type="button" class="btn" id="'+
@@ -868,6 +904,45 @@ function processTestDetail(data) {
     projectReportState.prjTableReady = true;
 }
 
+function processTestHistory(data) {
+    if (data.status != "ok") {
+        tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
+    } else {
+        // based on the compare table
+        var tableContent = "";
+        for (project in data.results) {
+            tableContent += "<tr><th colspan=\"5\"><h3>"+
+                data.results[project].name+"</h3></th></tr>";
+            tableContent += "<tr><th>Date / repository</th>";
+            tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
+
+            for (var dateRes in data.results[project].results) {
+                tableContent += "<tr><td class=\"testClass\">" +
+                     data.results[project].results[dateRes].project.Date +
+                     " / " + data.results[project].results[dateRes].repository +
+                    "</td>";
+                var tc = data.results[project].results[dateRes].results;
+                if (tc === undefined ||
+                    tc["total"] === undefined ||
+                    tc["failures"] === undefined ||
+                    tc["errors"] === undefined ||
+                    tc["skipped"] === undefined) {
+                    tableContent += "<td class=\"testResult\" colspan=\"4\"></td></tr>";
+                    continue;
+                }
+                tableContent += "<td class=\"testResultArch\">"+
+                    tc["total"]+"</td><td class=\"testResult\">"+
+                    tc["failures"]+"</td><td class=\"testResult\">"+
+                    tc["errors"]+"</td><td class=\"testResult\">"+
+                    tc["skipped"]+"</td></tr>";
+            }
+        }
+    }
+    $("#testResultsTable").html(tableContent);
+    loadingState.loading = false;
+    projectReportState.prjTableReady = true;
+}
+
 function archiveCallback(data) {
     // TODO show a confirmation or error dialog
     console.log("TODO");
@@ -975,7 +1050,17 @@ $(document).ready(function() {
             { "data": "os", "ordering": "true" },
             { "data": "completed", "ordering": "true" },
             { "data": "repository", "ordering": "true" },
-            { "data": "selectBtn", "ordering": "false" }
+            { "data": "selectStatus", "ordering": "false", "render": function(data, type, row) {
+                return '<a rv-href="#" onClick="projectReportState.selectProject(\''+
+                               row.id+'\')">'+
+                               '<button type="button" class="btn'+(data?' btn-primary':'')+
+                               '" id="'+
+                               row.id+'">'+
+                               '<span class="glyphicon glyphicon-'+
+                               (data?'ok':'remove')+
+                               '"></span>'+
+                               'Select</button></a>';
+            } }
         ]
     });
 });

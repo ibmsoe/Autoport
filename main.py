@@ -588,9 +588,45 @@ def getTestResults():
                         rightProject = rightmeta,
                         results = res)
 
-@app.route("/getTestHistory")
+@app.route("/getTestHistory", methods=["POST"])
 def getTestHistory():
-    return json.jsonify(status = "ok", results = "work in progress.")
+    projects = request.json['projects']
+    out = []
+    repoType = ""
+    projectNames = []
+    for name in projects.keys():
+        if repoType == "":
+            repoType = projects[name]
+        elif repoType == "all":
+            pass
+        elif repoType != projects[name]:
+            repoType = "all"
+        # remove time from the project name
+        pname = re.match(r"(.*)\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d", name).group(1)
+        if not pname in projectNames:
+            projectNames.append(pname)
+
+    jobRes = catalog.listJobResults(repoType, "")
+    for projectName in projectNames:
+        prjOut = []
+        for prj in jobRes:
+            if projectName in prj[0]:
+                resultDir = catalog.getResults(prj[0], prj[1])
+                prjRes = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+                f = open(resultDir+"/meta.arti")
+                meta = json.load(f)
+                f.close()
+                prjOut.append({
+                    "name": prj[0],
+                    "repository": prj[1],
+                    "project": meta,
+                    "results": prjRes})
+                pass
+        out.append({
+            "name": projectName,
+            "results": prjOut
+        })
+    return json.jsonify(status = "ok", results = out)
 
 @app.route("/getTestDetail", methods=["POST"])
 def getTestDetail():
