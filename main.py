@@ -140,7 +140,7 @@ def search():
         # TODO - return no results page
         return json.jsonify(status="failure", error="no results")
     elif repos.totalCount <= maxResults:
-        numResults = len(repos)
+        numResults = repos.totalCount
 
     for repo in repos[:numResults]: 
         globals.cache.cacheRepo(repo)
