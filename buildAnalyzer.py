@@ -2,6 +2,9 @@
 # steps
 def inferBuildSteps(listing, repo):
     for f in listing:
+        # Get the readme
+        readmeStr = repo.get_readme().content.decode('base64', 'strict')
+
         if f.name == "build.sh":
             return {
                 'build system': "custom build script",
@@ -12,30 +15,57 @@ def inferBuildSteps(listing, repo):
                 'reason': "build.sh",
                 'success': True
             }
+
         elif f.name == "Makefile":
+
+            # Search for options related to make
+            opts = "make test"
+            delim = ["`", "'", '"', "\n"]           # delimeters used to denote end of option
+            strFound = buildFilesParser(readmeStr, opts, delim)
+            if strFound != "":
+                testCmd = strFound
+            else:
+                testCmd = "make all"
+
             return {
                 'build system': "make",
-                'build': "./configure; make",
-                'test' : "make all",
+                'build': "if [ -x configure ]; then ./configure; fi; make clean; make",
+                'test' : testCmd,
                 'env' : "",
                 'artifacts': "", 
                 'reason': "Makefile",
                 'success': True
             }
+
         elif f.name == "build.xml":
+
+            # Search for options related to ant
+            opts = "ant clean" 
+            delim = ["`", "'", '"', "\n"]      # delimeters used to denote end of cmd
+            strFound = buildFilesParser(readmeStr, opts, delim)
+            if strFound != "":
+                buildCmd = "ant clean; ant"
+            else:
+                buildCmd = "ant"
+
+            opts = "ant test"             # maven options to look for
+            delim = ["`", "'", '"', "\n"]      # delimeters used to denote end of option
+            strFound = buildFilesParser(readmeStr, opts, delim)
+            if strFound != "":
+                testCmd = strFound        # test command
+            else:
+                testCmd = ""              # export command to be appended to the front of the build command
+
             return {
                 'build system': "ant",
-                'build': "ant",
-                'test' : "",
+                'build': buildCmd,
+                'test' : testCmd,
                 'env' : "",
                 'artifacts': "",
                 'reason': "build.xml",
                 'success': True
             }
         elif f.name == "pom.xml":
-            # Get the readme
-            readmeStr = repo.get_readme().content.decode('base64', 'strict')
-
             # Search for options related to maven
             opts = "MAVEN_OPTS" # maven options to look for
             delim = ["`", "\n"] # delimeters used to denote end of option
