@@ -465,7 +465,7 @@ def runBatchFile ():
   
     if batchName != "":
         # Read in the file and store as JSON
-        f = open(globals.localPathForBatchFiles + batchName)
+        f = open(batchName)
         fileBuf = json.load(f)
         f.close()
 
