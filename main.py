@@ -275,11 +275,14 @@ def uploadBatchFile():
     f.write(fileStr)
     f.close()
 
+    # We don't want to automatically be uploading to remote location, this code needs
+    # to be moved into the batch table as an action for each individual batch file
+    '''
     # Copy batch file to a predetermined spot in the GSA 
     # This portion of code requires paramiko installed.
     port = 22
     localpath = os.getcwd() + "/data/batch_files/" + name
-
+    
     # Unfortunately, this will not create a folder that is not already in the gsa.
     # Having stfp trying to create a folder with the same name everytime does not work either.
     remotepath = globals.pathForBatchFiles + name
@@ -295,6 +298,7 @@ def uploadBatchFile():
     sftp.put(localpath, remotepath)
     sftp.close()
     transport.close()
+    '''
 
     return json.jsonify(status="ok")
 
