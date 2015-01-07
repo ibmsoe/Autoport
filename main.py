@@ -110,8 +110,13 @@ def progress():
 def search():
     # Get and validate arguments
     query = request.args.get("q", "")
+    panel = request.args.get("panel", "")
+
     if query == "":
         return json.jsonify(status="failure", error="missing query")
+    
+    if panel == "":
+        return json.jsonify(status="failure", error="missing panel")
 
     searchArgs = None # Used to pass in sort argument to pygithub
     sort = request.args.get("sort", "") # Check for optional sort argument
@@ -165,7 +170,7 @@ def search():
             "description": repo.description,
             "classifications": classify(repo)
         })
-    return json.jsonify(status="ok", results=results, type="multiple")
+    return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
 
 # Detail - returns a JSON file with detailed information about the repo
 @app.route("/detail/<int:id>")
@@ -234,6 +239,10 @@ def search_repositories():
 
     # AutoPort parameters
     limit = int(request.args.get("limit", "25"))
+    panel = request.args.get("panel", "")
+
+    if panel == "":
+        return json.jsonify(status="failure", error="missing panel")
 
     # TODO: debug-log parameters
 
@@ -255,7 +264,7 @@ def search_repositories():
             "classifications": classify(repo)
         })
 
-    return json.jsonify(status="ok", results=results, type="multiple")
+    return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
 
 # Upload Batch File - takes a file and uploads it to a permanent location (TBD)
 @app.route("/uploadBatchFile", methods=['GET', 'POST'])

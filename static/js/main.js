@@ -101,8 +101,10 @@ var searchState = {
     generateSearchBox: false,
 	sorting: "relevance",
 	ready: false, // Whether or not to draw this view
+    generateReady: false,
 	query: "", // User's query
-	results: {}, // Search result data
+	singleResults: {}, // Search result data
+	generateResults: {}, // Search result data
 	setSingleSearchBox: function (ev) {
         searchState.singleSearchBox = (searchState.singleSearchBox) ? false : true;
 	},
@@ -131,7 +133,8 @@ var searchState = {
 
 				// AutoPort parameters
 				limit:   searchState.queryTop.limit,
-				version: searchState.queryTop.version
+				version: searchState.queryTop.version,
+                panel: "generate"
 			};
 
 			console.log(data);
@@ -441,6 +444,7 @@ var projectReportState = {
         });
     },
     compareResults: function() {
+        console.log("test compare");
         var sel = Object.keys(projectReportState.selectedProjects);
         if (sel.length === 2) {
             var leftProject = sel[0];
@@ -501,6 +505,7 @@ rivets.bind($('#jobManageButton'), {
 });
 // Allows client to display progress on batch job
 rivets.bind($('#jobManagePanel'), {
+    projectReportState: projectReportState,
     reportState: reportState,
     percentageState: percentageState
 });
@@ -551,10 +556,13 @@ rivets.bind($('#importButton'), {
     batchState: batchState
 });
 
+/*
 // Multiple result alert box
 rivets.bind($('.multiple-alert'), {
 	searchState: searchState
 });
+*/
+
 // Autoselect alert box
 rivets.bind($('.autoselect-alert'), {
 	detailState: detailState
@@ -593,9 +601,8 @@ rivets.bind($('#progressBar'), {
     percentageState: percentageState
 });
 
-rivets.bind($('#reportSelector'), {
-    reportState: reportState
-});
+/*TODO - Why do these need to be commented out, without these commented
+out projectReportState.<function> is no longer a function according to rivets in the html
 rivets.bind($('#testCompareSelectPanel'), {
     projectReportState: projectReportState
 });
@@ -605,6 +612,13 @@ rivets.bind($("#testCompareRunAlert"), {
 rivets.bind($("#testCompareTablePanel"), {
     projectReportState: projectReportState
 });
+*/
+
+/*Is this still needed?
+rivets.bind($('#reportSelector'), {
+    reportState: reportState
+});
+*/
 
 // Jenkins Tab Bindings
 rivets.bind($('#jenkinsManageButton'), {
@@ -618,10 +632,15 @@ rivets.bind($('#jenkinsPanel'), {
     jenkinsState: jenkinsState,
     percentageState: percentageState
 });
+rivets.configure({
+    handler : function(context, ev, binding) {
+        this.call(binding.observer.target, ev, binding.view.models);
+    }
+});
 
 // Disables all views except loading view
 function switchToLoadingState() {
-	searchState.ready = false;
+	//searchState.ready = false;
 	detailState.ready = false;
     projectReportState.prjCompareReady = false;
     projectReportState.prjTableReady = false;
@@ -641,7 +660,8 @@ function doSearch(autoselect) {
 		$.getJSON("/search", {
 			q: searchState.query,
 			sort: searchState.sorting,
-			auto: autoselect
+			auto: autoselect,
+            panel: "single"
 		}, processSearchResults);
 	}
 }
@@ -673,9 +693,18 @@ function processSearchResults(data) {
 			};
 		});
 		detailState.autoSelected = false;
-		searchState.results = data.results;
-		loadingState.loading = false;
-		searchState.ready = true;
+        if(data.panel === "generate") {
+            console.log("generate");
+		    searchState.generateResults = data.results;
+		    loadingState.loading = false;
+		    searchState.generateReady = true;
+        }
+        else if(data.panel === "single") {
+            console.log("single");
+		    searchState.singleResults = data.results;
+		    loadingState.loading = false;
+		    searchState.ready = true;
+        }
 	} else if (data.type === "detail") {
 		// Got single repository result, show detail page
 		detailState.autoSelected = true;

@@ -162,7 +162,74 @@
               <br />
 
             </div>
+
+            <!-- START MULTIPLE RESULTS TABLE -->
+
+            <div id="resultsPanel" class="panel panel-default" rv-show="searchState.ready">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Repositories</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="resultsTable" rv-each-result="searchState.singleResults">
+                  <tr class="result-row">
+                    <td>
+                      <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
+                      /
+                      <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
+                      <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
+                        <span class="glyphicon glyphicon-star"></span>
+                        { result.stars }
+                      </span>
+                      <span title="Fork count" class="tip label" rv-classification="result.classifications.forks">
+                        <span class="glyphicon glyphicon-random"></span>
+                        { result.forks }
+                      </span>
+                      <span title="Primary language" class="tip label" rv-classification="result.classifications.language">
+                        <span class="glyphicon glyphicon-wrench"></span>
+                        { result.language }
+                      </span>
+                      <span title="Repository size" class="tip label" rv-classification="result.classifications.size">
+                        <span class="glyphicon glyphicon-floppy-disk"></span>
+                        { result.size_kb | size }
+                      </span>
+                      <span title="Last updated" class="tip label" rv-classification="result.classifications.date">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                        updated { result.last_update | date }
+                      </span>
+
+                      <br />
+
+                      <!--<p class="candidate-description text-muted" rv-text="result.description"></p>-->
+                    </td>
+                    <td>
+                      <a rv-href="#" rv-on-click="result.addToBatchFile">
+                        <button type="button" class="btn btn-primary">
+                          <span class="glyphicon glyphicon-plus"></span>
+                          Add to Batch
+                        </button>
+                      </a>
+                    </td>
+                    <td>
+                      <a rv-href="#" rv-on-click="result.select">
+                        <button type="button" class="btn btn-primary">
+                          <span class="glyphicon glyphicon-zoom-in"></span>
+                          Details
+                        </button>
+                      </a>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- END MULTIPLE RESULTS TABLE -->
+          
           </div> <!-- jumbotron -->
+          
+          <!-- END SEARCH PROJECT BOX -->
 
           <!-- START SEARCH FOR MULTIPLE PROJECTS BOX -->
 
@@ -225,11 +292,135 @@
                 <div class="col-lg-3">
                   <button class="btn btn-primary" rv-on-click="searchState.queryTop.generate">Search</button>
                 </div>
+              </div>              
+              
+              <br />
+
+              <!-- START BATCH FILE TABLE -->
+
+              <div id="batchFilePanel" class="panel panel-default" rv-show="batchState.exportReady">
+                <a rv-href="#" rv-on-click="batchState.download">
+                  <button type="button" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-download"></span>
+                    Export
+                  </button>
+                </a>
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Batch File Repositories</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="batchFileTable" rv-each-package="batchState.batchFile.packages">
+                    <tr class="result-row">
+                      <td>
+                        <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
+                        /
+                        <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
+                        <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
+                          <span class="glyphicon glyphicon-star"></span>
+                          { package.stars }
+                        </span>
+                        <span title="Fork count" class="tip label" rv-classification="package.classifications.forks">
+                          <span class="glyphicon glyphicon-random"></span>
+                          { package.forks }
+                        </span>
+                        <span title="Primary language" class="tip label" rv-classification="package.classifications.language">
+                          <span class="glyphicon glyphicon-wrench"></span>
+                          { package.language }
+                        </span>
+                        <span title="Repository size" class="tip label" rv-classification="package.classifications.size">
+                          <span class="glyphicon glyphicon-floppy-disk"></span>
+                          { package.size_kb | size }
+                        </span>
+                        <span title="Last updated" class="tip label" rv-classification="package.classifications.date">
+                          <span class="glyphicon glyphicon-calendar"></span>
+                          updated { package.last_update | date }
+                        </span>
+           
+                        <br />
+
+                        <!--<p class="candidate-description text-muted" rv-text="package.description"></p>-->
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
 
+              <!-- END BATCH FILE TABLE -->
+    
+              <!-- START MULTIPLE RESULTS TABLE -->
+
+              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.generateReady">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Repositories</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="resultsTable" rv-each-result="searchState.generateResults">
+                    <tr class="result-row">
+                      <td>
+                        <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
+                        /
+                        <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
+                        <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
+                          <span class="glyphicon glyphicon-star"></span>
+                          { result.stars }
+                        </span>
+                        <span title="Fork count" class="tip label" rv-classification="result.classifications.forks">
+                          <span class="glyphicon glyphicon-random"></span>
+                          { result.forks }
+                        </span>
+                        <span title="Primary language" class="tip label" rv-classification="result.classifications.language">
+                          <span class="glyphicon glyphicon-wrench"></span>
+                          { result.language }
+                        </span>
+                        <span title="Repository size" class="tip label" rv-classification="result.classifications.size">
+                          <span class="glyphicon glyphicon-floppy-disk"></span>
+                          { result.size_kb | size }
+                        </span>
+                        <span title="Last updated" class="tip label" rv-classification="result.classifications.date">
+                          <span class="glyphicon glyphicon-calendar"></span>
+                          updated { result.last_update | date }
+                        </span>
+
+                        <br />
+
+                        <!--<p class="candidate-description text-muted" rv-text="result.description"></p>-->
+                      </td>
+                      <td>
+                        <a rv-href="#" rv-on-click="result.addToBatchFile">
+                          <button type="button" class="btn btn-primary">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            Add to Batch
+                          </button>
+                        </a>
+                      </td>
+                      <td>
+                        <a rv-href="#" rv-on-click="result.select">
+                          <button type="button" class="btn btn-primary">
+                            <span class="glyphicon glyphicon-zoom-in"></span>
+                            Details
+                          </button>
+                        </a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- END MULTIPLE RESULTS TABLE -->
 
             </div>
           </div> <!-- jumbotron -->
+
+          <!-- END SEARCH FOR MULTIPLE PROJECTS BOX -->
+
         </div> <!-- tab-pane -->
 
         <!-- END SEARCH TAB -->
@@ -321,7 +512,7 @@
         
         <!-- END BATCH TAB PROCESSING -->
 
-        <!-- START REPORTING TAB -->
+        <!-- START REPORTS TAB -->
 
         <div id="jobReports" class="tab-pane fade">
 
@@ -360,6 +551,116 @@
                   </a>
                 </div>
               </div>
+           
+              <br /> 
+
+              <!-- START PROJECT COMPARE RESULTS SELECT TABLE -->
+
+              <div class="modal fade" id="resultCompareSelectionAlert" tabindex="-1" role="dialog" aria-labelledby="compareModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-sm">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                      <h4 class="modal-title" id="myModalLabel">Selection error</h4>
+                    </div>
+                    <div class="modal-body">
+                      You can only run comparison on 2 projects.
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="alert alert-success clearfix"
+                   id="testCompareRunAlert"
+                   rv-show="projectReportState.prjCompareReady">
+                <span class="autoSelectText">This is the list of { projectReportState.compareRepo } { projectReportState.compareType } results. Select the project(s) and action you wish to perform.</span>
+                <br/>
+                <div class="row">
+                  <button type="button"
+                      class="btn btn-primary disabled"
+                      id="testHistoryBtn"
+                      rv-on-click="projectReportState.testHistory">
+                  Test History
+                  </button>
+                  <button type="button"
+                      class="btn btn-primary disabled"
+                      id="testDetailBtn"
+                      rv-on-click="projectReportState.testDetail">
+                  Test Detail
+                  </button>
+                  <button type="button"
+                      class="btn btn-primary disabled"
+                      rv-on-click="projectReportState.compareResults"
+                      id="compareResultsBtn">
+                  Test Compare (2)
+                  </button>
+                  <button type="button"
+                      class="btn btn-primary disabled"
+                      id="resultArchiveBtn"
+                      rv-on-click="projectReportState.archive">
+                  Archive
+                  </button>
+                  <span class="buttonRight">
+                    <button type="button" class="btn btn-primary"
+                      rv-on-click="projectReportState.selectAll">
+                    Select All
+                    </button>
+                    <button type="button" class="btn btn-primary"
+                      rv-on-click="projectReportState.selectNone">
+                    Select None
+                    </button>
+                  </span>
+                </div>
+              </div>
+
+              <div id="testCompareSelectPanel"
+                  class="panel panel-default"
+                  rv-show="projectReportState.prjCompareReady">
+                <table class="table table-hover" id="projectListTable">
+                  <thead>
+                    <tr>
+                      <th>Project name</th>
+                      <th>Version</th>
+                      <th>Environment</th>
+                      <th>Operating System</th>
+                      <th>Completed</th>
+                      <th>Repository</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="projectsTable">
+                  </tbody>
+                </table>
+              </div>
+
+              <div id="testCompareTablePanel"
+                  class="panel panel-default"
+                  rv-show="projectReportState.prjTableReady">
+                <span class="panel panel-primary">
+                  <div class="panel-heading">Test results <span id="prjHeader"></span></div>
+                  <div class="table-container">
+                    <table id="testResultsTable">
+                      <tr id="testResultsTableHeader">
+                        <th>Test</th>
+                        <th>x86</th>
+                        <th>LE</th>
+                      </tr>
+                    </table>
+                  </div>
+                </span>
+                <a href="#" class="backToResults" rv-on-click="projectReportState.backToList">
+                  <button type="button" class="btn btn-info">
+                  <span class="glyphicon glyphicon-chevron-left"></span>
+                  Back to list
+                  </button>
+                </a>
+              </div>
+              
+              <!-- END PROJECT COMPARE RESULTS SELECT TABLE -->
+            
             </div>
           </div>
 
@@ -468,75 +769,13 @@
 
     <!-- START MULTIPLE RESULTS ALERT BOX -->
 
+    <!--
     <div class="alert alert-info multiple-alert" rv-show="searchState.ready" role="alert">
       There are multiple results for <strong>{ searchState.query }</strong>. Please select one.
     </div>
+    -->
 
     <!-- END MULTIPLE RESULTS ALERT BOX -->
-
-    <!-- START MULTIPLE RESULTS TABLE -->
-
-    <div id="resultsPanel" class="panel panel-default" rv-show="searchState.ready">
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Repositories</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="resultsTable" rv-each-result="searchState.results">
-          <tr class="result-row">
-            <td>
-              <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
-              /
-              <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
-              <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
-                <span class="glyphicon glyphicon-star"></span>
-                { result.stars }
-              </span>
-              <span title="Fork count" class="tip label" rv-classification="result.classifications.forks">
-                <span class="glyphicon glyphicon-random"></span>
-                { result.forks }
-              </span>
-              <span title="Primary language" class="tip label" rv-classification="result.classifications.language">
-                <span class="glyphicon glyphicon-wrench"></span>
-                { result.language }
-              </span>
-              <span title="Repository size" class="tip label" rv-classification="result.classifications.size">
-                <span class="glyphicon glyphicon-floppy-disk"></span>
-                { result.size_kb | size }
-              </span>
-              <span title="Last updated" class="tip label" rv-classification="result.classifications.date">
-                <span class="glyphicon glyphicon-calendar"></span>
-                updated { result.last_update | date }
-              </span>
-
-              <br />
-
-              <p class="candidate-description text-muted" rv-text="result.description"></p>
-            </td>
-            <td>
-              <a rv-href="#" rv-on-click="result.addToBatchFile">
-                <button type="button" class="btn btn-primary">
-                  <span class="glyphicon glyphicon-plus"></span>
-                  Add to Batch
-                </button>
-              </a>
-            </td>
-            <td>
-              <a rv-href="#" rv-on-click="result.select">
-                <button type="button" class="btn btn-primary">
-                  <span class="glyphicon glyphicon-zoom-in"></span>
-                  Details
-                </button>
-              </a>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- END MULTIPLE RESULTS TABLE -->
 
     <!-- START AUTOSELECT ALERT BOX -->
 
@@ -634,165 +873,7 @@
     </div>
 
     <!-- END DETAIL VIEW -->
-
-    <!-- START BATCH FILE TABLE -->
-
-    <div id="batchFilePanel" class="panel panel-default" rv-show="batchState.exportReady">
-      <a rv-href="#" rv-on-click="batchState.download">
-        <button type="button" class="btn btn-primary">
-          <span class="glyphicon glyphicon-download"></span>
-          Export
-        </button>
-      </a>
-      <table class="table table-hover">
-        <thead>
-          <tr>
-            <th>Batch File Repositories</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="batchFileTable" rv-each-package="batchState.batchFile.packages">
-          <tr class="result-row">
-            <td>
-              <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
-              /
-              <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
-              <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
-                <span class="glyphicon glyphicon-star"></span>
-                { package.stars }
-              </span>
-              <span title="Fork count" class="tip label" rv-classification="package.classifications.forks">
-                <span class="glyphicon glyphicon-random"></span>
-                { package.forks }
-              </span>
-              <span title="Primary language" class="tip label" rv-classification="package.classifications.language">
-                <span class="glyphicon glyphicon-wrench"></span>
-                { package.language }
-              </span>
-              <span title="Repository size" class="tip label" rv-classification="package.classifications.size">
-                <span class="glyphicon glyphicon-floppy-disk"></span>
-                { package.size_kb | size }
-              </span>
-              <span title="Last updated" class="tip label" rv-classification="package.classifications.date">
-                <span class="glyphicon glyphicon-calendar"></span>
-                updated { package.last_update | date }
-              </span>
- 
-              <br />
-
-              <p class="candidate-description text-muted" rv-text="package.description"></p>
-            </td>
-            <td>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- END BATCH FILE TABLE -->
-
-    <!-- PROJECT COMPARE RESULTS SELECT TABLE -->
-    <div class="modal fade" id="resultCompareSelectionAlert" tabindex="-1" role="dialog" aria-labelledby="compareModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-sm">
-        <div class="modal-content">
-          <div class="modal-header">
-            <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            <h4 class="modal-title" id="myModalLabel">Selection error</h4>
-          </div>
-          <div class="modal-body">
-            You can only run comparison on 2 projects.
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="alert alert-success clearfix"
-         id="testCompareRunAlert"
-         rv-show="projectReportState.prjCompareReady">
-      <span class="autoSelectText">This is the list of { projectReportState.compareRepo } { projectReportState.compareType } results. Select the project(s) and action you wish to perform.</span>
-      <br/>
-      <div class="row">
-        <button type="button"
-            class="btn btn-primary disabled"
-            id="testHistoryBtn"
-            rv-on-click="projectReportState.testHistory">
-        Test History
-        </button>
-        <button type="button"
-            class="btn btn-primary disabled"
-            id="testDetailBtn"
-            rv-on-click="projectReportState.testDetail">
-        Test Detail
-        </button>
-        <button type="button"
-            class="btn btn-primary disabled"
-            rv-on-click="projectReportState.compareResults"
-            id="compareResultsBtn">
-        Test Compare (2)
-        </button>
-        <button type="button"
-            class="btn btn-primary disabled"
-            id="resultArchiveBtn"
-            rv-on-click="projectReportState.archive">
-        Archive
-        </button>
-        <span class="buttonRight">
-          <button type="button" class="btn btn-primary"
-            rv-on-click="projectReportState.selectAll">
-          Select All
-          </button>
-          <button type="button" class="btn btn-primary"
-            rv-on-click="projectReportState.selectNone">
-          Select None
-          </button>
-        </span>
-      </div>
-    </div>
-
-    <div id="testCompareSelectPanel"
-        class="panel panel-default"
-        rv-show="projectReportState.prjCompareReady">
-      <table class="table table-hover" id="projectListTable">
-        <thead>
-          <tr>
-            <th>Project name</th>
-            <th>Version</th>
-            <th>Environment</th>
-            <th>Operating System</th>
-            <th>Completed</th>
-            <th>Repository</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="projectsTable">
-        </tbody>
-      </table>
-    </div>
-
-    <div id="testCompareTablePanel"
-        class="panel panel-default"
-        rv-show="projectReportState.prjTableReady">
-      <span class="panel panel-primary">
-        <div class="panel-heading">Test results <span id="prjHeader"></span></div>
-        <div class="table-container">
-          <table id="testResultsTable">
-            <tr id="testResultsTableHeader">
-              <th>Test</th>
-              <th>x86</th>
-              <th>LE</th>
-            </tr>
-          </table>
-        </div>
-      </span>
-      <a href="#" class="backToResults" rv-on-click="projectReportState.backToList">
-        <button type="button" class="btn btn-info">
-        <span class="glyphicon glyphicon-chevron-left"></span>
-        Back to list
-        </button>
-      </a>
-    </div>
+    
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <!-- Hashing algorithms, as element IDs can't have any special chars -->
