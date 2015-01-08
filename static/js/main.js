@@ -124,6 +124,7 @@ var searchState = {
 		forks:    0,
 		generate: function (ev) {
 			// TODO: remove redundant query qualifiers (stars/forks == 0)
+            detailState.generateReady = false;
 			var data = {
 				// GitHub API parameters
 				q:       " stars:>" + searchState.queryTop.stars +
@@ -242,15 +243,27 @@ var loadingState = {
 // Contains state of detail view
 var detailState = {
 	ready: false,
+    generateReady: false,
 	repo: null, // Repo data
+    generateRepo: null,
 	autoSelected: false, // Was this repository autoselected from search query?
 	pie: null, // Pie chart
+    generatePie: null,
 	javaType: "", // Open JDK or IBM Java
-	backToResults: function() {
-		detailState.ready = false;
-		searchState.ready = true;
+	backToResults: function(ev) {
+        var idName = ev.target.id;
+		if(idName === "singleDetailBackButton") {
+            detailState.ready = false;
+		    searchState.ready = true;
+        }
+        else if(idName === "generateDetailBackButton") {
+            detailState.generateReady = false;
+		    searchState.generateReady = true;
+        }
 	},
 	exitAutoSelect: function() {
+        detailState.ready = false;
+        detailState.autoSelected = false;
 		doSearch(false);
 	},
 	// When the radio button is pressed update the server environment data
@@ -533,7 +546,8 @@ rivets.bind($('#batchListPanel'), {
 
 // Binders for single project search box
 rivets.bind($('#searchBox'), {
-	searchState: searchState
+	searchState: searchState,
+    detailState: detailState
 });
 rivets.bind($('#singleSearchButton'), {
     searchState: searchState
@@ -545,7 +559,8 @@ rivets.bind($('#generateBatchButton'), {
 });
 rivets.bind($('#generateBox'), {
     batchState: batchState,
-    searchState: searchState
+    searchState: searchState,
+    detailState: detailState
 });
 
 // Binders for import box
@@ -563,10 +578,13 @@ rivets.bind($('.multiple-alert'), {
 });
 */
 
+/*
 // Autoselect alert box
 rivets.bind($('.autoselect-alert'), {
 	detailState: detailState
 });
+*/
+
 // Hides / shows loading panel
 rivets.bind($('#loadingPanel'), {
 	loadingState: loadingState
@@ -576,9 +594,14 @@ rivets.bind($('#resultsPanel'), {
 	searchState: searchState
 });
 // Hides / shows detail panel
-rivets.bind($('#detailPanel'), {
+rivets.bind($('#singleDetailPanel'), {
 	detailState: detailState
 });
+/*
+rivets.bind($('#generateDetailPanel'), {
+	detailState: detailState
+});
+*/
 // Populates results table
 rivets.bind($('#resultsTable'), {
 	searchState: searchState
@@ -640,12 +663,11 @@ rivets.configure({
 
 // Disables all views except loading view
 function switchToLoadingState() {
-	//searchState.ready = false;
-	detailState.ready = false;
+	//detailState.ready = false;
     projectReportState.prjCompareReady = false;
     projectReportState.prjTableReady = false;
 	loadingState.loading = true;
-	detailState.autoSelected = false;
+	//detailState.autoSelected = false;
 }
 
 // Does the above and makes a search query
@@ -683,8 +705,20 @@ function processSearchResults(data) {
 		// Add select function to each result
 		data.results.forEach(function(result) {
 			// Show detail view for repo upon selection
-			result.select = function () {
-				$.get("/detail/" + result.id, showDetail);
+			result.select = function (ev) {
+                var className = $(ev.target).attr('class');
+                console.log(className);
+                if(className === "generateDetailButton btn btn-primary") {
+                    console.log("generate");
+				    $.getJSON("/detail/" + result.id, {panel: "generate"}, showDetail);
+                    searchState.generateReady = false;
+                }
+                else if(className === "singleDetailButton btn btn-primary") {
+                    console.log("single");
+				    $.getJSON("/detail/" + result.id, {panel: "single"}, showDetail);
+                    searchState.ready = false;
+                }
+
 				switchToLoadingState();
 			};
 			result.addToBatchFile = function () {
@@ -803,7 +837,6 @@ function processResultList(data) {
                 });
             }
         }
-        searchState.ready = false;
         detailState.autoSelected = false;
         loadingState.loading = false;
         projectReportState.prjCompareReady = true;
@@ -991,22 +1024,41 @@ function showDetail(data) {
 	if(data.status !== "ok" || data.type !== "detail") {
 		console.log("Bad response while creating detail view!");
 	} else {
-		detailState.repo = data.repo;
-		detailState.repo.addToJenkins = function(e) {
-			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "x86"}, addToJenkinsCallback, "json");
-			$.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "ppcle"}, addToJenkinsCallback, "json");
-		};
 		loadingState.loading = false;
-		detailState.ready = true;
-		// Make chart
-		var ctx = $("#langChart").get(0).getContext("2d");
-		if(detailState.pie !== null) {
-			detailState.pie.destroy();
-		}
-		detailState.pie = new Chart(ctx).Pie(detailState.repo.languages, {
-			segmentShowStroke: false
-		});
-		legend(document.getElementById('langLegend'), detailState.repo.languages)
+        if(data.panel === "single") {
+		    detailState.repo = data.repo;
+		    detailState.repo.addToJenkins = function(e) {
+			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "x86"}, addToJenkinsCallback, "json");
+			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "ppcle"}, addToJenkinsCallback, "json");
+		    };
+		    detailState.ready = true;
+		    // Make chart
+		    var ctx = $("#langChart").get(0).getContext("2d");
+		    if(detailState.pie !== null) {
+			    detailState.pie.destroy();
+		    }
+		    detailState.pie = new Chart(ctx).Pie(detailState.repo.languages, {
+			    segmentShowStroke: false
+		    });
+		    legend(document.getElementById('langLegend'), detailState.repo.languages);
+        }
+        else if(data.panel === "generate") {
+		    detailState.generateRepo = data.repo;
+		    detailState.generateRepo.addToJenkins = function(e) {
+			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "x86"}, addToJenkinsCallback, "json");
+			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "ppcle"}, addToJenkinsCallback, "json");
+		    };
+		    detailState.generateReady = true;
+		    // Make chart
+		    var ctx = $("#generateLangChart").get(0).getContext("2d");
+		    if(detailState.generatePie !== null) {
+			    detailState.generatePie.destroy();
+		    }
+		    detailState.generatePie = new Chart(ctx).Pie(detailState.generateRepo.languages, {
+			    segmentShowStroke: false
+		    });
+		    legend(document.getElementById('generateLangLegend'), detailState.generateRepo.languages);
+        }
 	}
 }
 

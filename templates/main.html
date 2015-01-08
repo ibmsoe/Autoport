@@ -160,73 +160,169 @@
               </div>
 
               <br />
+              
+              <!-- START AUTOSELECT ALERT BOX -->
+
+              <div class="alert alert-success autoselect-alert clearfix" rv-show="detailState.autoSelected" role="alert">
+                <span class="autoSelectText"><strong>Auto-selected</strong> this repository because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } popularity stars</strong>.</span>
+                <a href="#" class="exitAutoSelect buttonRight" rv-show="detailState.autoSelected" rv-on-click="detailState.exitAutoSelect">
+                  <button type="button" class="btn btn-default exitAutoSelectButton">
+                    <span class="glyphicon glyphicon-list"></span>
+                    See all results
+                  </button>
+                </a>
+              </div>
+           
+              <!-- END AUTOSELECT ALERT BOX -->
+
+              <!-- START DETAIL VIEW -->
+
+              <div id="singleDetailPanel" class="panel panel-default" rv-show="detailState.ready">
+                <div class="panel-body">
+                  <h1>
+                    <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
+                    /
+                    <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
+                    <div class="dropdown">
+
+                      <!-- Radio buttons for choosing what kind of java to use. -->
+                      <div class="btn-group radioRight" id="radio1" data-toggle="buttons">
+                        <label class="btn btn-primary active" rv-on-click="detailState.selectJavaType">
+                          <input type="radio" name="options" id="option1" checked> Open JDK
+                        </label>
+                        <label class="btn btn-primary" rv-on-click="detailState.selectJavaType">
+                          <input type="radio" name="options" id="option2"> IBM Java
+                        </label>
+                      </div>
+
+                      <button class="btn btn-primary dropdown-toggle buttonRight" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                        Add to Jenkins
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="dropdownMenu1">
+                        <li role="presentation" class="dropdown-header">Recent</li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">Current</a></li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ detailState.repo.recentTag }</a></li>
+                        <li role="presentation" class="divider"></li>
+                        <li role="presentation" class="dropdown-header">Older</li>
+                        <li role="presentation" rv-each-tag="detailState.repo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ tag }</a></li>
+                      </ul>
+                    </div>
+                  </h1>
+
+                  <span title="Star count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.stars">
+                    <span class="glyphicon glyphicon-star"></span>
+                    { detailState.repo.stars }
+                  </span>
+                  <span title="Fork count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.forks">
+                    <span class="glyphicon glyphicon-random"></span>
+                    { detailState.repo.forks }
+                  </span>
+                  <span title="Primary language" class="tip label fatLabel" rv-classification="detailState.repo.classifications.language">
+                    <span class="glyphicon glyphicon-wrench"></span>
+                    { detailState.repo.language }
+                  </span>
+                  <span title="Repository size" class="tip label fatLabel" rv-classification="detailState.repo.classifications.size">
+                    <span class="glyphicon glyphicon-floppy-disk"></span>
+                    { detailState.repo.size_kb | size }
+                  </span>
+                  <span title="Last updated" class="tip label fatLabel" rv-classification="detailState.repo.classifications.date">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                    updated { detailState.repo.last_update | date }
+                  </span>
+                  <h3>Description</h3>
+                  <blockquote>
+                    <p class="detail-description" rv-text="detailState.repo.description"></p>
+                  </blockquote>
+                  <span class=".clearfix chart-container">
+                    <h3>Language Composition</h3>
+                    <canvas class="chart" id="langChart" width="150" height="150"></canvas>
+                    <ul id="langLegend"></ul>
+                  </span>
+                  <span rv-show="detailState.repo.build.success" class="build-steps">
+                    <h3>Build steps</h3>
+                    <small>
+                      Inferred based on the existence of 
+                      <strong rv-text="detailState.repo.build.reason"></strong>
+                    </small>
+                    <pre rv-text="detailState.repo.build.build"></pre>
+                  </span>
+                  <a href="#" class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
+                    <button id="singleDetailBackButton" type="button" class="btn btn-info">
+                      <span class="glyphicon glyphicon-chevron-left"></span>
+                      Back to results
+                    </button>
+                  </a>
+                </div>
+              </div>
+
+              <!-- END DETAIL VIEW -->
+
+              <!-- START MULTIPLE RESULTS TABLE -->
+
+              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.ready">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Repositories</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="resultsTable" rv-each-result="searchState.singleResults">
+                    <tr class="result-row">
+                      <td>
+                        <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
+                        /
+                        <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
+                        <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
+                          <span class="glyphicon glyphicon-star"></span>
+                          { result.stars }
+                        </span>
+                        <span title="Fork count" class="tip label" rv-classification="result.classifications.forks">
+                          <span class="glyphicon glyphicon-random"></span>
+                          { result.forks }
+                        </span>
+                        <span title="Primary language" class="tip label" rv-classification="result.classifications.language">
+                          <span class="glyphicon glyphicon-wrench"></span>
+                          { result.language }
+                        </span>
+                        <span title="Repository size" class="tip label" rv-classification="result.classifications.size">
+                          <span class="glyphicon glyphicon-floppy-disk"></span>
+                          { result.size_kb | size }
+                        </span>
+                        <span title="Last updated" class="tip label" rv-classification="result.classifications.date">
+                          <span class="glyphicon glyphicon-calendar"></span>
+                          updated { result.last_update | date }
+                        </span>
+
+                        <br />
+
+                        <!--<p class="candidate-description text-muted" rv-text="result.description"></p>-->
+                      </td>
+                      <td>
+                        <a rv-href="#" rv-on-click="result.addToBatchFile">
+                          <button type="button" class="btn btn-primary">
+                            <span class="glyphicon glyphicon-plus"></span>
+                            Add to Batch
+                          </button>
+                        </a>
+                      </td>
+                      <td>
+                        <a rv-href="#" rv-on-click="result.select">
+                          <button type="button" class="singleDetailButton btn btn-primary">
+                            <span class="glyphicon glyphicon-zoom-in"></span>
+                            Details
+                          </button>
+                        </a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- END MULTIPLE RESULTS TABLE -->
 
             </div>
-
-            <!-- START MULTIPLE RESULTS TABLE -->
-
-            <div id="resultsPanel" class="panel panel-default" rv-show="searchState.ready">
-              <table class="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Repositories</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="resultsTable" rv-each-result="searchState.singleResults">
-                  <tr class="result-row">
-                    <td>
-                      <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
-                      /
-                      <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
-                      <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
-                        <span class="glyphicon glyphicon-star"></span>
-                        { result.stars }
-                      </span>
-                      <span title="Fork count" class="tip label" rv-classification="result.classifications.forks">
-                        <span class="glyphicon glyphicon-random"></span>
-                        { result.forks }
-                      </span>
-                      <span title="Primary language" class="tip label" rv-classification="result.classifications.language">
-                        <span class="glyphicon glyphicon-wrench"></span>
-                        { result.language }
-                      </span>
-                      <span title="Repository size" class="tip label" rv-classification="result.classifications.size">
-                        <span class="glyphicon glyphicon-floppy-disk"></span>
-                        { result.size_kb | size }
-                      </span>
-                      <span title="Last updated" class="tip label" rv-classification="result.classifications.date">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                        updated { result.last_update | date }
-                      </span>
-
-                      <br />
-
-                      <!--<p class="candidate-description text-muted" rv-text="result.description"></p>-->
-                    </td>
-                    <td>
-                      <a rv-href="#" rv-on-click="result.addToBatchFile">
-                        <button type="button" class="btn btn-primary">
-                          <span class="glyphicon glyphicon-plus"></span>
-                          Add to Batch
-                        </button>
-                      </a>
-                    </td>
-                    <td>
-                      <a rv-href="#" rv-on-click="result.select">
-                        <button type="button" class="btn btn-primary">
-                          <span class="glyphicon glyphicon-zoom-in"></span>
-                          Details
-                        </button>
-                      </a>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-            <!-- END MULTIPLE RESULTS TABLE -->
-          
           </div> <!-- jumbotron -->
           
           <!-- END SEARCH PROJECT BOX -->
@@ -351,6 +447,89 @@
               </div>
 
               <!-- END BATCH FILE TABLE -->
+              
+              <!-- START DETAIL VIEW -->
+
+              <div id="generateDetailPanel" class="panel panel-default" rv-show="detailState.generateReady">
+                <div class="panel-body">
+                  <h1>
+                    <a title="Owner" class="small" rv-href="detailState.generateRepo.owner_url" rv-text="detailState.generateRepo.owner"></a>
+                    /
+                    <a title="Repository" class="result-title" rv-href="detailState.generateRepo.url" rv-text="detailState.generateRepo.name"></a>
+                    <div class="dropdown">
+
+                      <!-- Radio buttons for choosing what kind of java to use. -->
+                      <div class="btn-group radioRight" id="radio1" data-toggle="buttons">
+                        <label class="btn btn-primary active" rv-on-click="detailState.selectJavaType">
+                          <input type="radio" name="options" id="option1" checked> Open JDK
+                        </label>
+                        <label class="btn btn-primary" rv-on-click="detailState.selectJavaType">
+                          <input type="radio" name="options" id="option2"> IBM Java
+                        </label>
+                      </div>
+
+                      <button class="btn btn-primary dropdown-toggle buttonRight" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                        Add to Jenkins
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="dropdownMenu1">
+                        <li role="presentation" class="dropdown-header">Recent</li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.generateRepo.addToJenkins">Current</a></li>
+                        <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.generateRepo.addToJenkins">{ detailState.generateRepo.recentTag }</a></li>
+                        <li role="presentation" class="divider"></li>
+                        <li role="presentation" class="dropdown-header">Older</li>
+                        <li role="presentation" rv-each-tag="detailState.generateRepo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.generateRepo.addToJenkins">{ tag }</a></li>
+                      </ul>
+                    </div>
+                  </h1>
+
+                  <span title="Star count" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.stars">
+                    <span class="glyphicon glyphicon-star"></span>
+                    { detailState.generateRepo.stars }
+                  </span>
+                  <span title="Fork count" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.forks">
+                    <span class="glyphicon glyphicon-random"></span>
+                    { detailState.generateRepo.forks }
+                  </span>
+                  <span title="Primary language" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.language">
+                    <span class="glyphicon glyphicon-wrench"></span>
+                    { detailState.generateRepo.language }
+                  </span>
+                  <span title="Repository size" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.size">
+                    <span class="glyphicon glyphicon-floppy-disk"></span>
+                    { detailState.generateRepo.size_kb | size }
+                  </span>
+                  <span title="Last updated" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.date">
+                    <span class="glyphicon glyphicon-calendar"></span>
+                    updated { detailState.generateRepo.last_update | date }
+                  </span>
+                  <h3>Description</h3>
+                  <blockquote>
+                    <p class="detail-description" rv-text="detailState.generateRepo.description"></p>
+                  </blockquote>
+                  <span class=".clearfix chart-container">
+                    <h3>Language Composition</h3>
+                    <canvas class="chart" id="generateLangChart" width="150" height="150"></canvas>
+                    <ul id="generateLangLegend"></ul>
+                  </span>
+                  <span rv-show="detailState.generateRepo.build.success" class="build-steps">
+                    <h3>Build steps</h3>
+                    <small>
+                      Inferred based on the existence of 
+                      <strong rv-text="detailState.generateRepo.build.reason"></strong>
+                    </small>
+                    <pre rv-text="detailState.generateRepo.build.build"></pre>
+                  </span>
+                  <a href="#" class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
+                    <button id="generateDetailBackButton" type="button" class="btn btn-info">
+                      <span class="glyphicon glyphicon-chevron-left"></span>
+                      Back to results
+                    </button>
+                  </a>
+                </div>
+              </div>
+
+              <!-- END DETAIL VIEW -->
     
               <!-- START MULTIPLE RESULTS TABLE -->
 
@@ -403,7 +582,7 @@
                       </td>
                       <td>
                         <a rv-href="#" rv-on-click="result.select">
-                          <button type="button" class="btn btn-primary">
+                          <button type="button" class="generateDetailButton btn btn-primary">
                             <span class="glyphicon glyphicon-zoom-in"></span>
                             Details
                           </button>
@@ -776,103 +955,6 @@
     -->
 
     <!-- END MULTIPLE RESULTS ALERT BOX -->
-
-    <!-- START AUTOSELECT ALERT BOX -->
-
-    <div class="alert alert-success autoselect-alert clearfix" rv-show="detailState.autoSelected" role="alert">
-      <span class="autoSelectText"><strong>Auto-selected</strong> this repository because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } popularity stars</strong>.</span>
-      <a href="#" class="exitAutoSelect buttonRight" rv-show="detailState.autoSelected" rv-on-click="detailState.exitAutoSelect">
-        <button type="button" class="btn btn-default exitAutoSelectButton">
-          <span class="glyphicon glyphicon-list"></span>
-          See all results
-        </button>
-      </a>
-    </div>
- 
-    <!-- END AUTOSELECT ALERT BOX -->
-
-    <!-- START DETAIL VIEW -->
-
-    <div id="detailPanel" class="panel panel-default" rv-show="detailState.ready">
-      <div class="panel-body">
-        <h1>
-          <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
-          /
-          <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
-          <div class="dropdown">
-
-            <!-- Radio buttons for choosing what kind of java to use. -->
-            <div class="btn-group radioRight" id="radio1" data-toggle="buttons">
-              <label class="btn btn-primary active" rv-on-click="detailState.selectJavaType">
-                <input type="radio" name="options" id="option1" checked> Open JDK
-              </label>
-              <label class="btn btn-primary" rv-on-click="detailState.selectJavaType">
-                <input type="radio" name="options" id="option2"> IBM Java
-              </label>
-            </div>
-
-            <button class="btn btn-primary dropdown-toggle buttonRight" type="button" id="dropdownMenu1" data-toggle="dropdown">
-              Add to Jenkins
-              <span class="caret"></span>
-            </button>
-            <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="dropdownMenu1">
-              <li role="presentation" class="dropdown-header">Recent</li>
-              <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">Current</a></li>
-              <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ detailState.repo.recentTag }</a></li>
-              <li role="presentation" class="divider"></li>
-              <li role="presentation" class="dropdown-header">Older</li>
-              <li role="presentation" rv-each-tag="detailState.repo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ tag }</a></li>
-            </ul>
-          </div>
-        </h1>
-
-        <span title="Star count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.stars">
-          <span class="glyphicon glyphicon-star"></span>
-          { detailState.repo.stars }
-        </span>
-        <span title="Fork count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.forks">
-          <span class="glyphicon glyphicon-random"></span>
-          { detailState.repo.forks }
-        </span>
-        <span title="Primary language" class="tip label fatLabel" rv-classification="detailState.repo.classifications.language">
-          <span class="glyphicon glyphicon-wrench"></span>
-          { detailState.repo.language }
-        </span>
-        <span title="Repository size" class="tip label fatLabel" rv-classification="detailState.repo.classifications.size">
-          <span class="glyphicon glyphicon-floppy-disk"></span>
-          { detailState.repo.size_kb | size }
-        </span>
-        <span title="Last updated" class="tip label fatLabel" rv-classification="detailState.repo.classifications.date">
-          <span class="glyphicon glyphicon-calendar"></span>
-          updated { detailState.repo.last_update | date }
-        </span>
-        <h3>Description</h3>
-        <blockquote>
-          <p class="detail-description" rv-text="detailState.repo.description"></p>
-        </blockquote>
-        <span class=".clearfix chart-container">
-          <h3>Language Composition</h3>
-          <canvas class="chart" id="langChart" width="150" height="150"></canvas>
-          <ul id="langLegend"></ul>
-        </span>
-        <span rv-show="detailState.repo.build.success" class="build-steps">
-          <h3>Build steps</h3>
-          <small>
-            Inferred based on the existence of 
-            <strong rv-text="detailState.repo.build.reason"></strong>
-          </small>
-          <pre rv-text="detailState.repo.build.build"></pre>
-        </span>
-        <a href="#" class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
-          <button type="button" class="btn btn-info">
-            <span class="glyphicon glyphicon-chevron-left"></span>
-            Back to results
-          </button>
-        </a>
-      </div>
-    </div>
-
-    <!-- END DETAIL VIEW -->
     
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>

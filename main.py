@@ -175,6 +175,11 @@ def search():
 # Detail - returns a JSON file with detailed information about the repo
 @app.route("/detail/<int:id>")
 def detail(id, repo=None):
+    panel = request.args.get("panel", "")
+
+    if panel == "":
+        return json.jsonify(status="failure", error="missing panel")
+
     # Get the repo if it wasn't passed in (from Search auto picking one)
     if repo is None:
         try:
@@ -225,7 +230,7 @@ def detail(id, repo=None):
         "tags": tags
     }
     # Send
-    return json.jsonify(status="ok", repo=repoData, type="detail")
+    return json.jsonify(status="ok", repo=repoData, type="detail", panel=panel)
 
 # Search repositories - return JSON search results for the GitHub
 # /search/repositories API call. See the following for details:
