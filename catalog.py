@@ -78,6 +78,42 @@ class Catalog:
         except IOError:
             return None
 
+    def archiveResults(self, builds):
+        errors = []
+        alreadyThere = []
+        for build in builds:
+            try:
+                self.__ftpClient.stat(self.__copyPath+build)
+                alreadyThere.append(build)
+                continue
+            except IOError as e:
+                pass # Directory's not there, try to add it
+            try:
+                self.__ftpClient.mkdir(self.__copyPath+build)
+                self.__ftpClient.put(self.__localPath+build+"/meta.arti",
+                                     self.__copyPath+build+"/meta.arti")
+                self.__ftpClient.put(self.__localPath+build+"/dependency.arti",
+                                     self.__copyPath+build+"/dependency.arti")
+                self.__ftpClient.put(self.__localPath+build+"/test_result.arti",
+                                     self.__copyPath+build+"/test_result.arti")
+            except IOError as e:
+                print "Can't push ",build,": exception=",e
+                errors.append(build)
+        for directory in errors:
+            try:
+                self.__ftpClient.stat(self.__copyPath+directory)
+            except IOError as e:
+                if 'No such file' in str(e):
+                    continue
+            try:
+                files = self.__ftpClient.listdir()
+                for f in files:
+                    self.__ftpClient.unlink(self.__copyPath+directory+'/'+f)
+                self.__ftpClient.rmdir(self.__copyPath+directory)
+            except IOError as e:
+                print "Can't remove directory",self.__copyPath+directory,":",e
+        return errors, alreadyThere
+
     def cleanTmp(self):
         for tmpdir in self.__tmpdirs:
             if os.path.exists(tmpdir):

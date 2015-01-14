@@ -309,7 +309,7 @@ var reportState = {
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "all";
         $.getJSON("/listTestResults/all", { filter: $("#projectFilter").val() }, processResultList);
-        $("#resultArchiveBtn").show();
+        $("#resultArchiveBtn").hide();
     },
     listLocalBatch: function(ev) {
     },
@@ -478,12 +478,21 @@ var projectReportState = {
         }
     },
     archive: function() {
-        console.log("TODO archive");
-        $.post("/archiveProjects",
-            {
-                projects: selectedProjects
-            },
-            archiveCallback, "json");
+        var sel = Object.keys(projectReportState.selectedProjects);
+        var query = {};
+        for (proj in sel) {
+            query[sel[proj]] = projectReportState.selectedProjects[sel[proj]];
+        }
+        $.ajax({
+                type: "POST",
+         contentType: "application/json; charset=utf-8",
+                 url: "/archiveProjects",
+                data: JSON.stringify({
+                        projects: query
+                      }),
+             success: archiveCallback,
+            dataType:'json'
+        });
     },
     backToList: function(ev) {
         projectReportState.prjCompareReady = true;
@@ -782,7 +791,7 @@ function processResultList(data) {
     if (data === undefined || data.status != "ok") {
         console.log("Error");// TODO error message
     } else {
-        var prjRegex = /(.*?) - (.*?) - (.*?)-(.*)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)/;
+        var prjRegex = /(.*) - (.*?) - (.*?)-(.*)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)/;
         var filterRegex = new RegExp(reportState.projectFilter.toLowerCase());
         for (var project in data.results) {
             if (project !== undefined) {
@@ -799,7 +808,7 @@ function processResultList(data) {
                 projectReportState.projects.push({
                      fullName: prjObject[0],
                            id: prjId+data.results[project][1],
-                         name: prjObject[3],
+                         name: prjObject[1]+" - "+prjObject[3],
                           env: prjObject[2],
                            os: "", // TODO
                       version: prjObject[4],
@@ -818,7 +827,7 @@ function processResultList(data) {
                 projectReportState.projectsTable.row.add({
                      fullName: prjObject[0],
                            id: prjId+data.results[project][1],
-                         name: prjObject[3],
+                         name: prjObject[1]+" - "+prjObject[3],
                           env: prjObject[2],
                            os: "",
                       version: prjObject[4],
@@ -983,12 +992,13 @@ function processTestHistory(data) {
         for (project in data.results) {
             tableContent += "<tr><th colspan=\"5\"><h3>"+
                 data.results[project].name+"</h3></th></tr>";
-            tableContent += "<tr><th>Date / repository</th>";
+            tableContent += "<tr><th>Date / platform / repository</th>";
             tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
 
             for (var dateRes in data.results[project].results) {
                 tableContent += "<tr><td class=\"testClass\">" +
                      data.results[project].results[dateRes].project.Date +
+                     " / " + data.results[project].results[dateRes].project.Architecture +
                      " / " + data.results[project].results[dateRes].repository +
                     "</td>";
                 var tc = data.results[project].results[dateRes].results;
@@ -1014,8 +1024,25 @@ function processTestHistory(data) {
 }
 
 function archiveCallback(data) {
-    // TODO show a confirmation or error dialog
-    console.log("TODO");
+    var errors = data.errors;
+    var alreadyThere = data.alreadyThere;
+    var text = "The selected results have been archived.";
+    if (alreadyThere.length !== 0) {
+        text += "<br/>The following results were already found in the archive:<br/><ul>";
+        for (proj in alreadyThere) {
+            text += "<li>" + alreadyThere[proj] + "</li>";
+        }
+        text += "</ul>";
+    }
+    if (errors.length !== 0) {
+        text = "The following projects could not be saved:<br/><ul>";
+        for (error in errors) {
+            text += "<li>" + errors[error] + "</li>";
+        }
+        text += "</ul>";
+    }
+    $("#archiveCallbackText").html(text);
+    $("#archiveCallbackAlert").modal();
 }
 
 // Sets up and opens detail view for a repo

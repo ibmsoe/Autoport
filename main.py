@@ -40,7 +40,7 @@ except IOError:
 
 catalog = Catalog(globals.hostname)
 #test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
-resultPattern = re.compile('.*? - (.*?) - .*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
+resultPattern = re.compile('(.*?) - (.*?) - (.*?)-.*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
 
 # Main page - just serve up main.html
 @app.route("/")
@@ -470,7 +470,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         # Stays on the same page, after creating a new jenkins job.
         return json.jsonify(status="ok", sjobUrl=startJobUrl, hjobUrl=homeJobUrl)
 
-    return json.jsonify(status="failure", error='jenkins error')
+    return json.jsonify(status="failure", error='jenkins error'), 500
 
 # Run Batch File - takes a batch file name and runs it
 @app.route("/runBatchFile", methods=["GET", "POST"])
@@ -564,7 +564,7 @@ def parseBatchBuf(filename, location):
 def listTestResults(repositoryType):
     filt = request.args.get("filter", "")
     if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
-        return json.jsonify(status="failure", error="Invalid repository type")
+        return json.jsonify(status="failure", error="Invalid repository type"), 400
     return json.jsonify(status="ok", results=catalog.listJobResults(repositoryType, filt.lower()))
 
 # Get the jenkins build output
@@ -577,16 +577,16 @@ def getTestResults():
     rightrepo = request.args.get("rightrepository", "local")
     
     if (leftbuild == "" or rightbuild == ""):
-        return json.jsonify(status="failure", error="invalid argument")
+        return json.jsonify(status="failure", error="invalid argument"), 400
     
     leftdir = catalog.getResults(leftbuild, leftrepo)
     rightdir = catalog.getResults(rightbuild, rightrepo)
     
     if (leftdir == None or rightdir == None):
-        return json.jsonify(status="failure", error="result not found")
+        return json.jsonify(status="failure", error="result not found"), 404
     
-    leftname = resultPattern.match(leftbuild).group(1)
-    rightname = resultPattern.match(rightbuild).group(1)
+    leftname = resultPattern.match(leftbuild).group(2)
+    rightname = resultPattern.match(rightbuild).group(2)
 
     res = resParser.MavenBuildCompare(leftname, leftdir+"/test_result.arti",
                                       rightname, rightdir+"/test_result.arti")
@@ -619,16 +619,16 @@ def getTestHistory():
             pass
         elif repoType != projects[name]:
             repoType = "all"
-        # remove time from the project name
-        pname = re.match(r"(.*)\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d", name).group(1)
-        if not pname in projectNames:
-            projectNames.append(pname)
+        # remove time and platform from the project name
+        pres = resultPattern.match(name)
+        if not [pres.group(1),pres.group(3)] in projectNames:
+            projectNames.append([pres.group(1),pres.group(3)])
 
     jobRes = catalog.listJobResults(repoType, "")
     for projectName in projectNames:
         prjOut = []
         for prj in jobRes:
-            if projectName in prj[0]:
+            if projectName[0] in prj[0] and projectName[1] in prj[0]:
                 resultDir = catalog.getResults(prj[0], prj[1])
                 prjRes = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
                 f = open(resultDir+"/meta.arti")
@@ -641,7 +641,7 @@ def getTestHistory():
                     "results": prjRes})
                 pass
         out.append({
-            "name": projectName,
+            "name": projectName[0]+" - "+projectName[1],
             "results": prjOut
         })
     return json.jsonify(status = "ok", results = out)
@@ -660,9 +660,11 @@ def getTestDetail():
         out.append({ "results": res, "project": meta, "repository": repo })
     return json.jsonify(status = "ok", results = out)
 
-@app.route("/archiveProjects")
+@app.route("/archiveProjects", methods=["POST"])
 def archiveProjects():
-    return json.jsonify(status="ok", results="work in progress.")
+    projects = request.json['projects']
+    errors, alreadyThere = catalog.archiveResults(projects)
+    return json.jsonify(status="ok", errors=errors, alreadyThere=alreadyThere)
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser()
