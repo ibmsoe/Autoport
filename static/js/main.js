@@ -984,39 +984,136 @@ function processTestDetail(data) {
 }
 
 function processTestHistory(data) {
+    var tableContent = "";
     if (data.status != "ok") {
         tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
     } else {
-        // based on the compare table
-        var tableContent = "";
-        for (project in data.results) {
-            tableContent += "<tr><th colspan=\"5\"><h3>"+
+        for (var project in data.results) {
+            var resultData = {
+                results: {},
+                duration: {},
+                total: {},
+                failures: {},
+                errors: {},
+                skipped: {}
+            };
+            tableContent += "<tr><th colspan=\"6\"><h3>"+
                 data.results[project].name+"</h3></th></tr>";
-            tableContent += "<tr><th>Date / platform / repository</th>";
-            tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
+            tableContent += "<tr><th colspan=\"2\">Test</th><th class=\"testResultArch\" rowspan=\"2\">T</th>"+
+                "<th rowspan=\"2\">F</th><th rowspan=\"2\">E</th><th rowspan=\"2\">S</th></tr>";
+            tableContent += "<tr><th>Platform</th><th>Date / repository</th></tr>";
 
             for (var dateRes in data.results[project].results) {
-                tableContent += "<tr><td class=\"testClass\">" +
-                     data.results[project].results[dateRes].project.Date +
-                     " / " + data.results[project].results[dateRes].project.Architecture +
-                     " / " + data.results[project].results[dateRes].repository +
-                    "</td>";
-                var tc = data.results[project].results[dateRes].results;
-                if (tc === undefined ||
-                    tc["total"] === undefined ||
-                    tc["failures"] === undefined ||
-                    tc["errors"] === undefined ||
-                    tc["skipped"] === undefined) {
-                    tableContent += "<td class=\"testResult\" colspan=\"4\"></td></tr>";
+                var testDate = data.results[project].results[dateRes].project.Date;
+                var testArch = data.results[project].results[dateRes].project.Architecture;
+                var testRepo = data.results[project].results[dateRes].repository;
+                var res = data.results[project].results[dateRes].results;
+                var suiteKeys = Object.keys(res.results);
+                for (var key in suiteKeys) {
+                    var testKeys = Object.keys(res.results[suiteKeys[key]]);
+                    for (testKey in testKeys) {
+                        var tc = res.results[suiteKeys[key]][testKeys[testKey]];
+                        if (tc === undefined ||
+                            tc["total"] === undefined ||
+                            tc["failures"] === undefined ||
+                            tc["errors"] === undefined ||
+                            tc["skipped"] === undefined)
+                            continue;
+                        if (resultData.results[suiteKeys[key]] === undefined)
+                            resultData.results[suiteKeys[key]] = {};
+                        if (resultData.results[suiteKeys[key]][testKeys[testKey]] === undefined)
+                            resultData.results[suiteKeys[key]][testKeys[testKey]] = {};
+                        if (resultData.results[suiteKeys[key]][testKeys[testKey]][testArch] === undefined)
+                            resultData.results[suiteKeys[key]][testKeys[testKey]][testArch] = {};
+                        if (resultData.results[suiteKeys[key]][testKeys[testKey]][testArch][testDate+" / "+testRepo] === undefined)
+                            resultData.results[suiteKeys[key]][testKeys[testKey]][testArch][testDate+" / "+testRepo] = {};
+                        resultData.results[suiteKeys[key]][testKeys[testKey]][testArch][testDate+" / "+testRepo] = {
+                            "duration": tc["duration"],
+                            "total": tc["total"],
+                            "failures": tc["failures"],
+                            "errors": tc["errors"],
+                            "skipped": tc["skipped"]
+                        };
+                    }
+                }
+                if (res === undefined ||
+                    res["total"] === undefined ||
+                    res["failures"] === undefined ||
+                    res["errors"] === undefined ||
+                    res["skipped"] === undefined) {
                     continue;
                 }
-                tableContent += "<td class=\"testResultArch\">"+
-                    tc["total"]+"</td><td class=\"testResult\">"+
-                    tc["failures"]+"</td><td class=\"testResult\">"+
-                    tc["errors"]+"</td><td class=\"testResult\">"+
-                    tc["skipped"]+"</td></tr>";
+                if (resultData.duration[testArch] === undefined)
+                    resultData.duration[testArch] = {};
+                if (resultData.duration[testArch][testDate+" / "+testRepo] === undefined)
+                    resultData.duration[testArch][testDate+" / "+testRepo] = res["duration"];
+                if (resultData.total[testArch] === undefined)
+                    resultData.total[testArch] = {};
+                if (resultData.total[testArch][testDate+" / "+testRepo] === undefined)
+                    resultData.total[testArch][testDate+" / "+testRepo] = res["total"];
+                if (resultData.failures[testArch] === undefined)
+                    resultData.failures[testArch] = {};
+                if (resultData.failures[testArch][testDate+" / "+testRepo] === undefined)
+                    resultData.failures[testArch][testDate+" / "+testRepo] = res["failures"];
+                if (resultData.errors[testArch] === undefined)
+                    resultData.errors[testArch] = {};
+                if (resultData.errors[testArch][testDate+" / "+testRepo] === undefined)
+                    resultData.errors[testArch][testDate+" / "+testRepo] = res["errors"];
+                if (resultData.skipped[testArch] === undefined)
+                    resultData.skipped[testArch] = {};
+                if (resultData.skipped[testArch][testDate+" / "+testRepo] === undefined)
+                    resultData.skipped[testArch][testDate+" / "+testRepo] = res["skipped"];
+            }
+            var suites = Object.keys(resultData.results);
+            for (var suite in suites) {
+                tableContent += "<tr><th colspan=\"6\">"+suites[suite]+"</th></tr>";
+                var tests = Object.keys(resultData.results[suites[suite]]);
+                for (var test in tests) {
+                    tableContent += "<tr><td colspan=\"6\">"+tests[test]+"</td></tr>";
+                    var platforms = Object.keys(resultData.results[suites[suite]][tests[test]]);
+                    for (platform in platforms) {
+                        // count the number of dates
+                        var dates = Object.keys(resultData.results[suites[suite]][tests[test]][platforms[platform]]);
+                        var nbtests = dates.length;
+                        var firstRes = false;
+                        tableContent += "<tr><td rowspan=\""+nbtests+"\">"+
+                            platforms[platform]+
+                            "</td>";
+                        for (var date in dates) {
+                            var res = resultData.results[suites[suite]][tests[test]][platforms[platform]][dates[date]];
+                            if (firstRes)
+                                tableContent += "<tr>";
+                            firstRes = true;
+                            tableContent += "<td>"+dates[date]+"</td><td class=\"testResultArch\">"+
+                                res.total+"</td><td>"+
+                                res.failures+"</td><td>"+
+                                res.errors+"</td><td>"+
+                                res.skipped+
+                                "</td></tr>";
+                        }
+                    }
+                }
+            }
+            tableContent += "<tr><th colspan=\"6\">Totals</th></tr>";
+            var platforms = Object.keys(resultData.total);
+            for (var platform in platforms) {
+                var dates = Object.keys(resultData.total[platforms[platform]]);
+                var nbtests = dates.length;
+                var firstRes = false;
+                tableContent += "<tr><td rowspan=\""+nbtests+"\">"+platforms[platform]+"</td>";
+                for (var date in dates) {
+                    if (firstRes)
+                        tableContent += "<tr>";
+                    firstRes = true;
+                    tableContent += "<td>"+dates[date]+"</td><td class=\"testResultArch\">"+
+                        resultData.total[platforms[platform]][dates[date]]+"</td><td>"+
+                        resultData.failures[platforms[platform]][dates[date]]+"</td><td>"+
+                        resultData.errors[platforms[platform]][dates[date]]+"</td><td>"+
+                        resultData.skipped[platforms[platform]][dates[date]]+"</td></tr>";
+                }
             }
         }
+        tableContent += "</table>";
     }
     $("#testResultsTable").html(tableContent);
     loadingState.loading = false;

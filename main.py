@@ -639,7 +639,6 @@ def getTestHistory():
                     "repository": prj[1],
                     "project": meta,
                     "results": prjRes})
-                pass
         out.append({
             "name": projectName[0]+" - "+projectName[1],
             "results": prjOut
