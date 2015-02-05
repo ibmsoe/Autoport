@@ -97,55 +97,69 @@ var percentageState = {
 
 // Contains state of searching operations
 var searchState = {
-    singleSearchBox: false,
-    generateSearchBox: false,
-	sorting: "relevance",
-	ready: false, // Whether or not to draw this view
-    generateReady: false,
-	query: "", // User's query
-	singleResults: {}, // Search result data
-	generateResults: {}, // Search result data
-	setSingleSearchBox: function (ev) {
-        searchState.singleSearchBox = (searchState.singleSearchBox) ? false : true;
-	},
-	setGenerateBatchBox: function (ev) {
-        searchState.generateBatchBox = (searchState.generateBatchBox) ? false : true;
-	},
-	changeSort: function (ev) { // Called upon changing sort type
-		searchState.sorting = $(ev.target).text().toLowerCase();
-		doSearch();
-	},
-	queryTop: {
-		limit:    25,
-		sort:     "stars",
-		language: "any",
-		version:  "current",
-		stars:    0,
-		forks:    0,
-		generate: function (ev) {
-			// TODO: remove redundant query qualifiers (stars/forks == 0)
-            detailState.generateReady = false;
-			var data = {
-				// GitHub API parameters
-				q:       " stars:>" + searchState.queryTop.stars +
-						 " forks:>" + searchState.queryTop.forks +
-						 (searchState.queryTop.language == "any" ? "" : (" language:" + searchState.queryTop.language)),
-				sort:    searchState.queryTop.sort,
+    single: {searchBoxReady: false,
+            ready: false,
+            sorting: "relevance",
+            query: "",
+            results: {},
+	        setSearchBox: function (ev) {
+                searchState.single.searchBoxReady = (searchState.single.searchBoxReady) ? false : true;
+	        },
+	        changeSort: function (ev) { // Called upon changing sort type
+		        searchState.single.sorting = $(ev.target).text().toLowerCase();
+		        doSearch();
+	        }
+    },
+    multiple: {searchBoxReady: false,
+              ready: false,
+              exportReady: false, // Whether or not to draw the export batch file view
+              results: {},
+              batchFile: {
+                  config:   {},
+                  packages: []
+              },
+              download: function (ev) {
+                  console.log("download");
+                  var json = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
+                  var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
+                  window.open(data);
+              },
+	          setSearchBox: function (ev) {
+                  searchState.multiple.searchBoxReady = (searchState.multiple.searchBoxReady) ? false : true;
+	          },
+              query: {
+                  limit:    25,
+                  sort:     "stars",
+                  language: "any",
+                  version:  "current",
+                  stars:    0,
+                  forks:    0,
+                  generate: function (ev) {
+                      // TODO: remove redundant query qualifiers (stars/forks == 0)
+                      detailState.generateReady = false;
+                      var data = {
+                          // GitHub API parameters
+                          q:       " stars:>" + searchState.multiple.query.stars +
+                                   " forks:>" + searchState.multiple.query.forks +
+                                   (searchState.multiple.query.language == "any" ? "" : (" language:" + searchState.multiple.query.language)),
+                          sort:    searchState.multiple.query.sort,
 
-				// AutoPort parameters
-				limit:   searchState.queryTop.limit,
-				version: searchState.queryTop.version,
-                panel: "generate"
-			};
+                          // AutoPort parameters
+                          limit:   searchState.multiple.query.limit,
+                          version: searchState.multiple.query.version,
+                          panel: "generate"
+                      };
 
-			console.log(data);
-			switchToLoadingState();
-			$.getJSON("/search/repositories", data, processSearchResults);
-		}
-	}
+                      console.log(data);
+                      switchToLoadingState();
+                      $.getJSON("/search/repositories", data, processSearchResults);
+                  }
+              }
+    }
 };
 
 var batchState = {
+    ready: false, // Whether or not to draw the list/select batch file view
     importBox: false,
     file_list: [],
     currentBatchFile: "",
@@ -176,64 +190,13 @@ var batchState = {
         }
     },
     build: function (ev) {
-        console.log("In batchState.build");
     },
     buildAndTest: function (ev, el) { 
-        console.log("In batchState.buildAndTest");
 	    $.post("/runBatchFile", {batchName: el.result.filename}, runBatchFileCallback, "json");
     },
 	setImportBox: function (ev) {
         batchState.importBox = (batchState.importBox) ? false : true;
-	},
-    query: {
-        limit:    25,
-        sort:     "stars",
-        language: "any",
-        version:  "current",
-        stars:    0,
-        forks:    0,
-        upload: function (ev) {
-            var data = document.getElementById('batchFileTextArea').value;
-            $.post("/uploadBatchFile", {file: data}, uploadBatchFileCallback, "json");
-        },
-        generate: function (ev) {
-            console.log("limit    = " + batchState.query.limit);
-            console.log("sort     = " + batchState.query.sort);
-            console.log("language = " + batchState.query.language);
-            console.log("version  = " + batchState.query.version);
-            console.log("stars    = " + batchState.query.stars);
-            console.log("forks    = " + batchState.query.forks);
-
-            // TODO: remove redundant query qualifiers (stars/forks == 0)
-            var data = {
-                // GitHub API parameters
-                q:       " stars:>" + batchState.query.stars +
-                         " forks:>" + batchState.query.forks +
-                         (batchState.query.language == "any" ? "" : (" language:" + batchState.query.language)),
-                sort:    batchState.query.sort,
-
-                // AutoPort parameters
-                limit:   batchState.query.limit,
-                version: batchState.query.version
-            };
-
-            console.log(data);
-            $.getJSON("/search/repositories", data, function(data, textStatus, jqXHR) {
-                document.getElementById('batchFileTextArea').value = JSON.stringify(data, undefined, 4);
-            });
-        }
-    },
-    ready: false, // Whether or not to draw the list/select batch file view
-    exportReady: false, // Whether or not to draw the export batch file view
-    batchFile: {
-        config:   {},
-        packages: []
-    },
-    download: function (ev) {
-        var json = JSON.stringify(batchState.batchFile, undefined, 2);
-        var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
-        window.open(data);
-    }
+	}
 };
 
 // Contains state of loading view
@@ -258,11 +221,11 @@ var detailState = {
         var idName = ev.target.id;
 		if(idName === "singleDetailBackButton") {
             detailState.ready = false;
-		    searchState.ready = true;
+		    searchState.single.ready = true;
         }
         else if(idName === "generateDetailBackButton") {
             detailState.generateReady = false;
-		    searchState.generateReady = true;
+		    searchState.multiple.ready = true;
         }
 	},
 	exitAutoSelect: function() {
@@ -518,138 +481,16 @@ var projectReportState = {
     }
 };
 
-// Rivets.js bindings
-// Binders for tab headers
-rivets.bind($('#searchTabHeader'), {
-    globalState: globalState
-});
-rivets.bind($('#batchTabHeader'), {
-    globalState: globalState
-});
-rivets.bind($('#reportsTabHeader'), {
-    globalState: globalState
-});
-// Binders for tabs
-rivets.bind($('#searchTab'), {
-    globalState: globalState
-});
-rivets.bind($('#batchTab'), {
-    globalState: globalState
-});
-rivets.bind($('#reportsTab'), {
-    globalState: globalState
-});
-// Binders for job manage box
-rivets.bind($('#jobManageButton'), {
-    reportState: reportState
-});
-// Allows client to display progress on batch job
-rivets.bind($('#jobManagePanel'), {
-    projectReportState: projectReportState,
+rivets.bind($('#toolContainer'), {
+    globalState: globalState,
     reportState: reportState,
-    percentageState: percentageState
-});
-
-// Binders for test results box
-rivets.bind($('#testResultsButton'), {
-    reportState: reportState
-});
-rivets.bind($('#testResultsPanel'), {
-    reportState: reportState
-});
-
-// Binders for batch list box
-rivets.bind($('#listBox'), {
-	batchState: batchState
-});
-rivets.bind($('#listButton'), {
-    batchState: batchState
-});
-
-// Binders for list/select box
-rivets.bind($('#batchListPanel'), {
-    batchState: batchState
-});
-
-// Binders for single project search box
-rivets.bind($('#searchBox'), {
-	searchState: searchState,
-    detailState: detailState
-});
-rivets.bind($('#singleSearchButton'), {
-    searchState: searchState
-});
-
-// Binders for multiple project search box
-rivets.bind($('#generateBatchButton'), {
-    searchState: searchState
-});
-rivets.bind($('#generateBox'), {
-    batchState: batchState,
+    projectReportState: projectReportState,
     searchState: searchState,
-    detailState: detailState
-});
-
-// Binders for import box
-rivets.bind($('#fileUploadBox'), {
-    batchState: batchState
-});
-rivets.bind($('#importButton'), {
-    batchState: batchState
-});
-
-// Hides / shows loading panel
-rivets.bind($('#loadingPanel'), {
-	loadingState: loadingState
-});
-// Hides / shows results panel
-rivets.bind($('#resultsPanel'), {
-	searchState: searchState
-});
-// Hides / shows detail panel
-rivets.bind($('#singleDetailPanel'), {
-	detailState: detailState
-});
-
-// Populates results table
-rivets.bind($('#resultsTable'), {
-	searchState: searchState
-});
-// Hides / shows batch file panel
-rivets.bind($('#batchFilePanel'), {
-	batchState: batchState
-});
-// Populates batch file table
-rivets.bind($('#batchFileTable'), {
-	batchState: batchState
-});
-// Allows user to change global settings
-rivets.bind($('#settingsModal'), {
-	globalState: globalState
-});
-
-// Allows client to display progress on batch job
-rivets.bind($('#progressBar'), {
-    percentageState: percentageState
-});
-
-// Jenkins Tab Bindings
-rivets.bind($('#jenkinsManageButton'), {
-    jenkinsState: jenkinsState
-});
-rivets.bind($('#jenkinsLink'), {
-    globalState: globalState
-});
-
-rivets.bind($('#jenkinsPanel'), {
+    batchState: batchState,
+    detailState: detailState,
     jenkinsState: jenkinsState,
-    percentageState: percentageState
-});
-
-rivets.configure({
-    handler : function(context, ev, binding) {
-        this.call(binding.observer.target, ev, binding.view.models);
-    }
+    percentageState: percentageState,
+	loadingState: loadingState
 });
 
 // Disables all views except loading view
@@ -667,12 +508,12 @@ function doSearch(autoselect) {
 	if(typeof(autoselect)!=='boolean') autoselect = true;
 	
 	// Do not switch to loading state if query is empty
-	searchState.query = $('#query').val();
-	if(searchState.query.length > 0) {
+	searchState.single.query = $('#query').val();
+	if(searchState.single.query.length > 0) {
 		switchToLoadingState();
 		$.getJSON("/search", {
-			q: searchState.query,
-			sort: searchState.sorting,
+			q: searchState.single.query,
+			sort: searchState.single.sorting,
 			auto: autoselect,
             panel: "single"
 		}, processSearchResults);
@@ -700,30 +541,30 @@ function processSearchResults(data) {
                 var className = $(ev.target).attr('class');
                 if(className === "generateDetailButton btn btn-primary") {
 				    $.getJSON("/detail/" + result.id, {panel: "generate"}, showDetail);
-                    searchState.generateReady = false;
+                    searchState.multiple.ready = false;
                 }
                 else if(className === "singleDetailButton btn btn-primary") {
 				    $.getJSON("/detail/" + result.id, {panel: "single"}, showDetail);
-                    searchState.ready = false;
+                    searchState.single.ready = false;
                 }
 
 				switchToLoadingState();
 			};
 			result.addToBatchFile = function () {
-				batchState.batchFile.packages.push(result);
-				batchState.exportReady = true;
+				searchState.multiple.batchFile.packages.push(result);
+				searchState.multiple.exportReady = true;
 			};
 		});
 		detailState.autoSelected = false;
         if(data.panel === "generate") {
-		    searchState.generateResults = data.results;
+		    searchState.multiple.results = data.results;
 		    loadingState.loading = false;
-		    searchState.generateReady = true;
+		    searchState.multiple.ready = true;
         }
         else if(data.panel === "single") {
-		    searchState.singleResults = data.results;
+		    searchState.single.results = data.results;
 		    loadingState.loading = false;
-		    searchState.ready = true;
+		    searchState.single.ready = true;
         }
 	} else if (data.type === "detail") {
 		// Got single repository result, show detail page

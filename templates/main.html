@@ -24,7 +24,7 @@
 
   </head>
   <body>
-    <div class="container">
+    <div class="container" id="toolContainer">
 
     <!-- START HEADER -->
 
@@ -141,20 +141,20 @@
           <!-- START SEARCH PROJECT BOX -->
 
           <div class="jumbotron">
-            <div class="btn btn-default btn-block" rv-on-click="searchState.setSingleSearchBox" id="singleSearchButton">
+            <div class="btn btn-default btn-block" rv-on-click="searchState.single.setSearchBox" id="singleSearchButton">
               <h2 class="text-center">Search for a single project</h2>
             </div>
 
-            <div class="jumbotron-button-content" id="searchBox" rv-show="searchState.singleSearchBox">
+            <div class="jumbotron-button-content" id="searchBox" rv-show="searchState.single.searchBoxReady">
               <div class="input-group">
                 <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
                 <div class="input-group-btn">
-                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.single.sorting } <span class="caret"></span></button>
                   <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a>Relevance</a></li>
-                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a>Popularity Stars</a></li>
-                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a>Forks</a></li>
-                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a>Updated</a></li>
+                    <li rv-on-click="searchState.single.changeSort" rv-hide="searchState.single.sorting | isRelevance"><a>Relevance</a></li>
+                    <li rv-on-click="searchState.single.changeSort" rv-hide="searchState.single.sorting | isStars"><a>Popularity Stars</a></li>
+                    <li rv-on-click="searchState.single.changeSort" rv-hide="searchState.single.sorting | isForks"><a>Forks</a></li>
+                    <li rv-on-click="searchState.single.changeSort" rv-hide="searchState.single.sorting | isUpdated"><a>Updated</a></li>
                   </ul>
                 </div>
               </div>
@@ -261,7 +261,7 @@
 
               <!-- START MULTIPLE RESULTS TABLE -->
 
-              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.ready">
+              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.single.ready">
                 <table class="table table-hover">
                   <thead>
                     <tr>
@@ -269,7 +269,7 @@
                       <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody id="resultsTable" rv-each-result="searchState.singleResults">
+                  <tbody id="resultsTable" rv-each-result="searchState.single.results">
                     <tr class="result-row">
                       <td>
                         <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
@@ -331,29 +331,29 @@
           <!-- START SEARCH FOR MULTIPLE PROJECTS BOX -->
 
           <div class="jumbotron">
-            <div class="btn btn-default btn-block" rv-on-click="searchState.setGenerateBatchBox" id="generateBatchButton">
+            <div class="btn btn-default btn-block" rv-on-click="searchState.multiple.setSearchBox" id="generateBatchButton">
               <h2 class="text-center">Search for most commonly used projects</h2>
             </div>
-            <div id="generateBox" class="jumbotron-button-content" rv-show="searchState.generateBatchBox">
+            <div id="generateBox" class="jumbotron-button-content" rv-show="searchState.multiple.searchBoxReady">
               <div class="row">
                 <div class="col-lg-4">
                   <div class="input-group">
                     <span class="input-group-addon">Top</span>
-                    <input type="number" class="form-control" rv-value="searchState.queryTop.limit">
+                    <input type="number" class="form-control" rv-value="searchState.multiple.query.limit">
                     <span class="input-group-addon">Repositories</span>
                   </div>
                 </div>
                 <div class="col-lg-4">
                   <div class="input-group">
                     <span class="input-group-addon">Using</span>
-                    <select class="form-control" rv-value="searchState.queryTop.sort">
+                    <select class="form-control" rv-value="searchState.multiple.query.sort">
                       <option value="stars">Popularity Stars</option>
                       <option value="forks">Forks</option>
                     </select>
                   </div>
                 </div>
                 <div class="col-lg-4">
-                  <select class="form-control" rv-value="searchState.queryTop.language">
+                  <select class="form-control" rv-value="searchState.multiple.query.language">
                     <option value="any">Any programming language</option>
                     <option value="java">Java</option>
                     <option value="python">Python</option>
@@ -367,7 +367,7 @@
               <br />
               <div class="row">
                 <div class="col-lg-3">
-                  <select class="form-control" rv-value="searchState.queryTop.version">
+                  <select class="form-control" rv-value="searchState.multiple.query.version">
                     <option value="current">Current</option>
                     <option value="recent">Recent release</option>
                   </select>
@@ -375,19 +375,19 @@
                 <div class="col-lg-3">
                   <div class="input-group">
                     <span class="input-group-addon">></span>
-                    <input type="number" class="form-control" rv-value="searchState.queryTop.stars">
+                    <input type="number" class="form-control" rv-value="searchState.multiple.query.stars">
                     <span class="input-group-addon">Popularity Stars</span>
                   </div>
                 </div>
                 <div class="col-lg-3">
                   <div class="input-group">
                     <span class="input-group-addon">></span>
-                    <input type="number" class="form-control" rv-value="searchState.queryTop.forks">
+                    <input type="number" class="form-control" rv-value="searchState.multiple.query.forks">
                     <span class="input-group-addon">Forks</span>
                   </div>
                 </div>
                 <div class="col-lg-3">
-                  <button class="btn btn-primary" rv-on-click="searchState.queryTop.generate">Search</button>
+                  <button class="btn btn-primary" rv-on-click="searchState.multiple.query.generate">Search</button>
                 </div>
               </div>              
               
@@ -395,8 +395,8 @@
 
               <!-- START BATCH FILE TABLE -->
 
-              <div id="batchFilePanel" class="panel panel-default" rv-show="batchState.exportReady">
-                <a rv-on-click="batchState.download">
+              <div id="batchFilePanel" class="panel panel-default" rv-show="searchState.multiple.exportReady">
+                <a rv-on-click="searchState.multiple.download">
                   <button type="button" class="btn btn-primary">
                     <span class="glyphicon glyphicon-download"></span>
                     Export
@@ -409,7 +409,7 @@
                       <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody id="batchFileTable" rv-each-package="batchState.batchFile.packages">
+                  <tbody id="batchFileTable" rv-each-package="searchState.multiple.batchFile.packages">
                     <tr class="result-row">
                       <td>
                         <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
@@ -535,7 +535,7 @@
     
               <!-- START MULTIPLE RESULTS TABLE -->
 
-              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.generateReady">
+              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.multiple.ready">
                 <table class="table table-hover">
                   <thead>
                     <tr>
@@ -543,7 +543,7 @@
                       <th>Actions</th>
                     </tr>
                   </thead>
-                  <tbody id="resultsTable" rv-each-result="searchState.generateResults">
+                  <tbody id="resultsTable" rv-each-result="searchState.multiple.results">
                     <tr class="result-row">
                       <td>
                         <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
