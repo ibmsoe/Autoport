@@ -249,7 +249,11 @@ var detailState = {
 	autoSelected: false, // Was this repository autoselected from search query?
 	pie: null, // Pie chart
     generatePie: null,
-	javaType: "", // Open JDK or IBM Java
+    //TODO - split single and generate out, this repetition is bad
+	javaType: "Open JDK", // Open JDK or IBM Java
+    generateJavaType: "Open JDK",
+    javaTypeOptions: "",
+    generateJavaTypeOptions: "",
 	backToResults: function(ev) {
         var idName = ev.target.id;
 		if(idName === "singleDetailBackButton") {
@@ -267,13 +271,27 @@ var detailState = {
 		doSearch(false);
 	},
 	// When the radio button is pressed update the server environment data
-	selectJavaType:	function() {
-    	var radio = document.getElementById('radio');
-    	if (!document.getElementById('option1').checked) {
-    		detailState.javaType = "";
+	selectJavaType:	function(ev) {
+		var selection = $(ev.target).text().toLowerCase();
+    	if(selection === "open jdk") {
+            detailState.javaType = "Open JDK";
+    		detailState.javaTypeOptions = "";
     	}
-    	else if (!document.getElementById('option2').checked) {
-    		detailState.javaType = "JAVA_HOME=/opt/ibm/java";
+    	else if(selection === "ibm java") {
+            detailState.javaType = "IBM Java";
+    		detailState.javaTypeOptions = "JAVA_HOME=/opt/ibm/java";
+    	}
+	},
+    // TODO - this is bad, this will be changed
+	selectGenerateJavaType:	function(ev) {
+		var selection = $(ev.target).text().toLowerCase();
+    	if(selection === "open jdk") {
+            detailState.generateJavaType = "Open JDK";
+    		detailState.generateJavaTypeOptions = "";
+    	}
+    	else if(selection === "ibm java") {
+            detailState.generateJavaType = "IBM Java";
+    		detailState.generateJavaTypeOptions = "JAVA_HOME=/opt/ibm/java";
     	}
 	}
 };
@@ -580,20 +598,6 @@ rivets.bind($('#importButton'), {
     batchState: batchState
 });
 
-/*
-// Multiple result alert box
-rivets.bind($('.multiple-alert'), {
-	searchState: searchState
-});
-*/
-
-/*
-// Autoselect alert box
-rivets.bind($('.autoselect-alert'), {
-	detailState: detailState
-});
-*/
-
 // Hides / shows loading panel
 rivets.bind($('#loadingPanel'), {
 	loadingState: loadingState
@@ -606,11 +610,7 @@ rivets.bind($('#resultsPanel'), {
 rivets.bind($('#singleDetailPanel'), {
 	detailState: detailState
 });
-/*
-rivets.bind($('#generateDetailPanel'), {
-	detailState: detailState
-});
-*/
+
 // Populates results table
 rivets.bind($('#resultsTable'), {
 	searchState: searchState
@@ -633,25 +633,6 @@ rivets.bind($('#progressBar'), {
     percentageState: percentageState
 });
 
-/*TODO - Why do these need to be commented out, without these commented
-out projectReportState.<function> is no longer a function according to rivets in the html
-rivets.bind($('#testCompareSelectPanel'), {
-    projectReportState: projectReportState
-});
-rivets.bind($("#testCompareRunAlert"), {
-    projectReportState: projectReportState
-});
-rivets.bind($("#testCompareTablePanel"), {
-    projectReportState: projectReportState
-});
-*/
-
-/*Is this still needed?
-rivets.bind($('#reportSelector'), {
-    reportState: reportState
-});
-*/
-
 // Jenkins Tab Bindings
 rivets.bind($('#jenkinsManageButton'), {
     jenkinsState: jenkinsState
@@ -664,6 +645,7 @@ rivets.bind($('#jenkinsPanel'), {
     jenkinsState: jenkinsState,
     percentageState: percentageState
 });
+
 rivets.configure({
     handler : function(context, ev, binding) {
         this.call(binding.observer.target, ev, binding.view.models);
@@ -716,14 +698,11 @@ function processSearchResults(data) {
 			// Show detail view for repo upon selection
 			result.select = function (ev) {
                 var className = $(ev.target).attr('class');
-                console.log(className);
                 if(className === "generateDetailButton btn btn-primary") {
-                    console.log("generate");
 				    $.getJSON("/detail/" + result.id, {panel: "generate"}, showDetail);
                     searchState.generateReady = false;
                 }
                 else if(className === "singleDetailButton btn btn-primary") {
-                    console.log("single");
 				    $.getJSON("/detail/" + result.id, {panel: "single"}, showDetail);
                     searchState.ready = false;
                 }
@@ -737,13 +716,11 @@ function processSearchResults(data) {
 		});
 		detailState.autoSelected = false;
         if(data.panel === "generate") {
-            console.log("generate");
 		    searchState.generateResults = data.results;
 		    loadingState.loading = false;
 		    searchState.generateReady = true;
         }
         else if(data.panel === "single") {
-            console.log("single");
 		    searchState.singleResults = data.results;
 		    loadingState.loading = false;
 		    searchState.ready = true;
@@ -1055,8 +1032,8 @@ function showDetail(data) {
         if(data.panel === "single") {
 		    detailState.repo = data.repo;
 		    detailState.repo.addToJenkins = function(e) {
-			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "x86"}, addToJenkinsCallback, "json");
-			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "ppcle"}, addToJenkinsCallback, "json");
+			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json");
+			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json");
 		    };
 		    detailState.ready = true;
 		    // Make chart
@@ -1072,8 +1049,8 @@ function showDetail(data) {
         else if(data.panel === "generate") {
 		    detailState.generateRepo = data.repo;
 		    detailState.generateRepo.addToJenkins = function(e) {
-			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "x86"}, addToJenkinsCallback, "json");
-			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.javaType, arch: "ppcle"}, addToJenkinsCallback, "json");
+			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json");
+			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json");
 		    };
 		    detailState.generateReady = true;
 		    // Make chart

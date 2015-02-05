@@ -23,13 +23,18 @@ rivets.formatters.isRelevance = function(value) {
 	return value === "relevance";
 };
 rivets.formatters.isStars = function(value) {
-	return value === "stars";
+	return value === "popularity stars";
 };
 rivets.formatters.isForks = function(value) {
 	return value === "forks";
 };
 rivets.formatters.isUpdated = function(value) {
 	return value === "updated";
+};
+
+// For showing compiler/sdk options based on language
+rivets.formatters.isJava = function(value) {
+    return value === "Java";
 };
 
 // report dropdown formatters
@@ -48,4 +53,3 @@ rivets.formatters.isProjectHistory = function(value) {
 rivets.formatters.isProjectCompare = function(value) {
     return value === "projectCompare";
 };
-

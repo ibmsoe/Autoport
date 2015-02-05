@@ -151,10 +151,10 @@
                 <div class="input-group-btn">
                   <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">Sort by { searchState.sorting } <span class="caret"></span></button>
                   <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a href="#">Relevance</a></li>
-                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a href="#">Popularity Stars</a></li>
-                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a href="#">Forks</a></li>
-                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a href="#">Updated</a></li>
+                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isRelevance"><a>Relevance</a></li>
+                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isStars"><a>Popularity Stars</a></li>
+                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isForks"><a>Forks</a></li>
+                    <li rv-on-click="searchState.changeSort" rv-hide="searchState.sorting | isUpdated"><a>Updated</a></li>
                   </ul>
                 </div>
               </div>
@@ -165,7 +165,7 @@
 
               <div class="alert alert-success autoselect-alert clearfix" rv-show="detailState.autoSelected" role="alert">
                 <span class="autoSelectText"><strong>Auto-selected</strong> this repository because it <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has <strong>{ detailState.repo.stars } popularity stars</strong>.</span>
-                <a href="#" class="exitAutoSelect buttonRight" rv-show="detailState.autoSelected" rv-on-click="detailState.exitAutoSelect">
+                <a class="exitAutoSelect buttonRight" rv-show="detailState.autoSelected" rv-on-click="detailState.exitAutoSelect">
                   <button type="button" class="btn btn-default exitAutoSelectButton">
                     <span class="glyphicon glyphicon-list"></span>
                     See all results
@@ -183,23 +183,24 @@
                     <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
                     /
                     <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
-                    <div class="dropdown">
-
-                      <!-- Radio buttons for choosing what kind of java to use. -->
-                      <div class="btn-group radioRight" id="radio1" data-toggle="buttons">
-                        <label class="btn btn-primary active" rv-on-click="detailState.selectJavaType">
-                          <input type="radio" name="options" id="option1" checked> Open JDK
-                        </label>
-                        <label class="btn btn-primary" rv-on-click="detailState.selectJavaType">
-                          <input type="radio" name="options" id="option2"> IBM Java
-                        </label>
+                    
+                    <div class="dropdown buttonRight">
+                    
+                      <!-- Dropdown box for choosing what kind of java to use. -->
+                      <div class="input-group-btn">
+                        <button rv-show="detailState.repo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.javaType } <span class="caret"></span></button>
+                        <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                          <li rv-on-click="detailState.selectJavaType"><a>Open JDK</a></li>
+                          <li rv-on-click="detailState.selectJavaType"><a>IBM Java</a></li>
+                        </ul>
                       </div>
-
-                      <button class="btn btn-primary dropdown-toggle buttonRight" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                    
+                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
                         Add to Jenkins
                         <span class="caret"></span>
                       </button>
-                      <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="dropdownMenu1">
+                      
+                      <ul class="dropdown-menu dropdown-menu-right" role="menu">
                         <li role="presentation" class="dropdown-header">Recent</li>
                         <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">Current</a></li>
                         <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ detailState.repo.recentTag }</a></li>
@@ -247,7 +248,7 @@
                     </small>
                     <pre rv-text="detailState.repo.build.build"></pre>
                   </span>
-                  <a href="#" class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
+                  <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
                     <button id="singleDetailBackButton" type="button" class="btn btn-info">
                       <span class="glyphicon glyphicon-chevron-left"></span>
                       Back to results
@@ -300,7 +301,7 @@
                         <p class="candidate-description text-muted" rv-text="result.description"></p>
                       </td>
                       <td>
-                        <a rv-href="#" rv-on-click="result.addToBatchFile">
+                        <a rv-on-click="result.addToBatchFile">
                           <button type="button" class="btn btn-primary">
                             <span class="glyphicon glyphicon-plus"></span>
                             Add to Batch
@@ -308,7 +309,7 @@
                         </a>
                       </td>
                       <td>
-                        <a rv-href="#" rv-on-click="result.select">
+                        <a rv-on-click="result.select">
                           <button type="button" class="singleDetailButton btn btn-primary">
                             <span class="glyphicon glyphicon-zoom-in"></span>
                             Details
@@ -395,7 +396,7 @@
               <!-- START BATCH FILE TABLE -->
 
               <div id="batchFilePanel" class="panel panel-default" rv-show="batchState.exportReady">
-                <a rv-href="#" rv-on-click="batchState.download">
+                <a rv-on-click="batchState.download">
                   <button type="button" class="btn btn-primary">
                     <span class="glyphicon glyphicon-download"></span>
                     Export
@@ -456,23 +457,24 @@
                     <a title="Owner" class="small" rv-href="detailState.generateRepo.owner_url" rv-text="detailState.generateRepo.owner"></a>
                     /
                     <a title="Repository" class="result-title" rv-href="detailState.generateRepo.url" rv-text="detailState.generateRepo.name"></a>
-                    <div class="dropdown">
 
-                      <!-- Radio buttons for choosing what kind of java to use. -->
-                      <div class="btn-group radioRight" id="radio1" data-toggle="buttons">
-                        <label class="btn btn-primary active" rv-on-click="detailState.selectJavaType">
-                          <input type="radio" name="options" id="option1" checked> Open JDK
-                        </label>
-                        <label class="btn btn-primary" rv-on-click="detailState.selectJavaType">
-                          <input type="radio" name="options" id="option2"> IBM Java
-                        </label>
+                    <div class="dropdown buttonRight">
+                    
+                      <!-- Dropdown box for choosing what kind of java to use. -->
+                      <div class="input-group-btn">
+                        <button rv-show="detailState.generateRepo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.generateJavaType } <span class="caret"></span></button>
+                        <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                          <li rv-on-click="detailState.selectGenerateJavaType"><a>Open JDK</a></li>
+                          <li rv-on-click="detailState.selectGenerateJavaType"><a>IBM Java</a></li>
+                        </ul>
                       </div>
-
-                      <button class="btn btn-primary dropdown-toggle buttonRight" type="button" id="dropdownMenu1" data-toggle="dropdown">
+                    
+                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
                         Add to Jenkins
                         <span class="caret"></span>
                       </button>
-                      <ul class="dropdown-menu dropdown-menu-right" role="menu" aria-labelledby="dropdownMenu1">
+                      
+                      <ul class="dropdown-menu dropdown-menu-right" role="menu">
                         <li role="presentation" class="dropdown-header">Recent</li>
                         <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.generateRepo.addToJenkins">Current</a></li>
                         <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.generateRepo.addToJenkins">{ detailState.generateRepo.recentTag }</a></li>
@@ -520,7 +522,7 @@
                     </small>
                     <pre rv-text="detailState.generateRepo.build.build"></pre>
                   </span>
-                  <a href="#" class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
+                  <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
                     <button id="generateDetailBackButton" type="button" class="btn btn-info">
                       <span class="glyphicon glyphicon-chevron-left"></span>
                       Back to results
@@ -573,7 +575,7 @@
                         <p class="candidate-description text-muted" rv-text="result.description"></p>
                       </td>
                       <td>
-                        <a rv-href="#" rv-on-click="result.addToBatchFile">
+                        <a rv-on-click="result.addToBatchFile">
                           <button type="button" class="btn btn-primary">
                             <span class="glyphicon glyphicon-plus"></span>
                             Add to Batch
@@ -581,7 +583,7 @@
                         </a>
                       </td>
                       <td>
-                        <a rv-href="#" rv-on-click="result.select">
+                        <a rv-on-click="result.select">
                           <button type="button" class="generateDetailButton btn btn-primary">
                             <span class="glyphicon glyphicon-zoom-in"></span>
                             Details
@@ -672,7 +674,7 @@
                       Owner: { result.owner }
                     </td>
                     <td>
-                      <a rv-href="#" rv-on-click="batchState.buildAndTest">
+                      <a rv-on-click="batchState.buildAndTest">
                         <button type="button" class="btn btn-primary">
                         Build + Test
                         </button>
@@ -713,17 +715,17 @@
                 </div>
                 
                 <div class="col-lg-4">
-                  <a rv-href="#" rv-on-click="reportState.listLocalProjects">
+                  <a rv-on-click="reportState.listLocalProjects">
                     <button type="button" class="btn btn-primary">
                       List local
                     </button>
                   </a>
-                  <a rv-href="#" rv-on-click="reportState.listGSAProjects">
+                  <a rv-on-click="reportState.listGSAProjects">
                     <button type="button" class="btn btn-primary">
                       List archived
                     </button>
                   </a>
-                  <a rv-href="#" rv-on-click="reportState.listAllProjects">
+                  <a rv-on-click="reportState.listAllProjects">
                     <button type="button" class="btn btn-primary">
                       List all
                     </button>
@@ -844,7 +846,7 @@
                     </table>
                   </div>
                 </span>
-                <a href="#" class="backToResults" rv-on-click="projectReportState.backToList">
+                <a class="backToResults" rv-on-click="projectReportState.backToList">
                   <button type="button" class="btn btn-info">
                   <span class="glyphicon glyphicon-chevron-left"></span>
                   Back to list
@@ -876,17 +878,17 @@
                       id="batchFilter"/>
                 </div>
                 <div class="col-lg-4">
-                  <a rv-href="#" rv-on-click="reportState.listLocalBatch">
+                  <a rv-on-click="reportState.listLocalBatch">
                     <button type="button" class="btn btn-primary">
                       List local
                     </button>
                   </a>
-                  <a rv-href="#" rv-on-click="reportState.listGSABatch">
+                  <a rv-on-click="reportState.listGSABatch">
                     <button type="button" class="btn btn-primary">
                       List archived
                     </button>
                   </a>
-                  <a rv-href="#" rv-on-click="reportState.listAllBatch">
+                  <a rv-on-click="reportState.listAllBatch">
                     <button type="button" class="btn btn-primary">
                       List all
                     </button>
