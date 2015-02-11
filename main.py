@@ -425,7 +425,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         xml_env_command.text += path_env
         xml_artifacts.text = build['artifacts']
 
-        xml_catalog_remote.text = globals.pathForTestResults + jobFolder
+        xml_catalog_remote.text = os.getcwd() + "/" + globals.localPathForTestResults + jobFolder
         xml_catalog_source.text = build['artifacts']
 
         # Job metadata as passed to jenkins
@@ -445,6 +445,10 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
 
     # Send to Jenkins
+    NO_PROXY = {
+        'no': 'pass',
+    }
+
     r = requests.post(
         globals.jenkinsUrl + "/createItem",
         headers={
@@ -453,7 +457,8 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         params={
             'name': jobName
         },
-        data=configXml
+        data=configXml,
+        proxies=NO_PROXY
     )
 
     if r.status_code == 200:
@@ -465,7 +470,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         homeJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/"
 
         # Start Jenkins job
-        requests.get(startJobUrl)
+        requests.get(startJobUrl, proxies=NO_PROXY)
 
         # Stays on the same page, after creating a new jenkins job.
         return json.jsonify(status="ok", sjobUrl=startJobUrl, hjobUrl=homeJobUrl)
