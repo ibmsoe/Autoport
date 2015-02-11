@@ -1,6 +1,20 @@
 # Looks for certain files (e.g. Makefile) and returns the corresponding build
 # steps
 def inferBuildSteps(listing, repo):
+
+    if repo.language == 'Python':
+        for f in listing:
+            if f.name == 'setup.py':
+                return {
+                    'build system': "python",
+                    'build': "python setup.py build",
+                    'test' : "py.test",
+                    'env' : "",
+                    'artifacts': "",
+                    'reason': "setup.py",
+                    'success': True
+                }
+            
     for f in listing:
         # Get the readme
         readmeStr = repo.get_readme().content.decode('base64', 'strict')
