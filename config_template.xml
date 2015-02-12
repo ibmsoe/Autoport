@@ -91,7 +91,7 @@
       <delegate>
         <publishers>
           <jenkins.plugins.publish__over__ssh.BapSshPublisher>
-            <configName>GSA</configName>
+            <configName>Autoport_results</configName>
             <verbose>false</verbose>
             <transfers>
               <jenkins.plugins.publish__over__ssh.BapSshTransfer>

@@ -99,6 +99,11 @@ class Catalog:
             except IOError as e:
                 print "Can't push ",build,": exception=",e
                 errors.append(build)
+            # remove the local copy
+            os.unlink(self.__localPath+build+"/meta.arti")
+            os.unlink(self.__localPath+build+"/dependency.arti")
+            os.unlink(self.__localPath+build+"/test_result.arti")
+            os.rmdir(self.__localPath+build)
         for directory in errors:
             try:
                 self.__ftpClient.stat(self.__copyPath+directory)
