@@ -3,7 +3,10 @@
 def inferBuildSteps(listing, repo):
     for f in listing:
         # Get the readme
-        readmeStr = repo.get_readme().content.decode('base64', 'strict')
+        try:
+            readmeStr = repo.get_readme().content.decode('base64', 'strict')
+        except IOError as e:
+            return { 'success': False, 'error': "I/O error({0}): {1}".format(e.errno, e.strerror) }
 
         if f.name == "build.sh":
             return {
@@ -85,7 +88,7 @@ def inferBuildSteps(listing, repo):
                 'reason': "pom.xml",
                 'success': True
             }
-    return {'success': False}
+    return { 'success': False, 'error': 'could not determine project type.' }
 
 # Build Files Parser - Looks for string searchTerm in string fileBuf and then iterates over
 # list of delimeters and finds the one with the smallest index, returning the string found between the

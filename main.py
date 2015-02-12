@@ -22,6 +22,7 @@ from tags import getTags
 from catalog import Catalog
 from resultParser import ResultParser
 from stat import ST_SIZE, ST_MTIME
+from urlparse import urlparse
 
 app = Flask(__name__)
 maxResults = 10
@@ -38,7 +39,7 @@ try:
 except IOError:
     assert(False)
 
-catalog = Catalog(globals.hostname)
+catalog = Catalog(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
 #test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
 resultPattern = re.compile('(.*?) - (.*?) - (.*?)-.*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
 
@@ -57,27 +58,27 @@ def settings():
     try:
         globals.jenkinsUrl = request.form["url"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad url")
+        return json.jsonify(status="failure", error="bad url"), 400
 
     try:
         globals.localPathForTestResults = request.form["ltest_results"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad local_test_results path")
+        return json.jsonify(status="failure", error="bad local_test_results path"), 400
 
     try:
         globals.pathForTestResults = request.form["gtest_results"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad test_results path")
+        return json.jsonify(status="failure", error="bad test_results path"), 400
 
     try:
         globals.localPathForBatchFiles = request.form["lbatch_files"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad local_batch_files path")
+        return json.jsonify(status="failure", error="bad local_batch_files path"), 400
 
     try:
         globals.pathForBatchFiles = request.form["gbatch_files"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad batch_files path")
+        return json.jsonify(status="failure", error="bad batch_files path"), 400
 
     try:
         # change githubToken from default, doesn't actually work right now
@@ -85,17 +86,17 @@ def settings():
         # globals.github = Github(githubToken)
         # globals.cache = Cache(github)
     except ValueError:
-        return json.jsonify(status="failure", error="bad github token")
+        return json.jsonify(status="failure", error="bad github token"), 400
 
     try:
         globals.configUsername = request.form["username"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad configuration username")
+        return json.jsonify(status="failure", error="bad configuration username"), 400
 
     try:
         globals.configPassword = request.form["password"]
     except ValueError:
-        return json.jsonify(status="failure", error="bad configuration password")
+        return json.jsonify(status="failure", error="bad configuration password"), 400
 
     return json.jsonify(status="ok")
 
@@ -113,10 +114,10 @@ def search():
     panel = request.args.get("panel", "")
 
     if query == "":
-        return json.jsonify(status="failure", error="missing query")
+        return json.jsonify(status="failure", error="missing query"), 400
     
     if panel == "":
-        return json.jsonify(status="failure", error="missing panel")
+        return json.jsonify(status="failure", error="missing panel"), 400
 
     searchArgs = None # Used to pass in sort argument to pygithub
     sort = request.args.get("sort", "") # Check for optional sort argument
@@ -126,7 +127,7 @@ def search():
         # Must pass no argument if we want to sort by relevance
         searchArgs = {}
     else:
-        return json.jsonify(status="failure", error="bad sort type")
+        return json.jsonify(status="failure", error="bad sort type"), 400
 
     autoselect = request.args.get("auto", "")
     if autoselect != "false":
@@ -138,12 +139,16 @@ def search():
     results = []
     isFirst = True
     numResults = maxResults
+    repos = None
 
-    repos = globals.github.search_repositories(query, **searchArgs)
+    try:
+        repos = globals.github.search_repositories(query, **searchArgs)
+    except IOError as e:
+        return json.jsonify(status="failure", error="Could not contact github: " + str(e)), 503
 
     if repos.totalCount == 0:
         # TODO - return no results page
-        return json.jsonify(status="failure", error="no results")
+        return json.jsonify(status="failure", error="no results"), 418
     elif repos.totalCount <= maxResults:
         numResults = repos.totalCount
 
@@ -178,14 +183,14 @@ def detail(id, repo=None):
     panel = request.args.get("panel", "")
 
     if panel == "":
-        return json.jsonify(status="failure", error="missing panel")
+        return json.jsonify(status="failure", error="missing panel"), 400
 
     # Get the repo if it wasn't passed in (from Search auto picking one)
     if repo is None:
         try:
             idInt = int(id)
         except ValueError:
-            return json.jsonify(status="failure", error="bad id")
+            return json.jsonify(status="failure", error="bad id"), 400
         repo = globals.cache.getRepo(id)
     # Get language data
     languages = globals.cache.getLang(repo)
@@ -206,6 +211,8 @@ def detail(id, repo=None):
 
     # Look for certain files to figure out how to build
     build = inferBuildSteps(globals.cache.getDir(repo), repo) # buildAnalyzer.py
+    if not build['success']:
+        return json.jsonify(status="failure", error=build['error']), 500
     # Collect data
 
     # Get tag-related data
@@ -247,7 +254,7 @@ def search_repositories():
     panel = request.args.get("panel", "")
 
     if panel == "":
-        return json.jsonify(status="failure", error="missing panel")
+        return json.jsonify(status="failure", error="missing panel"), 400
 
     # TODO: debug-log parameters
 
@@ -277,7 +284,7 @@ def uploadBatchFile():
     try:
         fileStr = request.form["file"]
     except KeyError:
-        return json.jsonify(status="failure", error="missing file")
+        return json.jsonify(status="failure", error="missing file"), 400
 
     if not os.path.exists(globals.localPathForBatchFiles):
         os.makedirs(globals.localPathForBatchFiles)
@@ -327,13 +334,13 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         try:
             id = int(idStr)
         except ValueError:
-            return json.jsonify(status="failure", error="invalid id number")
+            return json.jsonify(status="failure", error="invalid id number"), 400
 
     except KeyError:
         if i_id != None:
             id = i_id
         else:
-            return json.jsonify(status="failure", error="missing repo id")
+            return json.jsonify(status="failure", error="missing repo id"), 400
 
     # Ensure we have a valid architecture as a post argument
     try:
@@ -342,7 +349,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         if i_arch != None:
             arch = i_arch
         else:
-            return json.jsonify(status="failure", error="missing arch")
+            return json.jsonify(status="failure", error="missing arch"), 400
 
     # Check to see if we have a valid tag number as a post argument    
     try:
@@ -361,7 +368,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         if i_javaType != None:
             javaType = i_javaType
         else:
-            return json.jsonify(status="failure", error="missing java type")
+            return json.jsonify(status="failure", error="missing java type"), 400
     
     # Read template XML file
     tree = ET.parse("config_template.xml")
@@ -374,8 +381,8 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
     xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
     xml_artifacts = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
-    xml_catalog_remote = root.find("./publishers/jenkins.plugins.publish__over__ssh.BapSshPublisherPlugin/delegate/publishers/jenkins.plugins.publish__over__ssh.BapSshPublisher/transfers/jenkins.plugins.publish__over__ssh.BapSshTransfer/remoteDirectory")
-    xml_catalog_source = root.find("./publishers/jenkins.plugins.publish__over__ssh.BapSshPublisherPlugin/delegate/publishers/jenkins.plugins.publish__over__ssh.BapSshPublisher/transfers/jenkins.plugins.publish__over__ssh.BapSshTransfer/sourceFiles")
+    xml_catalog_remote = root.find("./publishers/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerPublisher/entries/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerEntry/remote")
+    xml_catalog_source = root.find("./publishers/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerPublisher/entries/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerEntry/includes")
     xml_node = root.find("./assignedNode")
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
@@ -425,7 +432,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         xml_env_command.text += path_env
         xml_artifacts.text = build['artifacts']
 
-        xml_catalog_remote.text = os.getcwd() + "/" + globals.localPathForTestResults + jobFolder
+        xml_catalog_remote.text = globals.localPathForTestResults + jobFolder
         xml_catalog_source.text = build['artifacts']
 
         # Job metadata as passed to jenkins
@@ -475,7 +482,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         # Stays on the same page, after creating a new jenkins job.
         return json.jsonify(status="ok", sjobUrl=startJobUrl, hjobUrl=homeJobUrl)
 
-    return json.jsonify(status="failure", error='jenkins error'), 500
+    return json.jsonify(status="failure", error='jenkins HTTP error '+str(r.status_code)), r.status_code
 
 # Run Batch File - takes a batch file name and runs it
 @app.route("/runBatchFile", methods=["GET", "POST"])
@@ -484,7 +491,7 @@ def runBatchFile ():
     try:
         batchName = request.form["batchName"]
     except KeyError:
-        return json.jsonify(status="failure", error="missing batch file name")
+        return json.jsonify(status="failure", error="missing batch file name"), 400
   
     if batchName != "":
         # Read in the file and store as JSON
@@ -504,7 +511,7 @@ def runBatchFile ():
             createJob(package['id'], package['tag'], "ppcle", javaType)
 
     else:
-        return json.jsonify(status="failure", error="could not find file")
+        return json.jsonify(status="failure", error="could not find file"), 404
 
     return json.jsonify(status="ok")
 
@@ -593,8 +600,11 @@ def getTestResults():
     leftname = resultPattern.match(leftbuild).group(2)
     rightname = resultPattern.match(rightbuild).group(2)
 
-    res = resParser.MavenBuildCompare(leftname, leftdir+"/test_result.arti",
-                                      rightname, rightdir+"/test_result.arti")
+    try:
+        res = resParser.MavenBuildCompare(leftname, leftdir+"/test_result.arti",
+                                          rightname, rightdir+"/test_result.arti")
+    except BaseException as e:
+        return json.jsonify(status="failure", error=str(e)), 500
 
     lf = open(leftdir+"/meta.arti")
     rf = open(rightdir+"/meta.arti")
@@ -635,7 +645,10 @@ def getTestHistory():
         for prj in jobRes:
             if projectName[0] in prj[0] and projectName[1] in prj[0]:
                 resultDir = catalog.getResults(prj[0], prj[1])
-                prjRes = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+                try:
+                    prjRes = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+                except BaseException as e:
+                    return json.jsonify(status="failure", error=str(e)), 500
                 f = open(resultDir+"/meta.arti")
                 meta = json.load(f)
                 f.close()
@@ -657,7 +670,10 @@ def getTestDetail():
     for projectName in projects:
         repo = projects[projectName]
         resultDir = catalog.getResults(projectName, repo)
-        res = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+        try:
+            res = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+        except BaseException as e:
+            return json.jsonify(status="failure", error=str(e)), 500
         f = open(resultDir+"/meta.arti")
         meta = json.load(f)
         f.close()

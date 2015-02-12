@@ -70,12 +70,12 @@ var globalState = {
         $.post("/settings", {url: jenkinsUrl,
                ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
                lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles, github: githubToken,
-               username: configUsername, password: configPassword}, settingsCallback, "json");
+               username: configUsername, password: configPassword}, settingsCallback, "json").fail(settingsCallback);
     }
 };
 
 if (!globalState.hasInit) {
-    $.post("/init", {}, initCallback, "json");
+    $.post("/init", {}, initCallback, "json").fail(initCallback);
 }
 
 var percentageState = {
@@ -91,7 +91,7 @@ var percentageState = {
     warningPercentage: "width: 0%;",
     successPercentage: "width: 0%;",
     updateProgressBar: function() {
-        $.getJSON("/progress", {}, processProgressBar);
+        $.getJSON("/progress", {}, processProgressBar).fail(processProgressBar);
     }
 };
 
@@ -152,7 +152,7 @@ var searchState = {
 
                       console.log(data);
                       switchToLoadingState();
-                      $.getJSON("/search/repositories", data, processSearchResults);
+                      $.getJSON("/search/repositories", data, processSearchResults).fail(processSearchResults);
                   }
               }
     }
@@ -172,7 +172,7 @@ var batchState = {
             batchState.ready = false;
         }
         else {
-	        $.post("/listBatchFiles", {}, listBatchFilesCallback, "json");
+	        $.post("/listBatchFiles", {}, listBatchFilesCallback, "json").fail(listBatchFilesCallback);
         }
     },
     upload: function (ev) {
@@ -185,14 +185,14 @@ var batchState = {
             reader.readAsText(file);
 		
             reader.onload = function(e) {
-                $.post("/uploadBatchFile", {file: e.target.result}, uploadBatchFileCallback, "json");
+                $.post("/uploadBatchFile", {file: e.target.result}, uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
             };	
         }
     },
     build: function (ev) {
     },
     buildAndTest: function (ev, el) { 
-	    $.post("/runBatchFile", {batchName: el.result.filename}, runBatchFileCallback, "json");
+	    $.post("/runBatchFile", {batchName: el.result.filename}, runBatchFileCallback, "json").fail(runBatchFileCallback);
     },
 	setImportBox: function (ev) {
         batchState.importBox = (batchState.importBox) ? false : true;
@@ -275,21 +275,21 @@ var reportState = {
         switchToLoadingState();
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "local";
-        $.getJSON("/listTestResults/local", { filter: $("#projectFilter").val() }, processResultList);
+        $.getJSON("/listTestResults/local", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").show();
     },
     listGSAProjects: function(ev) {
         switchToLoadingState();
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "archived";
-        $.getJSON("/listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList);
+        $.getJSON("/listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
     },
     listAllProjects: function(ev) {
         switchToLoadingState();
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "all";
-        $.getJSON("/listTestResults/all", { filter: $("#projectFilter").val() }, processResultList);
+        $.getJSON("/listTestResults/all", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
     },
     listLocalBatch: function(ev) {
@@ -417,7 +417,7 @@ var projectReportState = {
                       }),
              success: processTestHistory,
             dataType:'json'
-        });
+        }).fail(processTestHistory);
     },
     testDetail: function() {
         var sel = Object.keys(projectReportState.selectedProjects);
@@ -435,10 +435,9 @@ var projectReportState = {
                       }),
              success: processTestDetail,
             dataType:'json'
-        });
+        }).fail(processTestDetail);
     },
     compareResults: function() {
-        console.log("test compare");
         var sel = Object.keys(projectReportState.selectedProjects);
         if (sel.length === 2) {
             var leftProject = sel[0];
@@ -453,7 +452,7 @@ var projectReportState = {
                         leftrepository: leftRepo,
                         rightrepository: rightRepo
                       },
-                      processBuildResults);
+                      processBuildResults).fail(processBuildResults);
         } else {
             $('#resultCompareSelectionAlert').modal();
         }
@@ -473,7 +472,7 @@ var projectReportState = {
                       }),
              success: archiveCallback,
             dataType:'json'
-        });
+        }).fail(archiveCallback);
     },
     backToList: function(ev) {
         projectReportState.prjCompareReady = true;
@@ -516,7 +515,7 @@ function doSearch(autoselect) {
 			sort: searchState.single.sorting,
 			auto: autoselect,
             panel: "single"
-		}, processSearchResults);
+		}, processSearchResults).fail(processSearchResults);
 	}
 }
 
@@ -527,11 +526,22 @@ $('#batch_file').change(function () {
     $('#uploadFilename').val("File selected:  " + $('#batch_file').val());
 });
 
+function showAlert(message, data) {
+    var text = message;
+    if (typeof data !== "undefined") {
+        text += "<br/>" + (data.responseJSON.error !== undefined ?
+                           data.responseJSON.error :
+                           data.error);
+    }
+    $("#apErrorDialogText").html(text);
+    $("#errorAlert").modal();
+    loadingState.loading = false;
+}
+
 // Callback for when we recieve data from a search query request
 function processSearchResults(data) {
 	if(data.status !== "ok") {
-		console.log("Bad response from /search!");
-		console.log(data);
+        showAlert("Bad response from /search!", data);
 	} else if (data.type === "multiple") {
 		// Got multiple results
 		// Add select function to each result
@@ -540,11 +550,11 @@ function processSearchResults(data) {
 			result.select = function (ev) {
                 var className = $(ev.target).attr('class');
                 if(className === "generateDetailButton btn btn-primary") {
-				    $.getJSON("/detail/" + result.id, {panel: "generate"}, showDetail);
+				    $.getJSON("/detail/" + result.id, {panel: "generate"}, showDetail).fail(showDetail);
                     searchState.multiple.ready = false;
                 }
                 else if(className === "singleDetailButton btn btn-primary") {
-				    $.getJSON("/detail/" + result.id, {panel: "single"}, showDetail);
+				    $.getJSON("/detail/" + result.id, {panel: "single"}, showDetail).fail(showDetail);
                     searchState.single.ready = false;
                 }
 
@@ -576,8 +586,7 @@ function processSearchResults(data) {
 // Updates percentages by polling a tab on the jenkins page
 function processProgressBar(data) {
     if (data.status !== "ok") {
-        console.log("Bad response from /progress!");
-        console.log(data);
+        showAlert("Bad response from /progress!", data);
     } else {
         percentageState.totalNumberOfJobs = data.results[0][0] + data.results[0][1] + data.results[0][2] + data.results[0][3];
         percentageState.unfinishedJobs = data.results[0][0];
@@ -595,7 +604,7 @@ function doGetResultList() {
     switch (reportState.reportType) {
       case "projectCompare":
         switchToLoadingState();
-        $.getJSON("/listTestResults", {}, processResultList);
+        $.getJSON("/listTestResults", {}, processResultList).fail(processResultList);
         break;
       default:
         break;
@@ -607,7 +616,7 @@ function processResultList(data) {
     projectReportState.projects = [];
     projectReportState.projectsTable.clear();
     if (data === undefined || data.status != "ok") {
-        console.log("Error");// TODO error message
+        showAlert("Error:", data);
     } else {
         var prjRegex = /(.*) - (.*?) - (.*?)-(.*)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)/;
         var filterRegex = new RegExp(reportState.projectFilter.toLowerCase());
@@ -674,7 +683,7 @@ function processResultList(data) {
 function processBuildResults(data) {
     var tableContent = "";
     if (data.status != "ok") {
-        tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
+        showAlert("Error:", data);
     } else {
         var leftHeader = "";
         var rightHeader = "";
@@ -741,19 +750,19 @@ function processBuildResults(data) {
             data.results["failures"][data.rightCol]+"</th><th class=\"testResult\">"+
             data.results["errors"][data.rightCol]+"</th><th class=\"testResult\">"+
             data.results["skipped"][data.rightCol]+"</th></tr>";
+        $("#prjHeader").html("for " + data.leftProject.Package + " version " +
+            data.leftProject.Version + " on " + data.leftProject.Architecture +
+            " / " + data.rightProject.Package + " version " +
+            data.rightProject.Version + " on " + data.rightProject.Architecture);
     }
     $("#testResultsTable").html(tableContent);
-    $("#prjHeader").html("for " + data.leftProject.Package + " version " +
-        data.leftProject.Version + " on " + data.leftProject.Architecture +
-        " / " + data.rightProject.Package + " version " +
-        data.rightProject.Version + " on " + data.rightProject.Architecture);
     loadingState.loading = false;
     projectReportState.prjTableReady = true;
 }
 
 function processTestDetail(data) {
     if (data.status != "ok") {
-        tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
+        showAlert("Error:", data);
     } else {
         // based on the compare table
         var tableContent = "";
@@ -804,7 +813,7 @@ function processTestDetail(data) {
 function processTestHistory(data) {
     var tableContent = "";
     if (data.status != "ok") {
-        tableContent = "<tr><th>Error</th><th>"+data.error+"</th></td>";
+        showAlert("Error:", data);
     } else {
         for (var project in data.results) {
             var resultData = {
@@ -956,6 +965,9 @@ function archiveCallback(data) {
         }
         text += "</ul>";
     }
+    // refetch the list as previously checked
+    reportState.listLocalProjects();
+    handleProjectListBtns();
     $("#archiveCallbackText").html(text);
     $("#archiveCallbackAlert").modal();
 }
@@ -964,14 +976,14 @@ function archiveCallback(data) {
 // TODO - add check boxes for architectures wanted
 function showDetail(data) {
 	if(data.status !== "ok" || data.type !== "detail") {
-		console.log("Bad response while creating detail view!");
+		showAlert("Bad response while creating detail view!", data);
 	} else {
 		loadingState.loading = false;
         if(data.panel === "single") {
 		    detailState.repo = data.repo;
 		    detailState.repo.addToJenkins = function(e) {
-			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json");
-			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json");
+			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
 		    };
 		    detailState.ready = true;
 		    // Make chart
@@ -987,8 +999,8 @@ function showDetail(data) {
         else if(data.panel === "generate") {
 		    detailState.generateRepo = data.repo;
 		    detailState.generateRepo.addToJenkins = function(e) {
-			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json");
-			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json");
+			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
 		    };
 		    detailState.generateReady = true;
 		    // Make chart
@@ -1007,8 +1019,7 @@ function showDetail(data) {
 // assign variables in global state
 function initCallback(data) {
     if (data.status !== "ok") {
-        console.log("Bad response from /init!");
-        console.log(data);
+        showAlert("Bad response from /init!", data);
     }
     globalState.hasInit = true;
     globalState.jenkinsUrlInit = data.jenkinsUrl;
@@ -1032,15 +1043,14 @@ function initCallback(data) {
 
 function settingsCallback(data) {
 	if (data.status != "ok") {
-		console.log("Bad response from /settings!");
-		console.log(data);
+		showAlert("Bad response from /settings!", data);
 	}
 }
 
 function uploadBatchFileCallback(data) {
     console.log("In uploadBatchFileCallback");
     if (data.status !== "ok") {
-        window.alert(data.error);
+        showAlert("", data);
     }
 }
 
@@ -1052,6 +1062,8 @@ function listBatchFilesCallback(data) {
     if(data.status === "ok") {
         batchState.file_list = data.files;
         batchState.ready = true;
+    } else {
+        showAlert("Error!", data);
     }
 }
 
@@ -1062,8 +1074,7 @@ function addToJenkinsCallback(data) {
 		window.open(data.hjobUrl,'_blank');
         percentageState.updateProgressBar();
 	} else {
-		console.log("Bad response from /createJob!");
-		console.log(data);
+		showAlert("Bad response from /createJob!", data);
 	}
 }
 

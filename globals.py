@@ -34,6 +34,8 @@ def init():
 
     global configUsername
     global configPassword
+    global configJenkinsUsername
+    global configJenkinsKey
     global pathForTestResults
     global pathForBatchFiles
     global localPathForTestResults
@@ -53,6 +55,8 @@ def init():
 
     configUsername = configOptions['username']
     configPassword = configOptions['password']
+    configJenkinsUsername = configOptions['jenkinsusername']
+    configJenkinsKey = configOptions['autoportjenkinskey']
     pathForTestResults = configOptions['pathfortestresults']
     pathForBatchFiles = configOptions['pathforbatchfiles']
     localPathForTestResults = configOptions['localpathfortestresults']

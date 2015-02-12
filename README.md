@@ -20,6 +20,29 @@ Install [pip](https://pip.pypa.io/en/latest/installing.html) and then run these 
     pip install argparse (not needed if Python >= 2.7)
     pip install paramiko (may also need to install libevent-devel and python-devel)
 
+
+Setup
+========
+In order to run AutoPort, some configuration is needed. AutoPort needs to be able to ssh to your jenkins server, so you will need a key pair.
+
+On the autoport server:
+
+    ssh-keygen -P'' -t rsa -f id_rsa
+    scp id_rsa.pub jenkinshost:~
+
+Then connect to the jenkins server (sudo access is required):
+
+    ssh jenkinshost
+    sudo cat id_rsa.pub > ~jenkins/
+    sudo chown jenkins:jenkins ~jenkins/id_rsa.pub
+    sudo su - jenkins
+    mkdir -p .ssh data/test_results data/batch_files
+    cat id_rsa.pub >> .ssh/authorized_keys
+
+your AutoPort user should now be capable of connecting to jenkins without a password.
+
+config.ini contains settings used by AutoPort to connect to github, the archive server and the jenkins server. You can change the values therein to match your requirements.
+
 Running
 ========
 After installing dependencies, simply clone the repo and run:
