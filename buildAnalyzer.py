@@ -1,8 +1,8 @@
-# General strategy is to create a stack of language definitions from which build and test 
+# General strategy is to create a stack of language definitions from which build and test
 # commands are generated.  The initial entry is the base language definition.  Subsequent
 # entries are added based on the presense of specific build files enabling better command
-# lines to be produced.  Ultimately, top of stack is returned.  In between, there is 
-# grepping of readme files based on hints provided by the various language definitions 
+# lines to be produced.  Ultimately, top of stack is returned.  In between, there is
+# grepping of readme files based on hints provided by the various language definitions
 # to improve command generation and discovery of environment variables.
 
 def inferBuildSteps(listing, repo):
@@ -32,7 +32,7 @@ def inferBuildSteps(listing, repo):
         'build': "if [ -x configure ]; then ./configure; fi; make clean; make",
         'test' : "make all",
         'env' : "",
-        'artifacts': "", 
+        'artifacts': "",
         'reason': "primary language",
         'success': True }
 
@@ -44,7 +44,7 @@ def inferBuildSteps(listing, repo):
         'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -e build.gradle ]; then gradle -q; fi",
         'test': "if [ -e pom.xml ]; then mvn test -fn > test_result.arti; elif [ -e build.xml ]; then ant test; elif [ -e build.gradle ]; then gradle -q test; fi",
         'env' : "",
-        'artifacts': "", 
+        'artifacts': "",
         'reason': "primary language",
         'success': True }
 
@@ -56,7 +56,7 @@ def inferBuildSteps(listing, repo):
         'build': "",
         'test' : "",
         'env' : "",
-        'artifacts': "", 
+        'artifacts': "",
         'reason': "primary language unknown",
         'success': False }
 
@@ -127,7 +127,7 @@ def inferBuildSteps(listing, repo):
     makefile = None
     for f in listing:
         if f.name == 'pom.xml':
-            langstack.insert(0, maven_def)		# If we find specific build files we can improve our commands by grepping readme's 
+            langstack.insert(0, maven_def)         # If we find specific build files we can improve our commands by grepping readme's 
         elif f.name == 'build.xml':
             langstack.insert(0, ant_def)
         elif f.name == 'Makefile':
@@ -136,18 +136,18 @@ def inferBuildSteps(listing, repo):
             buildsh = f
 #       elif f.name == 'BUILDING.md' or f.name == 'BUILDING.txt' or
 #                      'README.maven' or f.name == 'README.ant':
-#           fstr = pygithub get file content (f.name) 
+#           fstr = pygithub get file content (f.name)
 #           grepstack.insert(0, fstr)
 
     # build.sh is favored, because it bridges languages, sets environment variables, ...
-    # Else if only the primary language definition is present, push Makefile as it may 
+    # Else if only the primary language definition is present, push Makefile as it may
     # apply to multiple languages.  It doesn't take precedence necessarily over a pom.xml
-    # file but if one is not present we should fall back to the Makefile as it is better 
+    # file but if one is not present we should fall back to the Makefile as it is better
     # than nothing.  The base java definition would not work!
     #
-    # On the other hand, if both pom.xml and Makefile are present, then one could argue 
+    # On the other hand, if both pom.xml and Makefile are present, then one could argue
     # that developers would favor makefiles as being simpler and better understood. Once
-    # we have the ability to grep a Makefile we could scan it for Java or Python to 
+    # we have the ability to grep a Makefile we could scan it for Java or Python to
     # determine whether the makefile applies to multiple languages. For now, we assume
     # that it does. Later, we can conditionally push it to the lang stack.
 
@@ -188,7 +188,7 @@ def inferBuildSteps(listing, repo):
             if env != "":
                 env = buildFilesParser(readmeStr, env, delim)
                 print "GREP env cmd: ", env
-                if env != "": 
+                if env != "":
                     lang['build'] = env + lang['build']
                     lang['test'] = env + lang['test']
             break
@@ -199,12 +199,12 @@ def inferBuildSteps(listing, repo):
 # list of delimeters and finds the one with the smallest index, returning the string found between the
 # two indices
 def buildFilesParser(fileBuf, searchTerm, delimeter):
-    # Get the length of the file     
+    # Get the length of the file
     lenFileBuf = len(fileBuf)
 
     # Search the fileBuf for searchTerm
     i = fileBuf.find(searchTerm)
-    
+ 
     if i != -1:
         smallestIndex = lenFileBuf # this is one bigger than the biggest index, acts as infinity
         # If searchTerm found find the smallest index delimeter

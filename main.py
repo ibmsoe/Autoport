@@ -376,14 +376,14 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     # Infer build steps if possible
     build = inferBuildSteps(globals.cache.getDir(repo), repo)
 
+    # TODO: Conditionally continue based on a user interface selection to create
+    # job on Jenkins w/o a build command.  User must manually enter command on Jenkins.
+    # Helps automate porting environment
+
     if not build['success']:
         errorstr = "Programming language not supported - " + build['build system']
         print errorstr
         return json.jsonify(status="failure", error=errorstr)
-
-    # TODO: Conditionally continue based on a user interface selection to create
-    # job on Jenkins w/o a build command.  User must manually enter command on Jenkins.
-    # Helps automate porting environment
 
     # Read template XML file
     tree = ET.parse("config_template.xml")
