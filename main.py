@@ -370,6 +370,21 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         else:
             return json.jsonify(status="failure", error="missing java type"), 400
     
+    # Get repository
+    repo = globals.cache.getRepo(id)
+
+    # Infer build steps if possible
+    build = inferBuildSteps(globals.cache.getDir(repo), repo)
+
+    if not build['success']:
+        errorstr = "Programming language not supported - " + build['build system']
+        print errorstr
+        return json.jsonify(status="failure", error=errorstr)
+
+    # TODO: Conditionally continue based on a user interface selection to create
+    # job on Jenkins w/o a build command.  User must manually enter command on Jenkins.
+    # Helps automate porting environment
+
     # Read template XML file
     tree = ET.parse("config_template.xml")
     root = tree.getroot()
@@ -385,12 +400,6 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     xml_catalog_source = root.find("./publishers/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerPublisher/entries/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerEntry/includes")
     xml_node = root.find("./assignedNode")
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
-
-    # Get repository
-    repo = globals.cache.getRepo(id)
-
-    # Infer build steps if possible
-    build = inferBuildSteps(globals.cache.getDir(repo), repo)
 
     # Modify selected elements
     archName = ""
@@ -420,33 +429,32 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     # Name of new Folder
     jobFolder = jobName + "." + time
 
-    if build['success']:
-        xml_build_command.text = build['build']
-        xml_test_command.text = build['test']
-        xml_env_command.text = build['env']
+    xml_build_command.text = build['build']
+    xml_test_command.text = build['test']
+    xml_env_command.text = build['env']
 
-        # In addition to whatever other environmental variables I need to inject
-        # I should add whether to pick IBM Java or Open JDK
-        xml_env_command.text += javaType + "\n"
-        path_env = "PATH=" + globals.mavenPath + ":$PATH\n"
-        xml_env_command.text += path_env
-        xml_artifacts.text = build['artifacts']
+    # In addition to whatever other environmental variables I need to inject
+    # I should add whether to pick IBM Java or Open JDK
+    xml_env_command.text += javaType + "\n"
+    path_env = "PATH=" + globals.mavenPath + ":$PATH\n"
+    xml_env_command.text += path_env
+    xml_artifacts.text = build['artifacts']
 
-        xml_catalog_remote.text = globals.localPathForTestResults + jobFolder
-        xml_catalog_source.text = build['artifacts']
+    xml_catalog_remote.text = globals.localPathForTestResults + jobFolder
+    xml_catalog_source.text = build['artifacts']
 
-        # Job metadata as passed to jenkins
-        jobMetadataName = "meta.arti"
-        jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Build System\":\"" + build['build system'] + "\", \"Architecture\": \"" + arch + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
+    # Job metadata as passed to jenkins
+    jobMetadataName = "meta.arti"
+    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Build System\":\"" + build['build system'] + "\", \"Architecture\": \"" + arch + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
 
-        # add parameters information
-        i = 1
-        for param in xml_parameters:
-            if i == 1:
-                param.text = jobMetadataName
-            elif i == 2:
-                param.text = jobMetadata
-            i += 1
+    # add parameters information
+    i = 1
+    for param in xml_parameters:
+        if i == 1:
+            param.text = jobMetadataName
+        elif i == 2:
+            param.text = jobMetadata
+        i += 1
 
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
