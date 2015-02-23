@@ -87,6 +87,18 @@ def inferBuildSteps(listing, repo):
         'reason': "pom.xml",
         'success': True }
 
+    c_def = {
+        'build system': "make",
+        'grep build': "",
+        'grep test': "make test",
+        'grep env': "",
+        'build': "if [ -x configure ]; then ./configure; fi; make clean; make",
+        'test' : "make all",
+        'env' : "",
+        'artifacts': "",
+        'reason': "Makefile",
+        'success': True }
+
     # This is most favored definition and is added to top of stack
 
     buildsh_def = {
@@ -155,7 +167,7 @@ def inferBuildSteps(listing, repo):
         langstack.insert(0, buildsh_def)
 #   elif len(langstack) == 1 and makefile != None:
     elif makefile != None:
-        langstack.insert(0, base_c_def)
+        langstack.insert(0, c_def)
 
     delim = ["`", "'", '"', "\n"]                               # delimeters used to denote end of cmd
 
@@ -164,35 +176,38 @@ def inferBuildSteps(listing, repo):
 
     lang = langstack.pop(0)
 
-    for i in range(len(grepstack)) and lang['build']:
-        readmeStr = grepstack[i]
-        print "README: ", readmeStr
-        if readmeStr != "":
-            cmd = lang['grep test']
-            if cmd != "":
-                strFound = buildFilesParser(readmeStr, cmd, delim)
-                print "GREP test cmd: ", cmd
-                print "GREP test str: ", StrFound
-                if strFound != "":
-                    lang['grep test'] = cmd                     # safe but loses extra cmd arguments possibly in strFound
-#                   lang['grep test'] = strFound		# TODO: needs to be validated.  May need to be sanitized
-            cmd = lang['grep build']
-            if cmd != "":
-                strFound = buildFilesParser(readmeStr, cmd, delim)
-                print "GREP build cmd: ", cmd
-                print "GREP build str: ", StrFound
-                if strFound != "":
-                    lang['grep build'] = cmd                    # safe but loses extra cmd arguments possibly in strFound
-#                   lang['grep build'] = strFound	        # TODO: needs to be validated.  May need to be sanitized
-            env = lang['grep env']
-            if env != "":
-                env = buildFilesParser(readmeStr, env, delim)
-                print "GREP env cmd: ", env
+    if lang['build'] != "":
+        for readmeStr in grepstack:
+            print "README: ", readmeStr
+            if readmeStr != "":
+                cmd = lang['grep test']
+                if cmd != "":
+                    print "GREP test cmd: ", cmd
+                    strFound = buildFilesParser(readmeStr, cmd, delim)
+                    print "GREP test str: ", strFound
+                    if strFound != "":
+                        lang['test'] = cmd                      # safe but loses extra cmd arguments possibly in strFound
+#                       lang['test'] = strFound                 # TODO: needs to be validated.  May need to be sanitized
+                cmd = lang['grep build']
+                if cmd != "":
+                    print "GREP build cmd: ", cmd
+                    strFound = buildFilesParser(readmeStr, cmd, delim)
+                    print "GREP build str: ", strFound
+                    if strFound != "":
+                        lang['build'] = cmd                     # safe but loses extra cmd arguments possibly in strFound
+#                       lang['build'] = strFound	        # TODO: needs to be validated.  May need to be sanitized
+                env = lang['grep env']
                 if env != "":
-                    lang['build'] = env + lang['build']
-                    lang['test'] = env + lang['test']
-            break
+                    print "GREP env cmd: ", env
+                    strFound = buildFilesParser(readmeStr, env, delim)
+                    print "GREP env str: ", strFound
+#                   if strFound != "":                           # TODO: debug, can we provide this separately instead of 
+#                       lang['build'] = strFound + lang['build']       # as part of the build and test command 
+#                       lang['test'] = strFound + lang['test']         # need to sanitize strFound
+                break
 
+    print "BUILD: " + lang['build']
+    print "TEST: " + lang['test']
     return lang
 
 # Build Files Parser - Looks for string searchTerm in string fileBuf and then iterates over
