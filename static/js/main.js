@@ -108,7 +108,10 @@ var searchState = {
 	        changeSort: function (ev) { // Called upon changing sort type
 		        searchState.single.sorting = $(ev.target).text().toLowerCase();
 		        doSearch();
-	        }
+	        },
+            loadingState: {
+                loading: false 
+            }
     },
     multiple: {searchBoxReady: false,
               ready: false,
@@ -151,9 +154,13 @@ var searchState = {
                       };
 
                       console.log(data);
-                      switchToLoadingState();
+		              searchState.multiple.ready = false;
+		              searchState.multiple.loadingState.loading = true;
                       $.getJSON("/search/repositories", data, processSearchResults).fail(processSearchResults);
                   }
+              },
+              loadingState: {
+                  loading: false 
               }
     }
 };
@@ -199,10 +206,6 @@ var batchState = {
 	}
 };
 
-// Contains state of loading view
-var loadingState = {
-	loading: false // Whether or not to draw this view
-};
 // Contains state of detail view
 var detailState = {
 	ready: false,
@@ -272,21 +275,30 @@ var reportState = {
     projectFilter: "",
     batchFilter: "",
     listLocalProjects: function(ev) {
-        switchToLoadingState();
+        //TODO - add loading bar
+        projectReportState.prjCompareReady = false;
+        projectReportState.prjTableReady = false;
+        
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "local";
         $.getJSON("/listTestResults/local", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").show();
     },
     listGSAProjects: function(ev) {
-        switchToLoadingState();
+        //TODO - add loading bar
+        projectReportState.prjCompareReady = false;
+        projectReportState.prjTableReady = false;
+        
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "archived";
         $.getJSON("/listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
     },
     listAllProjects: function(ev) {
-        switchToLoadingState();
+        //TODO - add loading bar
+        projectReportState.prjCompareReady = false;
+        projectReportState.prjTableReady = false;
+        
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "all";
         $.getJSON("/listTestResults/all", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
@@ -407,7 +419,9 @@ var projectReportState = {
         for (proj in sel) {
             query[sel[proj]] = projectReportState.selectedProjects[sel[proj]];
         }
-        switchToLoadingState();
+        //TODO - add loading bar
+        projectReportState.prjCompareReady = false;
+        projectReportState.prjTableReady = false;
         $.ajax({
                 type: "POST",
          contentType: "application/json; charset=utf-8",
@@ -425,7 +439,9 @@ var projectReportState = {
         for (proj in sel) {
             query[sel[proj]] = projectReportState.selectedProjects[sel[proj]];
         }
-        switchToLoadingState();
+        //TODO - add loading bar
+        projectReportState.prjCompareReady = false;
+        projectReportState.prjTableReady = false;
         $.ajax({
                 type: "POST",
          contentType: "application/json; charset=utf-8",
@@ -444,7 +460,9 @@ var projectReportState = {
             var rightProject = sel[1];
             var leftRepo = projectReportState.selectedProjects[leftProject];
             var rightRepo = projectReportState.selectedProjects[rightProject];
-            switchToLoadingState();
+            //TODO - add loading bar
+            projectReportState.prjCompareReady = false;
+            projectReportState.prjTableReady = false;
             $.getJSON("/getTestResults",
                       {
                         leftbuild: leftProject,
@@ -489,17 +507,7 @@ rivets.bind($('#toolContainer'), {
     detailState: detailState,
     jenkinsState: jenkinsState,
     percentageState: percentageState,
-	loadingState: loadingState
 });
-
-// Disables all views except loading view
-function switchToLoadingState() {
-	//detailState.ready = false;
-    projectReportState.prjCompareReady = false;
-    projectReportState.prjTableReady = false;
-	loadingState.loading = true;
-	//detailState.autoSelected = false;
-}
 
 // Does the above and makes a search query
 function doSearch(autoselect) {
@@ -509,7 +517,8 @@ function doSearch(autoselect) {
 	// Do not switch to loading state if query is empty
 	searchState.single.query = $('#query').val();
 	if(searchState.single.query.length > 0) {
-		switchToLoadingState();
+		searchState.single.ready = false;
+		searchState.single.loadingState.loading = true;
 		$.getJSON("/search", {
 			q: searchState.single.query,
 			sort: searchState.single.sorting,
@@ -535,7 +544,6 @@ function showAlert(message, data) {
     }
     $("#apErrorDialogText").html(text);
     $("#errorAlert").modal();
-    loadingState.loading = false;
 }
 
 // Callback for when we recieve data from a search query request
@@ -552,13 +560,13 @@ function processSearchResults(data) {
                 if(className === "generateDetailButton btn btn-primary") {
 				    $.getJSON("/detail/" + result.id, {panel: "generate"}, showDetail).fail(showDetail);
                     searchState.multiple.ready = false;
+		            searchState.multiple.loadingState.loading = true;
                 }
                 else if(className === "singleDetailButton btn btn-primary") {
 				    $.getJSON("/detail/" + result.id, {panel: "single"}, showDetail).fail(showDetail);
                     searchState.single.ready = false;
+		            searchState.single.loadingState.loading = true;
                 }
-
-				switchToLoadingState();
 			};
 			result.addToBatchFile = function () {
 				searchState.multiple.batchFile.packages.push(result);
@@ -568,12 +576,12 @@ function processSearchResults(data) {
 		detailState.autoSelected = false;
         if(data.panel === "generate") {
 		    searchState.multiple.results = data.results;
-		    loadingState.loading = false;
+		    searchState.multiple.loadingState.loading = false;
 		    searchState.multiple.ready = true;
         }
         else if(data.panel === "single") {
 		    searchState.single.results = data.results;
-		    loadingState.loading = false;
+		    searchState.single.loadingState.loading = false;
 		    searchState.single.ready = true;
         }
 	} else if (data.type === "detail") {
@@ -603,7 +611,10 @@ function processProgressBar(data) {
 function doGetResultList() {
     switch (reportState.reportType) {
       case "projectCompare":
-        switchToLoadingState();
+        //TODO - add loading bar
+        projectReportState.prjCompareReady = false;
+        projectReportState.prjTableReady = false;
+        
         $.getJSON("/listTestResults", {}, processResultList).fail(processResultList);
         break;
       default:
@@ -674,7 +685,6 @@ function processResultList(data) {
             }
         }
         detailState.autoSelected = false;
-        loadingState.loading = false;
         projectReportState.prjCompareReady = true;
         projectReportState.projectsTable.draw();
     }
@@ -756,7 +766,6 @@ function processBuildResults(data) {
             data.rightProject.Version + " on " + data.rightProject.Architecture);
     }
     $("#testResultsTable").html(tableContent);
-    loadingState.loading = false;
     projectReportState.prjTableReady = true;
 }
 
@@ -806,7 +815,6 @@ function processTestDetail(data) {
         }
     }
     $("#testResultsTable").html(tableContent);
-    loadingState.loading = false;
     projectReportState.prjTableReady = true;
 }
 
@@ -943,7 +951,6 @@ function processTestHistory(data) {
         tableContent += "</table>";
     }
     $("#testResultsTable").html(tableContent);
-    loadingState.loading = false;
     projectReportState.prjTableReady = true;
 }
 
@@ -978,13 +985,13 @@ function showDetail(data) {
 	if(data.status !== "ok" || data.type !== "detail") {
 		showAlert("Bad response while creating detail view!", data);
 	} else {
-		loadingState.loading = false;
         if(data.panel === "single") {
 		    detailState.repo = data.repo;
 		    detailState.repo.addToJenkins = function(e) {
 			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
 			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
 		    };
+		    searchState.single.loadingState.loading = false;
 		    detailState.ready = true;
 		    // Make chart
 		    var ctx = $("#langChart").get(0).getContext("2d");
@@ -1002,6 +1009,7 @@ function showDetail(data) {
 			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
 			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
 		    };
+		    searchState.multiple.loadingState.loading = false;
 		    detailState.generateReady = true;
 		    // Make chart
 		    var ctx = $("#generateLangChart").get(0).getContext("2d");
