@@ -1,55 +1,18 @@
+
 # General strategy is to create a stack of language definitions from which build and test
-# commands are generated.  The initial entry is the base language definition.  Subsequent
-# entries are added based on the presense of specific build files enabling better command
-# lines to be produced.  Ultimately, top of stack is returned.  In between, there is
-# grepping of readme files based on hints provided by the various language definitions
-# to improve command generation and discovery of environment variables.
+# commands are generated.  Each successive definition that is added to the stack provides
+# a better commnd line that is more specific to the project.  The last stack definition
+# is returned. With a little luck, it is the preferred cmd line as provided by the readme
 
 def inferBuildSteps(listing, repo):
 
-    # base_lang_def are added based on primary language designation.  Multiple build
-    # tools should be supported if applicable. Script are run on the Jenkins build client
-    # to invoke the appropriate build command. There is no ability to grep for environment
-    # variables as these are specific to the build tool like maven and ant.
-
-    base_python_def = {
-        'build system': "Python",
-        'grep build': "python setup.py build",	# Search readme for this string. If found, use it as build cmd
-        'grep test': "py.test",			# Same for test command. Maybe we can pick up some extra arguments
-        'grep env': "",
-        'build' : "if [ -e setup.py ]; then python setup.py install; fi",
-        'test' : "py.test",
-        'env' : "",
-        'artifacts': "",
-        'reason': "primary language",
-        'success': True }
-
-    base_c_def = {
-        'build system': "make",
-        'grep build': "",
-        'grep test': "make test",
-        'grep env': "",
-        'build': "if [ -x configure ]; then ./configure; fi; make clean; make",
-        'test' : "make all",
-        'env' : "",
-        'artifacts': "",
-        'reason': "primary language",
-        'success': True }
-
-    base_java_def = {
-        'build system': "Java",
-        'grep build': "",
-        'grep test': "",
-        'grep env': "",
-        'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -e build.gradle ]; then gradle -q; fi",
-        'test': "if [ -e pom.xml ]; then mvn test -fn > test_result.arti; elif [ -e build.xml ]; then ant test; elif [ -e build.gradle ]; then gradle -q test; fi",
-        'env' : "",
-        'artifacts': "",
-        'reason': "primary language",
-        'success': True }
+    # This is added to the stack first.  Additional stack elements are added on top of it
+    # as we perform discovery.  In the end, if we can't figure out how to build the project,
+    # then this entry is used to convey the unknown primary language to the end user
 
     base_empty_def = {
         'build system': "",
+        'primary lang': "",
         'grep build': "",
         'grep test': "",
         'grep env': "",
@@ -60,23 +23,71 @@ def inferBuildSteps(listing, repo):
         'reason': "primary language unknown",
         'success': False }
 
-    # These definitions are added based on the presense of a build file.  We can
-    # simply the command line and and search for environment variables.
+    # These are the base lang definitions. They should cover the top two or three build
+    # systems to achieve 60% or better compilation success.  The command line is not project
+    # or build system specific.  Represents standard use of the build system, eg make all
+
+    base_python_def = {
+        'build system': "Python",
+        'primary lang': "Python",
+        'grep build': "python setup.py build",	# Search readme for this string. If found, use it as build cmd
+        'grep test': "py.test",			# Same for test command. Maybe we can pick up some extra arguments
+        'grep env': "",
+        'build' : "if [ -e setup.py ]; then python setup.py install; fi",
+        'test' : "py.test",
+        'env' : "",
+        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'reason': "primary language",
+        'success': True }
+
+    base_c_def = {
+        'build system': "make",
+        'primary lang': "C",
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build': "if [ -x configure ]; then ./configure; fi; make clean; make all",
+        'test' : "make test",
+        'env' : "",
+        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'reason': "primary language",
+        'success': True }
+
+    base_java_def = {
+        'build system': "Java",
+        'primary lang': "Java",
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -e build.gradle ]; then gradle -q; fi",
+        'test': "if [ -e pom.xml ]; then mvn test -fn > test_result.arti; elif [ -e build.xml ]; then ant test; elif [ -e build.gradle ]; then gradle -q test; fi",
+        'env' : "",
+        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'reason': "primary language",
+        'success': True }
+
+    supported_langs = [ base_python_def, base_c_def, base_java_def ]
+
+    # These definitions are added based on the presense of a specific build file.  We can
+    # simply the command line provided by the base definition and grep for project and build
+    # system specific parameters in README files.  eg. maven and MAVEN_OPTS
 
     ant_def = {
         'build system': "ant",
+        'primary lang': "Java",
         'grep build': "ant clean; ant",
         'grep test': "ant test",
         'grep env': "ANT_OPTS",
         'build': "ant",
         'test' : "ant test",
         'env' : "",
-        'artifacts': "",
+        'artifacts': "",                        # TODO: Need to specify a build artifact
         'reason': "build.xml",
         'success': True }
 
     maven_def = {
         'build system': "maven",
+        'primary lang': "Java",
         'grep build': "",
         'grep test': "",
         'grep env': "MAVEN_OPTS",
@@ -89,13 +100,14 @@ def inferBuildSteps(listing, repo):
 
     c_def = {
         'build system': "make",
+        'primary lang': "C",
         'grep build': "",
         'grep test': "make test",
         'grep env': "",
         'build': "if [ -x configure ]; then ./configure; fi; make clean; make",
         'test' : "make all",
         'env' : "",
-        'artifacts': "",
+        'artifacts': "",                        # TODO: Need to specify a build artifact
         'reason': "Makefile",
         'success': True }
 
@@ -103,6 +115,7 @@ def inferBuildSteps(listing, repo):
 
     buildsh_def = {
         'build system': "custom build script",
+        'primary lang': "",
         'grep build': "build.sh",
         'grep test': "build.sh test",
         'grep env': "",
@@ -113,18 +126,16 @@ def inferBuildSteps(listing, repo):
         'reason': "build.sh",
         'success': True }
 
-    # Push base language definition based on primary language
+    # Fix base empty definition in case it is returned
+    base_empty_def['primary lang'] = repo.language
 
-    langstack = []
-    if repo.language == 'Python':
-        langstack.insert(0, base_python_def)
-    elif repo.language == 'C':
-        langstack.insert(0, base_c_def)
-    elif repo.language == 'Java':
-        langstack.insert(0, base_java_def)
-    else:
-        base_empty_def['build system'] = repo.language
-        langstack.insert(0, base_empty_def)
+    # Push empty language definition on stack
+    langstack = [ base_empty_def ]
+
+    # Push primary language
+    for lang in supported_langs:
+        if lang['primary lang'] == repo.language:
+            langstack.insert(0, lang)
 
     # Create a stack of readme files to grep
     grepstack = []
@@ -134,7 +145,11 @@ def inferBuildSteps(listing, repo):
         return { 'success': False, 'error': "I/O error({0}): {1}".format(e.errno, e.strerror) }
     grepstack.insert(0, readmeStr)                 # may be a null pointer
 
-    # Push additional definitions based on the presense of build files
+    # Add build system specific definitions to language stack based on the presense
+    # of specific files like pom.xml.  Also, queue readme related files to grep later
+    # looking for environment variables and command lines
+    # TODO: This is just looking at files in the root directory.
+
     buildsh = None
     makefile = None
     for f in listing:
@@ -144,70 +159,68 @@ def inferBuildSteps(listing, repo):
             langstack.insert(0, ant_def)
         elif f.name == 'Makefile':
             makefile = f
-        elif f.name == 'build.sh' or f.name == 'run_build.sh':
+        elif f.name in ('build.sh', 'run_build.sh'):
             buildsh = f
-#       elif f.name == 'BUILDING.md' or f.name == 'BUILDING.txt' or
-#                      'README.maven' or f.name == 'README.ant':
-#           fstr = pygithub get file content (f.name)
-#           grepstack.insert(0, fstr)
+        elif f.name in ('BUILDING.md', 'BUILDING.txt', 'README.maven', 'README.ant'):
+            if f.type == 'file' and f.size != 0:
+                fstr = repo.get_file_contents(f.path).content.decode('base64', 'strict')
+                if fstr != "":
+                    grepstack.insert(0, fstr)
 
     # build.sh is favored, because it bridges languages, sets environment variables, ...
-    # Else if only the primary language definition is present, push Makefile as it may
-    # apply to multiple languages.  It doesn't take precedence necessarily over a pom.xml
-    # file but if one is not present we should fall back to the Makefile as it is better
-    # than nothing.  The base java definition would not work!
+    # Else if only the primary language definition is present, len(langstack) <= 2), push
+    # Makefile as it is there for a reason.  Either, the primary language definition is 'C'
+    # and we are pushing it again (no harm), or it is another language which does not
+    # ordinarily use Makefiles.  It is safe to add when the length of stack is 2.
+    # A Makefile is a better bet than a primary language definition which is generic. For
+    # example, if the build system is something other than maven, ant, or gradle.
     #
-    # On the other hand, if both pom.xml and Makefile are present, then one could argue
-    # that developers would favor makefiles as being simpler and better understood. Once
-    # we have the ability to grep a Makefile we could scan it for Java or Python to
-    # determine whether the makefile applies to multiple languages. For now, we assume
-    # that it does. Later, we can conditionally push it to the lang stack.
+    # On the other hand, if both pom.xml and Makefile are present, len(langstack) == 3,
+    # then one could argue that developers would favor makefiles as being simpler and better
+    # understood. Once we have the ability to grep a Makefile we could scan it for Java or Python
+    # to determine whether the makefile applies to multiple languages.  For now, we assume
+    # that it does.  Later, we can conditionally push it to the lang stack.  TODO: improve
+
 
     if buildsh != None:
         langstack.insert(0, buildsh_def)
-#   elif len(langstack) == 1 and makefile != None:
+#   elif len(langstack) <= 2 and makefile != None:
     elif makefile != None:
         langstack.insert(0, c_def)
 
-    delim = ["`", "'", '"', "\n"]                               # delimeters used to denote end of cmd
-
-    # For now we just process the top of stack language, but we could process the
-    # intermediate entries potentially to improve our grepping of build.sh...
+    # For now we just process the top of stack language
 
     lang = langstack.pop(0)
-
     if lang['build'] != "":
         for readmeStr in grepstack:
-            print "README: ", readmeStr
             if readmeStr != "":
+                delim = ["`", "'", '"', "\n"]                   # delimeters used to denote end of cmd
                 cmd = lang['grep test']
                 if cmd != "":
-                    print "GREP test cmd: ", cmd
+                    print "GREP test grep: ", cmd
                     strFound = buildFilesParser(readmeStr, cmd, delim)
-                    print "GREP test str: ", strFound
+                    print "GREP test outstr: ", strFound
                     if strFound != "":
                         lang['test'] = cmd                      # safe but loses extra cmd arguments possibly in strFound
 #                       lang['test'] = strFound                 # TODO: needs to be validated.  May need to be sanitized
                 cmd = lang['grep build']
                 if cmd != "":
-                    print "GREP build cmd: ", cmd
+                    print "GREP build grep: ", cmd
                     strFound = buildFilesParser(readmeStr, cmd, delim)
-                    print "GREP build str: ", strFound
+                    print "GREP build outstr: ", strFound
                     if strFound != "":
                         lang['build'] = cmd                     # safe but loses extra cmd arguments possibly in strFound
 #                       lang['build'] = strFound	        # TODO: needs to be validated.  May need to be sanitized
                 env = lang['grep env']
                 if env != "":
-                    print "GREP env cmd: ", env
+                    delim = [";", " ", "\n"]                    # delimeters used to denote end of environment variable
+                    print "GREP env grep: ", env
                     strFound = buildFilesParser(readmeStr, env, delim)
-                    print "GREP env str: ", strFound
-#                   if strFound != "":                           # TODO: debug, can we provide this separately instead of 
-#                       lang['build'] = strFound + lang['build']       # as part of the build and test command 
-#                       lang['test'] = strFound + lang['test']         # need to sanitize strFound
+                    print "GREP env outstr: ", strFound
+                    if strFound != "":
+                        lang['env'] = strFound
                 break
 
-    print "BUILD: " + lang['build']
-    print "TEST: " + lang['test']
     return lang
 
 # Build Files Parser - Looks for string searchTerm in string fileBuf and then iterates over

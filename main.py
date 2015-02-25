@@ -381,8 +381,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     # Helps automate porting environment
 
     if not build['success']:
-        errorstr = "Programming language not supported - " + build['build system']
-        print errorstr
+        errorstr = "Programming language not supported - " + build['primary lang']
         return json.jsonify(status="failure", error=errorstr)
 
     # Read template XML file
@@ -489,6 +488,10 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
 
         # Stays on the same page, after creating a new jenkins job.
         return json.jsonify(status="ok", sjobUrl=startJobUrl, hjobUrl=homeJobUrl)
+
+    # TODO : delete job and retry 
+    if r.status_code == 400:
+        return json.jsonify(status="failure", error='jenkins HTTP error job exists : ' + jobName), r.status_code
 
     return json.jsonify(status="failure", error='jenkins HTTP error '+str(r.status_code)), r.status_code
 

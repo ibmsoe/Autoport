@@ -11,7 +11,6 @@ def determineProgress ():
 
     all_jobs = xml_input_no_filter['jobs']
 
-
     success = 0
     unstable = 0
     failure = 0
@@ -21,6 +20,8 @@ def determineProgress ():
 
     for row in all_jobs:
         if   row['lastBuild'] == None:
+            progressResults[0] += 1
+        elif row['lastBuild']['result'] == None:
             progressResults[0] += 1
         elif row['lastBuild']['result'] == 'FAILURE':
             progressResults[1] += 1
