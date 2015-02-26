@@ -670,7 +670,7 @@
               <h2 class="text-center">Import</h2>
             </div>
 
-            <div class="input-group jumbotron-button-content" id="fileUploadBox" rv-show="batchState.importBox">
+            <div class="input-group jumbotron-button-content" id="fileUploadBox" rv-show="batchState.importPanel">
               <input type="text" class="form-control" placeholder="No file selected for uploading." id="uploadFilename" disabled/>
               <div class="input-group-btn">
                 <div class="btn btn-default btn-file">
@@ -692,12 +692,43 @@
 
           <div class="jumbotron">
 
-            <div class="btn btn-default btn-block" rv-on-click="batchState.listBatchFiles" id="listButton">
+            <div class="btn btn-default btn-block" rv-on-click="batchState.setListPanel">
               <h2 class="text-center">List/Select</h2>
             </div>
 
-            <div id="batchListPanel" class="panel panel-default jumbotron-button-content" rv-show="batchState.ready">
-              <table class="table" id="batchListTable">
+            <div class="jumbotron-button-content" rv-show="batchState.listPanel">
+              <div class="row">
+                <div class="col-lg-8">
+                  <input type="text"
+                      class="form-control"
+                      placeholder="Enter batch file name."
+                      id="batchFileFilter"/>
+                </div>
+                
+                <div class="col-lg-4">
+                  <a rv-on-click="batchState.listLocalBatchFiles">
+                    <button type="button" class="btn btn-primary">
+                      List local
+                    </button>
+                  </a>
+                  <a rv-on-click="batchState.listGSABatchFiles">
+                    <button type="button" class="btn btn-primary">
+                      List archived
+                    </button>
+                  </a>
+                  <a rv-on-click="batchState.listAllBatchFiles">
+                    <button type="button" class="btn btn-primary">
+                      List all
+                    </button>
+                  </a>
+                </div>
+              </div>
+
+              <br />
+
+              <!-- START LIST/SELECT TABLE -->             
+ 
+              <table class="table panel panel-default" rv-show="batchState.ready">
                 <thead>
                   <tr>
                     <th>Name</th>
@@ -707,7 +738,7 @@
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody rv-each-result="batchState.file_list">
+                <tbody rv-each-result="batchState.fileList">
                   <tr class="result-row">
                     <td>
                       { result.name }

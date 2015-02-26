@@ -167,20 +167,27 @@ var searchState = {
 
 var batchState = {
     ready: false, // Whether or not to draw the list/select batch file view
-    importBox: false,
-    file_list: [],
+    
+    importPanel: false,
+    listPanel: false,
+    
+    fileList: [],
     currentBatchFile: "",
     selectBatchFile: function (ev) {
         batchState.currentBatchFile = $(ev.target).text();
         console.log(batchState.currentBatchFile);
     },
-    listBatchFiles: function (ev) {
-        if (batchState.ready) {
-            batchState.ready = false;
-        }
-        else {
-	        $.post("/listBatchFiles", {}, listBatchFilesCallback, "json").fail(listBatchFilesCallback);
-        }
+    listLocalBatchFiles: function(ev) {
+        batchState.ready = false;
+        $.getJSON("/listBatchFiles/local", { filter: $("#batchFileFilter").val() }, listBatchFilesCallback).fail(listBatchFilesCallback);
+    },
+    listGSABatchFiles: function(ev) {
+        batchState.ready = false;
+        $.getJSON("/listBatchFiles/gsa", { filter: $("#batchFileFilter").val() }, listBatchFilesCallback).fail(listBatchFilesCallback);
+    },
+    listAllBatchFiles: function(ev) {
+        batchState.ready = false;
+        $.getJSON("/listBatchFiles/all", { filter: $("#batchFileFilter").val() }, listBatchFilesCallback).fail(listBatchFilesCallback);
     },
     upload: function (ev) {
         //Why do I need the [0] in the jQuery but not the getElementByID, those should be equivalent?
@@ -196,13 +203,16 @@ var batchState = {
             };	
         }
     },
-    build: function (ev) {
+    build: function () {
     },
     buildAndTest: function (ev, el) { 
 	    $.post("/runBatchFile", {batchName: el.result.filename}, runBatchFileCallback, "json").fail(runBatchFileCallback);
     },
-	setImportBox: function (ev) {
-        batchState.importBox = (batchState.importBox) ? false : true;
+    setListPanel: function () {
+        batchState.listPanel = (batchState.listPanel) ? false : true;
+    },
+	setImportBox: function () {
+        batchState.importPanel = (batchState.importPanel) ? false : true;
 	}
 };
 
@@ -1068,7 +1078,7 @@ function runBatchFileCallback(data) {
 
 function listBatchFilesCallback(data) {
     if(data.status === "ok") {
-        batchState.file_list = data.files;
+        batchState.fileList = data.results;
         batchState.ready = true;
     } else {
         showAlert("Error!", data);

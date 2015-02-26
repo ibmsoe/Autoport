@@ -9,11 +9,9 @@ import xml.etree.ElementTree as ET
 import requests
 import argparse
 import datetime
-import paramiko
 import os
 import re
-import tempfile
-from time import gmtime, strftime, localtime, asctime
+from time import gmtime, strftime
 from flask import Flask, request, render_template, json
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
@@ -21,25 +19,15 @@ from status import determineProgress
 from tags import getTags
 from catalog import Catalog
 from resultParser import ResultParser
-from stat import ST_SIZE, ST_MTIME
 from urlparse import urlparse
+from batch import Batch
 
 app = Flask(__name__)
 maxResults = 10
 resParser = ResultParser()
 
-# Need to put this somewhere else, but we need a global ssh_client/ftp_client so we can reuse
-# instead of openening multiple sessions
-try:
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh_client.connect(globals.hostname, username=globals.configUsername, \
-        password=globals.configPassword)
-    ftp_client = ssh_client.open_sftp()
-except IOError:
-    assert(False)
-
 catalog = Catalog(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
+batch = Batch()
 #test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
 resultPattern = re.compile('(.*?) - (.*?) - (.*?)-.*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
 
@@ -526,61 +514,13 @@ def runBatchFile ():
 
     return json.jsonify(status="ok")
 
-@app.route("/listBatchFiles", methods=["GET", "POST"])
-def listBatchFiles():
-    file_list = []
-
-    # Get local batch file info
-    for dirname, dirnames, filenames in os.walk(globals.localPathForBatchFiles):
-        for filename in sorted(filenames):
-            if filename != ".gitignore":
-                file_list.append(parseBatchBuf(globals.localPathForBatchFiles + filename, "local"))
-
-    # Get server batch file info
-    ftp_client.chdir(globals.pathForBatchFiles)
-    flist = ftp_client.listdir()
-    for filename in sorted(flist):
-        putdir = tempfile.mkdtemp(prefix="autoport_")
-        ftp_client.get(filename, putdir + "/" + filename)
-        file_list.append(parseBatchBuf(putdir + "/" + filename, "gsa"))
-
-    return json.jsonify(status="ok", files=file_list)
-
-def parseBatchBuf(filename, location):
-    st = os.stat(filename)
-    f = open(filename)
-    
-    size = st[ST_SIZE]
-    datemodified = asctime(localtime(st[ST_MTIME]))
-
-    try:
-        fileBuf = json.load(f)
-    except ValueError:
-        return {"location": "-", "owner": "-", "name": "INVALID BATCH FILE", "size": "-", \
-            "datemodified": "-", "environment": "-", "filename": "-"}
-    f.close()
-    
-    try:
-        name = fileBuf['config']['name']
-    except KeyError:
-        name = "{ MISSING NAME }"
-    try:
-        env = fileBuf['config']['java']
-    
-        if env == "ibm":
-            environment = "IBM Java"
-        else:
-            environment = "System Default"
-    except KeyError:
-        environment = "System Default"
-    
-    try:
-        owner = fileBuf['config']['owner']
-    except KeyError:
-        owner = "Anonymous"
-            
-    return {"location": location, "owner": owner, "name": name, "size": size, \
-        "datemodified": datemodified, "environment": environment, "filename": filename}
+# List available batch files
+@app.route("/listBatchFiles/<repositoryType>")
+def listBatchFiles(repositoryType):
+    filt = request.args.get("filter", "")
+    if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
+        return json.jsonify(status="failure", error="Invalid repository type"), 400
+    return json.jsonify(status="ok", results=batch.listBatchFiles(repositoryType, filt.lower()))
 
 # List all results available on catalog
 @app.route("/listTestResults/<repositoryType>")
