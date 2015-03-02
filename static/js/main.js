@@ -99,7 +99,6 @@ var percentageState = {
 var searchState = {
     single: {searchBoxReady: false,
             ready: false,
-            readyMultiResults: false,
             exportReady: false, // Whether or not to draw the export batch file view
             sorting: "relevance",
             query: "",
@@ -113,9 +112,10 @@ var searchState = {
                 var json = JSON.stringify(searchState.single.batchFile, undefined, 2);
                 var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                 window.open(data);
+                // TODO: Check return code of window.open() to determine if request was cancelled
+                searchState.single.batchFile.config = {};
+                searchState.single.batchFile.packages = [];
                 searchState.single.exportReady = false;
-                searchState.single.readyMultiResults = false;
-                searchState.single.ready = true;
             },
             setSearchBox: function (ev) {
                 searchState.single.searchBoxReady = (searchState.single.searchBoxReady) ? false : true;
@@ -141,8 +141,10 @@ var searchState = {
                   var json = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
                   var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                   window.open(data);
+                  // TODO: Check return code of window.open() to determine if request was cancelled
+                  searchState.multiple.batchFile.config = {};
+                  searchState.multiple.batchFile.packages = [];
                   searchState.multiple.exportReady = false;
-                  searchState.multiple.ready = true;
               },
               setSearchBox: function (ev) {
                   searchState.multiple.searchBoxReady = (searchState.multiple.searchBoxReady) ? false : true;
@@ -252,8 +254,6 @@ var detailState = {
         if (idName === "singleDetailBackButton") {
             detailState.ready = false;
 	    searchState.single.ready = true;
-	    searchState.single.readyMultiResults = true;
-	    // searchState.single.readyMultiResults = false;
         }
         else if (idName === "generateDetailBackButton") {
             detailState.generateReady = false;
@@ -294,8 +294,6 @@ var detailState = {
         searchState.single.exportReady = true;
         detailState.ready = false;
         detailState.autoSelected = false;
-        searchState.single.readyMultiResults = false;
-        searchState.single.ready = true;
     }
 };
 
@@ -555,7 +553,6 @@ function doSearch(autoselect) {
     searchState.single.query = $('#query').val();
     if (searchState.single.query.length > 0) {
         searchState.single.ready = false;
-        searchState.single.readyMultiResults = false;
         searchState.single.loadingState.loading = true;
         $.getJSON("/search", {
                q: searchState.single.query,
@@ -612,9 +609,11 @@ function processSearchResults(data) {
                 if (className === "singleDetailBatchButton btn btn-primary") {
                     searchState.single.batchFile.packages.push(result);
                     searchState.single.exportReady = true;
+                    searchState.single.ready = true;
                 } else {
                     searchState.multiple.batchFile.packages.push(result);
                     searchState.multiple.exportReady = true;
+                    searchState.multiple.ready = true;
                 }
             };
         });
@@ -628,7 +627,6 @@ function processSearchResults(data) {
             searchState.single.results = data.results;
             searchState.single.loadingState.loading = false;
             searchState.single.ready = true;
-            searchState.single.readyMultiResults = true;
         }
     } else if (data.type === "detail") {
         // Got single repository result, show detail page

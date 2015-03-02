@@ -180,7 +180,7 @@
               </div>
 
               <br />
-              
+
               <!-- START SINGLE SEARCH LOADING PANEL -->
 
               <div class="panel panel-default" role="alert" rv-show="searchState.single.loadingState.loading">
@@ -196,7 +196,63 @@
               </div>
 
               <!-- END SINGLE SEARCH LOADING PANEL -->
-              
+
+              <!-- START SINGLE SEARCH BATCH FILE TABLE -->
+
+              <div id="batchFilePanel" class="panel panel-default" rv-show="searchState.single.exportReady">
+                <a rv-on-click="searchState.single.download">
+                  <button type="button" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-download"></span>
+                    Export
+                  </button>
+                </a>
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Batch File Repositories</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="batchFileTable" rv-each-package="searchState.single.batchFile.packages">
+                    <tr class="result-row">
+                      <td>
+                        <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
+                        /
+                        <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
+                        <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
+                          <span class="glyphicon glyphicon-star"></span>
+                          { package.stars }
+                        </span>
+                        <span title="Fork count" class="tip label" rv-classification="package.classifications.forks">
+                          <span class="glyphicon glyphicon-random"></span>
+                          { package.forks }
+                        </span>
+                        <span title="Primary language" class="tip label" rv-classification="package.classifications.language">
+                          <span class="glyphicon glyphicon-wrench"></span>
+                          { package.language }
+                        </span>
+                        <span title="Repository size" class="tip label" rv-classification="package.classifications.size">
+                          <span class="glyphicon glyphicon-floppy-disk"></span>
+                          { package.size_kb | size }
+                        </span>
+                        <span title="Last updated" class="tip label" rv-classification="package.classifications.date">
+                          <span class="glyphicon glyphicon-calendar"></span>
+                          updated { package.last_update | date }
+                        </span>
+
+                        <br />
+
+                        <p class="candidate-description text-muted" rv-text="package.description"></p>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- END SINGLE SEARCH BATCH FILE TABLE -->
+
               <!-- START AUTOSELECT ALERT BOX -->
 
               <div class="alert alert-success autoselect-alert clearfix" rv-show="detailState.autoSelected" role="alert">
@@ -208,7 +264,7 @@
                   </button>
                 </a>
               </div>
-           
+
               <!-- END AUTOSELECT ALERT BOX -->
 
               <!-- START SINGLE SEARCH DETAIL VIEW -->
@@ -219,9 +275,9 @@
                     <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
                     /
                     <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
-                    
+ 
                     <div class="dropdown buttonRight">
-                    
+ 
                       <!-- Dropdown box for choosing what kind of java to use. -->
                       <div class="input-group-btn">
                         <button rv-show="detailState.repo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.javaType } <span class="caret"></span></button>
@@ -235,7 +291,7 @@
                         Add to Jenkins
                         <span class="caret"></span>
                       </button>
-                      
+
                       <ul class="dropdown-menu dropdown-menu-right" role="menu">
                         <li role="presentation" class="dropdown-header">Recent</li>
                         <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">Current</a></li>
@@ -302,65 +358,9 @@
 
               <!-- END SINGLE SEARCH DETAIL VIEW -->
 
-              <!-- START SINGLE SEARCH BATCH FILE TABLE -->
-
-              <div id="batchFilePanel" class="panel panel-default" rv-show="searchState.single.exportReady">
-                <a rv-on-click="searchState.single.download">
-                  <button type="button" class="btn btn-primary">
-                    <span class="glyphicon glyphicon-download"></span>
-                    Export
-                  </button>
-                </a>
-                <table class="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Batch File Repositories</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="batchFileTable" rv-each-package="searchState.single.batchFile.packages">
-                    <tr class="result-row">
-                      <td>
-                        <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
-                        /
-                        <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
-                        <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
-                          <span class="glyphicon glyphicon-star"></span>
-                          { package.stars }
-                        </span>
-                        <span title="Fork count" class="tip label" rv-classification="package.classifications.forks">
-                          <span class="glyphicon glyphicon-random"></span>
-                          { package.forks }
-                        </span>
-                        <span title="Primary language" class="tip label" rv-classification="package.classifications.language">
-                          <span class="glyphicon glyphicon-wrench"></span>
-                          { package.language }
-                        </span>
-                        <span title="Repository size" class="tip label" rv-classification="package.classifications.size">
-                          <span class="glyphicon glyphicon-floppy-disk"></span>
-                          { package.size_kb | size }
-                        </span>
-                        <span title="Last updated" class="tip label" rv-classification="package.classifications.date">
-                          <span class="glyphicon glyphicon-calendar"></span>
-                          updated { package.last_update | date }
-                        </span>
-           
-                        <br />
-
-                        <p class="candidate-description text-muted" rv-text="package.description"></p>
-                      </td>
-                      <td>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- END SINGLE SEARCH BATCH FILE TABLE -->
-
               <!-- START SINGLE SEARCH MULTIPLE RESULTS TABLE -->
 
-              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.single.readyMultiResults">
+              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.single.ready">
                 <table class="table table-hover">
                   <thead>
                     <tr>
@@ -424,7 +424,7 @@
 
             </div>
           </div> <!-- jumbotron -->
-          
+
           <!-- END SINGLE SEARCH PROJECT BOX -->
 
           <!-- START SEARCH FOR MULTIPLE PROJECTS BOX -->
@@ -488,8 +488,8 @@
                 <div class="col-lg-3">
                   <button class="btn btn-primary" rv-on-click="searchState.multiple.query.generate">Search</button>
                 </div>
-              </div>              
-              
+              </div>
+ 
               <br />
               
               <!-- START MULTI PROJECT SEARCH LOADING PANEL -->
@@ -563,7 +563,7 @@
               </div>
 
               <!-- END MULTI PROJECT SEARCH BATCH FILE TABLE -->
-              
+
               <!-- START MULTI PROJECT SEARCH DETAIL VIEW -->
 
               <div id="generateDetailPanel" class="panel panel-default" rv-show="detailState.generateReady">
@@ -574,7 +574,7 @@
                     <a title="Repository" class="result-title" rv-href="detailState.generateRepo.url" rv-text="detailState.generateRepo.name"></a>
 
                     <div class="dropdown buttonRight">
-                    
+
                       <!-- Dropdown box for choosing what kind of java to use. -->
                       <div class="input-group-btn">
                         <button rv-show="detailState.generateRepo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.generateJavaType } <span class="caret"></span></button>
@@ -583,12 +583,12 @@
                           <li rv-on-click="detailState.selectGenerateJavaType"><a>IBM Java</a></li>
                         </ul>
                       </div>
-                    
+
                       <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
                         Add to Jenkins
                         <span class="caret"></span>
                       </button>
-                      
+ 
                       <ul class="dropdown-menu dropdown-menu-right" role="menu">
                         <li role="presentation" class="dropdown-header">Recent</li>
                         <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.generateRepo.addToJenkins">Current</a></li>
@@ -647,7 +647,7 @@
               </div>
 
               <!-- END MULTI PROJECT SEARCH DETAIL VIEW -->
-    
+ 
               <!-- START MULTI PROJECT SEARCH MULTIPLE RESULTS TABLE -->
 
               <div id="resultsPanel" class="panel panel-default" rv-show="searchState.multiple.ready">
