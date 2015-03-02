@@ -383,8 +383,6 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
     xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
     xml_artifacts = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
-    xml_catalog_remote = root.find("./publishers/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerPublisher/entries/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerEntry/remote")
-    xml_catalog_source = root.find("./publishers/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerPublisher/entries/org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerEntry/includes")
     xml_node = root.find("./assignedNode")
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
@@ -401,14 +399,14 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     xml_github_url.text = repo.html_url
     xml_git_url.text = "https" + repo.git_url[3:]
 
-    jobName = globals.jobNamePrefix + ' - ' + archName + ' - ' + repo.name
+    jobName = globals.jobNamePrefix + '_' + archName + '_' + repo.name
 
     if (tag == "") or (tag == "Current"):
         xml_default_branch.text = "*/" + repo.default_branch
-        jobName += "-current"
+        jobName += "_current"
     else:
         xml_default_branch.text = "tags/" + tag
-        jobName += "-" + tag
+        jobName += "_" + tag
 
     # Time job is created
     time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -426,9 +424,6 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     path_env = "PATH=" + globals.mavenPath + ":$PATH\n"
     xml_env_command.text += path_env
     xml_artifacts.text = build['artifacts']
-
-    xml_catalog_remote.text = globals.localPathForTestResults + jobFolder
-    xml_catalog_source.text = build['artifacts']
 
     # Job metadata as passed to jenkins
     jobMetadataName = "meta.arti"

@@ -285,7 +285,6 @@ var reportState = {
     projectFilter: "",
     batchFilter: "",
     listLocalProjects: function(ev) {
-        //TODO - add loading bar
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
         
@@ -295,7 +294,6 @@ var reportState = {
         $("#resultArchiveBtn").show();
     },
     listGSAProjects: function(ev) {
-        //TODO - add loading bar
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
         
@@ -305,7 +303,6 @@ var reportState = {
         $("#resultArchiveBtn").hide();
     },
     listAllProjects: function(ev) {
-        //TODO - add loading bar
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
         

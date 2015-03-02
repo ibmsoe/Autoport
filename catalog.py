@@ -47,8 +47,7 @@ class Catalog:
     def listLocalJobResults(self, filt):
         filteredList = []
         try:
-            self.__jenkinsFtpClient.chdir(self.__localPath)
-            fullList = self.__jenkinsFtpClient.listdir()
+            fullList = os.listdir(self.__localPath)
             filteredList = []
             for item in fullList:
                 if filt in item.lower() or filt == "":
