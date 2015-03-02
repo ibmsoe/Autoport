@@ -21,6 +21,7 @@ def inferBuildSteps(listing, repo):
         'env' : "",
         'artifacts': "",
         'reason': "primary language unknown",
+        'error': "primary language unknown",
         'success': False }
 
     # These are the base lang definitions. They should cover the top two or three build
@@ -38,6 +39,7 @@ def inferBuildSteps(listing, repo):
         'env' : "",
         'artifacts': "",                        # TODO: Need to specify a build artifact
         'reason': "primary language",
+        'error': "",
         'success': True }
 
     base_c_def = {
@@ -51,6 +53,7 @@ def inferBuildSteps(listing, repo):
         'env' : "",
         'artifacts': "",                        # TODO: Need to specify a build artifact
         'reason': "primary language",
+        'error': "",
         'success': True }
 
     base_java_def = {
@@ -64,6 +67,7 @@ def inferBuildSteps(listing, repo):
         'env' : "",
         'artifacts': "",                        # TODO: Need to specify a build artifact
         'reason': "primary language",
+        'error': "",
         'success': True }
 
     supported_langs = [ base_python_def, base_c_def, base_java_def ]
@@ -83,6 +87,7 @@ def inferBuildSteps(listing, repo):
         'env' : "",
         'artifacts': "",                        # TODO: Need to specify a build artifact
         'reason': "build.xml",
+        'error': "",
         'success': True }
 
     maven_def = {
@@ -96,6 +101,7 @@ def inferBuildSteps(listing, repo):
         'env' : "",
         'artifacts': "*.arti",
         'reason': "pom.xml",
+        'error': "",
         'success': True }
 
     c_def = {
@@ -109,6 +115,7 @@ def inferBuildSteps(listing, repo):
         'env' : "",
         'artifacts': "",                        # TODO: Need to specify a build artifact
         'reason': "Makefile",
+        'error': "",
         'success': True }
 
     # This is most favored definition and is added to top of stack
@@ -124,6 +131,7 @@ def inferBuildSteps(listing, repo):
         'env' : "",
         'artifacts': "",
         'reason': "build.sh",
+        'error': "",
         'success': True }
 
     # Fix base empty definition in case it is returned

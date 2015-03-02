@@ -199,8 +199,9 @@ def detail(id, repo=None):
 
     # Look for certain files to figure out how to build
     build = inferBuildSteps(globals.cache.getDir(repo), repo) # buildAnalyzer.py
-    if not build['success']:
-        return json.jsonify(status="failure", error=build['error']), 500
+
+    # Ignore errors related to build commands.  Need to show detailed project info
+
     # Collect data
 
     # Get tag-related data
