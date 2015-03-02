@@ -32,17 +32,17 @@ var globalState = {
     },
 
     headerChange: function(ev) {
-        if(ev.target.id === "searchTab") {
+        if (ev.target.id === "searchTab") {
             globalState.isSearchTabActive = true;
             globalState.isBatchTabActive = false;
             globalState.isReportsTabActive = false;
         }
-        else if(ev.target.id === "batchTab") {
+        else if (ev.target.id === "batchTab") {
             globalState.isSearchTabActive = false;
             globalState.isBatchTabActive = true;
             globalState.isReportsTabActive = false;
         }
-        else if(ev.target.id === "reportsTab") {
+        else if (ev.target.id === "reportsTab") {
             globalState.isSearchTabActive = false;
             globalState.isBatchTabActive = false;
             globalState.isReportsTabActive = true;
@@ -99,16 +99,31 @@ var percentageState = {
 var searchState = {
     single: {searchBoxReady: false,
             ready: false,
+            readyMultiResults: false,
+            exportReady: false, // Whether or not to draw the export batch file view
             sorting: "relevance",
             query: "",
             results: {},
-	        setSearchBox: function (ev) {
+            batchFile: {
+                config:   {},
+                packages: []
+            },
+            download: function (ev) {
+                console.log("download");
+                var json = JSON.stringify(searchState.single.batchFile, undefined, 2);
+                var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
+                window.open(data);
+                searchState.single.exportReady = false;
+                searchState.single.readyMultiResults = false;
+                searchState.single.ready = true;
+            },
+            setSearchBox: function (ev) {
                 searchState.single.searchBoxReady = (searchState.single.searchBoxReady) ? false : true;
-	        },
-	        changeSort: function (ev) { // Called upon changing sort type
-		        searchState.single.sorting = $(ev.target).text().toLowerCase();
-		        doSearch();
-	        },
+            },
+            changeSort: function (ev) { // Called upon changing sort type
+                searchState.single.sorting = $(ev.target).text().toLowerCase();
+                doSearch();
+            },
             loadingState: {
                 loading: false 
             }
@@ -126,10 +141,12 @@ var searchState = {
                   var json = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
                   var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                   window.open(data);
+                  searchState.multiple.exportReady = false;
+                  searchState.multiple.ready = true;
               },
-	          setSearchBox: function (ev) {
+              setSearchBox: function (ev) {
                   searchState.multiple.searchBoxReady = (searchState.multiple.searchBoxReady) ? false : true;
-	          },
+              },
               query: {
                   limit:    25,
                   sort:     "stars",
@@ -150,12 +167,12 @@ var searchState = {
                           // AutoPort parameters
                           limit:   searchState.multiple.query.limit,
                           version: searchState.multiple.query.version,
-                          panel: "generate"
+                          panel:   "generate"
                       };
 
                       console.log(data);
-		              searchState.multiple.ready = false;
-		              searchState.multiple.loadingState.loading = true;
+                      searchState.multiple.ready = false;
+                      searchState.multiple.loadingState.loading = true;
                       $.getJSON("/search/repositories", data, processSearchResults).fail(processSearchResults);
                   }
               },
@@ -206,70 +223,80 @@ var batchState = {
     build: function () {
     },
     buildAndTest: function (ev, el) { 
-	    $.post("/runBatchFile", {batchName: el.result.filename}, runBatchFileCallback, "json").fail(runBatchFileCallback);
+        $.post("/runBatchFile", {batchName: el.result.filename}, runBatchFileCallback, "json").fail(runBatchFileCallback);
     },
     setListPanel: function () {
         batchState.listPanel = (batchState.listPanel) ? false : true;
     },
-	setImportBox: function () {
+    setImportBox: function () {
         batchState.importPanel = (batchState.importPanel) ? false : true;
-	}
+    }
 };
 
 // Contains state of detail view
 var detailState = {
-	ready: false,
+    ready: false,
     generateReady: false,
-	repo: null, // Repo data
+    repo: null, // Repo data
     generateRepo: null,
-	autoSelected: false, // Was this repository autoselected from search query?
-	pie: null, // Pie chart
+    autoSelected: false, // Was this repository autoselected from search query?
+    pie: null, // Pie chart
     generatePie: null,
     //TODO - split single and generate out, this repetition is bad
-	javaType: "Open JDK", // Open JDK or IBM Java
+    javaType: "Open JDK", // Open JDK or IBM Java
     generateJavaType: "Open JDK",
     javaTypeOptions: "",
     generateJavaTypeOptions: "",
-	backToResults: function(ev) {
+    backToResults: function(ev) {
         var idName = ev.target.id;
-		if(idName === "singleDetailBackButton") {
+        if (idName === "singleDetailBackButton") {
             detailState.ready = false;
-		    searchState.single.ready = true;
+	    searchState.single.ready = true;
+	    searchState.single.readyMultiResults = true;
+	    // searchState.single.readyMultiResults = false;
         }
-        else if(idName === "generateDetailBackButton") {
+        else if (idName === "generateDetailBackButton") {
             detailState.generateReady = false;
-		    searchState.multiple.ready = true;
+	    searchState.multiple.ready = true;
         }
-	},
-	exitAutoSelect: function() {
+    },
+    exitAutoSelect: function() {
         detailState.ready = false;
         detailState.autoSelected = false;
-		doSearch(false);
-	},
-	// When the radio button is pressed update the server environment data
-	selectJavaType:	function(ev) {
-		var selection = $(ev.target).text().toLowerCase();
-    	if(selection === "open jdk") {
+        doSearch(false);
+    },
+    // When the radio button is pressed update the server environment data
+    selectJavaType: function(ev) {
+        var selection = $(ev.target).text().toLowerCase();
+        if (selection === "open jdk") {
             detailState.javaType = "Open JDK";
-    		detailState.javaTypeOptions = "";
+            detailState.javaTypeOptions = "";
     	}
-    	else if(selection === "ibm java") {
+    	else if (selection === "ibm java") {
             detailState.javaType = "IBM Java";
-    		detailState.javaTypeOptions = "JAVA_HOME=/opt/ibm/java";
+            detailState.javaTypeOptions = "JAVA_HOME=/opt/ibm/java";
     	}
-	},
+    },
     // TODO - this is bad, this will be changed
-	selectGenerateJavaType:	function(ev) {
-		var selection = $(ev.target).text().toLowerCase();
-    	if(selection === "open jdk") {
+    selectGenerateJavaType: function(ev) {
+        var selection = $(ev.target).text().toLowerCase();
+    	if (selection === "open jdk") {
             detailState.generateJavaType = "Open JDK";
-    		detailState.generateJavaTypeOptions = "";
+            detailState.generateJavaTypeOptions = "";
     	}
-    	else if(selection === "ibm java") {
+    	else if (selection === "ibm java") {
             detailState.generateJavaType = "IBM Java";
-    		detailState.generateJavaTypeOptions = "JAVA_HOME=/opt/ibm/java";
+            detailState.generateJavaTypeOptions = "JAVA_HOME=/opt/ibm/java";
     	}
-	}
+    },
+    addToBatchFile: function(ev) {
+        searchState.single.batchFile.packages.push(detailState.repo);
+        searchState.single.exportReady = true;
+        detailState.ready = false;
+        detailState.autoSelected = false;
+        searchState.single.readyMultiResults = false;
+        searchState.single.ready = true;
+    }
 };
 
 var reportState = {
@@ -320,12 +347,12 @@ var reportState = {
     },
     listAllBatch: function(ev) {
     },
-	setJobManagePanel: function(ev) {
+    setJobManagePanel: function(ev) {
         reportState.jobManagePanel = (reportState.jobManagePanel) ? false : true;
-	},
-	setTestResultsPanel: function(ev) {
+    },
+    setTestResultsPanel: function(ev) {
         reportState.testResultsPanel = (reportState.testResultsPanel) ? false : true;
-	}
+    }
 };
 
 var jenkinsState = {
@@ -521,19 +548,20 @@ rivets.bind($('#toolContainer'), {
 
 // Does the above and makes a search query
 function doSearch(autoselect) {
-	if(typeof(autoselect)==='undefined') autoselect = true;
-	if(typeof(autoselect)!=='boolean') autoselect = true;
+    if (typeof(autoselect)==='undefined') autoselect = true;
+    if (typeof(autoselect)!=='boolean') autoselect = true;
 	
-	// Do not switch to loading state if query is empty
-	searchState.single.query = $('#query').val();
-	if(searchState.single.query.length > 0) {
-		searchState.single.ready = false;
-		searchState.single.loadingState.loading = true;
-		$.getJSON("/search", {
-			q: searchState.single.query,
-			sort: searchState.single.sorting,
-			auto: autoselect,
-            panel: "single"
+    // Do not switch to loading state if query is empty
+    searchState.single.query = $('#query').val();
+    if (searchState.single.query.length > 0) {
+        searchState.single.ready = false;
+        searchState.single.readyMultiResults = false;
+        searchState.single.loadingState.loading = true;
+        $.getJSON("/search", {
+               q: searchState.single.query,
+            sort: searchState.single.sorting,
+            auto: autoselect,
+           panel: "single"
 		}, processSearchResults).fail(processSearchResults);
 	}
 }
@@ -556,49 +584,57 @@ function showAlert(message, data) {
     $("#errorAlert").modal();
 }
 
-// Callback for when we recieve data from a search query request
+// Callback for when we receive data from a search query request
 function processSearchResults(data) {
-	if(data.status !== "ok") {
+    if (data.status !== "ok") {
         showAlert("Bad response from /search!", data);
-	} else if (data.type === "multiple") {
-		// Got multiple results
-		// Add select function to each result
-		data.results.forEach(function(result) {
-			// Show detail view for repo upon selection
-			result.select = function (ev) {
+    } else if (data.type === "multiple") {
+
+        // Got multiple results
+        // Add select function to each result
+        data.results.forEach(function(result) {
+            // Show detail view for repo upon selection
+            result.select = function (ev) {
                 var className = $(ev.target).attr('class');
-                if(className === "generateDetailButton btn btn-primary") {
-				    $.getJSON("/detail/" + result.id, {panel: "generate"}, showDetail).fail(showDetail);
+                if (className === "generateDetailButton btn btn-primary") {
+                    $.getJSON("/detail/" + result.id, {panel: "generate"}, showDetail).fail(showDetail);
                     searchState.multiple.ready = false;
-		            searchState.multiple.loadingState.loading = true;
+                    searchState.multiple.loadingState.loading = true;
                 }
-                else if(className === "singleDetailButton btn btn-primary") {
-				    $.getJSON("/detail/" + result.id, {panel: "single"}, showDetail).fail(showDetail);
+                else if (className === "singleDetailButton btn btn-primary") {
+                    $.getJSON("/detail/" + result.id, {panel: "single"}, showDetail).fail(showDetail);
                     searchState.single.ready = false;
-		            searchState.single.loadingState.loading = true;
+                    searchState.single.loadingState.loading = true;
                 }
-			};
-			result.addToBatchFile = function () {
-				searchState.multiple.batchFile.packages.push(result);
-				searchState.multiple.exportReady = true;
-			};
-		});
-		detailState.autoSelected = false;
-        if(data.panel === "generate") {
-		    searchState.multiple.results = data.results;
-		    searchState.multiple.loadingState.loading = false;
-		    searchState.multiple.ready = true;
+            };
+            result.addToBatchFile = function (ev) {
+                var className = $(ev.target).attr('class');
+                if (className === "singleDetailBatchButton btn btn-primary") {
+                    searchState.single.batchFile.packages.push(result);
+                    searchState.single.exportReady = true;
+                } else {
+                    searchState.multiple.batchFile.packages.push(result);
+                    searchState.multiple.exportReady = true;
+                }
+            };
+        });
+
+        if (data.panel === "generate") {
+            searchState.multiple.results = data.results;
+            searchState.multiple.loadingState.loading = false;
+            searchState.multiple.ready = true;
         }
-        else if(data.panel === "single") {
-		    searchState.single.results = data.results;
-		    searchState.single.loadingState.loading = false;
-		    searchState.single.ready = true;
+        else if (data.panel === "single") {
+            searchState.single.results = data.results;
+            searchState.single.loadingState.loading = false;
+            searchState.single.ready = true;
+            searchState.single.readyMultiResults = true;
         }
-	} else if (data.type === "detail") {
-		// Got single repository result, show detail page
-		detailState.autoSelected = true;
-		showDetail(data);
-	}
+    } else if (data.type === "detail") {
+        // Got single repository result, show detail page
+        detailState.autoSelected = true;
+        showDetail(data);
+    }
 }
 
 // Updates percentages by polling a tab on the jenkins page
@@ -992,46 +1028,42 @@ function archiveCallback(data) {
 // Sets up and opens detail view for a repo
 // TODO - add check boxes for architectures wanted
 function showDetail(data) {
-	if(data.status !== "ok" || data.type !== "detail") {
-		showAlert("Bad response while creating detail view!", data);
-	} else {
-        if(data.panel === "single") {
-		    detailState.repo = data.repo;
-		    detailState.repo.addToJenkins = function(e) {
-			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-			    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-		    };
-		    searchState.single.loadingState.loading = false;
-		    detailState.ready = true;
-		    // Make chart
-		    var ctx = $("#langChart").get(0).getContext("2d");
-		    if(detailState.pie !== null) {
-			    detailState.pie.destroy();
-		    }
-		    detailState.pie = new Chart(ctx).Pie(detailState.repo.languages, {
-			    segmentShowStroke: false
-		    });
-		    legend(document.getElementById('langLegend'), detailState.repo.languages);
+    if (data.status !== "ok" || data.type !== "detail") {
+        showAlert("Bad response while creating detail view!", data);
+    } else {
+        if (data.panel === "single") {
+            detailState.repo = data.repo;
+            detailState.repo.addToJenkins = function(e) {
+                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+            };
+            searchState.single.loadingState.loading = false;
+            detailState.ready = true;
+            // Make chart
+            var ctx = $("#langChart").get(0).getContext("2d");
+            if (detailState.pie !== null) {
+                detailState.pie.destroy();
+            }
+            detailState.pie = new Chart(ctx).Pie(detailState.repo.languages, { segmentShowStroke: false });
+            legend(document.getElementById('langLegend'), detailState.repo.languages);
         }
         else if(data.panel === "generate") {
-		    detailState.generateRepo = data.repo;
-		    detailState.generateRepo.addToJenkins = function(e) {
-			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-			    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-		    };
-		    searchState.multiple.loadingState.loading = false;
-		    detailState.generateReady = true;
-		    // Make chart
-		    var ctx = $("#generateLangChart").get(0).getContext("2d");
-		    if(detailState.generatePie !== null) {
-			    detailState.generatePie.destroy();
-		    }
-		    detailState.generatePie = new Chart(ctx).Pie(detailState.generateRepo.languages, {
-			    segmentShowStroke: false
-		    });
-		    legend(document.getElementById('generateLangLegend'), detailState.generateRepo.languages);
+            detailState.generateRepo = data.repo;
+            detailState.generateRepo.addToJenkins = function(e) {
+                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+            };
+            searchState.multiple.loadingState.loading = false;
+            detailState.generateReady = true;
+            // Make chart
+            var ctx = $("#generateLangChart").get(0).getContext("2d");
+            if (detailState.generatePie !== null) {
+                detailState.generatePie.destroy();
+            }
+            detailState.generatePie = new Chart(ctx).Pie(detailState.generateRepo.languages, { segmentShowStroke: false });
+            legend(document.getElementById('generateLangLegend'), detailState.generateRepo.languages);
         }
-	}
+    }
 }
 
 // assign variables in global state
@@ -1060,9 +1092,9 @@ function initCallback(data) {
 }
 
 function settingsCallback(data) {
-	if (data.status != "ok") {
-		showAlert("Bad response from /settings!", data);
-	}
+    if (data.status != "ok") {
+        showAlert("Bad response from /settings!", data);
+    }
 }
 
 function uploadBatchFileCallback(data) {
@@ -1087,13 +1119,13 @@ function listBatchFilesCallback(data) {
 
 function addToJenkinsCallback(data) {
     // TODO - need to take in a list of sjobUrls and hjobUrls and then iterate over the list
-	if(data.status === "ok") {
-		// Open new windows with the jobs' home pages
-		window.open(data.hjobUrl,'_blank');
+    if (data.status === "ok") {
+        // Open new windows with the jobs' home pages
+        window.open(data.hjobUrl,'_blank');
         percentageState.updateProgressBar();
-	} else {
-		showAlert("Bad response from /createJob!", data);
-	}
+    } else {
+        showAlert("Bad response from /createJob!", data);
+    }
 }
 
 $(document).ready(function() {

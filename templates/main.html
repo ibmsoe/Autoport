@@ -158,7 +158,7 @@
 
         <div id="searchProject" class="tab-pane fade in active">
 
-          <!-- START SEARCH PROJECT BOX -->
+          <!-- START SINGLE SEARCH PROJECT BOX -->
 
           <div class="jumbotron">
             <div class="btn btn-default btn-block" rv-on-click="searchState.single.setSearchBox" id="singleSearchButton">
@@ -181,7 +181,7 @@
 
               <br />
               
-              <!-- START LOADING PANEL -->
+              <!-- START SINGLE SEARCH LOADING PANEL -->
 
               <div class="panel panel-default" role="alert" rv-show="searchState.single.loadingState.loading">
                 <div class="panel-body">
@@ -195,7 +195,7 @@
                 </div>
               </div>
 
-              <!-- END LOADING PANEL -->
+              <!-- END SINGLE SEARCH LOADING PANEL -->
               
               <!-- START AUTOSELECT ALERT BOX -->
 
@@ -211,7 +211,7 @@
            
               <!-- END AUTOSELECT ALERT BOX -->
 
-              <!-- START DETAIL VIEW -->
+              <!-- START SINGLE SEARCH DETAIL VIEW -->
 
               <div id="singleDetailPanel" class="panel panel-default" rv-show="detailState.ready">
                 <div class="panel-body">
@@ -244,6 +244,13 @@
                         <li role="presentation" class="dropdown-header">Older</li>
                         <li role="presentation" rv-each-tag="detailState.repo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ tag }</a></li>
                       </ul>
+
+                      <a rv-on-click="detailState.addToBatchFile">
+                        <button type="button" class="singleDetailBatchButton btn btn-primary">
+                          <span class="glyphicon glyphicon-plus"></span>
+                          Add to Batch
+                        </button>
+                      </a>
                     </div>
                   </h1>
 
@@ -293,11 +300,67 @@
                 </div>
               </div>
 
-              <!-- END DETAIL VIEW -->
+              <!-- END SINGLE SEARCH DETAIL VIEW -->
 
-              <!-- START MULTIPLE RESULTS TABLE -->
+              <!-- START SINGLE SEARCH BATCH FILE TABLE -->
 
-              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.single.ready">
+              <div id="batchFilePanel" class="panel panel-default" rv-show="searchState.single.exportReady">
+                <a rv-on-click="searchState.single.download">
+                  <button type="button" class="btn btn-primary">
+                    <span class="glyphicon glyphicon-download"></span>
+                    Export
+                  </button>
+                </a>
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Batch File Repositories</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody id="batchFileTable" rv-each-package="searchState.single.batchFile.packages">
+                    <tr class="result-row">
+                      <td>
+                        <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
+                        /
+                        <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
+                        <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
+                          <span class="glyphicon glyphicon-star"></span>
+                          { package.stars }
+                        </span>
+                        <span title="Fork count" class="tip label" rv-classification="package.classifications.forks">
+                          <span class="glyphicon glyphicon-random"></span>
+                          { package.forks }
+                        </span>
+                        <span title="Primary language" class="tip label" rv-classification="package.classifications.language">
+                          <span class="glyphicon glyphicon-wrench"></span>
+                          { package.language }
+                        </span>
+                        <span title="Repository size" class="tip label" rv-classification="package.classifications.size">
+                          <span class="glyphicon glyphicon-floppy-disk"></span>
+                          { package.size_kb | size }
+                        </span>
+                        <span title="Last updated" class="tip label" rv-classification="package.classifications.date">
+                          <span class="glyphicon glyphicon-calendar"></span>
+                          updated { package.last_update | date }
+                        </span>
+           
+                        <br />
+
+                        <p class="candidate-description text-muted" rv-text="package.description"></p>
+                      </td>
+                      <td>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- END SINGLE SEARCH BATCH FILE TABLE -->
+
+              <!-- START SINGLE SEARCH MULTIPLE RESULTS TABLE -->
+
+              <div id="resultsPanel" class="panel panel-default" rv-show="searchState.single.readyMultiResults">
                 <table class="table table-hover">
                   <thead>
                     <tr>
@@ -338,7 +401,7 @@
                       </td>
                       <td>
                         <a rv-on-click="result.addToBatchFile">
-                          <button type="button" class="btn btn-primary">
+                          <button type="button" class="singleDetailBatchButton btn btn-primary">
                             <span class="glyphicon glyphicon-plus"></span>
                             Add to Batch
                           </button>
@@ -357,12 +420,12 @@
                 </table>
               </div>
 
-              <!-- END MULTIPLE RESULTS TABLE -->
+              <!-- END SINGLE SEARCH MULTIPLE RESULTS TABLE -->
 
             </div>
           </div> <!-- jumbotron -->
           
-          <!-- END SEARCH PROJECT BOX -->
+          <!-- END SINGLE SEARCH PROJECT BOX -->
 
           <!-- START SEARCH FOR MULTIPLE PROJECTS BOX -->
 
@@ -429,7 +492,7 @@
               
               <br />
               
-              <!-- START LOADING PANEL -->
+              <!-- START MULTI PROJECT SEARCH LOADING PANEL -->
 
               <div class="panel panel-default" role="alert" rv-show="searchState.multiple.loadingState.loading">
                 <div class="panel-body">
@@ -443,9 +506,9 @@
                 </div>
               </div>
 
-              <!-- END LOADING PANEL -->
+              <!-- END MULTI PROJECT SEARCH LOADING PANEL -->
 
-              <!-- START BATCH FILE TABLE -->
+              <!-- START MULTI PROJECT SEARCH BATCH FILE TABLE -->
 
               <div id="batchFilePanel" class="panel panel-default" rv-show="searchState.multiple.exportReady">
                 <a rv-on-click="searchState.multiple.download">
@@ -499,9 +562,9 @@
                 </table>
               </div>
 
-              <!-- END BATCH FILE TABLE -->
+              <!-- END MULTI PROJECT SEARCH BATCH FILE TABLE -->
               
-              <!-- START DETAIL VIEW -->
+              <!-- START MULTI PROJECT SEARCH DETAIL VIEW -->
 
               <div id="generateDetailPanel" class="panel panel-default" rv-show="detailState.generateReady">
                 <div class="panel-body">
@@ -583,9 +646,9 @@
                 </div>
               </div>
 
-              <!-- END DETAIL VIEW -->
+              <!-- END MULTI PROJECT SEARCH DETAIL VIEW -->
     
-              <!-- START MULTIPLE RESULTS TABLE -->
+              <!-- START MULTI PROJECT SEARCH MULTIPLE RESULTS TABLE -->
 
               <div id="resultsPanel" class="panel panel-default" rv-show="searchState.multiple.ready">
                 <table class="table table-hover">
@@ -628,7 +691,7 @@
                       </td>
                       <td>
                         <a rv-on-click="result.addToBatchFile">
-                          <button type="button" class="btn btn-primary">
+                          <button type="button" class="multiProjectBatch btn btn-primary">
                             <span class="glyphicon glyphicon-plus"></span>
                             Add to Batch
                           </button>
@@ -647,7 +710,7 @@
                 </table>
               </div>
 
-              <!-- END MULTIPLE RESULTS TABLE -->
+              <!-- END MULTI PROJECT SEARCH MULTIPLE RESULTS TABLE -->
 
             </div>
           </div> <!-- jumbotron -->
