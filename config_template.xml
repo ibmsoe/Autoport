@@ -86,22 +86,7 @@
       <onlyIfSuccessful>true</onlyIfSuccessful>
       <defaultExcludes>true</defaultExcludes>
     </hudson.tasks.ArtifactArchiver>
-    <org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerPublisher plugin="artifactdeployer@0.32">
-      <entries>
-        <org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerEntry>
-          <includes>*.arti</includes>
-          <basedir></basedir>
-          <excludes></excludes>
-          <remote></remote>
-          <flatten>false</flatten>
-          <deleteRemote>false</deleteRemote>
-          <deleteRemoteArtifacts>false</deleteRemoteArtifacts>
-          <deleteRemoteArtifactsByScript>false</deleteRemoteArtifactsByScript>
-          <failNoFilesDeploy>false</failNoFilesDeploy>
-        </org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerEntry>
-      </entries>
-      <deployEvenBuildFail>false</deployEvenBuildFail>
-    </org.jenkinsci.plugins.artifactdeployer.ArtifactDeployerPublisher>  </publishers>
+  </publishers>
   <buildWrappers>
     <EnvInjectBuildWrapper plugin="envinject@1.89">
       <info>
