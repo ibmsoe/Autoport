@@ -56,6 +56,34 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
+    base_php_def = {
+        'build system': "PHP",
+        'primary lang': "PHP",
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build' : "if [ -e composer.json ]; then curl -sS https://getcomposer.org/installer | php; php composer.phar install; fi",
+        'test' : "",
+        'env' : "",
+        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'reason': "primary language",
+        'error': "",
+        'success': True }
+
+    base_perl_def = {
+        'build system': "Perl",
+         'primary lang': "Perl",
+         'grep build': "",
+         'grep test': "",
+         'grep env': "",
+         'build': "if [ -e Makefile.PL ]; then perl Makefile.PL; fi; make ; make install",
+         'test' : "make test",
+         'env' : "",
+         'artifacts': "",                        # TODO: Need to specify a build artifact
+         'reason': "primary language",
+         'error': "",
+         'success': True }
+
     base_c_def = {
         'build system': "make",
         'primary lang': "C",
@@ -84,7 +112,7 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    supported_langs = [ base_python_def, base_ruby_def, base_c_def, base_java_def ]
+    supported_langs = [ base_python_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_java_def ]
 
     # These definitions are added based on the presense of a specific build file.  We can
     # simply the command line provided by the base definition and grep for project and build
@@ -219,26 +247,20 @@ def inferBuildSteps(listing, repo):
                 delim = ["`", "'", '"', "\n"]                   # delimeters used to denote end of cmd
                 cmd = lang['grep test']
                 if cmd != "":
-                    print "GREP test grep: ", cmd
                     strFound = buildFilesParser(readmeStr, cmd, delim)
-                    print "GREP test outstr: ", strFound
                     if strFound != "":
                         lang['test'] = cmd                      # safe but loses extra cmd arguments possibly in strFound
 #                       lang['test'] = strFound                 # TODO: needs to be validated.  May need to be sanitized
                 cmd = lang['grep build']
                 if cmd != "":
-                    print "GREP build grep: ", cmd
                     strFound = buildFilesParser(readmeStr, cmd, delim)
-                    print "GREP build outstr: ", strFound
                     if strFound != "":
                         lang['build'] = cmd                     # safe but loses extra cmd arguments possibly in strFound
 #                       lang['build'] = strFound	        # TODO: needs to be validated.  May need to be sanitized
                 env = lang['grep env']
                 if env != "":
                     delim = [";", " ", "\n"]                    # delimeters used to denote end of environment variable
-                    print "GREP env grep: ", env
                     strFound = buildFilesParser(readmeStr, env, delim)
-                    print "GREP env outstr: ", strFound
                     if strFound != "":
                         lang['env'] = strFound
                 break
@@ -253,8 +275,11 @@ def buildFilesParser(fileBuf, searchTerm, delimeter):
     lenFileBuf = len(fileBuf)
 
     # Search the fileBuf for searchTerm
-    i = fileBuf.find(searchTerm)
- 
+    try:
+        i = fileBuf.find(searchTerm)
+    except UnicodeDecodeError:
+        return ""
+
     if i != -1:
         smallestIndex = lenFileBuf # this is one bigger than the biggest index, acts as infinity
         # If searchTerm found find the smallest index delimeter

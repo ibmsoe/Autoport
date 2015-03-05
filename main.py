@@ -11,7 +11,10 @@ import argparse
 import datetime
 import os
 import re
-from time import gmtime, strftime
+import threading
+import paramiko
+from threadpool import makeRequests
+from time import gmtime, strftime, sleep
 from flask import Flask, request, render_template, json
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
@@ -201,7 +204,7 @@ def detail(id, repo=None):
     build = inferBuildSteps(globals.cache.getDir(repo), repo) # buildAnalyzer.py
 
     # Ignore errors related to build commands.  Need to show detailed project info
-
+    
     # Collect data
 
     # Get tag-related data
@@ -470,6 +473,10 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
 
+        # Split off a thread to query for build completion and move artifacts to local machine
+        threadRequests = makeRequests(moveArtifacts, (jobName, ))
+        [globals.threadPool.putRequest(req) for req in threadRequests]
+
         # Stays on the same page, after creating a new jenkins job.
         return json.jsonify(status="ok", sjobUrl=startJobUrl, hjobUrl=homeJobUrl)
 
@@ -478,6 +485,67 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         return json.jsonify(status="failure", error='jenkins HTTP error job exists : ' + jobName), r.status_code
 
     return json.jsonify(status="failure", error='jenkins HTTP error '+str(r.status_code)), r.status_code
+
+# Polls the Jenkins master to see when a job has completed and moves artifacts over to local
+# storage once/if they are available
+def moveArtifacts (jobName):
+    checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
+    building = True
+
+    # poll until job stops building
+    while building:
+        sleep(10)
+        try:
+            buildInfo = json.loads(requests.get(checkBuildUrl).text)
+            building = buildInfo['building']
+        # check to make sure build isn't queued, if it is wait for it to dequeue
+        except ValueError:
+            checkQueueUrl = globals.jenkinsUrl + "/job/" + jobName + "/api/json"
+            queued = True
+
+            count = 0;
+            while queued and count < 20:
+                sleep(10)
+                try:
+                    r = requests.get(checkQueueUrl).text
+                    projectInfo = json.loads(r)
+                    inQueue = projectInfo['inQueue']
+                # if it's not in the queue and not building something went wrong
+                except ValueError:
+                    print "project failed to start building/queuing" + jobName
+                count += 1
+            building = False
+
+    # grab the build artifacts through ftp if build was successful
+    artifactsPath = globals.artifactsPathPrefix + jobName + "/builds/"
+
+    try:
+        globals.ftpClient.chdir(artifactsPath)
+        flist = globals.ftpClient.listdir()
+       
+        if "lastSuccessfulBuild" in flist:
+            artifactsPath = artifactsPath + "lastSuccessfulBuild/"
+            globals.ftpClient.chdir(artifactsPath)
+            flist = globals.ftpClient.listdir()
+
+            if "archive" in flist:
+                artifactsPath = artifactsPath + "archive/"
+                globals.ftpClient.chdir(artifactsPath)
+            
+                localArtifactsPath = globals.localPathForTestResults + jobName + "." + \
+                    str(datetime.datetime.today()) + "/"
+                os.mkdir(localArtifactsPath)
+                
+                flist = globals.ftpClient.listdir()
+ 
+                for f in flist:
+                    globals.ftpClient.get(f, localArtifactsPath + f)
+
+            else:
+                print "archive folder missing" + jobName
+
+    except IOError as e:
+        print "archive move FTP failure" + jobName + " error: " + e
 
 # Run Batch File - takes a batch file name and runs it
 @app.route("/runBatchFile", methods=["GET", "POST"])

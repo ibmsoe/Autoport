@@ -19,7 +19,7 @@ Install [pip](https://pip.pypa.io/en/latest/installing.html) and then run these 
     pip install requests
     pip install argparse (not needed if Python >= 2.7)
     pip install paramiko (may also need to install libevent-devel and python-devel)
-
+    pip install threadpool
 
 Setup
 ========

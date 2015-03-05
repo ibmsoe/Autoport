@@ -36,8 +36,6 @@ def determineProgress ():
     for status in progressResults:
         total += status
 
-    print total
-
     neverBeenBuiltP = progressResults[0] * 100 / total
     failureP = progressResults[1] * 100 / total
     unstableP = progressResults[2] * 100 / total

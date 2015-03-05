@@ -670,7 +670,7 @@ function processResultList(data) {
     if (data === undefined || data.status != "ok") {
         showAlert("Error:", data);
     } else {
-        var prjRegex = /(.*) - (.*?) - (.*?)-(.*)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d)/;
+        var prjRegex = /(.*)_(.*?)_(.*?)_(.*)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d)/;
         var filterRegex = new RegExp(reportState.projectFilter.toLowerCase());
         for (var project in data.results) {
             if (project !== undefined) {
@@ -706,7 +706,7 @@ function processResultList(data) {
                 projectReportState.projectsTable.row.add({
                      fullName: prjObject[0],
                            id: prjId+data.results[project][1],
-                         name: prjObject[1]+" - "+prjObject[3],
+                         name: prjObject[1]+"_"+prjObject[3],
                           env: prjObject[2],
                            os: "",
                       version: prjObject[4],
