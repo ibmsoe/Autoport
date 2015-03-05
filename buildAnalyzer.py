@@ -42,6 +42,20 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
+    base_ruby_def = {
+        'build system': "Ruby",
+        'primary lang': "Ruby",
+        'grep build': "gem install %s"%(repo.name),
+        'grep test': "rake test",
+        'grep env': "",
+        'build' : "bundle install; if [ -e Rakefile ]; then rake install; fi",
+        'test' : "rake test",
+        'env' : "",
+        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'reason': "primary language",
+        'error': "",
+        'success': True }
+
     base_c_def = {
         'build system': "make",
         'primary lang': "C",
@@ -70,7 +84,7 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    supported_langs = [ base_python_def, base_c_def, base_java_def ]
+    supported_langs = [ base_python_def, base_ruby_def, base_c_def, base_java_def ]
 
     # These definitions are added based on the presense of a specific build file.  We can
     # simply the command line provided by the base definition and grep for project and build
