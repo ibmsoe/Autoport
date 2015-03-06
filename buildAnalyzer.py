@@ -253,8 +253,11 @@ def buildFilesParser(fileBuf, searchTerm, delimeter):
     lenFileBuf = len(fileBuf)
 
     # Search the fileBuf for searchTerm
-    i = fileBuf.find(searchTerm)
- 
+    try:
+        i = fileBuf.find(searchTerm)
+    except UnicodeDecodeError:
+        return ""
+
     if i != -1:
         smallestIndex = lenFileBuf # this is one bigger than the biggest index, acts as infinity
         # If searchTerm found find the smallest index delimeter
