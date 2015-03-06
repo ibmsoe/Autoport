@@ -70,6 +70,20 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
+    base_perl_def = {
+        'build system': "Perl",
+         'primary lang': "Perl",
+         'grep build': "",
+         'grep test': "",
+         'grep env': "",
+         'build': "if [ -e Makefile.PL ]; then perl Makefile.PL; fi; make ; make install",
+         'test' : "make test",
+         'env' : "",
+         'artifacts': "",                        # TODO: Need to specify a build artifact
+         'reason': "primary language",
+         'error': "",
+         'success': True }
+
     base_c_def = {
         'build system': "make",
         'primary lang': "C",
@@ -98,7 +112,7 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    supported_langs = [ base_python_def, base_ruby_def,base_php_def, base_c_def, base_java_def ]
+    supported_langs = [ base_python_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_java_def ]
 
     # These definitions are added based on the presense of a specific build file.  We can
     # simply the command line provided by the base definition and grep for project and build
