@@ -247,26 +247,20 @@ def inferBuildSteps(listing, repo):
                 delim = ["`", "'", '"', "\n"]                   # delimeters used to denote end of cmd
                 cmd = lang['grep test']
                 if cmd != "":
-                    print "GREP test grep: ", cmd
                     strFound = buildFilesParser(readmeStr, cmd, delim)
-                    print "GREP test outstr: ", strFound
                     if strFound != "":
                         lang['test'] = cmd                      # safe but loses extra cmd arguments possibly in strFound
 #                       lang['test'] = strFound                 # TODO: needs to be validated.  May need to be sanitized
                 cmd = lang['grep build']
                 if cmd != "":
-                    print "GREP build grep: ", cmd
                     strFound = buildFilesParser(readmeStr, cmd, delim)
-                    print "GREP build outstr: ", strFound
                     if strFound != "":
                         lang['build'] = cmd                     # safe but loses extra cmd arguments possibly in strFound
 #                       lang['build'] = strFound	        # TODO: needs to be validated.  May need to be sanitized
                 env = lang['grep env']
                 if env != "":
                     delim = [";", " ", "\n"]                    # delimeters used to denote end of environment variable
-                    print "GREP env grep: ", env
                     strFound = buildFilesParser(readmeStr, env, delim)
-                    print "GREP env outstr: ", strFound
                     if strFound != "":
                         lang['env'] = strFound
                 break

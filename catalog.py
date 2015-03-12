@@ -48,7 +48,6 @@ class Catalog:
         filteredList = []
         try:
             fullList = os.listdir(self.__localPath)
-            filteredList = []
             for item in fullList:
                 if filt in item.lower() or filt == "":
                     filteredList.append([item, "local"])
@@ -61,7 +60,6 @@ class Catalog:
         try:
             self.__archiveFtpClient.chdir(self.__copyPath)
             fullList = self.__archiveFtpClient.listdir()
-            filteredList = []
             for item in fullList:
                 if filt in item.lower() or filt == "":
                     filteredList.append([item, "gsa"])
