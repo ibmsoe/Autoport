@@ -32,7 +32,7 @@ resParser = ResultParser()
 catalog = Catalog(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
 batch = Batch()
 #test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
-resultPattern = re.compile('(.*?) - (.*?) - (.*?)-.*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
+resultPattern = re.compile('(.*)_(.*)_(.*)_.*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
 
 # Main page - just serve up main.html
 @app.route("/")

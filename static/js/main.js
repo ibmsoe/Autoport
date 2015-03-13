@@ -108,7 +108,6 @@ var searchState = {
                 packages: []
             },
             download: function (ev) {
-                console.log("download");
                 var json = JSON.stringify(searchState.single.batchFile, undefined, 2);
                 var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                 window.open(data);
@@ -137,7 +136,6 @@ var searchState = {
                   packages: []
               },
               download: function (ev) {
-                  console.log("download");
                   var json = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
                   var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                   window.open(data);

@@ -2,6 +2,7 @@ import paramiko
 import tempfile
 import shutil
 import os
+import shutil
 import globals
 
 class Catalog:
@@ -75,11 +76,11 @@ class Catalog:
 
     def getLocalResults(self, build):
         try:
+            localPath = self.__localPath + build + "/"
             putdir = tempfile.mkdtemp(prefix="autoport_")
-            self.__jenkinsFtpClient.chdir(self.__localPath+build)
-            self.__jenkinsFtpClient.get("meta.arti", putdir+"/meta.arti")
-            self.__jenkinsFtpClient.get("dependency.arti", putdir+"/dependency.arti")
-            self.__jenkinsFtpClient.get("test_result.arti", putdir+"/test_result.arti")
+            shutil.copyfile(localPath + "meta.arti", putdir+"/meta.arti")
+            shutil.copyfile(localPath + "dependency.arti", putdir+"/dependency.arti")
+            shutil.copyfile(localPath + "test_result.arti", putdir+"/test_result.arti")
             self.__tmpdirs.append(putdir)
             return putdir
         except IOError as e:
