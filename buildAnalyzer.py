@@ -34,10 +34,10 @@ def inferBuildSteps(listing, repo):
         'grep build': "python setup.py build",	# Search readme for this string. If found, use it as build cmd
         'grep test': "py.test",			# Same for test command. Maybe we can pick up some extra arguments
         'grep env': "",
-        'build' : "if [ -e setup.py ]; then python setup.py install; fi",
-        'test' : "py.test",
+        'build' : "if [ -e setup.py ]; then python setup.py install > build_result.arti; fi",
+        'test' : "py.test > test_result.arti",
         'env' : "",
-        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'artifacts': "*.arti",
         'reason': "primary language",
         'error': "",
         'success': True }
@@ -48,10 +48,10 @@ def inferBuildSteps(listing, repo):
         'grep build': "gem install %s"%(repo.name),
         'grep test': "rake test",
         'grep env': "",
-        'build' : "bundle install; if [ -e Rakefile ]; then rake install; fi",
-        'test' : "rake test",
+        'build' : "bundle install > dependency.arti; if [ -e Rakefile ]; then rake install > build_result.arti; fi",
+        'test' : "rake test > test_result.arti",
         'env' : "",
-        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'artifacts': "*.arti",
         'reason': "primary language",
         'error': "",
         'success': True }
@@ -62,10 +62,10 @@ def inferBuildSteps(listing, repo):
         'grep build': "",
         'grep test': "",
         'grep env': "",
-        'build' : "if [ -e composer.json ]; then curl -sS https://getcomposer.org/installer | php; php composer.phar install; fi",
+        'build' : "if [ -e composer.json ]; then curl -sS https://getcomposer.org/installer | php; php composer.phar install > build_result.arti; fi",
         'test' : "",
         'env' : "",
-        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'artifacts': "*.arti",
         'reason': "primary language",
         'error': "",
         'success': True }
@@ -76,10 +76,10 @@ def inferBuildSteps(listing, repo):
          'grep build': "",
          'grep test': "",
          'grep env': "",
-         'build': "if [ -e Makefile.PL ]; then perl Makefile.PL; fi; make ; make install",
-         'test' : "make test",
+         'build': "if [ -e Makefile.PL ]; then perl Makefile.PL > build_result.arti; fi; make >> build_result.arti ; make install >> build_result.arti",
+         'test' : "make test > test_result.arti",
          'env' : "",
-         'artifacts': "",                        # TODO: Need to specify a build artifact
+         'artifacts': "*.arti", 
          'reason': "primary language",
          'error': "",
          'success': True }
