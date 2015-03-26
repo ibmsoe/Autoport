@@ -24,6 +24,7 @@ from catalog import Catalog
 from resultParser import ResultParser
 from urlparse import urlparse
 from batch import Batch
+from random import randint
 
 app = Flask(__name__)
 maxResults = 10
@@ -32,7 +33,7 @@ resParser = ResultParser()
 catalog = Catalog(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
 batch = Batch()
 #test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
-resultPattern = re.compile('(.*)_(.*)_(.*)_.*\.\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d')
+resultPattern = re.compile('(.*?)_(.*?)_(.*?)_(.*?)_(.*?)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d)')
 
 # Main page - just serve up main.html
 @app.route("/")
@@ -403,7 +404,12 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     xml_github_url.text = repo.html_url
     xml_git_url.text = "https" + repo.git_url[3:]
 
-    jobName = globals.jobNamePrefix + '_' + archName + '_' + repo.name
+    # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
+    # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one 
+    # is found. This should be an extremely rare occurence.
+    # TODO - chcek to see if job already exists
+    uid = randint(globals.minRandom, globals.maxRandom)
+    jobName = globals.localHostName + '_' + str(uid) + '_' + archName + '_' + repo.name
 
     if (tag == "") or (tag == "Current"):
         xml_default_branch.text = "*/" + repo.default_branch
@@ -705,13 +711,10 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument("-p", "--public",               action="store_true", help="specifies for the web server to listen over the public network, defaults to only listening on private localhost")
     p.add_argument("-u", "--jenkinsURL",                                help="specifies the URL for the Jenkins server, defaults to '" + globals.jenkinsUrl + "'")
-    p.add_argument("-n", "--jenkinsJobNamePrefix",                      help="specifies a string to prefix to the Jenkins job name, defaults to '" + globals.jobNamePrefix + "'")
     args = p.parse_args()
 
     if args.jenkinsURL:
         globals.jenkinsUrl = args.jenkinsURL
-    if args.jenkinsJobNamePrefix:
-        globals.jobNamePrefix = args.jenkinsJobNamePrefix
 
     if args.public:
         app.run(debug = True, host='0.0.0.0')

@@ -1,6 +1,7 @@
 import ConfigParser
 import os
 import paramiko
+import socket
 from github import Github
 from cache import Cache
 from threadpool import ThreadPool
@@ -9,7 +10,7 @@ from urlparse import urlparse
 # Config Globals
 # All global variables should be here
 def init():
-    # parse global data
+    # parse global data from config file
     config = ConfigParser.ConfigParser()
     config.read("./config.ini")
 
@@ -26,13 +27,11 @@ def init():
                 print("exception on %s!" % option)
                 configOptions[option] = None
 
-    # changeable project configurations
+    # globals based on config file
     global jenkinsUrl
     global mavenPath
     global githubToken
-
     global hostname
-
     global configUsername
     global configPassword
     global configJenkinsUsername
@@ -41,24 +40,15 @@ def init():
     global pathForBatchFiles
     global localPathForTestResults
     global localPathForBatchFiles
-    global jobNamePrefix
     global artifactsPathPrefix
     global threadPoolSize
-
-    # unchanging project configurations
-    global github
-    global cache
-    global nodes
-    global sshClient
-    global ftpClient
-    global threadPool
+    global minRandom
+    global maxRandom
 
     jenkinsUrl = configOptions['jenkinsurl']
     mavenPath = configOptions['mavenpath']
     githubToken = configOptions['githubtoken']
-
     hostname = configOptions['hostname']
-
     configUsername = configOptions['username']
     configPassword = configOptions['password']
     configJenkinsUsername = configOptions['jenkinsusername']
@@ -67,9 +57,19 @@ def init():
     pathForBatchFiles = configOptions['pathforbatchfiles']
     localPathForTestResults = configOptions['localpathfortestresults']
     localPathForBatchFiles = configOptions['localpathforbatchfiles']
-    jobNamePrefix = configOptions['jobnameprefix']
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
+    minRandom = int(configOptions['minrandom'])
+    maxRandom = int(configOptions['maxrandom'])
+    
+    # globals not based on config file
+    global github
+    global cache
+    global nodes
+    global sshClient
+    global ftpClient
+    global threadPool
+    global localHostName
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
@@ -82,6 +82,9 @@ def init():
    
     # create pool of worker threads that query Jenkins for job completion 
     threadPool = ThreadPool(threadPoolSize)
+
+    # get local hostname to append to job names
+    localHostName = socket.gethostname()
 
     # setup global SSH and FTP clients connected to Jenkins master
     sshClient = paramiko.SSHClient()

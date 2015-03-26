@@ -668,7 +668,7 @@ function processResultList(data) {
     if (data === undefined || data.status != "ok") {
         showAlert("Error:", data);
     } else {
-        var prjRegex = /(.*)_(.*?)_(.*?)_(.*)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d)/;
+        var prjRegex = /(.*?)_(.*?)_(.*?)_(.*?)_(.*?)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d)/;
         var filterRegex = new RegExp(reportState.projectFilter.toLowerCase());
         for (var project in data.results) {
             if (project !== undefined) {
@@ -685,11 +685,13 @@ function processResultList(data) {
                 projectReportState.projects.push({
                      fullName: prjObject[0],
                            id: prjId+data.results[project][1],
-                         name: prjObject[1]+" - "+prjObject[3],
-                          env: prjObject[2],
+                     hostname: prjObject[1],
+                          uid: prjObject[2],
+                         name: prjObject[4],
+                          env: prjObject[3],
                            os: "", // TODO
-                      version: prjObject[4],
-                    completed: prjObject[5],
+                      version: prjObject[5],
+                    completed: prjObject[6],
                    repository: data.results[project][1],
                  selectStatus: false,
                     selectBtn: '<a rv-href="#" rv-on-click="project.select">'+
@@ -704,11 +706,13 @@ function processResultList(data) {
                 projectReportState.projectsTable.row.add({
                      fullName: prjObject[0],
                            id: prjId+data.results[project][1],
-                         name: prjObject[1]+"_"+prjObject[3],
-                          env: prjObject[2],
-                           os: "",
-                      version: prjObject[4],
-                    completed: prjObject[5],
+                     hostname: prjObject[1],
+                          uid: prjObject[2],
+                         name: prjObject[4],
+                          env: prjObject[3],
+                           os: "", // TODO
+                      version: prjObject[5],
+                    completed: prjObject[6],
                    repository: data.results[project][1],
                  selectStatus: false,
                     selectBtn: '<a rv-href="#" onClick="projectReportState.selectProject(\''+
