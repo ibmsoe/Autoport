@@ -113,8 +113,10 @@ def search():
 
     searchArgs = None # Used to pass in sort argument to pygithub
     sort = request.args.get("sort", "") # Check for optional sort argument
-    if sort in ['stars', 'forks', 'updated']:
+    if sort in ['forks', 'updated']:
         searchArgs = {'sort': sort}
+    elif sort == 'popularity stars':
+        searchArgs = {'sort': "stars"}
     elif sort == 'relevance' or sort == '':
         # Must pass no argument if we want to sort by relevance
         searchArgs = {}
