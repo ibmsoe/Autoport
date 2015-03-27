@@ -321,6 +321,7 @@ def uploadBatchFile():
 # Create Job - takes a repo id, repo tag, and arch and creates a Jenkins job for it
 # Opens a new tab with a new jenkins job URL on the client side on success,
 # while the current tab stays in the same place.
+# TODO - If job is started through batch file can't select options currently
 @app.route("/createJob", methods=['GET', 'POST'])
 def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     # Ensure we have a valid id number as a post argument
@@ -364,19 +365,29 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
             javaType = i_javaType
         else:
             return json.jsonify(status="failure", error="missing java type"), 400
-    
+
     # Get repository
     repo = globals.cache.getRepo(id)
-
-    # Infer build steps if possible
-    build = inferBuildSteps(globals.cache.getDir(repo), repo)
+    
+    # Get build info
+    try:
+        selectedBuild = request.form["selectedBuild"]
+        selectedTest = request.form["selectedTest"]
+        selectedEnv = request.form["selectedEnv"]
+        artifacts = request.form["artifacts"]
+    except KeyError:
+        build = inferBuildSteps(globals.cache.getDir(repo), repo)
+        selectedBuild = build["selectedBuild"]
+        selectedTest = build["selectedTest"]
+        selectedEnv = build["selectedEnv"]
+        artifacts = build["artifacts"]
 
     # TODO: Conditionally continue based on a user interface selection to create
     # job on Jenkins w/o a build command.  User must manually enter command on Jenkins.
     # Helps automate porting environment
 
-    if not build['success']:
-        errorstr = "Programming language not supported - " + build['primary lang']
+    if not selectedBuild:
+        errorstr = "Programming language not supported - " + repo.language
         return json.jsonify(status="failure", error=errorstr)
 
     # Read template XML file
@@ -426,20 +437,20 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     # Name of new Folder
     jobFolder = jobName + "." + time
 
-    xml_build_command.text = build['build']
-    xml_test_command.text = build['test']
-    xml_env_command.text = build['env']
+    xml_build_command.text = selectedBuild
+    xml_test_command.text = selectedTest
+    xml_env_command.text = selectedEnv
 
     # In addition to whatever other environmental variables I need to inject
     # I should add whether to pick IBM Java or Open JDK
     xml_env_command.text += javaType + "\n"
     path_env = "PATH=" + globals.mavenPath + ":$PATH\n"
     xml_env_command.text += path_env
-    xml_artifacts.text = build['artifacts']
+    xml_artifacts.text = artifacts
 
     # Job metadata as passed to jenkins
     jobMetadataName = "meta.arti"
-    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Build System\":\"" + build['build system'] + "\", \"Architecture\": \"" + arch + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
+    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Architecture\": \"" + arch + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
 
     # add parameters information
     i = 1

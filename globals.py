@@ -42,8 +42,6 @@ def init():
     global localPathForBatchFiles
     global artifactsPathPrefix
     global threadPoolSize
-    global minRandom
-    global maxRandom
 
     jenkinsUrl = configOptions['jenkinsurl']
     mavenPath = configOptions['mavenpath']
@@ -59,8 +57,6 @@ def init():
     localPathForBatchFiles = configOptions['localpathforbatchfiles']
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
-    minRandom = int(configOptions['minrandom'])
-    maxRandom = int(configOptions['maxrandom'])
     
     # globals not based on config file
     global github
@@ -70,6 +66,8 @@ def init():
     global ftpClient
     global threadPool
     global localHostName
+    global minRandom
+    global maxRandom
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
@@ -91,3 +89,7 @@ def init():
     sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
     sshClient.connect(urlparse(jenkinsUrl).hostname, username=configJenkinsUsername, key_filename=configJenkinsKey)
     ftpClient = sshClient.open_sftp()
+
+    # set random number range for UUID
+    minRandom = 100000
+    maxRandom = 999999

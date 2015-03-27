@@ -1,15 +1,28 @@
 
-# General strategy is to create a stack of language definitions from which build and test
-# commands are generated.  Each successive definition that is added to the stack provides
-# a better commnd line that is more specific to the project.  The last stack definition
+# General strategy is to create a list of language definitions from which build and test
+# commands are generated.  Each successive definition that is added to the list provides
+# a better commnd line that is more specific to the project.  The last list definition
 # is returned. With a little luck, it is the preferred cmd line as provided by the readme
 
 def inferBuildSteps(listing, repo):
 
-    # This is added to the stack first.  Additional stack elements are added on top of it
+    # Gather all possible build, test, and environment options    
+    # This is what gets returned
+    build_info = {
+        'buildOptions': [],
+        'testOptions': [],
+        'envOptions': [],
+        'success': False,
+        'reason': "primary language unknown",
+        'selectedBuild': "",
+        'selectedTest': "",
+        'selectedEnv': "",
+        'artifacts': "*.arti"
+    }
+
+    # This is added to the list first.  Additional list elements are added on top of it
     # as we perform discovery.  In the end, if we can't figure out how to build the project,
     # then this entry is used to convey the unknown primary language to the end user
-
     base_empty_def = {
         'build system': "",
         'primary lang': "",
@@ -27,7 +40,6 @@ def inferBuildSteps(listing, repo):
     # These are the base lang definitions. They should cover the top two or three build
     # systems to achieve 60% or better compilation success.  The command line is not project
     # or build system specific.  Represents standard use of the build system, eg make all
-
     base_python_def = {
         'build system': "Python",
         'primary lang': "Python",
@@ -117,7 +129,6 @@ def inferBuildSteps(listing, repo):
     # These definitions are added based on the presense of a specific build file.  We can
     # simply the command line provided by the base definition and grep for project and build
     # system specific parameters in README files.  eg. maven and MAVEN_OPTS
-
     ant_def = {
         'build system': "ant",
         'primary lang': "Java",
@@ -160,8 +171,7 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    # This is most favored definition and is added to top of stack
-
+    # This is most favored definition and is appended to the end of the list
     buildsh_def = {
         'build system': "custom build script",
         'primary lang': "",
@@ -179,13 +189,13 @@ def inferBuildSteps(listing, repo):
     # Fix base empty definition in case it is returned
     base_empty_def['primary lang'] = repo.language
 
-    # Push empty language definition on stack
-    langstack = [ base_empty_def ]
+    # Append empty language definition to list
+    langlist = [ base_empty_def ]
 
     # Push primary language
     for lang in supported_langs:
         if lang['primary lang'] == repo.language:
-            langstack.insert(0, lang)
+            langlist.append(lang)
 
     # Create a stack of readme files to grep
     grepstack = []
@@ -195,7 +205,7 @@ def inferBuildSteps(listing, repo):
         return { 'success': False, 'error': "I/O error({0}): {1}".format(e.errno, e.strerror) }
     grepstack.insert(0, readmeStr)                 # may be a null pointer
 
-    # Add build system specific definitions to language stack based on the presense
+    # Add build system specific definitions to language list based on the presense
     # of specific files like pom.xml.  Also, queue readme related files to grep later
     # looking for environment variables and command lines
     # TODO: This is just looking at files in the root directory.
@@ -204,9 +214,9 @@ def inferBuildSteps(listing, repo):
     makefile = None
     for f in listing:
         if f.name == 'pom.xml':
-            langstack.insert(0, maven_def)         # If we find specific build files we can improve our commands by grepping readme's 
+            langlist.append(maven_def)         # If we find specific build files we can improve our commands by grepping readme's 
         elif f.name == 'build.xml':
-            langstack.insert(0, ant_def)
+            langlist.append(ant_def)
         elif f.name == 'Makefile':
             makefile = f
         elif f.name in ('build.sh', 'run_build.sh'):
@@ -218,54 +228,71 @@ def inferBuildSteps(listing, repo):
                     grepstack.insert(0, fstr)
 
     # build.sh is favored, because it bridges languages, sets environment variables, ...
-    # Else if only the primary language definition is present, len(langstack) <= 2), push
+    # Else if only the primary language definition is present, len(langlist) <= 2), push
     # Makefile as it is there for a reason.  Either, the primary language definition is 'C'
     # and we are pushing it again (no harm), or it is another language which does not
     # ordinarily use Makefiles.  It is safe to add when the length of stack is 2.
     # A Makefile is a better bet than a primary language definition which is generic. For
     # example, if the build system is something other than maven, ant, or gradle.
     #
-    # On the other hand, if both pom.xml and Makefile are present, len(langstack) == 3,
+    # On the other hand, if both pom.xml and Makefile are present, len(langlist) == 3,
     # then one could argue that developers would favor makefiles as being simpler and better
     # understood. Once we have the ability to grep a Makefile we could scan it for Java or Python
     # to determine whether the makefile applies to multiple languages.  For now, we assume
     # that it does.  Later, we can conditionally push it to the lang stack.  TODO: improve
 
-
     if buildsh != None:
-        langstack.insert(0, buildsh_def)
-#   elif len(langstack) <= 2 and makefile != None:
+        langlist.append(buildsh_def)
     elif makefile != None:
-        langstack.insert(0, c_def)
+        langlist.append(0, c_def)
 
-    # For now we just process the top of stack language
+    # Add each template match to build info in the order they were found
+    for lang in langlist:
+        if lang['build']: 
+            build_info['buildOptions'].append(lang['build'])
+        if lang['test']: 
+            build_info['testOptions'].append(lang['test'])
+        if lang['env']: 
+            build_info['envOptions'].append(lang['env'])
+        build_info['reason'] = lang['reason']
 
-    lang = langstack.pop(0)
-    if lang['build'] != "":
+    # Check the last element added to the langlist for readme/other important file info
+    lang = langlist[-1]
+    if lang['build']:
         for readmeStr in grepstack:
-            if readmeStr != "":
+            if readmeStr:
                 delim = ["`", "'", '"', "\n"]                   # delimeters used to denote end of cmd
                 cmd = lang['grep test']
-                if cmd != "":
+                if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
-                    if strFound != "":
-                        lang['test'] = cmd                      # safe but loses extra cmd arguments possibly in strFound
-#                       lang['test'] = strFound                 # TODO: needs to be validated.  May need to be sanitized
+                    if strFound:
+                        build_info['testOptions'].append(cmd)
                 cmd = lang['grep build']
-                if cmd != "":
+                if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
-                    if strFound != "":
-                        lang['build'] = cmd                     # safe but loses extra cmd arguments possibly in strFound
-#                       lang['build'] = strFound	        # TODO: needs to be validated.  May need to be sanitized
+                    if strFound:
+                        build_info['buildOptions'].append(cmd)
                 env = lang['grep env']
-                if env != "":
+                if env:
                     delim = [";", " ", "\n"]                    # delimeters used to denote end of environment variable
                     strFound = buildFilesParser(readmeStr, env, delim)
-                    if strFound != "":
-                        lang['env'] = strFound
+                    if strFound:
+                        build_info['envOptions'].append(strFound)
                 break
 
-    return lang
+    # Make the build, test, and env options of the last added element the default options
+    # as those are the most likely to be correct
+    if build_info['buildOptions']:
+        build_info['success'] = True
+        build_info['selectedBuild'] = build_info['buildOptions'][-1]
+    
+        if build_info['testOptions']:
+            build_info['selectedTest'] = build_info['testOptions'][-1]
+    
+            if build_info['envOptions']:
+                build_info['selectedEnv'] = build_info['envOptions'][-1]
+
+    return build_info
 
 # Build Files Parser - Looks for string searchTerm in string fileBuf and then iterates over
 # list of delimeters and finds the one with the smallest index, returning the string found between the

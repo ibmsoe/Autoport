@@ -251,11 +251,11 @@ var detailState = {
         var idName = ev.target.id;
         if (idName === "singleDetailBackButton") {
             detailState.ready = false;
-	    searchState.single.ready = true;
+	        searchState.single.ready = true;
         }
         else if (idName === "generateDetailBackButton") {
             detailState.generateReady = false;
-	    searchState.multiple.ready = true;
+	        searchState.multiple.ready = true;
         }
     },
     exitAutoSelect: function() {
@@ -286,6 +286,30 @@ var detailState = {
             detailState.generateJavaType = "IBM Java";
             detailState.generateJavaTypeOptions = "JAVA_HOME=/opt/ibm/java";
     	}
+    },
+    changeBuildOptions: function(ev) {
+        if(ev.target.className === "singleSearch") {
+            detailState.repo.build.selectedBuild = ev.target.text;
+        }
+        else if(ev.target.className === "generateSearch") {
+            detailState.generateRepo.build.selectedBuild = ev.target.text;
+        }
+    },
+    changeTestOptions: function(ev) {
+        if(ev.target.className === "singleSearch") {
+            detailState.repo.build.selectedTest = ev.target.text;
+        }
+        else if(ev.target.className === "generateSearch") {
+            detailState.generateRepo.build.selectedTest = ev.target.text;
+        }
+    },
+    changeEnvOptions: function(ev) {
+        if(ev.target.className === "singleSearch") {
+            detailState.repo.build.selectedEnv = ev.target.text;
+        }
+        else if(ev.target.className === "generateSearch") {
+            detailState.generateRepo.build.selectedEnv = ev.target.text;
+        }
     },
     addToBatchFile: function(ev) {
         searchState.single.batchFile.packages.push(detailState.repo);
@@ -536,7 +560,7 @@ rivets.bind($('#toolContainer'), {
     batchState: batchState,
     detailState: detailState,
     jenkinsState: jenkinsState,
-    percentageState: percentageState,
+    percentageState: percentageState
 });
 
 // Does the above and makes a search query
@@ -1030,9 +1054,11 @@ function showDetail(data) {
     } else {
         if (data.panel === "single") {
             detailState.repo = data.repo;
+            console.log(data.repo.build);
             detailState.repo.addToJenkins = function(e) {
-                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                var buildInfo = detailState.repo.build;
+                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86", selectedBuild: buildInfo.selectedBuild, selectedTest: buildInfo.selectedTest, selectedEnv: buildInfo.selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle", selectedBuild: buildInfo.selectedBuild, selectedTest: buildInfo.selectedTest, selectedEnv: buildInfo.selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
             };
             searchState.single.loadingState.loading = false;
             detailState.ready = true;
@@ -1045,10 +1071,11 @@ function showDetail(data) {
             legend(document.getElementById('langLegend'), detailState.repo.languages);
         }
         else if(data.panel === "generate") {
+            var buildInfo = detailState.generateRepo.build;
             detailState.generateRepo = data.repo;
             detailState.generateRepo.addToJenkins = function(e) {
-                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle"}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86", selectedBuild: buildInfo.selectedBuild, selectedTest: buildInfo.selectedTest, selectedEnv: buildInfo.selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle", selectedBuild: buildInfo.selectedBuild, selectedTest: buildInfo.selectedTest, selectedEnv: buildInfo.selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
             };
             searchState.multiple.loadingState.loading = false;
             detailState.generateReady = true;

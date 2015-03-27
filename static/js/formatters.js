@@ -37,6 +37,11 @@ rivets.formatters.isJava = function(value) {
     return value === "Java";
 };
 
+// For displaying NA when no options were found instead of empty textbox
+rivets.formatters.cleanOptionsOutput = function(value) {
+    return (value === "" ? "NA" : value);
+}
+
 // report dropdown formatters
 rivets.formatters.isBatchResults = function(value) {
     return value === "batchResults";

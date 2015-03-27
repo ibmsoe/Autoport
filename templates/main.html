@@ -342,10 +342,45 @@
                   <span rv-show="detailState.repo.build.success" class="build-steps">
                     <h3>Build steps</h3>
                     <small>
-                      Inferred based on the existence of 
+                      The default options were inferred based on the existence of 
                       <strong rv-text="detailState.repo.build.reason"></strong>
                     </small>
-                    <pre rv-text="detailState.repo.build.build"></pre>
+                    <br />
+                    <div class="dropdown">
+                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                        Select build options
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" role="menu">
+                        <li role="presentation" rv-each-tag="detailState.repo.build.buildOptions"><a class="singleSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
+                      </ul>
+                      <br />
+                      <pre rv-text="detailState.repo.build.selectedBuild | cleanOptionsOutput"></pre>
+                    </div>
+                    <br />
+                    <div class="dropdown">
+                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                        Select test options
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" role="menu">
+                        <li role="presentation" rv-each-tag="detailState.repo.build.testOptions"><a class="singleSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
+                      </ul>
+                      <br />
+                      <pre rv-text="detailState.repo.build.selectedTest | cleanOptionsOutput"></pre>
+                    </div>
+                    <br />
+                    <div class="dropdown">
+                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                        Select environment options
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" role="menu">
+                        <li role="presentation" rv-each-tag="detailState.repo.build.envOptions"><a class="singleSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeEnvOptions">{ tag }</a></li>
+                      </ul>
+                      <br />
+                      <pre rv-text="detailState.repo.build.selectedEnv | cleanOptionsOutput"></pre>
+                    </div>
                   </span>
                   <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
                     <button id="singleDetailBackButton" type="button" class="btn btn-info">
@@ -632,10 +667,45 @@
                   <span rv-show="detailState.generateRepo.build.success" class="build-steps">
                     <h3>Build steps</h3>
                     <small>
-                      Inferred based on the existence of 
+                      The default options were inferred based on the existence of 
                       <strong rv-text="detailState.generateRepo.build.reason"></strong>
                     </small>
-                    <pre rv-text="detailState.generateRepo.build.build"></pre>
+                    <br />
+                    <div class="dropdown">
+                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                        Select build options
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" role="menu">
+                        <li role="presentation" rv-each-tag="detailState.generateRepo.build.buildOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
+                      </ul>
+                      <br />
+                      <pre rv-text="detailState.generateRepo.build.selectedBuild | cleanOptionsOutput"></pre>
+                    </div>
+                    <br />
+                    <div class="dropdown">
+                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                        Select test options
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" role="menu">
+                        <li role="presentation" rv-each-tag="detailState.generateRepo.build.testOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
+                      </ul>
+                      <br />
+                      <pre rv-text="detailState.generateRepo.build.selectedTest | cleanOptionsOutput"></pre>
+                    </div>
+                    <br />
+                    <div class="dropdown">
+                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                        Select environment options
+                        <span class="caret"></span>
+                      </button>
+                      <ul class="dropdown-menu" role="menu">
+                        <li role="presentation" rv-each-tag="detailState.generateRepo.build.envOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeEnvOptions">{ tag }</a></li>
+                      </ul>
+                      <br />
+                      <pre rv-text="detailState.generateRepo.build.selectedEnv | cleanOptionsOutput"></pre>
+                    </div>
                   </span>
                   <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
                     <button id="generateDetailBackButton" type="button" class="btn btn-info">
