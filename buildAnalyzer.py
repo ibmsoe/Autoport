@@ -110,6 +110,20 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
+    base_cxx_def = {
+        'build system': "C++",
+        'primary lang': "C++",
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build': " if [ -e configure.ac ]; then autoconfig > build_result.arti; ./configure >> build_result.arti; make >> build_result.arti; make install >> build_result.arti; elif [ -x configure ]; then ./configure > build_result.arti; make >> build_result.arti; make install >> build_result.arti; elif [ -e CMakeLists.txt ]; then cmake . > build_result.arti; make  >> build_result.arti; make install >> build_result.arti; elif [ -e SConstruct ]; then scons all  > build_result.arti; fi",
+        'test': " if [ -x configure ]; then make test  > test _result.arti; elif [ -e CMakeLists.txt ]; then make test > test _result.arti; elif [ -e SConstruct ]; then scons test  > test _result.arti; fi",
+        'env' : "",
+        'artifacts': "*.arti ",
+        'reason': "primary language",
+        'error': "",
+        'success': True }
+
     base_java_def = {
         'build system': "Java",
         'primary lang': "Java",
@@ -124,7 +138,7 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    supported_langs = [ base_python_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_java_def ]
+    supported_langs = [ base_python_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_cxx_def, base_java_def ]
 
     # These definitions are added based on the presense of a specific build file.  We can
     # simply the command line provided by the base definition and grep for project and build
