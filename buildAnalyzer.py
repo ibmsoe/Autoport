@@ -1,4 +1,4 @@
-
+from github import GithubException
 # General strategy is to create a list of language definitions from which build and test
 # commands are generated.  Each successive definition that is added to the list provides
 # a better commnd line that is more specific to the project.  The last list definition
@@ -117,7 +117,7 @@ def inferBuildSteps(listing, repo):
         'grep test': "",
         'grep env': "",
         'build': " if [ -e configure.ac ]; then autoconfig > build_result.arti; ./configure >> build_result.arti; make >> build_result.arti; make install >> build_result.arti; elif [ -x configure ]; then ./configure > build_result.arti; make >> build_result.arti; make install >> build_result.arti; elif [ -e CMakeLists.txt ]; then cmake . > build_result.arti; make  >> build_result.arti; make install >> build_result.arti; elif [ -e SConstruct ]; then scons all  > build_result.arti; fi",
-        'test': " if [ -x configure ]; then make test  > test _result.arti; elif [ -e CMakeLists.txt ]; then make test > test _result.arti; elif [ -e SConstruct ]; then scons test  > test _result.arti; fi",
+        'test': " if [ -x configure ]; then make test  > test_result.arti; elif [ -e CMakeLists.txt ]; then make test > test_result.arti; elif [ -e SConstruct ]; then scons test  > test_result.arti; fi",
         'env' : "",
         'artifacts': "*.arti ",
         'reason': "primary language",
@@ -217,6 +217,8 @@ def inferBuildSteps(listing, repo):
         readmeStr = repo.get_readme().content.decode('base64', 'strict')
     except IOError as e:
         return { 'success': False, 'error': "I/O error({0}): {1}".format(e.errno, e.strerror) }
+    except GithubException as e:
+        return { 'success': False, 'error': "GithubException ({0}): {1}".format(e.status, e.data['message']), 'primary lang': repo.language }
     grepstack.insert(0, readmeStr)                 # may be a null pointer
 
     # Add build system specific definitions to language list based on the presense
