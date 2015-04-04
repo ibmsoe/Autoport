@@ -244,7 +244,7 @@ def inferBuildSteps(listing, repo):
     if buildsh != None:
         langlist.append(buildsh_def)
     elif makefile != None:
-        langlist.append(0, c_def)
+        langlist.append(c_def)
 
     # Add each template match to build info in the order they were found
     for lang in langlist:
