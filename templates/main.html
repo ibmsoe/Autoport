@@ -543,62 +543,6 @@
 
               <!-- END MULTI PROJECT SEARCH LOADING PANEL -->
 
-              <!-- START MULTI PROJECT SEARCH BATCH FILE TABLE -->
-
-              <div id="batchFilePanel" class="panel panel-default" rv-show="searchState.multiple.exportReady">
-                <a rv-on-click="searchState.multiple.download">
-                  <button type="button" class="btn btn-primary">
-                    <span class="glyphicon glyphicon-download"></span>
-                    Export
-                  </button>
-                </a>
-                <table class="table table-hover">
-                  <thead>
-                    <tr>
-                      <th>Batch File Repositories</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody id="batchFileTable" rv-each-package="searchState.multiple.batchFile.packages">
-                    <tr class="result-row">
-                      <td>
-                        <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
-                        /
-                        <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
-                        <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
-                          <span class="glyphicon glyphicon-star"></span>
-                          { package.stars }
-                        </span>
-                        <span title="Fork count" class="tip label" rv-classification="package.classifications.forks">
-                          <span class="glyphicon glyphicon-random"></span>
-                          { package.forks }
-                        </span>
-                        <span title="Primary language" class="tip label" rv-classification="package.classifications.language">
-                          <span class="glyphicon glyphicon-wrench"></span>
-                          { package.language }
-                        </span>
-                        <span title="Repository size" class="tip label" rv-classification="package.classifications.size">
-                          <span class="glyphicon glyphicon-floppy-disk"></span>
-                          { package.size_kb | size }
-                        </span>
-                        <span title="Last updated" class="tip label" rv-classification="package.classifications.date">
-                          <span class="glyphicon glyphicon-calendar"></span>
-                          updated { package.last_update | date }
-                        </span>
-           
-                        <br />
-
-                        <p class="candidate-description text-muted" rv-text="package.description"></p>
-                      </td>
-                      <td>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-
-              <!-- END MULTI PROJECT SEARCH BATCH FILE TABLE -->
-
               <!-- START MULTI PROJECT SEARCH DETAIL VIEW -->
 
               <div id="generateDetailPanel" class="panel panel-default" rv-show="detailState.generateReady">
@@ -720,6 +664,19 @@
  
               <!-- START MULTI PROJECT SEARCH MULTIPLE RESULTS TABLE -->
 
+              <div class="alert alert-success clearfix" rv-show="searchState.multiple.ready">
+                <span class="autoSelectText">This is the list of top projects written in the specified language: { searchState.multiple.query.language }.  Select the action you wish to perform.</span>
+                <br/>
+                <div class="row">
+                  <span class="buttonRight">
+                    <button type="button" class="btn btn-primary"
+                      rv-on-click="searchState.multiple.download">
+                    Export
+                    </button>
+                  </span>
+                </div>
+              </div>
+
               <div id="resultsPanel" class="panel panel-default" rv-show="searchState.multiple.ready">
                 <table class="table table-hover">
                   <thead>
@@ -760,18 +717,18 @@
                         <p class="candidate-description text-muted" rv-text="result.description"></p>
                       </td>
                       <td>
-                        <a rv-on-click="result.addToBatchFile">
-                          <button type="button" class="multiProjectBatch btn btn-primary">
-                            <span class="glyphicon glyphicon-plus"></span>
-                            Add to Batch
-                          </button>
-                        </a>
-                      </td>
-                      <td>
                         <a rv-on-click="result.select">
                           <button type="button" class="generateDetailButton btn btn-primary">
                             <span class="glyphicon glyphicon-zoom-in"></span>
                             Details
+                          </button>
+                        </a>
+                      </td>
+                      <td>
+                        <a rv-on-click="result.remove">
+                          <button type="button" class="multiProjectExclude btn btn-primary">
+                            <span class="glyphicon glyphicon-remove"></span>
+                            Remove
                           </button>
                         </a>
                       </td>
