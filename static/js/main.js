@@ -129,20 +129,28 @@ var searchState = {
     },
     multiple: {searchBoxReady: false,
               ready: false,
-              exportReady: false, // Whether or not to draw the export batch file view
               results: {},
               batchFile: {
                   config:   {},
                   packages: []
               },
+              removed: {
+                  config:   {},
+                  packages: []
+              },
               download: function (ev) {
+                  for (var i = 0; i < searchState.multiple.results.length; ++i) {
+                      var result = searchState.multiple.results[i];
+                      searchState.multiple.batchFile.packages.push(result);
+                  }
+
                   var json = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
                   var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                   window.open(data);
+
                   // TODO: Check return code of window.open() to determine if request was cancelled
                   searchState.multiple.batchFile.config = {};
                   searchState.multiple.batchFile.packages = [];
-                  searchState.multiple.exportReady = false;
               },
               setSearchBox: function (ev) {
                   searchState.multiple.searchBoxReady = (searchState.multiple.searchBoxReady) ? false : true;
@@ -159,7 +167,7 @@ var searchState = {
                       detailState.generateReady = false;
                       var data = {
                           // GitHub API parameters
-                          q:       " stars:>" + searchState.multiple.query.stars +
+                          q:       "stars:>" + searchState.multiple.query.stars +
                                    " forks:>" + searchState.multiple.query.forks +
                                    (searchState.multiple.query.language == "any" ? "" : (" language:" + searchState.multiple.query.language)),
                           sort:    searchState.multiple.query.sort,
@@ -237,9 +245,9 @@ var batchState = {
 var detailState = {
     ready: false,
     generateReady: false,
-    repo: null, // Repo data
-    generateRepo: null,
-    autoSelected: false, // Was this repository autoselected from search query?
+    repo: null,                                     // Single project search repo data
+    generateRepo: null,                             // Multiple project search repo data
+    autoSelected: false,                            // Was this repository autoselected from search query?
     pie: null, // Pie chart
     generatePie: null,
     //TODO - split single and generate out, this repetition is bad
@@ -288,26 +296,26 @@ var detailState = {
     	}
     },
     changeBuildOptions: function(ev) {
-        if(ev.target.className === "singleSearch") {
+        if (ev.target.className === "singleSearch") {
             detailState.repo.build.selectedBuild = ev.target.text;
         }
-        else if(ev.target.className === "generateSearch") {
+        else if (ev.target.className === "generateSearch") {
             detailState.generateRepo.build.selectedBuild = ev.target.text;
         }
     },
     changeTestOptions: function(ev) {
-        if(ev.target.className === "singleSearch") {
+        if (ev.target.className === "singleSearch") {
             detailState.repo.build.selectedTest = ev.target.text;
         }
-        else if(ev.target.className === "generateSearch") {
+        else if (ev.target.className === "generateSearch") {
             detailState.generateRepo.build.selectedTest = ev.target.text;
         }
     },
     changeEnvOptions: function(ev) {
-        if(ev.target.className === "singleSearch") {
+        if (ev.target.className === "singleSearch") {
             detailState.repo.build.selectedEnv = ev.target.text;
         }
-        else if(ev.target.className === "generateSearch") {
+        else if (ev.target.className === "generateSearch") {
             detailState.generateRepo.build.selectedEnv = ev.target.text;
         }
     },
@@ -592,7 +600,7 @@ $('#batch_file').change(function () {
 function showAlert(message, data) {
     var text = message;
     if (typeof data !== "undefined") {
-        text += "<br/>" + (data.responseJSON.error !== undefined ?
+        text += "<br/>" + (data.responseJSON.error !== undefined ?        // TODO: responseJSON undefined.  Maybe ajax/getResponseHeader
                            data.responseJSON.error :
                            data.error);
     }
@@ -624,16 +632,14 @@ function processSearchResults(data) {
                 }
             };
             result.addToBatchFile = function (ev) {
-                var className = $(ev.target).attr('class');
-                if (className === "singleDetailBatchButton btn btn-primary") {
-                    searchState.single.batchFile.packages.push(result);
-                    searchState.single.exportReady = true;
-                    searchState.single.ready = true;
-                } else {
-                    searchState.multiple.batchFile.packages.push(result);
-                    searchState.multiple.exportReady = true;
-                    searchState.multiple.ready = true;
-                }
+                searchState.single.batchFile.packages.push(result);
+                searchState.single.exportReady = true;
+                searchState.single.ready = true;
+            };
+            result.remove = function (ev) {
+                var i = data.results.indexOf(result);
+                var ele = data.results.splice(i, 1);
+                searchState.multiple.removed.packages.push(ele);
             };
         });
 
@@ -1070,8 +1076,8 @@ function showDetail(data) {
             detailState.pie = new Chart(ctx).Pie(detailState.repo.languages, { segmentShowStroke: false });
             legend(document.getElementById('langLegend'), detailState.repo.languages);
         }
-        else if(data.panel === "generate") {
-            var buildInfo = detailState.generateRepo.build;
+        else if (data.panel === "generate") {
+            var buildInfo = data.repo.build;
             detailState.generateRepo = data.repo;
             detailState.generateRepo.addToJenkins = function(e) {
                 $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86", selectedBuild: buildInfo.selectedBuild, selectedTest: buildInfo.selectedTest, selectedEnv: buildInfo.selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
