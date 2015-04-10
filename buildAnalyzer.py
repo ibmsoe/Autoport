@@ -116,8 +116,8 @@ def inferBuildSteps(listing, repo):
         'grep build': "",
         'grep test': "",
         'grep env': "",
-        'build': "if [ -e configure.ac ]; then autoconfig > build_result.arti; ./configure >> build_result.arti; make all >> build_result.arti; elif [ -x configure ]; then ./configure > build_result.arti; make all >> build_result.arti; elif [ -e CMakeLists.txt ]; then cmake . > build_result.arti; make all >> build_result.arti; elif [ -e SConstruct ]; then scons all  > build_result.arti; fi",
-        'test': "if [ -x configure ]; then make test  > test_result.arti; elif [ -e CMakeLists.txt ]; then make test > test_result.arti; elif [ -e SConstruct ]; then scons test  > test_result.arti; fi",
+        'build': "if [ -x configure ]; then ./configure > build_result.arti; make clean all >> build_result.arti; fi",
+        'test': "make test  > test_result.arti",
         'env' : "",
         'artifacts': "*.arti ",
         'reason': "primary language",
@@ -138,7 +138,21 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    supported_langs = [ base_python_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_cxx_def, base_java_def ]
+    base_scala_def = {
+        'build system': "Scala",
+        'primary lang': "Scala",
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build': "if [ -e sbt ]; then chmod a+x ./sbt; ./sbt clean compile > build_result.arti; elif [ -e build.gradle ]; then gradle -q > build_result.arti; fi",
+        'test': "if [ -e sbt ]; then ./sbt test  > test_result.arti; elif [ -e build.gradle ]; then gradle -q test > test_result.arti; fi",
+        'env' : "",
+        'artifacts': "*.arti ",
+        'reason': "primary language",
+        'error': "",
+        'success': True }
+
+    supported_langs = [ base_python_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_cxx_def, base_java_def, base_scala_def ]
 
     # These definitions are added based on the presense of a specific build file.  We can
     # simply the command line provided by the base definition and grep for project and build
@@ -168,6 +182,62 @@ def inferBuildSteps(listing, repo):
         'env' : "",
         'artifacts': "*.arti",
         'reason': "pom.xml",
+        'error': "",
+        'success': True }
+
+    autotools_def = {
+        'build system': "C++_autotools",
+        'primary lang': "C++",
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build': "autoconf > build_result.arti; ./configure >> build_result.arti; make clean all >> build_result.arti",
+        'test' : "make test > test_result.arti",
+        'env' : "",
+        'artifacts': "*.arti",
+        'reason': "configure.ac ",
+        'error': "",
+        'success': True }
+
+    cmake_def = {
+        'build system': "C++_cmake",
+        'primary lang': "C++",
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build': "cmake . > build_result.arti; ./configure >> build_result.arti; make clean all >> build_result.arti",
+        'test' : "make test > test_result.arti",
+        'env' : "",
+        'artifacts': "*.arti",
+        'reason': "CMakeLists.txt",
+        'error': "",
+        'success': True }
+
+    scons_def = {
+        'build system': "C++_scons",
+        'primary lang': "C++",
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build': "scons all > build_result.arti;",
+        'test' : "scons test > test_result.arti",
+        'env' : "",
+        'artifacts': "*.arti",
+        'reason': "SConstruct ",
+        'error': "",
+        'success': True }
+
+    sbt_def = {
+        'build system': "sbt",
+        'primary lang': "Scala",
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build': "sbt clean compile > build_result.arti;",
+        'test' : "sbt test > test_result.arti",
+        'env' : "",
+        'artifacts': "*.arti",
+        'reason': "build.sbt ",
         'error': "",
         'success': True }
 
@@ -233,6 +303,14 @@ def inferBuildSteps(listing, repo):
             langlist.append(maven_def)         # If we find specific build files we can improve our commands by grepping readme's 
         elif f.name == 'build.xml':
             langlist.append(ant_def)
+        elif f.name == 'configure.ac':
+            langlist.append(autotools_def)
+        elif f.name == 'CMakeLists.txt':
+            langlist.append(cmake_def)
+        elif f.name == 'SConstruct':
+            langlist.append(scons_def)
+        elif f.name == 'build.sbt':
+            langlist.append(sbt_def)
         elif f.name == 'Makefile':
             makefile = f
         elif f.name in ('build.sh', 'run_build.sh'):
