@@ -284,7 +284,12 @@ def uploadBatchFile():
     if not os.path.exists(globals.localPathForBatchFiles):
         os.makedirs(globals.localPathForBatchFiles)
 
-    name = "batch_file." + str(datetime.datetime.today()) 
+    now = datetime.datetime.today()
+    now = now.replace(microsecond=0)
+    nowstr = str(now)
+    nowstr = nowstr.replace(' ', '_')
+
+    name = "batch_file." + nowstr 
     openPath = globals.localPathForBatchFiles + name
 
     f = open(openPath, "w")
