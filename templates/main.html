@@ -199,18 +199,52 @@
 
               <!-- START SINGLE SEARCH BATCH FILE TABLE -->
 
+              <div class="alert alert-success clearfix" rv-show="searchState.single.exportReady">
+                <span class="autoSelectText">
+                  <div>
+                    You can <strong>Save</strong> the Batch File Repository List to a batch file
+                    enabling the projects listed within to be built and tested later with a single command.
+                  </div>
+                  <div>
+                    Alternatively, you can <strong>Export</strong> the list to a file that you can edit
+                    and then <strong>Import</strong> the file into the tool from the 'Batch Jobs' tab.
+                  </div>
+                  <div>
+                    <strong>Clear</strong> the list to start over without creating a file.
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-8">
+                      <input type="text"
+                          class="form-control"
+                          placeholder="(e.g. mybatch-java)"
+                          rv-value="searchState.single.batchFile.config.name"/>
+                    </div>
+                    <div class="col-lg-4">
+                      <a rv-on-click="searchState.single.save">
+                        <button type="button" class="btn btn-primary">
+                          Save
+                        </button>
+                      </a>
+                      <a rv-on-click="searchState.single.download">
+                        <button type="button" class="btn btn-primary">
+                          Export
+                        </button>
+                      </a>
+                      <a rv-on-click="searchState.single.removeBatchFile">
+                        <button type="button" class="btn btn-primary">
+                          Clear
+                        </button>
+                      </a>
+                    </div>
+                  </div>
+                </span>
+              </div>
+
               <div id="batchFilePanel" class="panel panel-default" rv-show="searchState.single.exportReady">
-                <a rv-on-click="searchState.single.download">
-                  <button type="button" class="btn btn-primary">
-                    <span class="glyphicon glyphicon-download"></span>
-                    Export
-                  </button>
-                </a>
                 <table class="table table-hover">
                   <thead>
                     <tr>
                       <th>Batch File Repositories</th>
-                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody id="batchFileTable" rv-each-package="searchState.single.batchFile.packages">
@@ -243,8 +277,6 @@
                         <br />
 
                         <p class="candidate-description text-muted" rv-text="package.description"></p>
-                      </td>
-                      <td>
                       </td>
                     </tr>
                   </tbody>
@@ -661,20 +693,44 @@
               </div>
 
               <!-- END MULTI PROJECT SEARCH DETAIL VIEW -->
- 
+
               <!-- START MULTI PROJECT SEARCH MULTIPLE RESULTS TABLE -->
 
               <div class="alert alert-success clearfix" rv-show="searchState.multiple.ready">
-                <span class="autoSelectText">This is the list of top projects written in the specified language: { searchState.multiple.query.language }.  Select the action you wish to perform.</span>
-                <br/>
-                <div class="row">
-                  <span class="buttonRight">
-                    <button type="button" class="btn btn-primary"
-                      rv-on-click="searchState.multiple.download">
-                    Export
-                    </button>
-                  </span>
-                </div>
+                <span class="autoSelectText">
+                  <div>
+                    This is the list of most popular projects written in the specified language:
+                    <strong>'{ searchState.multiple.query.language }'</strong>.
+                  </div>
+                  <div>
+                    You can examine project details, remove projects from the list, and <strong>Save</strong> the
+                    list as a batch file to be built and tested later as a group with a single command.
+                  </div>
+                  <div>
+                    Alternatively, you can <strong>Export</strong> the list to a file that you can edit
+                    and then <strong>Import</strong> the file into the tool from the 'Batch Jobs' tab.
+                  </div>
+                  <div class="row">
+                    <div class="col-lg-8">
+                      <input type="text"
+                          class="form-control"
+                          placeholder="(e.g. mybatch-java)"
+                          rv-value="searchState.multiple.batchFile.config.name"/>
+                    </div>
+                    <div class="col-lg-4">
+                      <a rv-on-click="searchState.multiple.save">
+                        <button type="button" class="btn btn-primary">
+                          Save
+                        </button>
+                      </a>
+                      <a rv-on-click="searchState.multiple.download">
+                        <button type="button" class="btn btn-primary">
+                          Export
+                        </button>
+                      </a>
+                    </div>
+                  </div>
+                </span>
               </div>
 
               <div id="resultsPanel" class="panel panel-default" rv-show="searchState.multiple.ready">

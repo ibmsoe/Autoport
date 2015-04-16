@@ -104,17 +104,30 @@ var searchState = {
             query: "",
             results: {},
             batchFile: {
+                config: {
+                    name : "",
+                    owner : "",
+                    java : ""
+                },
+                packages: []
+            },
+            removed: {
                 config:   {},
                 packages: []
             },
+            removeBatchFile: function (ev) {
+                clearBatchFile(searchState.single.batchFile);
+            },
             download: function (ev) {
+                if (searchState.single.batchFile.config.name === "") {
+                    searchState.single.batchFile.config.name = searchState.single.batchFile.packages[0].name +
+                        "-" + "1";    // TODO change 1 to selected version
+                }
                 var json = JSON.stringify(searchState.single.batchFile, undefined, 2);
                 var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                 window.open(data);
                 // TODO: Check return code of window.open() to determine if request was cancelled
-                searchState.single.batchFile.config = {};
-                searchState.single.batchFile.packages = [];
-                searchState.single.exportReady = false;
+                clearBatchFile(searchState.single.batchFile);
             },
             setSearchBox: function (ev) {
                 searchState.single.searchBoxReady = (searchState.single.searchBoxReady) ? false : true;
@@ -124,14 +137,18 @@ var searchState = {
                 doSearch();
             },
             loadingState: {
-                loading: false 
+                loading: false
             }
     },
     multiple: {searchBoxReady: false,
               ready: false,
               results: {},
               batchFile: {
-                  config:   {},
+                  config: {
+                      name : "",
+                      owner : "",
+                      java : ""
+                  },
                   packages: []
               },
               removed: {
@@ -143,14 +160,16 @@ var searchState = {
                       var result = searchState.multiple.results[i];
                       searchState.multiple.batchFile.packages.push(result);
                   }
-
+                  if (searchState.multiple.batchFile.config.name === "") {
+                      searchState.multiple.batchFile.config.name = searchState.multiple.batchFile.packages[0].name +
+                          "-" + "1";    // TODO change 1 to selected version
+                  }
                   var json = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
                   var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                   window.open(data);
 
                   // TODO: Check return code of window.open() to determine if request was cancelled
-                  searchState.multiple.batchFile.config = {};
-                  searchState.multiple.batchFile.packages = [];
+                  clearBatchFile(searchState.multiple.batchFile);
               },
               setSearchBox: function (ev) {
                   searchState.multiple.searchBoxReady = (searchState.multiple.searchBoxReady) ? false : true;
@@ -185,17 +204,33 @@ var searchState = {
                   }
               },
               loadingState: {
-                  loading: false 
+                  loading: false
               }
+    }
+};
+
+function clearBatchFile(batchfile) {
+    if (batchfile == searchState.single.batchFile) {
+        searchState.single.batchFile.config.name = "";
+        searchState.single.batchFile.config.owner = "";
+        searchState.single.batchFile.config.java = "";
+        searchState.single.batchFile.packages = [];
+        searchState.single.exportReady = false;
+    } else {
+        searchState.multiple.batchFile.config.name = "";
+        searchState.multiple.batchFile.config.owner = "";
+        searchState.multiple.batchFile.config.java = "";
+        searchState.multiple.batchFile.packages = [];
+        searchState.multiple.exportReady = false;
     }
 };
 
 var batchState = {
     ready: false, // Whether or not to draw the list/select batch file view
-    
+
     importPanel: false,
     listPanel: false,
-    
+ 
     fileList: [],
     currentBatchFile: "",
     selectBatchFile: function (ev) {
@@ -259,11 +294,15 @@ var detailState = {
         var idName = ev.target.id;
         if (idName === "singleDetailBackButton") {
             detailState.ready = false;
-	        searchState.single.ready = true;
+            if (searchState.single.results.length > 0) {
+                searchState.single.ready = true;
+            }
         }
         else if (idName === "generateDetailBackButton") {
             detailState.generateReady = false;
-	        searchState.multiple.ready = true;
+            if (searchState.multiple.results.length > 0) {
+                searchState.multiple.ready = true;
+            }
         }
     },
     exitAutoSelect: function() {
@@ -632,14 +671,21 @@ function processSearchResults(data) {
                 }
             };
             result.addToBatchFile = function (ev) {
+                var i = data.results.indexOf(result);
+                var ele = data.results.splice(i, 1);
                 searchState.single.batchFile.packages.push(result);
+                if (data.results.length === 0) {
+                    searchState.single.ready = false;
+                }
                 searchState.single.exportReady = true;
-                searchState.single.ready = true;
             };
             result.remove = function (ev) {
                 var i = data.results.indexOf(result);
                 var ele = data.results.splice(i, 1);
                 searchState.multiple.removed.packages.push(ele);
+                if (data.results.length === 0) {
+                    searchState.multiple.ready = false;
+                }
             };
         });
 
