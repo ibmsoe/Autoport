@@ -1109,8 +1109,14 @@ function showDetail(data) {
             console.log(data.repo.build);
             detailState.repo.addToJenkins = function(e) {
                 var buildInfo = detailState.repo.build;
-                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86", selectedBuild: buildInfo.selectedBuild, selectedTest: buildInfo.selectedTest, selectedEnv: buildInfo.selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle", selectedBuild: buildInfo.selectedBuild, selectedTest: buildInfo.selectedTest, selectedEnv: buildInfo.selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                var selectedBuild = $("#singleSelectedBuild").val();
+                selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
+                var selectedTest = $("#singleSelectedTest").val();
+                selectedTest = selectedTest === "NA" ? "" : selectedTest;
+                var selectedEnv = $("#singleSelectedEnv").val();
+                selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
+                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86", selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle", selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
             };
             searchState.single.loadingState.loading = false;
             detailState.ready = true;
@@ -1126,8 +1132,15 @@ function showDetail(data) {
             var buildInfo = data.repo.build;
             detailState.generateRepo = data.repo;
             detailState.generateRepo.addToJenkins = function(e) {
-                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86", selectedBuild: buildInfo.selectedBuild, selectedTest: buildInfo.selectedTest, selectedEnv: buildInfo.selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle", selectedBuild: buildInfo.selectedBuild, selectedTest: buildInfo.selectedTest, selectedEnv: buildInfo.selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                var buildInfo = detailState.generateRepo.build;
+                var selectedBuild = $("#generateSelectedBuild").val();
+                selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
+                var selectedTest = $("#generateSelectedTest").val();
+                selectedTest = selectedTest === "NA" ? "" : selectedTest;
+                var selectedEnv = $("#generateSelectedEnv").val();
+                selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
+                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86", selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle", selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
             };
             searchState.multiple.loadingState.loading = false;
             detailState.generateReady = true;
