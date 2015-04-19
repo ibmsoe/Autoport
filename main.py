@@ -277,6 +277,11 @@ def search_repositories():
 @app.route("/uploadBatchFile", methods=['GET', 'POST'])
 def uploadBatchFile():
     try:
+        name = request.form["name"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing file"), 400
+
+    try:
         fileStr = request.form["file"]
     except KeyError:
         return json.jsonify(status="failure", error="missing file"), 400
@@ -289,10 +294,13 @@ def uploadBatchFile():
     nowstr = str(now)
     nowstr = nowstr.replace(' ', '_')
 
-    name = "batch_file." + nowstr 
+    if name == "":
+        name = "batch_file"
+
+    name = name + "." + nowstr 
     openPath = globals.localPathForBatchFiles + name
 
-    f = open(openPath, "w")
+    f = open(openPath, "wb")
     f.write(fileStr)
     f.close()
 
