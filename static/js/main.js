@@ -670,9 +670,11 @@ $('#batch_file').change(function () {
 function showAlert(message, data) {
     var text = message;
     if (typeof data !== "undefined") {
-        text += "<br/>" + (data.responseJSON.error !== undefined ?        // TODO: responseJSON undefined.  Maybe ajax/getResponseHeader
-                           data.responseJSON.error :
-                           data.error);
+        text += "<br/>" + (data.responseJSON !== undefined ?
+                            (data.responseJSON.error !== undefined ?
+                              data.responseJSON.error :
+                              data.error) :
+                            data.error);
     }
     $("#apErrorDialogText").html(text);
     $("#errorAlert").modal();
