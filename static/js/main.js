@@ -121,12 +121,23 @@ var searchState = {
             download: function (ev) {
                 if (searchState.single.batchFile.config.name === "") {
                     searchState.single.batchFile.config.name = searchState.single.batchFile.packages[0].name +
-                        "-" + "1";    // TODO change 1 to selected version
+                        "-" + String(searchState.single.batchFile.packages.length);
                 }
                 var json = JSON.stringify(searchState.single.batchFile, undefined, 2);
                 var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                 window.open(data);
                 // TODO: Check return code of window.open() to determine if request was cancelled
+                clearBatchFile(searchState.single.batchFile);
+            },
+            save: function (ev) {
+                if (searchState.single.batchFile.config.name === "") {
+                    searchState.single.batchFile.config.name = searchState.single.batchFile.packages[0].name +
+                        "-" + String(searchState.single.batchFile.packages.length);
+                }
+                var name = searchState.single.batchFile.config.name;
+                var file = JSON.stringify(searchState.single.batchFile, undefined, 2);
+
+                $.post("/uploadBatchFile", {name: name, file: file}, uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
                 clearBatchFile(searchState.single.batchFile);
             },
             setSearchBox: function (ev) {
@@ -162,13 +173,29 @@ var searchState = {
                   }
                   if (searchState.multiple.batchFile.config.name === "") {
                       searchState.multiple.batchFile.config.name = searchState.multiple.batchFile.packages[0].name +
-                          "-" + "1";    // TODO change 1 to selected version
+                          "-" + String(searchState.multiple.batchFile.packages.length);
                   }
                   var json = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
                   var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                   window.open(data);
 
                   // TODO: Check return code of window.open() to determine if request was cancelled
+                  clearBatchFile(searchState.multiple.batchFile);
+              },
+              save: function (ev) {
+                  for (var i = 0; i < searchState.multiple.results.length; ++i) {
+                      var result = searchState.multiple.results[i];
+                      searchState.multiple.batchFile.packages.push(result);
+                  }
+                  if (searchState.multiple.batchFile.config.name === "") {
+                      console.log("Save name: ", searchState.multiple.batchFile.packages[0].name);
+                      searchState.multiple.batchFile.config.name = searchState.multiple.batchFile.packages[0].name +
+                          "-" + String(searchState.multiple.batchFile.packages.length);
+                  }
+                  var name = searchState.multiple.batchFile.config.name;
+                  var file = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
+
+                  $.post("/uploadBatchFile", {name: name, file: file}, uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
                   clearBatchFile(searchState.multiple.batchFile);
               },
               setSearchBox: function (ev) {
@@ -216,12 +243,14 @@ function clearBatchFile(batchfile) {
         searchState.single.batchFile.config.java = "";
         searchState.single.batchFile.packages = [];
         searchState.single.exportReady = false;
+        searchState.single.ready = false;
     } else {
         searchState.multiple.batchFile.config.name = "";
         searchState.multiple.batchFile.config.owner = "";
         searchState.multiple.batchFile.config.java = "";
         searchState.multiple.batchFile.packages = [];
         searchState.multiple.exportReady = false;
+        searchState.multiple.ready = false;
     }
 };
 
@@ -257,9 +286,11 @@ var batchState = {
         if (file) {
             var reader = new FileReader();
             reader.readAsText(file);
-		
+
             reader.onload = function(e) {
-                $.post("/uploadBatchFile", {file: e.target.result}, uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
+                var batchFile = JSON.parse(e.target.result);
+                name = batchFile.config.name;
+                $.post("/uploadBatchFile", {name: name, file: e.target.result}, uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
             };	
         }
     },
