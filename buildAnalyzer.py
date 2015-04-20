@@ -54,6 +54,20 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
+    base_js_def = {
+        'build system': "JavaScript",
+        'primary lang': "JavaScript",
+        'grep build': "npm install %s"%(repo.name),	# Search readme for this string. If found, use it as build cmd
+        'grep test': "npm test",			# Same for test command. Maybe we can pick up some extra arguments
+        'grep env': "",
+        'build' : "if [ -e package.json ]; then npm install > build_result.arti; fi",
+        'test' : "npm test > test_result.arti",
+        'env' : "",
+        'artifacts': "*.arti",
+        'reason': "primary language",
+        'error': "",
+        'success': True }
+
     base_ruby_def = {
         'build system': "Ruby",
         'primary lang': "Ruby",
@@ -152,7 +166,7 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    supported_langs = [ base_python_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_cxx_def, base_java_def, base_scala_def ]
+    supported_langs = [ base_python_def,base_js_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_cxx_def, base_java_def, base_scala_def ]
 
     # These definitions are added based on the presense of a specific build file.  We can
     # simply the command line provided by the base definition and grep for project and build
