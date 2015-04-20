@@ -60,8 +60,8 @@ def inferBuildSteps(listing, repo):
         'grep build': "npm install %s"%(repo.name),	# Search readme for this string. If found, use it as build cmd
         'grep test': "npm test",			# Same for test command. Maybe we can pick up some extra arguments
         'grep env': "",
-        'build' : "if [ -e package.json ]; then npm install > build_result.arti; fi",
-        'test' : "npm test > test_result.arti",
+        'build' : "if [ -e package.json ]; then npm install > build_result.arti 2>&1; fi",
+        'test' : "npm test > test_result.arti 2>&1",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "primary language",
@@ -325,6 +325,8 @@ def inferBuildSteps(listing, repo):
             langlist.append(scons_def)
         elif f.name == 'build.sbt':
             langlist.append(sbt_def)
+        elif f.name == 'package.json':
+            langlist.append(base_js_def)      # Sometimes there is more CSS than JavaScript so base language is not recognized
         elif f.name == 'Makefile':
             makefile = f
         elif f.name in ('build.sh', 'run_build.sh'):
