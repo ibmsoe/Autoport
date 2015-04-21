@@ -27,6 +27,7 @@ from batch import Batch
 from random import randint
 
 app = Flask(__name__)
+
 maxResults = 10
 resParser = ResultParser()
 
@@ -43,6 +44,25 @@ def main():
 @app.route("/init", methods=['POST'])
 def init():
     return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, localPathForTestResults=globals.localPathForTestResults, pathForTestResults=globals.pathForTestResults, localPathForBatchFiles=globals.localPathForBatchFiles, pathForBatchFiles=globals.pathForBatchFiles, githubToken=globals.githubToken, configUsername=globals.configUsername, configPassword=globals.configPassword)
+
+#TODO - add error checking
+@app.route("/getJenkinsNodes", methods=["POST"])
+def getJenkinsNodes():
+    nodesUrl = globals.jenkinsUrl + "/computer/api/json?pretty=true"
+    nodesResults = json.loads(requests.get(nodesUrl).text)
+    nodes = nodesResults['computer']
+
+    nodeNames = []
+    nodeLabels = []
+
+    for node in nodes:
+        name = node['displayName']
+        if name != "master":
+            nodeNames.append(name)
+            root = ET.fromstring(requests.get(globals.jenkinsUrl + "/computer/" + name + "/config.xml").text)
+            nodeLabels.append(root.find("./label").text)
+
+    return json.jsonify(status="ok", nodeNames=nodeNames, nodeLabels=nodeLabels)
 
 # Settings function
 @app.route("/settings", methods=['POST'])
@@ -331,12 +351,12 @@ def uploadBatchFile():
 
     return json.jsonify(status="ok")
 
-# Create Job - takes a repo id, repo tag, and arch and creates a Jenkins job for it
+# Create Job - takes a repo id, repo tag, and build node and creates a Jenkins job for it
 # Opens a new tab with a new jenkins job URL on the client side on success,
 # while the current tab stays in the same place.
 # TODO - If job is started through batch file can't select options currently
 @app.route("/createJob", methods=['GET', 'POST'])
-def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
+def createJob(i_id = None, i_tag = None, i_node = None, i_javaType = None):
     # Ensure we have a valid id number as a post argument
     try:
         idStr = request.form["id"]
@@ -351,14 +371,14 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
         else:
             return json.jsonify(status="failure", error="missing repo id"), 400
 
-    # Ensure we have a valid architecture as a post argument
+    # Ensure we have a valid build node as a post argument
     try:
-        arch = request.form["arch"]
+        node = request.form["node"]
     except KeyError:
-        if i_arch != None:
-            arch = i_arch
+        if i_node != None:
+            node = i_node
         else:
-            return json.jsonify(status="failure", error="missing arch"), 400
+            return json.jsonify(status="failure", error="missing build node"), 400
 
     # Check to see if we have a valid tag number as a post argument    
     try:
@@ -418,14 +438,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
     # Modify selected elements
-    archName = ""
-    if arch == "x86":
-        xml_node.text = globals.nodes['x86']
-        archName = "x86"
-
-    elif arch == "ppcle":
-        xml_node.text = globals.nodes['ppcle']
-        archName = "ppcle"
+    xml_node.text = node
 
     xml_github_url.text = repo.html_url
     xml_git_url.text = "https" + repo.git_url[3:]
@@ -435,7 +448,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
     # is found. This should be an extremely rare occurence.
     # TODO - chcek to see if job already exists
     uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = globals.localHostName + '_' + str(uid) + '_' + archName + '_' + repo.name
+    jobName = globals.localHostName + '_' + str(uid) + '_' + node + '_' + repo.name
 
     if (tag == "") or (tag == "Current"):
         xml_default_branch.text = "*/" + repo.default_branch
@@ -463,7 +476,7 @@ def createJob(i_id = None, i_tag = None, i_arch = None, i_javaType = None):
 
     # Job metadata as passed to jenkins
     jobMetadataName = "meta.arti"
-    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Architecture\": \"" + arch + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
+    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Architecture\": \"" + node + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
 
     # add parameters information
     i = 1
@@ -580,6 +593,7 @@ def moveArtifacts (jobName):
         print "archive move FTP failure" + jobName + " error: " + e
 
 # Run Batch File - takes a batch file name and runs it
+# TODO - fix to provide support for multiple build servers instead of just x86 vs ppcle
 @app.route("/runBatchFile", methods=["GET", "POST"])
 def runBatchFile ():
     # Get the batch file name from POST
@@ -602,8 +616,10 @@ def runBatchFile ():
         for package in fileBuf['packages']:            
             p_repo = globals.github.get_repo(package['id'])
             tag = package['tag']
-            createJob(package['id'], package['tag'], "x86", javaType)
-            createJob(package['id'], package['tag'], "ppcle", javaType)
+            # TODO - need to specify the servers from the batch file, leaving this in
+            # as to not break batch functionality
+            createJob(package['id'], package['tag'], "x86-ubuntu-14.04", javaType)
+            createJob(package['id'], package['tag'], "ppcle-ubuntu-14.04", javaType)
 
     else:
         return json.jsonify(status="failure", error="could not find file"), 404

@@ -8,6 +8,7 @@
 
     <!-- Bootstrap -->
     <link href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}" rel="stylesheet"/>
+    <link href="{{ url_for('static', filename='css/lib/bootstrap-multiselect.css') }}" rel="stylesheet"/>
     <link href="{{ url_for('static', filename='css/lib/wave.css') }}" rel="stylesheet"/>
 
     <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet"/>
@@ -416,6 +417,12 @@
                         <input id="singleSelectedEnv" type="text" class="form-control" 
                           rv-value="detailState.repo.build.selectedEnv | cleanOptionsOutput"/>
                     </div>
+                    <br />
+                    <div>
+                      <select id="singleBuildServers" multiple="multiple">
+                        <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+                      </select>
+                    </div>
                   </span>
                   <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
                     <button id="singleDetailBackButton" type="button" class="btn btn-info">
@@ -687,6 +694,12 @@
                       <br />
                       <input id="generateSelectedEnv" type="text" class="form-control" 
                         rv-value="detailState.generateRepo.build.selectedEnv | cleanOptionsOutput"/>
+                    </div>
+                    <br />
+                    <div>
+                      <select id="generateBuildServers" multiple="multiple">
+                        <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+                      </select>
                     </div>
                   </span>
                   <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
@@ -1200,6 +1213,7 @@
     <script type="text/javascript" src="http://cdn.datatables.net/1.10.4/js/jquery.dataTables.min.js"></script>
     <!-- Include all compiled plugins (below), or include individual files as needed -->
     <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/lib/bootstrap-multiselect.js') }}"></script>
     <script src="http://cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.js"></script>
     <script src="{{ url_for('static', filename='js/lib/rivets.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/lib/chart.min.js') }}"></script>
