@@ -451,6 +451,8 @@ var reportState = {
 };
 
 var jenkinsState = {
+    nodeNames: [],
+    nodeLabels: [],
     jenkinsPanel: false,
     setJenkinsPanel: function(ev) {
         jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
@@ -1131,8 +1133,22 @@ function archiveCallback(data) {
     $("#archiveCallbackAlert").modal();
 }
 
+function getSelectedValues(select) {
+    var result = [];
+    var options = select && select.options;
+    var opt;
+
+    for(var i=0, iLen=options.length; i<iLen; i++) {
+        opt = options[i];
+
+        if(opt.selected) {
+            result.push(opt.value || opt.text);
+        }
+    }
+    return result;
+}
+
 // Sets up and opens detail view for a repo
-// TODO - add check boxes for architectures wanted
 function showDetail(data) {
     if (data.status !== "ok" || data.type !== "detail") {
         showAlert("Bad response while creating detail view!", data);
@@ -1142,14 +1158,22 @@ function showDetail(data) {
             console.log(data.repo.build);
             detailState.repo.addToJenkins = function(e) {
                 var buildInfo = detailState.repo.build;
+        
                 var selectedBuild = $("#singleSelectedBuild").val();
                 selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
+        
                 var selectedTest = $("#singleSelectedTest").val();
                 selectedTest = selectedTest === "NA" ? "" : selectedTest;
+        
                 var selectedEnv = $("#singleSelectedEnv").val();
                 selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
-                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "x86", selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-                $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, arch: "ppcle", selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+        
+                var el = $("#singleBuildServers")[0];
+                var buildServers = getSelectedValues(el);
+
+                for(var i=0; i < buildServers.length; i++) {
+                    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                }
             };
             searchState.single.loadingState.loading = false;
             detailState.ready = true;
@@ -1166,14 +1190,22 @@ function showDetail(data) {
             detailState.generateRepo = data.repo;
             detailState.generateRepo.addToJenkins = function(e) {
                 var buildInfo = detailState.generateRepo.build;
+                
                 var selectedBuild = $("#generateSelectedBuild").val();
                 selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
+                
                 var selectedTest = $("#generateSelectedTest").val();
                 selectedTest = selectedTest === "NA" ? "" : selectedTest;
+                
                 var selectedEnv = $("#generateSelectedEnv").val();
                 selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
-                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "x86", selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-                $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, arch: "ppcle", selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                
+                var el = $("#generateBuildServers")[0];
+                var buildServers = getSelectedValues(el);
+
+                for(var i=0; i < buildServers.length; i++) {
+                    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                }
             };
             searchState.multiple.loadingState.loading = false;
             detailState.generateReady = true;
@@ -1250,6 +1282,26 @@ function addToJenkinsCallback(data) {
     }
 }
 
+function getJenkinsNodesCallback(data) {
+    if (data.status === "ok") {
+        for(i = 0; i < data.nodeLabels.length; i++) {
+            var name = data.nodeNames[i];
+            var label = data.nodeLabels[i];
+            if($.inArray(name, jenkinsState.nodeNames) === -1) {
+                jenkinsState.nodeNames.push(data.nodeNames[i]);
+            }
+            if($.inArray(label, jenkinsState.nodeLabels) === -1) {
+                jenkinsState.nodeLabels.push(data.nodeLabels[i]);
+            }
+        }
+
+        console.log(jenkinsState.nodeLabels);
+    }
+    else {
+        showAlert("Could not get Jenkins slaves", data);
+    }
+}
+
 $(document).ready(function() {
     projectReportState.projectsTable = $("#projectListTable").DataTable({
         order: [[4, "desc"]],
@@ -1276,5 +1328,30 @@ $(document).ready(function() {
                                'Select</button></a>';
             } }
         ]
+    });
+    
+    // NOTE - rivets does not play well with multiselect
+    // Query Jenkins for list of build servers
+    $.ajax({
+        type: 'POST',
+        url: "/getJenkinsNodes",
+        data: {},
+        success: getJenkinsNodesCallback,
+        dataType: "json",
+        async:false
+    });
+    // Initialize bootstrap multiselect plugin
+    // Config options go here
+    $('#singleBuildServers').multiselect({
+        buttonClass: "btn btn-primary",
+        buttonText: function(options, select) {
+            return "Select build system type";
+        }
+    });
+    $('#generateBuildServers').multiselect({
+        buttonClass: "btn btn-primary",
+        buttonText: function(options, select) {
+            return "Select build system type";
+        }
     });
 });

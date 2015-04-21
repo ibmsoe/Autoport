@@ -74,9 +74,6 @@ def init():
 
     # used for caching repo data
     cache = Cache(github)
-
-    # Jenkins slave node pools
-    nodes = {'x86': "x86", 'ppcle': "ppcle"}
    
     # create pool of worker threads that query Jenkins for job completion 
     threadPool = ThreadPool(threadPoolSize)
