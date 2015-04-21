@@ -174,11 +174,11 @@ def inferBuildSteps(listing, repo):
     ant_def = {
         'build system': "ant",
         'primary lang': "Java",
-        'grep build': "ant clean > build_result.arti 2>&1; ant >> build_result.arti 2>&1",
-        'grep test': "ant test > test_result.arti 2>&1",
+        'grep build': "ant clean",
+        'grep test' : "ant test",
         'grep env': "ANT_OPTS",
-        'build': "ant",
-        'test' : "ant test",
+        'build': "ant clean > build_result.arti 2>&1; ant >> build_result.arti 2>&1",
+        'test': "ant test > test_result.arti 2>&1",
         'env' : "",
         'artifacts': "",                        # TODO: Need to specify a build artifact
         'reason': "build.xml",
@@ -376,12 +376,14 @@ def inferBuildSteps(listing, repo):
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
                     if strFound:
-                        build_info['testOptions'].append(cmd)
+                        strFound = appendArtifact(strFound);
+                        build_info['testOptions'].append(strFound)
                 cmd = lang['grep build']
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
                     if strFound:
-                        build_info['buildOptions'].append(cmd)
+                        strFound = appendArtifact(strFound);
+                        build_info['buildOptions'].append(strFound)
                 env = lang['grep env']
                 if env:
                     delim = [";", " ", "\n"]                    # delimeters used to denote end of environment variable
@@ -395,14 +397,23 @@ def inferBuildSteps(listing, repo):
     if build_info['buildOptions']:
         build_info['success'] = True
         build_info['selectedBuild'] = build_info['buildOptions'][-1]
-    
+
         if build_info['testOptions']:
             build_info['selectedTest'] = build_info['testOptions'][-1]
-    
+
             if build_info['envOptions']:
                 build_info['selectedEnv'] = build_info['envOptions'][-1]
 
     return build_info
+
+# appendArtifact - Removes trailing semi-colon if present and modifies
+# command to re-direct stdin/stderr to the Jenkins's build artifact
+def appendArtifact(cmd):
+    if cmd[-1] == ';':
+        cmd = cmd[:-1]
+    if '>' not in cmd:
+        cmd += " > test_result.arti 2>&1"
+    return cmd;
 
 # Build Files Parser - Looks for string searchTerm in string fileBuf and then iterates over
 # list of delimeters and finds the one with the smallest index, returning the string found between the
