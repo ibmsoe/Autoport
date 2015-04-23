@@ -568,8 +568,11 @@ def moveArtifacts (jobName):
         globals.ftpClient.chdir(artifactsPath)
         flist = globals.ftpClient.listdir()
        
-        if "lastSuccessfulBuild" in flist:
-            artifactsPath = artifactsPath + "lastSuccessfulBuild/"
+        # 1 is a sym link to the first build for that job.
+        # If we delete each job after each run, we only care about this first build.
+        # Else we need to parse nextBuildNumber in the parent directory to get build number.
+        if "1" in flist:
+            artifactsPath = artifactsPath + "1/"
             globals.ftpClient.chdir(artifactsPath)
             flist = globals.ftpClient.listdir()
 
