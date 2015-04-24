@@ -249,7 +249,8 @@ def detail(id, repo=None):
         "classifications": classify(repo),
         "build": build,
         "recentTag": recentTag,
-        "tags": tags
+        "tags": tags,
+        "useVersion": "Current"
     }
     # Send
     return json.jsonify(status="ok", repo=repoData, type="detail", panel=panel)
