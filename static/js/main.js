@@ -1172,8 +1172,12 @@ function showDetail(data) {
                 var buildServers = getSelectedValues(el);
 
                 for(var i=0; i < buildServers.length; i++) {
-                    $.post("/createJob", {id: detailState.repo.id, tag: e.target.innerHTML, javaType: detailState.javaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                    console.log(detailState.repo.useVersion + " version");
+                    $.post("/createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion, javaType: detailState.javaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
+            };
+            detailState.repo.updateVersion = function(e) {
+                detailState.repo.useVersion = e.target.innerHTML;
             };
             searchState.single.loadingState.loading = false;
             detailState.ready = true;
@@ -1204,8 +1208,11 @@ function showDetail(data) {
                 var buildServers = getSelectedValues(el);
 
                 for(var i=0; i < buildServers.length; i++) {
-                    $.post("/createJob", {id: detailState.generateRepo.id, tag: e.target.innerHTML, javaType: detailState.generateJavaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                    $.post("/createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion, javaType: detailState.generateJavaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
+            };
+            detailState.generateRepo.updateVersion = function(e) {
+                detailState.generateRepo.useVersion = e.target.innerHTML;
             };
             searchState.multiple.loadingState.loading = false;
             detailState.generateReady = true;

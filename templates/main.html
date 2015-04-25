@@ -320,19 +320,31 @@
                         </ul>
                       </div>
                     
-                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                      <button class="btn btn-primary" type="button" 
+                        rv-on-click="detailState.repo.addToJenkins">
                         Add to Jenkins
-                        <span class="caret"></span>
                       </button>
 
-                      <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                        <li role="presentation" class="dropdown-header">Recent</li>
-                        <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">Current</a></li>
-                        <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ detailState.repo.recentTag }</a></li>
-                        <li role="presentation" class="divider"></li>
-                        <li role="presentation" class="dropdown-header">Older</li>
-                        <li role="presentation" rv-each-tag="detailState.repo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.repo.addToJenkins">{ tag }</a></li>
-                      </ul>
+                      <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" 
+                          id="singleVersions" data-toggle="dropdown" aria-expanded="true">
+                          Use { detailState.repo.useVersion} version
+                          <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-right" role="menu" 
+                          airia-labelledby="singleVersions">
+                          <li role="presentation" class="dropdown-header">Recent</li>
+                          <li role="presentation"><a role="menuitem" tabindex="-1"
+                            rv-on-click="detailState.repo.updateVersion">Current</a></li>
+                          <li role="presentation"><a role="menuitem" tabindex="-1"
+                            rv-on-click="detailState.repo.updateVersion">{ detailState.repo.recentTag }</a></li>
+                          <li role="presentation" class="divider"></li>
+                          <li role="presentation" class="dropdown-header">Older</li>
+                          <li role="presentation" rv-each-tag="detailState.repo.tags"
+                            rv-on-click="detailState.repo.updateVersion">
+                            <a role="menuitem" tabindex="-1">{ tag }</a></li>
+                        </ul>
+                      </div>
 
                       <a rv-on-click="detailState.addToBatchFile">
                         <button type="button" class="singleDetailBatchButton btn btn-primary">
@@ -604,20 +616,32 @@
                           <li rv-on-click="detailState.selectGenerateJavaType"><a>IBM Java</a></li>
                         </ul>
                       </div>
-
-                      <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+                      
+                      <button class="btn btn-primary" type="button" 
+                        rv-on-click="detailState.generateRepo.addToJenkins">
                         Add to Jenkins
-                        <span class="caret"></span>
                       </button>
- 
-                      <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                        <li role="presentation" class="dropdown-header">Recent</li>
-                        <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.generateRepo.addToJenkins">Current</a></li>
-                        <li role="presentation"><a role="menuitem" tabindex="-1" rv-on-click="detailState.generateRepo.addToJenkins">{ detailState.generateRepo.recentTag }</a></li>
-                        <li role="presentation" class="divider"></li>
-                        <li role="presentation" class="dropdown-header">Older</li>
-                        <li role="presentation" rv-each-tag="detailState.generateRepo.tags"><a role="menuitem" tabindex="-1" rv-on-click="detailState.generateRepo.addToJenkins">{ tag }</a></li>
-                      </ul>
+
+                      <div class="dropdown">
+                        <button class="btn btn-primary dropdown-toggle" type="button" 
+                          id="singleVersions" data-toggle="dropdown" aria-expanded="true">
+                          Use { detailState.generateRepo.useVersion} version
+                          <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-right" role="menu" 
+                          airia-labelledby="singleVersions">
+                          <li role="presentation" class="dropdown-header">Recent</li>
+                          <li role="presentation"><a role="menuitem" tabindex="-1"
+                            rv-on-click="detailState.generateRepo.updateVersion">Current</a></li>
+                          <li role="presentation"><a role="menuitem" tabindex="-1"
+                            rv-on-click="detailState.generateRepo.updateVersion">{ detailState.generateRepo.recentTag }</a></li>
+                          <li role="presentation" class="divider"></li>
+                          <li role="presentation" class="dropdown-header">Older</li>
+                          <li role="presentation" rv-each-tag="detailState.generateRepo.tags"
+                            rv-on-click="detailState.generateRepo.updateVersion">
+                            <a role="menuitem" tabindex="-1">{ tag }</a></li>
+                        </ul>
+                      </div>
                     </div>
                   </h1>
 
