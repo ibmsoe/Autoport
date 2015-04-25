@@ -78,9 +78,17 @@ class Catalog:
         try:
             localPath = self.__localPath + build + "/"
             putdir = tempfile.mkdtemp(prefix="autoport_")
-            shutil.copyfile(localPath + "meta.arti", putdir+"/meta.arti")
-            shutil.copyfile(localPath + "dependency.arti", putdir+"/dependency.arti")
-            shutil.copyfile(localPath + "test_result.arti", putdir+"/test_result.arti")
+
+            metaFile = localPath + "meta.arti"
+            buildArtifactFile = localPath + "build_result.arti"
+            testArtifactFile = localPath + "test_result.arti"
+
+            if(os.path.isfile(metaFile)):
+                shutil.copyfile(metaFile, putdir+"/meta.arti")
+            if(os.path.isfile(buildArtifactFile)):
+                shutil.copyfile(buildArtifactFile, putdir+"/build_result.arti")
+            if(os.path.isfile(testArtifactFile)):
+                shutil.copyfile(testArtifactFile, putdir+"/test_result.arti")
             self.__tmpdirs.append(putdir)
             return putdir
         except IOError as e:
@@ -88,16 +96,24 @@ class Catalog:
             return None
 
     def getGSAResults(self, build):
+        putdir = tempfile.mkdtemp(prefix="autoport_")
+        self.__archiveFtpClient.chdir(self.__copyPath+build)
+        
         try:
-            putdir = tempfile.mkdtemp(prefix="autoport_")
-            self.__archiveFtpClient.chdir(self.__copyPath+build)
             self.__archiveFtpClient.get("meta.arti", putdir+"/meta.arti")
-            self.__archiveFtpClient.get("dependency.arti", putdir+"/dependency.arti")
-            self.__archiveFtpClient.get("test_result.arti", putdir+"/test_result.arti")
-            self.__tmpdirs.append(putdir)
-            return putdir
         except IOError:
-            return None
+            pass
+        try:
+            self.__archiveFtpClient.get("build_result.arti", putdir+"/build_result.arti")
+        except IOError:
+            pass
+        try:
+            self.__archiveFtpClient.get("test_result.arti", putdir+"/test_result.arti")
+        except IOError:
+            pass
+        
+        self.__tmpdirs.append(putdir)
+        return putdir
 
     def archiveResults(self, builds):
         errors = []
@@ -118,8 +134,8 @@ class Catalog:
                 self.__archiveFtpClient.mkdir(self.__copyPath+build)
                 self.__archiveFtpClient.put(tmpDir+"/meta.arti",
                                      self.__copyPath+build+"/meta.arti")
-                self.__archiveFtpClient.put(tmpDir+"/dependency.arti",
-                                     self.__copyPath+build+"/dependency.arti")
+                self.__archiveFtpClient.put(tmpDir+"/build_result.arti",
+                                     self.__copyPath+build+"/build_result.arti")
                 self.__archiveFtpClient.put(tmpDir+"/test_result.arti",
                                      self.__copyPath+build+"/test_result.arti")
             except IOError as e:
@@ -128,7 +144,7 @@ class Catalog:
             # remove the 'local' copy
             try:
                 self.__jenkinsFtpClient.remove(self.__localPath+build+"/meta.arti")
-                self.__jenkinsFtpClient.remove(self.__localPath+build+"/dependency.arti")
+                self.__jenkinsFtpClient.remove(self.__localPath+build+"/build_result.arti")
                 self.__jenkinsFtpClient.remove(self.__localPath+build+"/test_result.arti")
                 self.__jenkinsFtpClient.rmdir(self.__localPath+build)
             except IOError as e:

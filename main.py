@@ -638,6 +638,7 @@ def listBatchFiles(repositoryType):
     return json.jsonify(status="ok", results=batch.listBatchFiles(repositoryType, filt.lower()))
 
 # List all results available on catalog
+#TODO - list builds as failed and disable test detail
 @app.route("/listTestResults/<repositoryType>")
 def listTestResults(repositoryType):
     filt = request.args.get("filter", "")
@@ -712,7 +713,10 @@ def getTestHistory():
             if projectName[0] in prj[0] and projectName[1] in prj[0]:
                 resultDir = catalog.getResults(prj[0], prj[1])
                 try:
-                    prjRes = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+                    if(os.path.isfile(resultDir+"/test_result.arti")):
+                        prjRes = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+                    else:
+                        return json.jsonify(status="failure", error="build failed, no test results"), 500
                 except BaseException as e:
                     return json.jsonify(status="failure", error=str(e)), 500
                 f = open(resultDir+"/meta.arti")
@@ -737,7 +741,10 @@ def getTestDetail():
         repo = projects[projectName]
         resultDir = catalog.getResults(projectName, repo)
         try:
-            res = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+            if(os.path.isfile(resultDir+"/test_result.arti")):
+                res = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+            else:
+                return json.jsonify(status="failure", error="build failed, no test results"), 500
         except BaseException as e:
             return json.jsonify(status="failure", error=str(e)), 500
         f = open(resultDir+"/meta.arti")
