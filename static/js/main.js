@@ -779,7 +779,7 @@ function processResultList(data) {
     if (data === undefined || data.status != "ok") {
         showAlert("Error:", data);
     } else {
-        var prjRegex = /(.*?)_(.*?)_(.*?)_(.*?)_(.*?)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d)/;
+        var prjRegex = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-.\d\d-.\d\d-.\d\d)/;
         var filterRegex = new RegExp(reportState.projectFilter.toLowerCase());
         for (var project in data.results) {
             if (project !== undefined) {

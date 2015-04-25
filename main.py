@@ -33,8 +33,22 @@ resParser = ResultParser()
 
 catalog = Catalog(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
 batch = Batch()
-#test AutoPortTool - x86 - jsoup-current.2014-10-24 15:01:45
-resultPattern = re.compile('(.*?)_(.*?)_(.*?)_(.*?)_(.*?)\.(\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d\.\d\d\d\d\d\d)')
+
+# Be sure to update main.js also.
+#
+# job result sample "hostname.181259.x86-ubuntu-14.04.junit.current.2015-04-24-h12-m23-s15/"
+# job result sample "hostname.887140.229_x86_ubuntu14.junit.current.2015-04-24-h12-m23-s12/"
+# job result sample "hostname.984127.ppcle-ubuntu-14.04.junit.current.2015-04-24-h12-m23-s05/"
+# pattern           "hostname.uuid  .node              .name .tag    .time stamp
+#                                    ^                  ^     ^
+#                                    |                  +-----+-- may have - or _
+#                                    +-- may have a - or _ or .
+#
+# We delimit with . and we prefix project name with N-.  This becomes :
+#
+# job result sample "hostname.984127.ppcle-ubuntu-14.04.N-junit.current.2015-04-24_12-23-05/"
+#
+resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
 # Main page - just serve up main.html
 @app.route("/")
@@ -310,15 +324,14 @@ def uploadBatchFile():
     if not os.path.exists(globals.localPathForBatchFiles):
         os.makedirs(globals.localPathForBatchFiles)
 
-    now = datetime.datetime.today()
-    now = now.replace(microsecond=0)
-    nowstr = str(now)
-    nowstr = nowstr.replace(' ', '_')
+    # TODO - Fix timestamp.  Format wrong
+    # Contruct time so that it works on windows.  No colons allowed
+    time = strftime("%Y-%m-%d-h%H-m%M-s%S", gmtime())
 
     if name == "":
         name = "batch_file"
 
-    name = name + "." + nowstr 
+    name = name + "." + time 
     openPath = globals.localPathForBatchFiles + name
 
     f = open(openPath, "wb")
@@ -449,14 +462,14 @@ def createJob(i_id = None, i_tag = None, i_node = None, i_javaType = None):
     # is found. This should be an extremely rare occurence.
     # TODO - chcek to see if job already exists
     uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = globals.localHostName + '_' + str(uid) + '_' + node + '_' + repo.name
+    jobName = globals.localHostName + '.' + str(uid) + '.' + node + '.N-' + repo.name
 
     if (tag == "") or (tag == "Current"):
         xml_default_branch.text = "*/" + repo.default_branch
-        jobName += "_current"
+        jobName += ".current"
     else:
         xml_default_branch.text = "tags/" + tag
-        jobName += "_" + tag
+        jobName += "." + tag
 
     # Time job is created
     time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
@@ -565,7 +578,11 @@ def moveArtifacts (jobName):
     # grab the build artifacts through ftp if build was successful
     artifactsPath = globals.artifactsPathPrefix + jobName + "/builds/"
 
+    # give a few seconds for jenkins to finish archiving files
+    sleep(10)
+
     try:
+
         globals.ftpClient.chdir(artifactsPath)
         flist = globals.ftpClient.listdir()
        
@@ -581,8 +598,10 @@ def moveArtifacts (jobName):
                 artifactsPath = artifactsPath + "archive/"
                 globals.ftpClient.chdir(artifactsPath)
             
-                localArtifactsPath = globals.localPathForTestResults + jobName + "." + \
-                    str(datetime.datetime.today()) + "/"
+                # Contruct time so that it works on windows.  No colons allowed
+                time = strftime("%Y-%m-%d-h%H-m%M-s%S", gmtime())
+
+                localArtifactsPath = globals.localPathForTestResults + jobName + "." + time + "/"
                 os.mkdir(localArtifactsPath)
                 
                 flist = globals.ftpClient.listdir()
