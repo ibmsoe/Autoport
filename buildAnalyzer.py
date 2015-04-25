@@ -191,7 +191,7 @@ def inferBuildSteps(listing, repo):
         'grep build': "",
         'grep test': "",
         'grep env': "MAVEN_OPTS",
-        'build': "mvn dependency:list -DexcludeTransitive > build_result.arti 2>&1; mvn clean compile >> build_result.arti 2>&1",
+        'build': "mvn dependency:list -DexcludeTransitive > dependency.arti 2>&1; mvn clean compile > build_result.arti 2>&1",
         'test' : "mvn test -fn > test_result.arti 2>&1",
         'env' : "",
         'artifacts': "*.arti",
