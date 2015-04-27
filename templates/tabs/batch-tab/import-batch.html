@@ -1,0 +1,21 @@
+<div class="jumbotron"> 
+  <div class="btn btn-default btn-block" rv-on-click="batchState.setImportBox" id="importButton">
+    <h2 class="text-center">Import</h2>
+  </div>
+
+  <div class="input-group jumbotron-button-content" id="fileUploadBox" 
+    rv-show="batchState.importPanel">
+    <input type="text" class="form-control" placeholder="No file selected for uploading."
+        id="uploadFilename" disabled/>
+    <div class="input-group-btn">
+      <div class="btn btn-default btn-file">
+        Select File <input type="file" id="batch_file">
+      </div>
+    </div>
+    <div class="input-group-btn">
+      <div rv-on-click="batchState.upload" class="btn btn-primary">
+        Upload
+      </div>
+    </div>
+  </div>
+</div>

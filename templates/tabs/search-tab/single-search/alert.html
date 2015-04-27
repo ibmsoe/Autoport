@@ -1,0 +1,15 @@
+{% extends "tabs/alert.html" %}
+{% block showCondition %}"detailState.autoSelected"{% endblock %}
+{% block data %}
+<span class="autoSelectText"><strong>Auto-selected</strong> this repository because it
+  <strong>matches the query exactly</strong>, was the <strong>top hit</strong>, and has
+  <strong>{ detailState.repo.stars } popularity stars</strong>.
+</span>
+<a class="exitAutoSelect buttonRight" rv-show="detailState.autoSelected"
+  rv-on-click="detailState.exitAutoSelect">
+  <button type="button" class="btn btn-default exitAutoSelectButton">
+    <span class="glyphicon glyphicon-list"></span>
+    See all results
+  </button>
+</a>
+{% endblock %}

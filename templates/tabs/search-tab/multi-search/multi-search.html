@@ -1,0 +1,308 @@
+<div class="jumbotron">
+  <div class="btn btn-default btn-block" rv-on-click="searchState.multiple.setSearchBox" id="generateBatchButton">
+    <h2 class="text-center">Search for most commonly used projects</h2>
+  </div>
+  <div id="generateBox" class="jumbotron-button-content" rv-show="searchState.multiple.searchBoxReady">
+    <div class="row">
+      <div class="col-lg-4">
+        <div class="input-group">
+          <span class="input-group-addon">Top</span>
+          <input type="number" class="form-control" rv-value="searchState.multiple.query.limit">
+          <span class="input-group-addon">Repositories</span>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <span class="input-group-addon">Using</span>
+          <select class="form-control" rv-value="searchState.multiple.query.sort">
+            <option value="stars">Popularity Stars</option>
+            <option value="forks">Forks</option>
+          </select>
+        </div>
+      </div>
+      <div class="col-lg-4">
+        <select class="form-control" rv-value="searchState.multiple.query.language">
+          <option value="any">Any programming language</option>
+          <option value="java">Java</option>
+          <option value="python">Python</option>
+          <option value="javascript">JavaScript</option>
+          <option value="ruby">Ruby</option>
+          <option value="c">C</option>
+          <option value="c++">C++</option>
+        </select>
+      </div>
+    </div>
+    <br />
+    <div class="row">
+      <div class="col-lg-3">
+        <select class="form-control" rv-value="searchState.multiple.query.version">
+          <option value="current">Current</option>
+          <option value="recent">Recent release</option>
+        </select>
+      </div>
+      <div class="col-lg-3">
+        <div class="input-group">
+          <span class="input-group-addon">></span>
+          <input type="number" class="form-control" rv-value="searchState.multiple.query.stars">
+          <span class="input-group-addon">Popularity Stars</span>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <div class="input-group">
+          <span class="input-group-addon">></span>
+          <input type="number" class="form-control" rv-value="searchState.multiple.query.forks">
+          <span class="input-group-addon">Forks</span>
+        </div>
+      </div>
+      <div class="col-lg-3">
+        <button class="btn btn-primary" rv-on-click="searchState.multiple.query.generate">Search</button>
+      </div>
+    </div>
+
+    <br />
+    
+    {% include "tabs/search-tab/multi-search/loading.html" %}
+
+    <!-- START MULTI PROJECT SEARCH DETAIL VIEW -->
+
+    <div id="generateDetailPanel" class="panel panel-default" rv-show="detailState.generateReady">
+      <div class="panel-body">
+        <h1>
+          <a title="Owner" class="small" rv-href="detailState.generateRepo.owner_url" rv-text="detailState.generateRepo.owner"></a>
+          /
+          <a title="Repository" class="result-title" rv-href="detailState.generateRepo.url" rv-text="detailState.generateRepo.name"></a>
+
+          <div class="dropdown buttonRight">
+
+            <!-- Dropdown box for choosing what kind of java to use. -->
+            <div class="input-group-btn">
+              <button rv-show="detailState.generateRepo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.generateJavaType } <span class="caret"></span></button>
+              <ul class="dropdown-menu dropdown-menu-right" role="menu">
+                <li rv-on-click="detailState.selectGenerateJavaType"><a>Open JDK</a></li>
+                <li rv-on-click="detailState.selectGenerateJavaType"><a>IBM Java</a></li>
+              </ul>
+            </div>
+            
+            <button class="btn btn-primary" type="button" 
+              rv-on-click="detailState.generateRepo.addToJenkins">
+              Add to Jenkins
+            </button>
+
+            <div class="dropdown">
+              <button class="btn btn-primary dropdown-toggle" type="button" 
+                id="singleVersions" data-toggle="dropdown" aria-expanded="true">
+                Use { detailState.generateRepo.useVersion} version
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-right" role="menu" 
+                airia-labelledby="singleVersions">
+                <li role="presentation" class="dropdown-header">Recent</li>
+                <li role="presentation"><a role="menuitem" tabindex="-1"
+                  rv-on-click="detailState.generateRepo.updateVersion">Current</a></li>
+                <li role="presentation"><a role="menuitem" tabindex="-1"
+                  rv-on-click="detailState.generateRepo.updateVersion">{ detailState.generateRepo.recentTag }</a></li>
+                <li role="presentation" class="divider"></li>
+                <li role="presentation" class="dropdown-header">Older</li>
+                <li role="presentation" rv-each-tag="detailState.generateRepo.tags"
+                  rv-on-click="detailState.generateRepo.updateVersion">
+                  <a role="menuitem" tabindex="-1">{ tag }</a></li>
+              </ul>
+            </div>
+          </div>
+        </h1>
+
+        <span title="Star count" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.stars">
+          <span class="glyphicon glyphicon-star"></span>
+          { detailState.generateRepo.stars }
+        </span>
+        <span title="Fork count" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.forks">
+          <span class="glyphicon glyphicon-random"></span>
+          { detailState.generateRepo.forks }
+        </span>
+        <span title="Primary language" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.language">
+          <span class="glyphicon glyphicon-wrench"></span>
+          { detailState.generateRepo.language }
+        </span>
+        <span title="Repository size" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.size">
+          <span class="glyphicon glyphicon-floppy-disk"></span>
+          { detailState.generateRepo.size_kb | size }
+        </span>
+        <span title="Last updated" class="tip label fatLabel" rv-classification="detailState.generateRepo.classifications.date">
+          <span class="glyphicon glyphicon-calendar"></span>
+          updated { detailState.generateRepo.last_update | date }
+        </span>
+        <h3>Description</h3>
+        <blockquote>
+          <p class="detail-description" rv-text="detailState.generateRepo.description"></p>
+        </blockquote>
+        <span class=".clearfix chart-container">
+          <h3>Language Composition</h3>
+          <canvas class="chart" id="generateLangChart" width="150" height="150"></canvas>
+          <ul id="generateLangLegend"></ul>
+        </span>
+        <span rv-show="detailState.generateRepo.build.success" class="build-steps">
+          <h3>Build steps</h3>
+          <small>
+            The default options were inferred based on the existence of 
+            <strong rv-text="detailState.generateRepo.build.reason"></strong>. When modifying build/test/env options ensure commands/variables are semicolon delimited.
+          </small>
+          <br />
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+              Select build options
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li role="presentation" rv-each-tag="detailState.generateRepo.build.buildOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
+            </ul>
+            <br />
+            <input id="generateSelectedBuild" type="text" class="form-control" 
+              rv-value="detailState.generateRepo.build.selectedBuild | cleanOptionsOutput"/>
+          </div>
+          <br />
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+              Select test options
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li role="presentation" rv-each-tag="detailState.generateRepo.build.testOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
+            </ul>
+            <br />
+            <input id="generateSelectedTest" type="text" class="form-control" 
+              rv-value="detailState.generateRepo.build.selectedTest | cleanOptionsOutput"/>
+          </div>
+          <br />
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+              Select environment options
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu" role="menu">
+              <li role="presentation" rv-each-tag="detailState.generateRepo.build.envOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeEnvOptions">{ tag }</a></li>
+            </ul>
+            <br />
+            <input id="generateSelectedEnv" type="text" class="form-control" 
+              rv-value="detailState.generateRepo.build.selectedEnv | cleanOptionsOutput"/>
+          </div>
+          <br />
+          <div>
+            <select id="generateBuildServers" multiple="multiple">
+              <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+            </select>
+          </div>
+        </span>
+        <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
+          <button id="generateDetailBackButton" type="button" class="btn btn-info">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            Back to results
+          </button>
+        </a>
+      </div>
+    </div>
+
+    <!-- END MULTI PROJECT SEARCH DETAIL VIEW -->
+
+    <!-- START MULTI PROJECT SEARCH MULTIPLE RESULTS TABLE -->
+
+    <div class="alert alert-success clearfix" rv-show="searchState.multiple.ready">
+      <span class="autoSelectText">
+        <div>
+          This is the list of most popular projects written in the specified language:
+          <strong>'{ searchState.multiple.query.language }'</strong>.
+        </div>
+        <div>
+          You can examine project details, remove projects from the list, and <strong>Save</strong> the
+          list as a batch file to be built and tested later as a group with a single command.
+        </div>
+        <div>
+          Alternatively, you can <strong>Export</strong> the list to a file that you can edit
+          and then <strong>Import</strong> the file into the tool from the 'Batch Jobs' tab.
+        </div>
+        <div class="row">
+          <div class="col-lg-8">
+            <input type="text"
+                class="form-control"
+                placeholder="(e.g. mybatch-java)"
+                rv-value="searchState.multiple.batchFile.config.name"/>
+          </div>
+          <div class="col-lg-4">
+            <a rv-on-click="searchState.multiple.save">
+              <button type="button" class="btn btn-primary">
+                Save
+              </button>
+            </a>
+            <a rv-on-click="searchState.multiple.download">
+              <button type="button" class="btn btn-primary">
+                Export
+              </button>
+            </a>
+          </div>
+        </div>
+      </span>
+    </div>
+
+    <div id="resultsPanel" class="panel panel-default" rv-show="searchState.multiple.ready">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Repositories</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="resultsTable" rv-each-result="searchState.multiple.results">
+          <tr class="result-row">
+            <td>
+              <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
+              /
+              <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
+              <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
+                <span class="glyphicon glyphicon-star"></span>
+                { result.stars }
+              </span>
+              <span title="Fork count" class="tip label" rv-classification="result.classifications.forks">
+                <span class="glyphicon glyphicon-random"></span>
+                { result.forks }
+              </span>
+              <span title="Primary language" class="tip label" rv-classification="result.classifications.language">
+                <span class="glyphicon glyphicon-wrench"></span>
+                { result.language }
+              </span>
+              <span title="Repository size" class="tip label" rv-classification="result.classifications.size">
+                <span class="glyphicon glyphicon-floppy-disk"></span>
+                { result.size_kb | size }
+              </span>
+              <span title="Last updated" class="tip label" rv-classification="result.classifications.date">
+                <span class="glyphicon glyphicon-calendar"></span>
+                updated { result.last_update | date }
+              </span>
+
+              <br />
+
+              <p class="candidate-description text-muted" rv-text="result.description"></p>
+            </td>
+            <td>
+              <a rv-on-click="result.select">
+                <button type="button" class="generateDetailButton btn btn-primary">
+                  <span class="glyphicon glyphicon-zoom-in"></span>
+                  Details
+                </button>
+              </a>
+            </td>
+            <td>
+              <a rv-on-click="result.remove">
+                <button type="button" class="multiProjectExclude btn btn-primary">
+                  <span class="glyphicon glyphicon-remove"></span>
+                  Remove
+                </button>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- END MULTI PROJECT SEARCH MULTIPLE RESULTS TABLE -->
+
+  </div>
+</div>

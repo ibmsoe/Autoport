@@ -1,0 +1,163 @@
+<div class="jumbotron">
+  <div class="btn btn-default btn-block" rv-on-click="reportState.setJobManagePanel" id="jobManageButton">
+    <h2 class="text-center">Manage/Compare project results</h2>
+  </div>
+  <div id="jobManagePanel"
+      class="jumbotron-button-content"
+      rv-show="reportState.jobManagePanel">
+    <div class="row">
+      <div class="col-lg-8">
+        <input type="text"
+            class="form-control"
+            placeholder="(e.g. redis, cassandra, mongo)"
+            id="projectFilter"/>
+      </div>
+      
+      <div class="col-lg-4">
+        <a rv-on-click="reportState.listLocalProjects">
+          <button type="button" class="btn btn-primary">
+            List local
+          </button>
+        </a>
+        <a rv-on-click="reportState.listGSAProjects">
+          <button type="button" class="btn btn-primary">
+            List archived
+          </button>
+        </a>
+        <a rv-on-click="reportState.listAllProjects">
+          <button type="button" class="btn btn-primary">
+            List all
+          </button>
+        </a>
+      </div>
+    </div>
+ 
+    <br /> 
+
+    <!-- START PROJECT COMPARE RESULTS SELECT TABLE -->
+
+    <div class="modal fade" id="resultCompareSelectionAlert" tabindex="-1">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span>&times;</span>
+            </button>
+            <h4 class="modal-title" id="myModalLabel">Selection error</h4>
+          </div>
+          <div class="modal-body">
+            You can only run comparison on 2 projects.
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal fade" id="archiveCallbackAlert" tabindex="-1">
+      <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">
+              <span>&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="archiveCallbackText">
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert alert-success clearfix"
+         id="testCompareRunAlert"
+         rv-show="projectReportState.prjCompareReady">
+      <span class="autoSelectText">This is the list of { projectReportState.compareRepo } { projectReportState.compareType } results. Select the project(s) and action you wish to perform.</span>
+      <br/>
+      <div class="row">
+        <button type="button"
+            class="btn btn-primary disabled"
+            id="testHistoryBtn"
+            rv-on-click="projectReportState.testHistory">
+        Test History
+        </button>
+        <button type="button"
+            class="btn btn-primary disabled"
+            id="testDetailBtn"
+            rv-on-click="projectReportState.testDetail">
+        Test Detail
+        </button>
+        <button type="button"
+            class="btn btn-primary disabled"
+            rv-on-click="projectReportState.compareResults"
+            id="compareResultsBtn">
+        Test Compare (2)
+        </button>
+        <button type="button"
+            class="btn btn-primary disabled"
+            id="resultArchiveBtn"
+            rv-on-click="projectReportState.archive">
+        Archive
+        </button>
+        <span class="buttonRight">
+          <button type="button" class="btn btn-primary"
+            rv-on-click="projectReportState.selectAll">
+          Select All
+          </button>
+          <button type="button" class="btn btn-primary"
+            rv-on-click="projectReportState.selectNone">
+          Select None
+          </button>
+        </span>
+      </div>
+    </div>
+
+    <div id="testCompareSelectPanel"
+        class="panel panel-default"
+        rv-show="projectReportState.prjCompareReady">
+      <table class="table table-hover" id="projectListTable">
+        <thead>
+          <tr>
+            <th>Project name</th>
+            <th>Version</th>
+            <th>Environment</th>
+            <th>Operating System</th>
+            <th>Completed</th>
+            <th>Repository</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="projectsTable">
+        </tbody>
+      </table>
+    </div>
+
+    <div id="testCompareTablePanel"
+        class="panel panel-default"
+        rv-show="projectReportState.prjTableReady">
+      <span class="panel panel-primary">
+        <div class="panel-heading">Test results <span id="prjHeader"></span></div>
+        <div class="table-container">
+          <table id="testResultsTable">
+            <tr id="testResultsTableHeader">
+              <th>Test</th>
+              <th>x86</th>
+              <th>LE</th>
+            </tr>
+          </table>
+        </div>
+      </span>
+      <a class="backToResults" rv-on-click="projectReportState.backToList">
+        <button type="button" class="btn btn-info">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+        Back to list
+        </button>
+      </a>
+    </div>
+    
+    <!-- END PROJECT COMPARE RESULTS SELECT TABLE -->
+  
+  </div>
+</div>

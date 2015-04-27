@@ -1,0 +1,56 @@
+<div class="modal fade" id="settingsModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h4 class="modal-title" id="modalLabel">Settings</h4>
+      </div>
+      <div class="modal-body" id="settingsModal">
+        <div class="attributes modalAttributes">
+          <div>
+            <label class="url">Jenkins Url</label>
+            <span><input type="text" id="url" rv-value="globalState.jenkinsUrl"></span>
+          </div>
+          <div>
+            <label class="test_results">Local Test Results Path</label>
+            <span><input type="text" id="ltest_results" 
+              rv-value="globalState.localPathForTestResults"></span>
+          </div>
+          <div>
+            <label class="test_results">Archive Test Results Path</label>
+            <span><input type="text" id="gtest_results"
+              rv-value="globalState.pathForTestResults"></span>
+          </div>
+          <div>
+            <label class="batch_files">Local Batch Files Path</label>
+            <span><input type="text" id="lbatch_files"
+              rv-value="globalState.localPathForBatchFiles"></span>
+          </div>
+          <div>
+            <label class="batch_files">Archive Batch Files Path</label>
+            <span><input type="text" id="gbatch_files"
+              rv-value="globalState.pathForBatchFiles"></span>
+          </div>
+          <div>
+            <label class="github">Github Token</label>
+            <span><input type="text" id="github" rv-value="globalState.githubToken"></span>
+          </div>
+          <div> 
+            <label class="github">GSA Username</label>
+            <span><input type="text" id="username" rv-value="globalState.configUsername"></span>
+          </div>
+          <div> 
+            <label class="github">GSA Password</label>
+            <span><input type="password" id="password" rv-value="globalState.configPassword"></span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+        <button rv-on-click="globalState.reset" type="button"
+          class="btn btn-primary">Reset to Default</button>
+        <button rv-on-click="globalState.updateParameters" type="button"
+          class="btn btn-primary" data-dismiss="modal">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
