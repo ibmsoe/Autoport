@@ -1,0 +1,19 @@
+<div class="jumbotron">
+  <h1>
+    AutoPort
+    <button class="btn btn-primary modalButton" data-toggle="modal" data-target="#settingsModal">
+      <span class="glyphicon glyphicon-wrench"></span>
+      Settings
+    </button>
+  </h1>
+
+  <button type="button" id="toggleHelpBtn" class="btn btn-primary buttonRight"
+    rv-on-click="globalState.toggleHelp">
+    Hide help
+  </button>
+
+  {% include "header/descriptions.html" %}
+
+  {% include "header/settings.html"%}
+
+</div>

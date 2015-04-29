@@ -1,0 +1,31 @@
+<div class="jumbotron">
+  <div class="btn btn-default btn-block" rv-on-click="jenkinsState.setJenkinsPanel" id="jenkinsManageButton">
+    <h2 class="text-center">Show Jenkins Status</h2>
+  </div>
+
+  <div id="jenkinsPanel" class="jumbotron-button-content" rv-show="jenkinsState.jenkinsPanel">
+
+    <div class="jlink" id="jenkinsLink">
+      <ul class="text linkText" >
+        Jenkins Page: <a rv-href="globalState.jenkinsUrl">{ globalState.jenkinsUrl }</a> 
+      </ul>
+    </div>
+
+    <button rv-on-click="percentageState.updateProgressBar" type="button" class="btn btn-primary progressButton">Check Progress</button>
+    <ul class="text progressText" >
+      Total Number of Jobs on this Tab: { percentageState.totalNumberOfJobs }
+      <li>Successful Jobs (green): { percentageState.successfulJobs }</li>
+      <li>Unstable Jobs (yellow): { percentageState.unstableJobs }</li>
+      <li>Failing Jobs (red): { percentageState.failingJobs }</li>
+      <li>Disabled or Unfinished Jobs (white): { percentageState.unfinishedJobs }</li>
+    </ul>
+
+    <div class="progressSettings" id="progressBar">
+      <div class="progress progress-bar-primary">
+        <div class="bar bar-success progress-bar progress-bar-success" rv-style="percentageState.successPercentage"></div>
+        <div class="bar bar-warning progress-bar progress-bar-warning" rv-style="percentageState.warningPercentage"></div>
+        <div class="bar bar-danger progress-bar progress-bar-danger" rv-style="percentageState.dangerPercentage"></div>
+      </div>
+    </div>
+  </div>
+</div>

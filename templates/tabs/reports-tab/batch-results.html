@@ -1,0 +1,34 @@
+<div class="jumbotron">
+  <div class="btn btn-default btn-block" rv-on-click="reportState.setTestResultsPanel" id="testResultsButton">
+    <h2 class="text-center">Manage/Compare batch jobs results</h2>
+  </div>
+  <div id="testResultsPanel"
+      class="jumbotron-button-content"
+      rv-show="reportState.testResultsPanel">
+    <div class="row">
+      <div class="col-lg-8">
+        <input type="text"
+            class="form-control"
+            placeholder="(e.g. my-java-jobs)"
+            id="batchFilter"/>
+      </div>
+      <div class="col-lg-4">
+        <a rv-on-click="reportState.listLocalBatch">
+          <button type="button" class="btn btn-primary">
+            List local
+          </button>
+        </a>
+        <a rv-on-click="reportState.listGSABatch">
+          <button type="button" class="btn btn-primary">
+            List archived
+          </button>
+        </a>
+        <a rv-on-click="reportState.listAllBatch">
+          <button type="button" class="btn btn-primary">
+            List all
+          </button>
+        </a>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,334 @@
+<div class="jumbotron">
+  <div class="btn btn-default btn-block"
+    rv-on-click="searchState.single.setSearchBox" id="singleSearchButton">
+    <h2 class="text-center">Search for a single project</h2>
+  </div>
+
+  <div class="jumbotron-button-content" id="searchBox" rv-show="searchState.single.searchBoxReady">
+    <div class="input-group">
+      <input type="text" class="form-control"
+        placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
+      <div class="input-group-btn">
+        <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+          Sort by { searchState.single.sorting }
+          <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu dropdown-menu-right">
+          <li rv-on-click="searchState.single.changeSort"
+            rv-hide="searchState.single.sorting | isRelevance"><a>Relevance</a></li>
+          <li rv-on-click="searchState.single.changeSort"
+            rv-hide="searchState.single.sorting | isStars"><a>Popularity Stars</a></li>
+          <li rv-on-click="searchState.single.changeSort"
+            rv-hide="searchState.single.sorting | isForks"><a>Forks</a></li>
+          <li rv-on-click="searchState.single.changeSort"
+            rv-hide="searchState.single.sorting | isUpdated"><a>Updated</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <br />
+
+    {% include "tabs/search-tab/single-search/loading.html" %}
+
+    <!-- START SINGLE SEARCH BATCH FILE TABLE -->
+
+    <div class="alert alert-success clearfix" rv-show="searchState.single.exportReady">
+      <span class="autoSelectText">
+        <div>
+          You can <strong>Save</strong> the Batch File Repository List to a batch file
+          enabling the projects listed within to be built and tested later with a single command.
+        </div>
+        <div>
+          Alternatively, you can <strong>Export</strong> the list to a file that you can edit
+          and then <strong>Import</strong> the file into the tool from the 'Batch Jobs' tab.
+        </div>
+        <div>
+          <strong>Clear</strong> the list to start over without creating a file.
+        </div>
+        <div class="row">
+          <div class="col-lg-8">
+            <input type="text"
+                class="form-control"
+                placeholder="(e.g. mybatch-java)"
+                rv-value="searchState.single.batchFile.config.name"/>
+          </div>
+          <div class="col-lg-4">
+            <a rv-on-click="searchState.single.save">
+              <button type="button" class="btn btn-primary">
+                Save
+              </button>
+            </a>
+            <a rv-on-click="searchState.single.download">
+              <button type="button" class="btn btn-primary">
+                Export
+              </button>
+            </a>
+            <a rv-on-click="searchState.single.removeBatchFile">
+              <button type="button" class="btn btn-primary">
+                Clear
+              </button>
+            </a>
+          </div>
+        </div>
+      </span>
+    </div>
+
+    <div id="batchFilePanel" class="panel panel-default" rv-show="searchState.single.exportReady">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Batch File Repositories</th>
+          </tr>
+        </thead>
+        <tbody id="batchFileTable" rv-each-package="searchState.single.batchFile.packages">
+          <tr class="result-row">
+            <td>
+              <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
+              /
+              <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
+              <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
+                <span class="glyphicon glyphicon-star"></span>
+                { package.stars }
+              </span>
+              <span title="Fork count" class="tip label" rv-classification="package.classifications.forks">
+                <span class="glyphicon glyphicon-random"></span>
+                { package.forks }
+              </span>
+              <span title="Primary language" class="tip label" rv-classification="package.classifications.language">
+                <span class="glyphicon glyphicon-wrench"></span>
+                { package.language }
+              </span>
+              <span title="Repository size" class="tip label" rv-classification="package.classifications.size">
+                <span class="glyphicon glyphicon-floppy-disk"></span>
+                { package.size_kb | size }
+              </span>
+              <span title="Last updated" class="tip label" rv-classification="package.classifications.date">
+                <span class="glyphicon glyphicon-calendar"></span>
+                updated { package.last_update | date }
+              </span>
+
+              <br />
+
+              <p class="candidate-description text-muted" rv-text="package.description"></p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- END SINGLE SEARCH BATCH FILE TABLE -->
+
+    {% include "tabs/search-tab/single-search/alert.html" %}
+
+    <!-- START SINGLE SEARCH DETAIL VIEW -->
+
+    <div id="singleDetailPanel" class="panel panel-default" rv-show="detailState.ready">
+      <div class="panel-body">
+        <h1>
+          <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
+          /
+          <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
+
+          <div class="dropdown buttonRight">
+
+            <!-- Dropdown box for choosing what kind of java to use. -->
+            <div class="input-group-btn">
+              <button rv-show="detailState.repo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.javaType } <span class="caret"></span></button>
+              <ul class="dropdown-menu dropdown-menu-right">
+                <li rv-on-click="detailState.selectJavaType"><a>Open JDK</a></li>
+                <li rv-on-click="detailState.selectJavaType"><a>IBM Java</a></li>
+              </ul>
+            </div>
+          
+            <button class="btn btn-primary" type="button" 
+              rv-on-click="detailState.repo.addToJenkins">
+              Add to Jenkins
+            </button>
+
+            <div class="dropdown">
+              <button class="btn btn-primary dropdown-toggle" type="button" 
+                id="singleVersions" data-toggle="dropdown">
+                Use { detailState.repo.useVersion} version
+                <span class="caret"></span>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-right">
+                <li class="dropdown-header">Recent</li>
+                <li><a tabindex="-1"
+                  rv-on-click="detailState.repo.updateVersion">Current</a></li>
+                <li><a tabindex="-1"
+                  rv-on-click="detailState.repo.updateVersion">{ detailState.repo.recentTag }</a></li>
+                <li class="divider"></li>
+                <li class="dropdown-header">Older</li>
+                <li rv-each-tag="detailState.repo.tags"
+                  rv-on-click="detailState.repo.updateVersion">
+                  <a tabindex="-1">{ tag }</a></li>
+              </ul>
+            </div>
+
+            <a rv-on-click="detailState.addToBatchFile">
+              <button type="button" class="singleDetailBatchButton btn btn-primary">
+                <span class="glyphicon glyphicon-plus"></span>
+                Add to Batch
+              </button>
+            </a>
+          </div>
+        </h1>
+
+        <span title="Star count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.stars">
+          <span class="glyphicon glyphicon-star"></span>
+          { detailState.repo.stars }
+        </span>
+        <span title="Fork count" class="tip label fatLabel" rv-classification="detailState.repo.classifications.forks">
+          <span class="glyphicon glyphicon-random"></span>
+          { detailState.repo.forks }
+        </span>
+        <span title="Primary language" class="tip label fatLabel" rv-classification="detailState.repo.classifications.language">
+          <span class="glyphicon glyphicon-wrench"></span>
+          { detailState.repo.language }
+        </span>
+        <span title="Repository size" class="tip label fatLabel" rv-classification="detailState.repo.classifications.size">
+          <span class="glyphicon glyphicon-floppy-disk"></span>
+          { detailState.repo.size_kb | size }
+        </span>
+        <span title="Last updated" class="tip label fatLabel" rv-classification="detailState.repo.classifications.date">
+          <span class="glyphicon glyphicon-calendar"></span>
+          updated { detailState.repo.last_update | date }
+        </span>
+        <h3>Description</h3>
+        <blockquote>
+          <p class="detail-description" rv-text="detailState.repo.description"></p>
+        </blockquote>
+        <span class=".clearfix chart-container">
+          <h3>Language Composition</h3>
+          <canvas class="chart" id="langChart" width="150" height="150"></canvas>
+          <ul id="langLegend"></ul>
+        </span>
+        <span rv-show="detailState.repo.build.success" class="build-steps">
+          <h3>Build steps</h3>
+          <small>
+            The default options were inferred based on the existence of 
+            <strong rv-text="detailState.repo.build.reason"></strong>. When modifying build/test/env options ensure commands/variables are semicolon delimited.
+          </small>
+          <br />
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+              Select build options
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li rv-each-tag="detailState.repo.build.buildOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
+            </ul>
+            <br />
+              <input id="singleSelectedBuild" type="text" class="form-control" 
+                rv-value="detailState.repo.build.selectedBuild | cleanOptionsOutput"/>
+          </div>
+          <br />
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+              Select test options
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li rv-each-tag="detailState.repo.build.testOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
+            </ul>
+            <br />
+              <input id="singleSelectedTest" type="text" class="form-control" 
+                rv-value="detailState.repo.build.selectedTest | cleanOptionsOutput"/>
+          </div>
+          <br />
+          <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
+              Select environment options
+              <span class="caret"></span>
+            </button>
+            <ul class="dropdown-menu">
+              <li rv-each-tag="detailState.repo.build.envOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeEnvOptions">{ tag }</a></li>
+            </ul>
+            <br />
+              <input id="singleSelectedEnv" type="text" class="form-control" 
+                rv-value="detailState.repo.build.selectedEnv | cleanOptionsOutput"/>
+          </div>
+          <br />
+          <div>
+            <select id="singleBuildServers" multiple="multiple">
+              <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+            </select>
+          </div>
+        </span>
+        <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
+          <button id="singleDetailBackButton" type="button" class="btn btn-info">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            Back to results
+          </button>
+        </a>
+      </div>
+    </div>
+
+    <!-- END SINGLE SEARCH DETAIL VIEW -->
+
+    <!-- START SINGLE SEARCH MULTIPLE RESULTS TABLE -->
+
+    <div id="resultsPanel" class="panel panel-default" rv-show="searchState.single.ready">
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Repositories</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="resultsTable" rv-each-result="searchState.single.results">
+          <tr class="result-row">
+            <td>
+              <a title="Owner" class="tip" rv-href="result.owner_url" rv-text="result.owner"></a>
+              /
+              <a title="Repository" class="tip result-title" rv-href="result.url" rv-text="result.name"></a>
+              <span title="Star count" class="tip label first-label" rv-classification="result.classifications.stars">
+                <span class="glyphicon glyphicon-star"></span>
+                { result.stars }
+              </span>
+              <span title="Fork count" class="tip label" rv-classification="result.classifications.forks">
+                <span class="glyphicon glyphicon-random"></span>
+                { result.forks }
+              </span>
+              <span title="Primary language" class="tip label" rv-classification="result.classifications.language">
+                <span class="glyphicon glyphicon-wrench"></span>
+                { result.language }
+              </span>
+              <span title="Repository size" class="tip label" rv-classification="result.classifications.size">
+                <span class="glyphicon glyphicon-floppy-disk"></span>
+                { result.size_kb | size }
+              </span>
+              <span title="Last updated" class="tip label" rv-classification="result.classifications.date">
+                <span class="glyphicon glyphicon-calendar"></span>
+                updated { result.last_update | date }
+              </span>
+
+              <br />
+
+              <p class="candidate-description text-muted" rv-text="result.description"></p>
+            </td>
+            <td>
+              <a rv-on-click="result.addToBatchFile">
+                <button type="button" class="singleDetailBatchButton btn btn-primary">
+                  <span class="glyphicon glyphicon-plus"></span>
+                  Add to Batch
+                </button>
+              </a>
+            </td>
+            <td>
+              <a rv-on-click="result.select">
+                <button type="button" class="singleDetailButton btn btn-primary">
+                  <span class="glyphicon glyphicon-zoom-in"></span>
+                  Details
+                </button>
+              </a>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- END SINGLE SEARCH MULTIPLE RESULTS TABLE -->
+
+  </div>
+</div>
