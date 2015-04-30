@@ -578,25 +578,30 @@ def moveArtifacts (jobName):
     # grab the build artifacts through ftp if build was successful
     artifactsPath = globals.artifactsPathPrefix + jobName + "/builds/"
 
-    # give a few seconds for jenkins to finish archiving files
-    sleep(10)
-
     try:
+        # just incase build finished but artifacts haven't moved over yet due to network
+        sleep(10)
 
-        globals.ftpClient.chdir(artifactsPath)
-        flist = globals.ftpClient.listdir()
-       
+        # create an FTP connection to Jenkins
+        sshClient = paramiko.SSHClient()
+        sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        sshClient.connect(urlparse(globals.jenkinsUrl).hostname, username=globals.configJenkinsUsername, key_filename=globals.configJenkinsKey)
+        ftpClient = sshClient.open_sftp()
+        
+        ftpClient.chdir(artifactsPath)
+        flist = ftpClient.listdir()
+
         # 1 is a sym link to the first build for that job.
         # If we delete each job after each run, we only care about this first build.
         # Else we need to parse nextBuildNumber in the parent directory to get build number.
         if "1" in flist:
             artifactsPath = artifactsPath + "1/"
-            globals.ftpClient.chdir(artifactsPath)
-            flist = globals.ftpClient.listdir()
+            ftpClient.chdir(artifactsPath)
+            flist = ftpClient.listdir()
 
             if "archive" in flist:
                 artifactsPath = artifactsPath + "archive/"
-                globals.ftpClient.chdir(artifactsPath)
+                ftpClient.chdir(artifactsPath)
             
                 # Contruct time so that it works on windows.  No colons allowed
                 time = strftime("%Y-%m-%d-h%H-m%M-s%S", gmtime())
@@ -604,10 +609,10 @@ def moveArtifacts (jobName):
                 localArtifactsPath = globals.localPathForTestResults + jobName + "." + time + "/"
                 os.mkdir(localArtifactsPath)
                 
-                flist = globals.ftpClient.listdir()
+                flist = ftpClient.listdir()
  
                 for f in flist:
-                    globals.ftpClient.get(f, localArtifactsPath + f)
+                    ftpClient.get(f, localArtifactsPath + f)
 
             else:
                 print "archive folder missing" + jobName

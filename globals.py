@@ -81,12 +81,6 @@ def init():
     # get local hostname to append to job names
     localHostName = socket.gethostname()
 
-    # setup global SSH and FTP clients connected to Jenkins master
-    sshClient = paramiko.SSHClient()
-    sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    sshClient.connect(urlparse(jenkinsUrl).hostname, username=configJenkinsUsername, key_filename=configJenkinsKey)
-    ftpClient = sshClient.open_sftp()
-
     # set random number range for UUID
     minRandom = 100000
     maxRandom = 999999

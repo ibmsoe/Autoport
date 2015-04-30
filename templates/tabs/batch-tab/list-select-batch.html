@@ -1,10 +1,11 @@
 <div class="jumbotron">
-
   <div class="btn btn-default btn-block" rv-on-click="batchState.setListPanel">
     <h2 class="text-center">List/Select</h2>
   </div>
 
   <div class="jumbotron-button-content" rv-show="batchState.listPanel">
+    
+    <!-- Batch file list selector (local, archived, all) -->
     <div class="row">
       <div class="col-lg-8">
         <input type="text"
@@ -34,8 +35,7 @@
 
     <br />
 
-    <!-- START LIST/SELECT TABLE -->             
-
+    <!-- Batch file table -->             
     <table class="table panel panel-default" rv-show="batchState.ready">
       <thead>
         <tr>
@@ -74,6 +74,6 @@
         </tr>
       </tbody>
     </table>
+  
   </div>
-
 </div>
