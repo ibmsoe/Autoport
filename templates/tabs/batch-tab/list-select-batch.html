@@ -3,40 +3,33 @@
     <h2 class="text-center">List/Select</h2>
   </div>
 
-  <div class="jumbotron-button-content" rv-show="batchState.listPanel">
+  <div class="jumbotron-button-content" rv-show="batchState.showListPanel">
     
     <!-- Batch file list selector (local, archived, all) -->
-    <div class="row">
-      <div class="col-lg-8">
-        <input type="text"
-            class="form-control"
-            placeholder="Enter batch file name."
+    <div class="input-group">
+        <input type="text" class="form-control" placeholder="Enter batch file name."
             id="batchFileFilter"/>
-      </div>
-      
-      <div class="col-lg-4">
-        <a rv-on-click="batchState.listLocalBatchFiles">
-          <button type="button" class="btn btn-primary">
+        <div class="input-group-btn"> 
+          <div class="btn btn-primary" rv-on-click="batchState.listLocalBatchFiles">
             List local
-          </button>
-        </a>
-        <a rv-on-click="batchState.listGSABatchFiles">
-          <button type="button" class="btn btn-primary">
+          </div>
+        </div>
+        <div class="input-group-btn"> 
+          <div class="btn btn-primary" rv-on-click="batchState.listArchivedBatchFiles">
             List archived
-          </button>
-        </a>
-        <a rv-on-click="batchState.listAllBatchFiles">
-          <button type="button" class="btn btn-primary">
+          </div>
+        </div>
+        <div class="input-group-btn"> 
+          <div class="btn btn-primary" rv-on-click="batchState.listAllBatchFiles">
             List all
-          </button>
-        </a>
-      </div>
+          </div>
+        </div>
     </div>
 
     <br />
 
     <!-- Batch file table -->             
-    <table class="table panel panel-default" rv-show="batchState.ready">
+    <table class="table panel panel-default" rv-show="batchState.showListSelectTable">
       <thead>
         <tr>
           <th>Name</th>
@@ -46,28 +39,28 @@
           <th>Actions</th>
         </tr>
       </thead>
-      <tbody rv-each-result="batchState.fileList">
+      <tbody rv-each-file="batchState.fileList">
         <tr class="result-row">
           <td>
-            { result.name }
+            { file.name }
           </td>
           <td>
-            { result.location }
+            { file.location }
           </td>
           <td>
-            { result.environment }
+            { file.environment }
           </td>
           <td>
-            Size: { result.size } bytes
+            Size: { file.size } bytes
             <br />
-            Date Modified: { result.datemodified }
+            Date Modified: { file.datemodified }
             <br />
-            Owner: { result.owner }
+            Owner: { file.owner }
           </td>
           <td>
             <a rv-on-click="batchState.buildAndTest">
               <button type="button" class="btn btn-primary">
-              Build + Test
+                Build + Test
               </button>
             </a>
           </td>

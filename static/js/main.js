@@ -255,33 +255,19 @@ function clearBatchFile(batchfile) {
 };
 
 var batchState = {
-    ready: false, // Whether or not to draw the list/select batch file view
-
-    importPanel: false,
-    listPanel: false,
- 
-    fileList: [],
-    currentBatchFile: "",
-    selectBatchFile: function (ev) {
-        batchState.currentBatchFile = $(ev.target).text();
-        console.log(batchState.currentBatchFile);
+    // Member variables and methods for viewing different panels within the batch tab
+    showImportPanel: false, // Draw import panel condition
+    showListPanel: false,   // Draw list/select panel condition
+    setListPanel: function () {
+        batchState.showListPanel = !batchState.showListPanel;
     },
-    listLocalBatchFiles: function(ev) {
-        batchState.ready = false;
-        $.getJSON("/listBatchFiles/local", { filter: $("#batchFileFilter").val() }, listBatchFilesCallback).fail(listBatchFilesCallback);
+    setImportPanel: function () {
+        batchState.showImportPanel = !batchState.showImportPanel;
     },
-    listGSABatchFiles: function(ev) {
-        batchState.ready = false;
-        $.getJSON("/listBatchFiles/gsa", { filter: $("#batchFileFilter").val() }, listBatchFilesCallback).fail(listBatchFilesCallback);
-    },
-    listAllBatchFiles: function(ev) {
-        batchState.ready = false;
-        $.getJSON("/listBatchFiles/all", { filter: $("#batchFileFilter").val() }, listBatchFilesCallback).fail(listBatchFilesCallback);
-    },
+    
+    // Import member variables and methods
     upload: function (ev) {
-        //Why do I need the [0] in the jQuery but not the getElementByID, those should be equivalent?
-        //var file = document.getElementById('batch_file').files[0];
-        var file = $('#batch_file')[0].files[0]; 
+        var file = $('#batchFile')[0].files[0]; 
         
         if (file) {
             var reader = new FileReader();
@@ -290,20 +276,35 @@ var batchState = {
             reader.onload = function(e) {
                 var batchFile = JSON.parse(e.target.result);
                 name = batchFile.config.name;
-                $.post("/uploadBatchFile", {name: name, file: e.target.result}, uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
+                $.post("/uploadBatchFile", {name: name, file: e.target.result},
+                    uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
             };	
         }
     },
-    build: function () {
+
+    // List/Select member variables and methods
+    showListSelectTable: false, // Draw list/select table
+    fileList: [],               // Stores batch files found in list/select
+    listLocalBatchFiles: function(ev) {
+        batchState.showListSelectTable = false;
+        $.getJSON("/listBatchFiles/local", { filter: $("#batchFileFilter").val() },
+            listBatchFilesCallback).fail(listBatchFilesCallback);
     },
+    listArchivedBatchFiles: function(ev) {
+        batchState.showListSelectTable = false;
+        $.getJSON("/listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
+            listBatchFilesCallback).fail(listBatchFilesCallback);
+    },
+    listAllBatchFiles: function(ev) {
+        batchState.showListSelectTable = false;
+        $.getJSON("/listBatchFiles/all", { filter: $("#batchFileFilter").val() },
+            listBatchFilesCallback).fail(listBatchFilesCallback);
+    },
+
+    // Actions for individual batch files
     buildAndTest: function (ev, el) { 
-        $.post("/runBatchFile", {batchName: el.result.filename}, runBatchFileCallback, "json").fail(runBatchFileCallback);
-    },
-    setListPanel: function () {
-        batchState.listPanel = (batchState.listPanel) ? false : true;
-    },
-    setImportBox: function () {
-        batchState.importPanel = (batchState.importPanel) ? false : true;
+        $.post("/runBatchFile", {batchName: el.result.filename},
+            runBatchFileCallback, "json").fail(runBatchFileCallback);
     }
 };
 
@@ -665,8 +666,8 @@ function doSearch(autoselect) {
 // When the query textbox is changed, do a search
 $('#query').change(doSearch);
 
-$('#batch_file').change(function () {
-    $('#uploadFilename').val("File selected:  " + $('#batch_file').val());
+$('#batchFile').change(function () {
+    $('#uploadFilename').val("File selected:  " + $('#batchFile').val());
 });
 
 function showAlert(message, data) {
@@ -1272,7 +1273,7 @@ function runBatchFileCallback(data) {
 function listBatchFilesCallback(data) {
     if(data.status === "ok") {
         batchState.fileList = data.results;
-        batchState.ready = true;
+        batchState.showListSelectTable = true;
     } else {
         showAlert("Error!", data);
     }
