@@ -120,7 +120,8 @@ var searchState = {
             },
             download: function (ev) {
                 if (searchState.single.batchFile.config.name === "") {
-                    searchState.single.batchFile.config.name = searchState.single.batchFile.packages[0].name +
+                    searchState.single.batchFile.config.name = 
+                        searchState.single.batchFile.packages[0].name +
                         "-" + String(searchState.single.batchFile.packages.length);
                 }
                 var json = JSON.stringify(searchState.single.batchFile, undefined, 2);
@@ -131,14 +132,15 @@ var searchState = {
             },
             save: function (ev) {
                 if (searchState.single.batchFile.config.name === "") {
-                    searchState.single.batchFile.config.name = searchState.single.batchFile.packages[0].name +
+                    searchState.single.batchFile.config.name = 
+                        searchState.single.batchFile.packages[0].name +
                         "-" + String(searchState.single.batchFile.packages.length);
                 }
                 var name = searchState.single.batchFile.config.name;
                 var file = JSON.stringify(searchState.single.batchFile, undefined, 2);
 
-                $.post("/uploadBatchFile", {name: name, file: file}, uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
-                clearBatchFile(searchState.single.batchFile);
+                $.post("/uploadBatchFile", {name: name, file: file},
+                    singleSaveCallback, "json").fail(uploadBatchFileCallback);
             },
             setSearchBox: function (ev) {
                 searchState.single.searchBoxReady = (searchState.single.searchBoxReady) ? false : true;
@@ -172,7 +174,8 @@ var searchState = {
                       searchState.multiple.batchFile.packages.push(result);
                   }
                   if (searchState.multiple.batchFile.config.name === "") {
-                      searchState.multiple.batchFile.config.name = searchState.multiple.batchFile.packages[0].name +
+                      searchState.multiple.batchFile.config.name =
+                          searchState.multiple.batchFile.packages[0].name +
                           "-" + String(searchState.multiple.batchFile.packages.length);
                   }
                   var json = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
@@ -189,14 +192,15 @@ var searchState = {
                   }
                   if (searchState.multiple.batchFile.config.name === "") {
                       console.log("Save name: ", searchState.multiple.batchFile.packages[0].name);
-                      searchState.multiple.batchFile.config.name = searchState.multiple.batchFile.packages[0].name +
+                      searchState.multiple.batchFile.config.name =
+                          searchState.multiple.batchFile.packages[0].name +
                           "-" + String(searchState.multiple.batchFile.packages.length);
                   }
                   var name = searchState.multiple.batchFile.config.name;
                   var file = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
 
-                  $.post("/uploadBatchFile", {name: name, file: file}, uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
-                  clearBatchFile(searchState.multiple.batchFile);
+                  $.post("/uploadBatchFile", {name: name, file: file},
+                      multipleSaveCallback, "json").fail(uploadBatchFileCallback);
               },
               setSearchBox: function (ev) {
                   searchState.multiple.searchBoxReady = (searchState.multiple.searchBoxReady) ? false : true;
@@ -302,8 +306,8 @@ var batchState = {
     },
 
     // Actions for individual batch files
-    buildAndTest: function (ev, el) { 
-        $.post("/runBatchFile", {batchName: el.result.filename},
+    buildAndTest: function (ev, el) {
+        $.post("/runBatchFile", {batchName: el.file.filename},
             runBatchFileCallback, "json").fail(runBatchFileCallback);
     }
 };
@@ -1264,6 +1268,22 @@ function uploadBatchFileCallback(data) {
     if (data.status !== "ok") {
         showAlert("", data);
     }
+}
+
+function singleSaveCallback(data) {
+    console.log("In singleSaveCallback");
+    if (data.status !== "ok") {
+        showAlert("", data);
+    }
+    clearBatchFile(searchState.single.batchFile);
+}
+
+function multipleSaveCallback(data) {
+    console.log("In multipleSaveCallback");
+    if (data.status !== "ok") {
+        showAlert("", data);
+    }
+    clearBatchFile(searchState.multiple.batchFile);
 }
 
 function runBatchFileCallback(data) {
