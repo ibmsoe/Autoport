@@ -642,12 +642,15 @@ def runBatchFile ():
             javaType = "JAVA_HOME=/opt/ibm/java"
 
         for package in fileBuf['packages']:            
-            p_repo = globals.github.get_repo(package['id'])
-            tag = package['tag']
+            try:
+                tag = package['tag']
+            except KeyError:
+                tag = "Current"
+
             # TODO - need to specify the servers from the batch file, leaving this in
             # as to not break batch functionality
-            createJob(package['id'], package['tag'], "x86-ubuntu-14.04", javaType)
-            createJob(package['id'], package['tag'], "ppcle-ubuntu-14.04", javaType)
+            createJob(package['id'], tag, "x86-ubuntu-14.04", javaType)
+            createJob(package['id'], tag, "ppcle-ubuntu-14.04", javaType)
 
     else:
         return json.jsonify(status="failure", error="could not find file"), 404
