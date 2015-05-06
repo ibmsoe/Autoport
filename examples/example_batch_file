@@ -1,35 +1,31 @@
 {
-    "config": {
-        "name": "Example_Batch_File",
-        "owner": "Ted",
-        "java": "ibm"
+  "config": {
+    "name": "Example Batch File",
+    "owner": "Ted",
+    "java": "ibm"
+  },
+  "packages": [
+    {
+      "id": 507775,
+      "name": "elastic/elasticsearch",
+      "tag": "v1.5.2",
+      "build": {
+        "artifacts": "*.arti",
+        "selectedBuild": "mvn dependency:list -DexcludeTransitive > dependency.arti 2>&1; mvn clean compile > build_result.arti 2>&1",
+        "selectedTest": "mvn test -fn > test_result.arti 2>&1",
+        "selectedEnv": ""
+      }
     },
-    "packages": [
-        {
-            "id": 6650539,
-            "name": "neo4j/neo4j",
-            "tag": "2.1.5"
-        },
-        {
-            "id": 1064563,
-            "name": "netty/netty",
-            "tag": "netty-3.8.3.Final"
-        },
-        {
-            "id": 721650,
-            "name": "yahoo/oozie",
-            "tag": "release-4.0.1"
-        },
-        {
-            "id": 20089857,
-            "name": "apache/hbase",
-            "tag": "0.99.1"
-        },
-        {
-            "id": 20089859,
-            "name": "apache/mahout",
-            "tag": "mahout-0.9"
-        }
-    ]
+    {
+      "id": 106310,
+      "name": "junit-team/junit",
+      "tag": "r4.12-beta-2",
+      "build": {
+        "artifacts": "*.arti",
+        "selectedBuild": "mvn dependency:list -DexcludeTransitive > dependency.arti 2>&1; mvn clean compile > build_result.arti 2>&1",
+        "selectedTest": "mvn test -fn > test_result.arti 2>&1",
+        "selectedEnv": ""
+      }
+    }
+  ]
 }
-

@@ -291,20 +291,8 @@ def search_repositories():
     results = []
     for repo in globals.github.search_repositories(q, sort=sort, order=order)[:limit]:
         globals.cache.cacheRepo(repo)
-        results.append({
-            "id": repo.id,
-            "name": repo.name,
-            "owner": repo.owner.login,
-            "owner_url": repo.owner.html_url,
-            "stars": repo.stargazers_count,
-            "forks": repo.forks_count,
-            "url": repo.html_url,
-            "size_kb": repo.size,
-            "last_update": str(repo.updated_at),
-            "language": repo.language,
-            "description": repo.description,
-            "classifications": classify(repo)
-        })
+        repoData = detail(repo.id, repo)
+        results.append(json.loads(repoData.get_data())['repo'])
 
     return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
 
@@ -370,7 +358,15 @@ def uploadBatchFile():
 # while the current tab stays in the same place.
 # TODO - If job is started through batch file can't select options currently
 @app.route("/createJob", methods=['GET', 'POST'])
-def createJob(i_id = None, i_tag = None, i_node = None, i_javaType = None):
+def createJob(i_id = None,
+              i_tag = None,
+              i_node = None,
+              i_javaType = None,
+              i_selectedBuild = None,
+              i_selectedTest = None,
+              i_selectedEnv = None,
+              i_artifacts = None):
+
     # Ensure we have a valid id number as a post argument
     try:
         idStr = request.form["id"]
@@ -413,22 +409,45 @@ def createJob(i_id = None, i_tag = None, i_node = None, i_javaType = None):
         else:
             return json.jsonify(status="failure", error="missing java type"), 400
 
-    # Get repository
-    repo = globals.cache.getRepo(id)
-    
     # Get build info
     try:
         selectedBuild = request.form["selectedBuild"]
+    except KeyError:
+        if i_selectedBuild != None:
+            selectedBuild = i_selectedBuild
+        else:
+            return json.jsonify(status="failure", error="missing selected build command"), 400
+    
+    # Get test info
+    try:
         selectedTest = request.form["selectedTest"]
+    except KeyError:
+        if i_selectedTest != None:
+            selectedTest = i_selectedTest
+        else:
+            return json.jsonify(status="failure", error="missing selected test command"), 400
+    
+    # Get environment info
+    try:
         selectedEnv = request.form["selectedEnv"]
+    except KeyError:
+        if i_selectedEnv != None:
+            selectedEnv = i_selectedEnv
+        else:
+            return json.jsonify(status="failure", error="missing selected env command"), 400
+    
+    # Get artifacts info
+    try:
         artifacts = request.form["artifacts"]
     except KeyError:
-        build = inferBuildSteps(globals.cache.getDir(repo), repo)
-        selectedBuild = build["selectedBuild"]
-        selectedTest = build["selectedTest"]
-        selectedEnv = build["selectedEnv"]
-        artifacts = build["artifacts"]
+        if i_artifacts != None:
+            artifacts = i_artifacts
+        else:
+            return json.jsonify(status="failure", error="missing artifacts"), 400
 
+    # Get repository
+    repo = globals.cache.getRepo(id)
+    
     # TODO: Conditionally continue based on a user interface selection to create
     # job on Jenkins w/o a build command.  User must manually enter command on Jenkins.
     # Helps automate porting environment
@@ -628,7 +647,7 @@ def runBatchFile ():
     try:
         batchName = request.form["batchName"]
     except KeyError:
-        return json.jsonify(status="failure", error="missing batch file name"), 400
+        return json.jsonify(status="failure", error="missing batchName POST argument"), 400
   
     if batchName != "":
         # Read in the file and store as JSON
@@ -636,24 +655,60 @@ def runBatchFile ():
         fileBuf = json.load(f)
         f.close()
 
+        # Parse config data
         javaType = ""
-
+        
         if fileBuf['config']['java'] == "ibm":
             javaType = "JAVA_HOME=/opt/ibm/java"
 
+        # Parse package data
         for package in fileBuf['packages']:            
             try:
                 tag = package['tag']
             except KeyError:
                 tag = "Current"
 
+            try:
+                selectedBuild = package['build']['selectedBuild']
+            except KeyError:
+                return json.jsonify(status="failure", error="batch file missing selectedBuild"), 404
+            
+            try:
+                selectedTest = package['build']['selectedTest']
+            except KeyError:
+                return json.jsonify(status="failure", error="batch file missing selectedTest"), 404
+            
+            try:
+                selectedEnv = package['build']['selectedEnv']
+            except KeyError:
+                return json.jsonify(status="failure", error="batch file missing selectedEnv"), 404
+            
+            try:
+                artifacts = package['build']['artifacts']
+            except KeyError:
+                return json.jsonify(status="failure", error="batch file missing artifacts"), 404
+
             # TODO - need to specify the servers from the batch file, leaving this in
             # as to not break batch functionality
-            createJob(package['id'], tag, "x86-ubuntu-14.04", javaType)
-            createJob(package['id'], tag, "ppcle-ubuntu-14.04", javaType)
+            createJob(package['id'],
+                      tag,
+                      "x86-ubuntu-14.04",
+                      javaType,
+                      selectedBuild,
+                      selectedTest,
+                      selectedEnv,
+                      artifacts)
+            createJob(package['id'],
+                      tag,
+                      "ppcle-ubuntu-14.04",
+                      javaType,
+                      selectedBuild,
+                      selectedTest,
+                      selectedEnv,
+                      artifacts)
 
     else:
-        return json.jsonify(status="failure", error="could not find file"), 404
+        return json.jsonify(status="failure", error="could not find batch file"), 404
 
     return json.jsonify(status="ok")
 

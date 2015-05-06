@@ -124,7 +124,8 @@ var searchState = {
                         searchState.single.batchFile.packages[0].name +
                         "-" + String(searchState.single.batchFile.packages.length);
                 }
-                var json = JSON.stringify(searchState.single.batchFile, undefined, 2);
+                var json = JSON.stringify(batchState.convertToExternal(searchState.single.batchFile),
+                    undefined, 2);
                 var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                 window.open(data);
                 // TODO: Check return code of window.open() to determine if request was cancelled
@@ -137,7 +138,8 @@ var searchState = {
                         "-" + String(searchState.single.batchFile.packages.length);
                 }
                 var name = searchState.single.batchFile.config.name;
-                var file = JSON.stringify(searchState.single.batchFile, undefined, 2);
+                var file = JSON.stringify(batchState.convertToExternal(searchState.single.batchFile),
+                    undefined, 2);
 
                 $.post("/uploadBatchFile", {name: name, file: file},
                     singleSaveCallback, "json").fail(uploadBatchFileCallback);
@@ -178,7 +180,9 @@ var searchState = {
                           searchState.multiple.batchFile.packages[0].name +
                           "-" + String(searchState.multiple.batchFile.packages.length);
                   }
-                  var json = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
+                  var json =
+                      JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
+                      undefined, 2);
                   var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
                   window.open(data);
 
@@ -197,7 +201,9 @@ var searchState = {
                           "-" + String(searchState.multiple.batchFile.packages.length);
                   }
                   var name = searchState.multiple.batchFile.config.name;
-                  var file = JSON.stringify(searchState.multiple.batchFile, undefined, 2);
+                  var file =
+                      JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
+                      undefined, 2);
 
                   $.post("/uploadBatchFile", {name: name, file: file},
                       multipleSaveCallback, "json").fail(uploadBatchFileCallback);
@@ -306,9 +312,29 @@ var batchState = {
     },
 
     // Actions for individual batch files
-    buildAndTest: function (ev, el) {
+    buildAndTest: function(ev, el) {
         $.post("/runBatchFile", {batchName: el.file.filename},
             runBatchFileCallback, "json").fail(runBatchFileCallback);
+    },
+    convertToExternal: function(internal) {
+        var external = {};
+        external["config"] = $.extend(true, {}, internal["config"]);
+        external["packages"] = [];
+
+        internal["packages"].forEach(function(entry) {
+            var packagesElement = {};
+            packagesElement["id"] = entry["id"];
+            packagesElement["name"] = entry["owner"] + "/" + entry["name"];
+            packagesElement["tag"] = entry["useVersion"];
+            packagesElement["build"] = {};
+            packagesElement["build"]["artifacts"] = entry["build"]["artifacts"];
+            packagesElement["build"]["selectedBuild"] = entry["build"]["selectedBuild"];
+            packagesElement["build"]["selectedTest"] = entry["build"]["selectedTest"];
+            packagesElement["build"]["selectedEnv"] = entry["build"]["selectedEnv"];
+            external["packages"].push(packagesElement);
+        });
+
+        return external;
     }
 };
 
@@ -1160,7 +1186,6 @@ function showDetail(data) {
     } else {
         if (data.panel === "single") {
             detailState.repo = data.repo;
-            console.log(data.repo.build);
             detailState.repo.addToJenkins = function(e) {
                 var buildInfo = detailState.repo.build;
         
