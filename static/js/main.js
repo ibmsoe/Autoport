@@ -326,11 +326,18 @@ var batchState = {
             packagesElement["id"] = entry["id"];
             packagesElement["name"] = entry["owner"] + "/" + entry["name"];
             packagesElement["tag"] = entry["useVersion"];
-            packagesElement["build"] = {};
-            packagesElement["build"]["artifacts"] = entry["build"]["artifacts"];
-            packagesElement["build"]["selectedBuild"] = entry["build"]["selectedBuild"];
-            packagesElement["build"]["selectedTest"] = entry["build"]["selectedTest"];
-            packagesElement["build"]["selectedEnv"] = entry["build"]["selectedEnv"];
+            if ((typeof(entry["build"]) !== 'undefined') &&
+                (typeof(entry["build"]["artifacts"]) !== 'undefined') &&
+                (typeof(entry["build"]["selectedBuild"]) !== 'undefined') &&
+                (typeof(entry["build"]["selectedTest"]) !== 'undefined') &&
+                (typeof(entry["build"]["selectedEnv"]) !== 'undefined'))
+            {
+                packagesElement["build"] = {};
+                packagesElement["build"]["artifacts"] = entry["build"]["artifacts"];
+                packagesElement["build"]["selectedBuild"] = entry["build"]["selectedBuild"];
+                packagesElement["build"]["selectedTest"] = entry["build"]["selectedTest"];
+                packagesElement["build"]["selectedEnv"] = entry["build"]["selectedEnv"];
+            }
             external["packages"].push(packagesElement);
         });
 
@@ -1172,7 +1179,7 @@ function getSelectedValues(select) {
     for(var i=0, iLen=options.length; i<iLen; i++) {
         opt = options[i];
 
-        if(opt.selected) {
+        if (opt.selected) {
             result.push(opt.value || opt.text);
         }
     }
@@ -1313,10 +1320,13 @@ function multipleSaveCallback(data) {
 
 function runBatchFileCallback(data) {
     console.log("In runBatchFileCallback");
+    if (data.status !== "ok") {
+        showAlert("", data);
+    }
 }
 
 function listBatchFilesCallback(data) {
-    if(data.status === "ok") {
+    if (data.status === "ok") {
         batchState.fileList = data.results;
         batchState.showListSelectTable = true;
     } else {
@@ -1340,10 +1350,10 @@ function getJenkinsNodesCallback(data) {
         for(i = 0; i < data.nodeLabels.length; i++) {
             var name = data.nodeNames[i];
             var label = data.nodeLabels[i];
-            if($.inArray(name, jenkinsState.nodeNames) === -1) {
+            if ($.inArray(name, jenkinsState.nodeNames) === -1) {
                 jenkinsState.nodeNames.push(data.nodeNames[i]);
             }
-            if($.inArray(label, jenkinsState.nodeLabels) === -1) {
+            if ($.inArray(label, jenkinsState.nodeLabels) === -1) {
                 jenkinsState.nodeLabels.push(data.nodeLabels[i]);
             }
         }

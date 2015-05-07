@@ -286,13 +286,29 @@ def search_repositories():
     if panel == "":
         return json.jsonify(status="failure", error="missing panel"), 400
 
-    # TODO: debug-log parameters
-
+    # This algorithm must be fast as it is used to collect information on potentially
+    # thousands of projects.  Number of projects is a user specified field.  Don't look
+    # detailed information as this search is used to perform discovery of popular 
+    # projects for research purposes, not necessarily to build.  We defer the build
+    # lookup to when the batch file is submitted for build and test.   This is also
+    # as the build information for current may change over time.  ie. ant to maven 
     results = []
     for repo in globals.github.search_repositories(q, sort=sort, order=order)[:limit]:
         globals.cache.cacheRepo(repo)
-        repoData = detail(repo.id, repo)
-        results.append(json.loads(repoData.get_data())['repo'])
+        results.append({
+            "id": repo.id,
+            "name": repo.name,
+            "owner": repo.owner.login,
+            "owner_url": repo.owner.html_url,
+            "stars": repo.stargazers_count,
+            "forks": repo.forks_count,
+            "url": repo.html_url,
+            "size_kb": repo.size,
+            "last_update": str(repo.updated_at),
+            "language": repo.language,
+            "description": repo.description,
+            "classifications": classify(repo)
+        })
 
     return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
 
@@ -664,12 +680,30 @@ def runBatchFile ():
         # Parse package data
         for package in fileBuf['packages']:            
             try:
+                idStr = package['id']
+                id = int(idStr)
+            except KeyError:
+                return json.jsonify(status="failure", error="batch file missing project id"), 404
+
+            try:
                 tag = package['tag']
             except KeyError:
                 tag = "Current"
 
+            # Build information is missing from top-N search 
+            try:
+                build = package['build']
+            except KeyError:
+                repo = globals.cache.getRepo(id)
+                if repo == None:
+                    return json.jsonify(status="failure", error="batch file invalid project ID: " + idStr), 404
+                package['build'] = inferBuildSteps(globals.cache.getDir(repo), repo)
+
             try:
                 selectedBuild = package['build']['selectedBuild']
+                # All projects should have a build task.  Some projects like documents don't.  Skip these
+                if selectedBuild == "":
+                    continue
             except KeyError:
                 return json.jsonify(status="failure", error="batch file missing selectedBuild"), 404
             
