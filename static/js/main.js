@@ -326,11 +326,11 @@ var batchState = {
             packagesElement["id"] = entry["id"];
             packagesElement["name"] = entry["owner"] + "/" + entry["name"];
             packagesElement["tag"] = entry["useVersion"];
-            if ((typeof(entry["build"]) !== 'undefined') &&
-                (typeof(entry["build"]["artifacts"]) !== 'undefined') &&
-                (typeof(entry["build"]["selectedBuild"]) !== 'undefined') &&
-                (typeof(entry["build"]["selectedTest"]) !== 'undefined') &&
-                (typeof(entry["build"]["selectedEnv"]) !== 'undefined'))
+            if (!entry["build"] &&
+                !entry["build"]["artifacts"] &&
+                !entry["build"]["selectedBuild"] &&
+                !entry["build"]["selectedTest"] &&
+                !entry["build"]["selectedEnv"])
             {
                 packagesElement["build"] = {};
                 packagesElement["build"]["artifacts"] = entry["build"]["artifacts"];

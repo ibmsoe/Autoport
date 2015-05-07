@@ -288,10 +288,10 @@ def search_repositories():
 
     # This algorithm must be fast as it is used to collect information on potentially
     # thousands of projects.  Number of projects is a user specified field.  Don't look
-    # detailed information as this search is used to perform discovery of popular 
+    # detailed information as this search is used to perform discovery of popular
     # projects for research purposes, not necessarily to build.  We defer the build
     # lookup to when the batch file is submitted for build and test.   This is also
-    # as the build information for current may change over time.  ie. ant to maven 
+    # as the build information for current may change over time.  ie. ant to maven
     results = []
     for repo in globals.github.search_repositories(q, sort=sort, order=order)[:limit]:
         globals.cache.cacheRepo(repo)
@@ -673,12 +673,13 @@ def runBatchFile ():
 
         # Parse config data
         javaType = ""
-        
+
         if fileBuf['config']['java'] == "ibm":
             javaType = "JAVA_HOME=/opt/ibm/java"
 
         # Parse package data
-        for package in fileBuf['packages']:            
+        submittedJob = False
+        for package in fileBuf['packages']:
             try:
                 idStr = package['id']
                 id = int(idStr)
@@ -690,7 +691,7 @@ def runBatchFile ():
             except KeyError:
                 tag = "Current"
 
-            # Build information is missing from top-N search 
+            # Build information is missing from top-N search
             try:
                 build = package['build']
             except KeyError:
@@ -740,11 +741,14 @@ def runBatchFile ():
                       selectedTest,
                       selectedEnv,
                       artifacts)
-
+            submittedJob = True
     else:
         return json.jsonify(status="failure", error="could not find batch file"), 404
 
-    return json.jsonify(status="ok")
+    if submittedJob:
+        return json.jsonify(status="ok")
+    return json.jsonify(status="failure", error="batch file no project is buildable"), 404
+
 
 # List available batch files
 @app.route("/listBatchFiles/<repositoryType>")
