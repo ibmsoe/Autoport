@@ -63,8 +63,12 @@ def init():
 @app.route("/getJenkinsNodes", methods=["POST"])
 def getJenkinsNodes():
     nodesUrl = globals.jenkinsUrl + "/computer/api/json?pretty=true"
-    nodesResults = json.loads(requests.get(nodesUrl).text)
-    nodes = nodesResults['computer']
+
+    try:
+        nodesResults = json.loads(requests.get(nodesUrl).text)
+        nodes = nodesResults['computer']
+    except ValueError:
+        return json.jsonify(status="failure", error="Jenkins nodes url or authentication error"), 400
 
     nodeNames = []
     nodeLabels = []
