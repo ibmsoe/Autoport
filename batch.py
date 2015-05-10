@@ -2,6 +2,7 @@ import globals
 import os
 import paramiko
 import tempfile
+from buildAnalyzer import inferBuildSteps
 from stat import ST_SIZE, ST_MTIME
 from time import localtime, asctime
 from flask import json
@@ -33,7 +34,7 @@ class Batch:
                 for filename in sorted(filenames):
                     if filt in filename.lower() or filt == "":
                         if filename != ".gitignore":
-                            filteredList.append(self.parseBatchBuf(globals.localPathForBatchFiles + filename, "local"))
+                            filteredList.append(self.parseBatchFileList(globals.localPathForBatchFiles + filename, "local"))
         except IOError:
             pass
         return filteredList
@@ -47,43 +48,113 @@ class Batch:
                 if filt in filename.lower() or filt == "":
                     putdir = tempfile.mkdtemp(prefix="autoport_")
                     self.ftp_client.get(filename, putdir + "/" + filename)
-                    filteredList.append(self.parseBatchBuf(putdir + "/" + filename, "gsa"))
+                    filteredList.append(self.parseBatchFileList(putdir + "/" + filename, "gsa"))
         except IOError:
             pass
         return filteredList
 
-    def parseBatchBuf(self, filename, location):
+    def parseBatchFileList(self, filename, location):
         st = os.stat(filename)
         f = open(filename)
-        
+
         size = st[ST_SIZE]
         datemodified = asctime(localtime(st[ST_MTIME]))
 
         try:
             fileBuf = json.load(f)
         except ValueError:
+            f.close()
             return {"location": "-", "owner": "-", "name": "INVALID BATCH FILE", "size": "-", \
                 "datemodified": "-", "environment": "-", "filename": "-"}
         f.close()
-        
+
         try:
             name = fileBuf['config']['name']
         except KeyError:
             name = "{ MISSING NAME }"
+
         try:
             env = fileBuf['config']['java']
-        
             if env == "ibm":
                 environment = "IBM Java"
             else:
                 environment = "System Default"
         except KeyError:
             environment = "System Default"
-        
+
         try:
             owner = fileBuf['config']['owner']
         except KeyError:
             owner = "Anonymous"
-                
+
         return {"location": location, "owner": owner, "name": name, "size": size, \
             "datemodified": datemodified, "environment": environment, "filename": filename}
+
+    def parseBatchFile(self, filename):
+        st = os.stat(filename)
+        f = open(filename)
+
+        try:
+            fileBuf = json.load(f)
+        except ValueError:
+            f.close()
+            return {"error": "Could not read file" + filename }
+        f.close()
+
+        try:
+            name = fileBuf['config']['name']
+        except KeyError:
+            return {"error": "Missing project name" }
+
+        try:
+            env = fileBuf['config']['java']
+        except KeyError:
+            pass
+
+        try:
+            owner = fileBuf['config']['owner']
+        except KeyError:
+            owner = "Anonymous"
+
+        for package in fileBuf['packages']:
+            try:
+                name = package['name']
+            except KeyError:
+                return { "error": "batch file missing project name" }
+
+            try:
+                idStr = package['id']
+            except KeyError:
+                return { "error": "batch file project " + name + " missing id field" }
+
+            try:
+                tag = package['tag']
+            except KeyError:
+                package['tag'] = "Current"
+
+            # Build information is lazily calculated for searches that yield multiple 
+            # projects to ensure fast searches.
+            try:
+                selectedBuild = package['build']['selectedBuild']
+            except KeyError:
+                repo = globals.cache.getRepo(int(idStr))
+                if repo == None:
+                    return { "error": "batch file invalid project " + name }
+                package['build'] = inferBuildSteps(globals.cache.getDir(repo), repo)
+
+            try:
+                selectedTest = package['build']['selectedTest']
+            except KeyError:
+                package['build']['selectedTest'] = ""
+ 
+            try:
+                selectedEnv = package['build']['selectedEnv']
+            except KeyError:
+                package['build']['selectedEnv'] = ""
+
+            try:
+                artifacts = package['build']['artifacts']
+            except KeyError:
+                package['build']['artifacts'] = ""
+
+        return fileBuf

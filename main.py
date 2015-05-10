@@ -39,7 +39,7 @@ batch = Batch()
 # job result sample "hostname.181259.x86-ubuntu-14.04.junit.current.2015-04-24-h12-m23-s15/"
 # job result sample "hostname.887140.229_x86_ubuntu14.junit.current.2015-04-24-h12-m23-s12/"
 # job result sample "hostname.984127.ppcle-ubuntu-14.04.junit.current.2015-04-24-h12-m23-s05/"
-# pattern           "hostname.uuid  .node              .name .tag    .time stamp
+# pattern           "hostname.uid   .node              .name .tag    .time stamp
 #                                    ^                  ^     ^
 #                                    |                  +-----+-- may have - or _
 #                                    +-- may have a - or _ or .
@@ -373,6 +373,124 @@ def uploadBatchFile():
 
     return json.jsonify(status="ok")
 
+# Common routine for createJob and runBatchJob
+def createJob_common(uid, id, tag, node, javaType,
+                     selectedBuild, selectedTest, selectedEnv, artifacts):
+
+    # Get repository
+    repo = globals.cache.getRepo(id)
+
+    # TODO: Conditionally continue based on a user interface selection to create
+    # job on Jenkins w/o a build command.  User must manually enter command on Jenkins.
+    # Helps automate porting environment
+
+    if not selectedBuild:
+        errorstr = "Programming language not supported - " + repo.language
+        return { 'status': "failure", 'error': errorstr }
+
+    # Read template XML file
+    tree = ET.parse("config_template.xml")
+    root = tree.getroot()
+    # Find elements we want to modify
+    xml_github_url = root.find("./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
+    xml_git_url = root.find("./scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url")
+    xml_default_branch = root.find("./scm/branches/hudson.plugins.git.BranchSpec/name")
+    xml_build_command = root.find("./builders/hudson.tasks.Shell/command")
+    xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
+    xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
+    xml_artifacts = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
+    xml_node = root.find("./assignedNode")
+    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
+
+    # Modify selected elements
+    xml_node.text = node
+
+    xml_github_url.text = repo.html_url
+    xml_git_url.text = "https" + repo.git_url[3:]
+
+    jobName = globals.localHostName + '.' + str(uid) + '.' + node + '.N-' + repo.name
+
+    if (tag == "") or (tag == "Current"):
+        xml_default_branch.text = "*/" + repo.default_branch
+        jobName += ".current"
+    else:
+        xml_default_branch.text = "tags/" + tag
+        jobName += "." + tag
+
+    # Time job is created
+    time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+
+    # Name of new Folder
+    jobFolder = jobName + "." + time
+
+    xml_build_command.text = selectedBuild
+    xml_test_command.text = selectedTest
+    xml_env_command.text = selectedEnv
+
+    # In addition to whatever other environmental variables I need to inject
+    # I should add whether to pick IBM Java or Open JDK
+    xml_env_command.text += javaType + "\n"
+    path_env = "PATH=" + globals.mavenPath + ":$PATH\n"
+    xml_env_command.text += path_env
+    xml_artifacts.text = artifacts
+
+    # Job metadata as passed to jenkins
+    jobMetadataName = "meta.arti"
+    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Architecture\": \"" + node + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
+
+    # add parameters information
+    i = 1
+    for param in xml_parameters:
+        if i == 1:
+            param.text = jobMetadataName
+        elif i == 2:
+            param.text = jobMetadata
+        i += 1
+
+    # Add header to the config
+    configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
+
+    # Send to Jenkins
+    NO_PROXY = {
+        'no': 'pass',
+    }
+
+    r = requests.post(
+        globals.jenkinsUrl + "/createItem",
+        headers={
+            'Content-Type': 'application/xml'
+        },
+        params={
+            'name': jobName
+        },
+        data=configXml,
+        proxies=NO_PROXY
+    )
+
+    if r.status_code == 200:
+
+        # Success, send the jenkins job and start it right away.
+        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
+
+        # But then redirect to job home to monitor job progress.
+        homeJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/"
+
+        # Start Jenkins job
+        requests.get(startJobUrl, proxies=NO_PROXY)
+
+        # Split off a thread to query for build completion and move artifacts to local machine
+        threadRequests = makeRequests(moveArtifacts, (jobName, ))
+        [globals.threadPool.putRequest(req) for req in threadRequests]
+
+        # Stays on the same page, after creating a new jenkins job.
+        return { 'status':"ok", 'sjobUrl':startJobUrl, 'hjobUrl':homeJobUrl }
+
+    if r.status_code == 400:
+        return { 'status':"failure", 'error':"jenkins HTTP error job exists : " + jobName, 'rstatus':r.status_code }
+
+    return { 'status':"failure", 'error':"jenkins HTTP error " + str(r.status_code), 'rstatus':r.status_code }
+
+
 # Create Job - takes a repo id, repo tag, and build node and creates a Jenkins job for it
 # Opens a new tab with a new jenkins job URL on the client side on success,
 # while the current tab stays in the same place.
@@ -386,6 +504,12 @@ def createJob(i_id = None,
               i_selectedTest = None,
               i_selectedEnv = None,
               i_artifacts = None):
+
+    # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
+    # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one 
+    # is found. This should be an extremely rare occurence.
+    # TODO - check to see if job already exists
+    uid = randint(globals.minRandom, globals.maxRandom)
 
     # Ensure we have a valid id number as a post argument
     try:
@@ -455,7 +579,7 @@ def createJob(i_id = None,
             selectedEnv = i_selectedEnv
         else:
             return json.jsonify(status="failure", error="missing selected env command"), 400
-    
+
     # Get artifacts info
     try:
         artifacts = request.form["artifacts"]
@@ -465,124 +589,20 @@ def createJob(i_id = None,
         else:
             return json.jsonify(status="failure", error="missing artifacts"), 400
 
-    # Get repository
-    repo = globals.cache.getRepo(id)
-    
-    # TODO: Conditionally continue based on a user interface selection to create
-    # job on Jenkins w/o a build command.  User must manually enter command on Jenkins.
-    # Helps automate porting environment
+    rc = createJob_common(uid, id, tag, node, javaType, selectedBuild, selectedTest, selectedEnv, artifacts)
 
-    if not selectedBuild:
-        errorstr = "Programming language not supported - " + repo.language
-        return json.jsonify(status="failure", error=errorstr)
-
-    # Read template XML file
-    tree = ET.parse("config_template.xml")
-    root = tree.getroot()
-    # Find elements we want to modify
-    xml_github_url = root.find("./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
-    xml_git_url = root.find("./scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url")
-    xml_default_branch = root.find("./scm/branches/hudson.plugins.git.BranchSpec/name")
-    xml_build_command = root.find("./builders/hudson.tasks.Shell/command")
-    xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
-    xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
-    xml_artifacts = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
-    xml_node = root.find("./assignedNode")
-    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
-
-    # Modify selected elements
-    xml_node.text = node
-
-    xml_github_url.text = repo.html_url
-    xml_git_url.text = "https" + repo.git_url[3:]
-
-    # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
-    # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one 
-    # is found. This should be an extremely rare occurence.
-    # TODO - chcek to see if job already exists
-    uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = globals.localHostName + '.' + str(uid) + '.' + node + '.N-' + repo.name
-
-    if (tag == "") or (tag == "Current"):
-        xml_default_branch.text = "*/" + repo.default_branch
-        jobName += ".current"
-    else:
-        xml_default_branch.text = "tags/" + tag
-        jobName += "." + tag
-
-    # Time job is created
-    time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-
-    # Name of new Folder
-    jobFolder = jobName + "." + time
-
-    xml_build_command.text = selectedBuild
-    xml_test_command.text = selectedTest
-    xml_env_command.text = selectedEnv
-
-    # In addition to whatever other environmental variables I need to inject
-    # I should add whether to pick IBM Java or Open JDK
-    xml_env_command.text += javaType + "\n"
-    path_env = "PATH=" + globals.mavenPath + ":$PATH\n"
-    xml_env_command.text += path_env
-    xml_artifacts.text = artifacts
-
-    # Job metadata as passed to jenkins
-    jobMetadataName = "meta.arti"
-    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Architecture\": \"" + node + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
-
-    # add parameters information
-    i = 1
-    for param in xml_parameters:
-        if i == 1:
-            param.text = jobMetadataName
-        elif i == 2:
-            param.text = jobMetadata
-        i += 1
-
-    # Add header to the config
-    configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
-
-    # Send to Jenkins
-    NO_PROXY = {
-        'no': 'pass',
-    }
-
-    r = requests.post(
-        globals.jenkinsUrl + "/createItem",
-        headers={
-            'Content-Type': 'application/xml'
-        },
-        params={
-            'name': jobName
-        },
-        data=configXml,
-        proxies=NO_PROXY
-    )
-
-    if r.status_code == 200:
-
-        # Success, send the jenkins job and start it right away.
-        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
-        
-        # But then redirect to job home to monitor job progress.
-        homeJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/"
-
-        # Start Jenkins job
-        requests.get(startJobUrl, proxies=NO_PROXY)
-
-        # Split off a thread to query for build completion and move artifacts to local machine
-        threadRequests = makeRequests(moveArtifacts, (jobName, ))
-        [globals.threadPool.putRequest(req) for req in threadRequests]
-
+    try:
+        rcstatus = rc['status']
+        rcerror = rc['error']
+        try:
+            return json.jsonify(status=rcstatus, error=rcerror), rc['rstatus']
+        except KeyError:
+            return json.jsonify(status=rcstatus, error=rcerror)
+    except KeyError:
         # Stays on the same page, after creating a new jenkins job.
-        return json.jsonify(status="ok", sjobUrl=startJobUrl, hjobUrl=homeJobUrl)
+        # return json.jsonify(status="ok", rc.sjobUrl=startJobUrl, rc.hjobUrl=homeJobUrl)
+        return json.jsonify(status="ok", sjobUrl=rc['sjobUrl'], hjobUrl=rc['hjobUrl'])
 
-    # TODO : delete job and retry 
-    if r.status_code == 400:
-        return json.jsonify(status="failure", error='jenkins HTTP error job exists : ' + jobName), r.status_code
-
-    return json.jsonify(status="failure", error='jenkins HTTP error '+str(r.status_code)), r.status_code
 
 # Polls the Jenkins master to see when a job has completed and moves artifacts over to local
 # storage once/if they are available
@@ -626,7 +646,7 @@ def moveArtifacts (jobName):
         sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         sshClient.connect(urlparse(globals.jenkinsUrl).hostname, username=globals.configJenkinsUsername, key_filename=globals.configJenkinsKey)
         ftpClient = sshClient.open_sftp()
-        
+
         ftpClient.chdir(artifactsPath)
         flist = ftpClient.listdir()
 
@@ -654,7 +674,7 @@ def moveArtifacts (jobName):
                     ftpClient.get(f, localArtifactsPath + f)
 
             else:
-                print "archive folder missing" + jobName
+                print "archive folder missing " + jobName
 
     except IOError as e:
         print "archive move FTP failure" + jobName + " error: " + e
@@ -668,83 +688,47 @@ def runBatchFile ():
         batchName = request.form["batchName"]
     except KeyError:
         return json.jsonify(status="failure", error="missing batchName POST argument"), 400
-  
+
+    # Get the batch file name from POST
+    try:
+        node = request.form["node"]
+    except KeyError:
+        return json.jsonify(status="failure", error="run batch file missing node argument"), 400
+ 
     if batchName != "":
-        # Read in the file and store as JSON
-        f = open(batchName)
-        fileBuf = json.load(f)
-        f.close()
+        fileBuf = batch.parseBatchFile(batchName)
+        try:
+            return json.jsonify(status="failure", error=fileBuf['error']), 400
+        except KeyError:
+            pass
+
+        # Randomly generate a batch job UID to append to the job name to provide a grouping
+        # for all jobs in the batch file for reporting purposes.
+        uid = randint(globals.minRandom, globals.maxRandom)
 
         # Parse config data
         javaType = ""
-
         if fileBuf['config']['java'] == "ibm":
             javaType = "JAVA_HOME=/opt/ibm/java"
 
         # Parse package data
         submittedJob = False
         for package in fileBuf['packages']:
-            try:
-                idStr = package['id']
-                id = int(idStr)
-            except KeyError:
-                return json.jsonify(status="failure", error="batch file missing project id"), 404
 
-            try:
-                tag = package['tag']
-            except KeyError:
-                tag = "Current"
+            # if a project can't be built, skip it. Top N may not be buildable - documentation
+            selectedBuild = package['build']['selectedBuild']
+            if selectedBuild == "":
+                continue
 
-            # Build information is missing from top-N search
-            try:
-                build = package['build']
-            except KeyError:
-                repo = globals.cache.getRepo(id)
-                if repo == None:
-                    return json.jsonify(status="failure", error="batch file invalid project ID: " + idStr), 404
-                package['build'] = inferBuildSteps(globals.cache.getDir(repo), repo)
-
-            try:
-                selectedBuild = package['build']['selectedBuild']
-                # All projects should have a build task.  Some projects like documents don't.  Skip these
-                if selectedBuild == "":
-                    continue
-            except KeyError:
-                return json.jsonify(status="failure", error="batch file missing selectedBuild"), 404
-            
-            try:
-                selectedTest = package['build']['selectedTest']
-            except KeyError:
-                return json.jsonify(status="failure", error="batch file missing selectedTest"), 404
-            
-            try:
-                selectedEnv = package['build']['selectedEnv']
-            except KeyError:
-                return json.jsonify(status="failure", error="batch file missing selectedEnv"), 404
-            
-            try:
-                artifacts = package['build']['artifacts']
-            except KeyError:
-                return json.jsonify(status="failure", error="batch file missing artifacts"), 404
-
-            # TODO - need to specify the servers from the batch file, leaving this in
-            # as to not break batch functionality
-            createJob(package['id'],
-                      tag,
-                      "x86-ubuntu-14.04",
+            createJob_common(uid,
+                      package['id'],
+                      package['tag'],
+                      node,
                       javaType,
-                      selectedBuild,
-                      selectedTest,
-                      selectedEnv,
-                      artifacts)
-            createJob(package['id'],
-                      tag,
-                      "ppcle-ubuntu-14.04",
-                      javaType,
-                      selectedBuild,
-                      selectedTest,
-                      selectedEnv,
-                      artifacts)
+                      package['build']['selectedBuild'],
+                      package['build']['selectedTest'],
+                      package['build']['selectedEnv'],
+                      package['build']['artifacts'])
             submittedJob = True
     else:
         return json.jsonify(status="failure", error="could not find batch file"), 404
@@ -761,6 +745,14 @@ def listBatchFiles(repositoryType):
     if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
         return json.jsonify(status="failure", error="Invalid repository type"), 400
     return json.jsonify(status="ok", results=batch.listBatchFiles(repositoryType, filt.lower()))
+
+# Read and sanitize the contents of the named batch file
+@app.route("/parseBatchFile")
+def parseBatchFile():
+    batchName  = request.args.get("batchName", "")
+    if batchName == "":
+        return json.jsonify(status="failure", error="missing batch file name"), 400
+    return json.jsonify(status="ok", results=batch.parseBatchFile(batchName))
 
 # List all results available on catalog
 #TODO - list builds as failed and disable test detail

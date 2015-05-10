@@ -312,9 +312,54 @@ var batchState = {
     },
 
     // Actions for individual batch files
+    batchFile: {},
+    loading: false,
+    showBatchFile: false, // Draw batch file detail table
+    backToBatchList: function(ev) {
+        batchState.showBatchFile = false;
+        batchState.showListSelectTable = true;
+    },
+    saveBatch: function(ev) {
+    },
     buildAndTest: function(ev, el) {
-        $.post("/runBatchFile", {batchName: el.file.filename},
-            runBatchFileCallback, "json").fail(runBatchFileCallback);
+        // TODO - default scheduling policy based on jenkinsState.nodeLabels
+        $.post("/runBatchFile", {batchName: el.file.filename, node: "x86-ubuntu-14.04"},
+                runBatchFileCallback, "json").fail(runBatchFileCallback);
+        $.post("/runBatchFile", {batchName: el.file.filename, node: "ppcle-ubuntu-14.04"},
+                runBatchFileCallback, "json").fail(runBatchFileCallback);
+    },
+    buildAndTestDetail: function(ev, el) {
+        var el = $("#batchBuildServers")[0];
+        var buildServers = getSelectedValues(el);
+        var javaType = "";
+
+        config = batchState.batchFile.config;
+        if (config['java'] === "ibm")
+            javaType = "JAVA_HOME=/opt/ibm/java"
+
+        packages = batchState.batchFile.packages;
+        for (var i = 0; i < buildServers.length; i++) {
+            for (var j = 0; j < packages.length; j++) {
+                package = batchState.batchFile.packages[j];
+
+                // Skip projects that can't be built like documentation
+                build = package.build;
+                if (build.selectedBuild === "")
+                    continue;
+
+                $.post("/createJob", {id: package.id, tag: packages.tag, javaType: javaType,
+                       node: buildServers[i], selectedBuild: build.selectedBuild,
+                       selectedTest: build.selectedTest, selectedEnv: build.selectedEnv,
+                       artifacts: build.artifacts}, addToJenkinsCallback,
+                       "json").fail(addToJenkinsCallback);
+            }
+        }
+    },
+    parseBatchFile: function(ev, el) {
+        batchState.loading = true;
+        batchState.showBatchFile = false;
+        $.getJSON("/parseBatchFile", {batchName: el.file.filename},
+            parseBatchFileCallback, "json").fail(parseBatchFileCallback);
     },
     convertToExternal: function(internal) {
         var external = {};
@@ -326,11 +371,7 @@ var batchState = {
             packagesElement["id"] = entry["id"];
             packagesElement["name"] = entry["owner"] + "/" + entry["name"];
             packagesElement["tag"] = entry["useVersion"];
-            if (!entry["build"] &&
-                !entry["build"]["artifacts"] &&
-                !entry["build"]["selectedBuild"] &&
-                !entry["build"]["selectedTest"] &&
-                !entry["build"]["selectedEnv"])
+            if (entry["build"])
             {
                 packagesElement["build"] = {};
                 packagesElement["build"]["artifacts"] = entry["build"]["artifacts"];
@@ -1208,7 +1249,7 @@ function showDetail(data) {
                 var el = $("#singleBuildServers")[0];
                 var buildServers = getSelectedValues(el);
 
-                for(var i=0; i < buildServers.length; i++) {
+                for (var i=0; i < buildServers.length; i++) {
                     console.log(detailState.repo.useVersion + " version");
                     $.post("/createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion, javaType: detailState.javaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
@@ -1325,6 +1366,47 @@ function runBatchFileCallback(data) {
     }
 }
 
+function parseBatchFileCallback(data) {
+    console.log("In parseBatchFileCallback");
+    if (data.status === "ok") {
+        batchState.showListSelectTable = false;
+        batchState.loading = false;
+        batchState.showBatchFile = true;
+        batchState.batchFile = data.results;
+        data.results.packages.forEach(function(package) {
+            package.down = function (ev) {
+                var i = data.results.packages.indexOf(package);
+                if (i < data.results.packages.length - 1) {
+                    var ele1 = data.results.packages[i];
+                    var ele2 = data.results.packages[i+1];
+                    data.results.packages.splice(i, 2, ele2, ele1);
+                    batchState.batchFile.packages = data.results.packages;
+                }
+            };
+            package.up = function (ev) {
+                var i = data.results.packages.indexOf(package);
+                if (i > 0) {
+                    var ele1 = data.results.packages[i-1];
+                    var ele2 = data.results.packages[i];
+                    data.results.packages.splice(i-1, 2, ele2, ele1);
+                    batchState.batchFile.packages = data.results.packages;
+                }
+            };
+            package.remove = function (ev) {
+                var i = data.results.packages.indexOf(package);
+                var ele = data.results.packages.splice(i, 1);
+                batchState.batchFile.packages = data.results.packages;
+                if (data.results.packages.length === 0) {
+                    batchState.showBatchFile = false;
+                    batchState.showListSelectTable = true;
+                }
+            };
+        });
+    } else {
+        showAlert("", data);
+    }
+}
+
 function listBatchFilesCallback(data) {
     if (data.status === "ok") {
         batchState.fileList = data.results;
@@ -1395,6 +1477,8 @@ $(document).ready(function() {
     
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers
+    // TODO: exclude offline jenkins nodes
+    // TODO: add selections for default (goes through jenkins master), linux distributions, specific build servers
     $.ajax({
         type: 'POST',
         url: "/getJenkinsNodes",
@@ -1412,6 +1496,12 @@ $(document).ready(function() {
         }
     });
     $('#generateBuildServers').multiselect({
+        buttonClass: "btn btn-primary",
+        buttonText: function(options, select) {
+            return "Select build system type";
+        }
+    });
+    $('#batchBuildServers').multiselect({
         buttonClass: "btn btn-primary",
         buttonText: function(options, select) {
             return "Select build system type";

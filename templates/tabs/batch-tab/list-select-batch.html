@@ -6,29 +6,27 @@
   <div class="jumbotron-button-content" rv-show="batchState.showListPanel">
     
     <!-- Batch file list selector (local, archived, all) -->
-    <div class="input-group">
+    <div class="row">
+      <div class="col-lg-8">
         <input type="text" class="form-control" placeholder="Enter batch file name."
-            id="batchFileFilter"/>
-        <div class="input-group-btn"> 
-          <div class="btn btn-primary" rv-on-click="batchState.listLocalBatchFiles">
-            List local
-          </div>
+          id="batchFileFilter"/>
+      </div>
+      <div class="col-lg-4">
+        <div class="btn btn-primary" rv-on-click="batchState.listLocalBatchFiles">
+          List local
         </div>
-        <div class="input-group-btn"> 
-          <div class="btn btn-primary" rv-on-click="batchState.listArchivedBatchFiles">
-            List archived
-          </div>
+        <div class="btn btn-primary" rv-on-click="batchState.listArchivedBatchFiles">
+          List archived
         </div>
-        <div class="input-group-btn"> 
-          <div class="btn btn-primary" rv-on-click="batchState.listAllBatchFiles">
-            List all
-          </div>
+        <div class="btn btn-primary" rv-on-click="batchState.listAllBatchFiles">
+          List all
         </div>
+      </div>
     </div>
 
     <br />
 
-    <!-- Batch file table -->             
+    <!-- List batch files table -->             
     <table class="table panel panel-default" rv-show="batchState.showListSelectTable">
       <thead>
         <tr>
@@ -63,10 +61,95 @@
                 Build + Test
               </button>
             </a>
+            <a rv-on-click="batchState.parseBatchFile">
+              <button type="button" class="btn btn-primary">
+                <span class="glyphicon glyphicon-zoom-in"></span>
+                Details
+              </button>
+            </a>
           </td>
         </tr>
       </tbody>
     </table>
   
+    {% include "tabs/batch-tab/loading.html" %}
+
+    <!-- List batch file content table -->             
+    <div class="alert alert-success clearfix" rv-show="batchState.showBatchFile">
+      <span class="autoSelectedText">
+        <div>
+          The following packages will be submitted to be built and tested in order.&nbsp;&nbsp;&nbsp;This allows
+          you to manage package dependencies by including them in the batch file in the proper place and
+          submitting the batch file as a job to be executed on a specific build server.&nbsp;&nbsp;&nbsp;Alternatively,
+          you can install packages on build servers themselves using services provided on the Build Server tab. If
+          you do not select a build server, then all available build servers will be used.  A specific build
+          server should only be chosen if you are evaluating a particular Linux distribution or if the
+          batch file includes dependent packages.
+        </div>  
+        <br />
+        <div class="row buttonRight">
+            <a rv-on-click="batchState.backToBatchList">
+              <button type="button" class="btn btn-primary">
+                <span class="glyphicon glyphicon-chevron-left"></span>
+                Back
+              </button>
+            </a>
+            <a rv-on-click="batchState.saveBatch">
+              <button type="button" class="btn btn-primary">
+                Save
+              </button>
+            </a>
+
+            <!-- Yuck -->
+            <select id="batchBuildServers" multiple="multiple">
+              <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+            </select>
+
+            <a rv-on-click="batchState.buildAndTestDetail">
+              <button type="button" class="btn btn-primary">
+                Build + Test
+              </button>
+            </a>
+        </div>
+      </span>
+    </div>
+
+    <table class="table panel panel-default" rv-show="batchState.showBatchFile">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Version</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody rv-each-package="batchState.batchFile.packages">
+        <tr class="result-row">
+          <td>
+            { package.name }
+          </td>
+          <td>
+            { package.tag }
+          </td>
+          <td class="col-lg-3">
+            <a rv-on-click="package.up">
+              <button type="button" class="btn btn-primary">
+                Up 
+              </button>
+            </a>
+            <a rv-on-click="package.down">
+              <button type="button" class="btn btn-primary">
+                Down 
+              </button>
+            </a>
+            <a rv-on-click="package.remove">
+              <button type="button" class="btn btn-primary">
+                Remove 
+              </button>
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
   </div>
 </div>
