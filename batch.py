@@ -53,6 +53,8 @@ class Batch:
             pass
         return filteredList
 
+    # Fast look up for listing of all Batch Files.  Upon user selection of batch build and test,
+    # the full contents of file are checked.  See parseBatchFile below
     def parseBatchFileList(self, filename, location):
         st = os.stat(filename)
         f = open(filename)
@@ -90,10 +92,9 @@ class Batch:
         return {"location": location, "owner": owner, "name": name, "size": size, \
             "datemodified": datemodified, "environment": environment, "filename": filename}
 
+    # Full verification of batch file including generation of build command if not specified
     def parseBatchFile(self, filename):
-        st = os.stat(filename)
         f = open(filename)
-
         try:
             fileBuf = json.load(f)
         except ValueError:
@@ -102,37 +103,52 @@ class Batch:
         f.close()
 
         try:
-            name = fileBuf['config']['name']
+            config = fileBuf['config']
         except KeyError:
-            return {"error": "Missing project name" }
+            return {"error": "Missing 'config' section in batch file" }
 
         try:
-            env = fileBuf['config']['java']
+            name = fileBuf['config']['name']
         except KeyError:
-            pass
+            return {"error": "Missing 'name' field in config section in batch file" }
 
         try:
             owner = fileBuf['config']['owner']
         except KeyError:
             owner = "Anonymous"
+            fileBuf['config']['owner'] = owner
+
+        try:
+            env = fileBuf['config']['java']
+            if env == "ibm":
+                environment = "IBM Java"
+            else:
+                environment = "System Default"
+        except KeyError:
+            environment = "System Default"
+
+        try:
+            package = fileBuf['packages']
+        except KeyError:
+            return {"error": "Missing packages section in batch file" }
 
         for package in fileBuf['packages']:
             try:
                 name = package['name']
             except KeyError:
-                return { "error": "batch file missing project name" }
+                return { "error": "Missing project name" }
 
             try:
                 idStr = package['id']
             except KeyError:
-                return { "error": "batch file project " + name + " missing id field" }
+                return { "error": "Missing id field for project " + name }
 
             try:
                 tag = package['tag']
             except KeyError:
                 package['tag'] = "Current"
 
-            # Build information is lazily calculated for searches that yield multiple 
+            # Build information is lazily calculated for searches that yield multiple
             # projects to ensure fast searches.
             try:
                 selectedBuild = package['build']['selectedBuild']
@@ -146,7 +162,7 @@ class Batch:
                 selectedTest = package['build']['selectedTest']
             except KeyError:
                 package['build']['selectedTest'] = ""
- 
+
             try:
                 selectedEnv = package['build']['selectedEnv']
             except KeyError:
@@ -157,4 +173,4 @@ class Batch:
             except KeyError:
                 package['build']['artifacts'] = ""
 
-        return fileBuf
+        return { "status":"ok", "fileBuf":fileBuf }

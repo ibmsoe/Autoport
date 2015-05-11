@@ -315,18 +315,24 @@ var batchState = {
     batchFile: {},
     loading: false,
     showBatchFile: false, // Draw batch file detail table
-    backToBatchList: function(ev) {
-        batchState.showBatchFile = false;
-        batchState.showListSelectTable = true;
-    },
-    saveBatch: function(ev) {
-    },
     buildAndTest: function(ev, el) {
         // TODO - default scheduling policy based on jenkinsState.nodeLabels
         $.post("/runBatchFile", {batchName: el.file.filename, node: "x86-ubuntu-14.04"},
                 runBatchFileCallback, "json").fail(runBatchFileCallback);
         $.post("/runBatchFile", {batchName: el.file.filename, node: "ppcle-ubuntu-14.04"},
                 runBatchFileCallback, "json").fail(runBatchFileCallback);
+    },
+    detail: function(ev, el) {
+        batchState.loading = true;
+        batchState.showBatchFile = false;
+        $.getJSON("/parseBatchFile", {batchName: el.file.filename},
+            parseBatchFileCallback, "json").fail(parseBatchFileCallback);
+    },
+    backToBatchList: function(ev) {
+        batchState.showBatchFile = false;
+        batchState.showListSelectTable = true;
+    },
+    saveBatch: function(ev) {
     },
     buildAndTestDetail: function(ev, el) {
         var el = $("#batchBuildServers")[0];
@@ -354,12 +360,6 @@ var batchState = {
                        "json").fail(addToJenkinsCallback);
             }
         }
-    },
-    parseBatchFile: function(ev, el) {
-        batchState.loading = true;
-        batchState.showBatchFile = false;
-        $.getJSON("/parseBatchFile", {batchName: el.file.filename},
-            parseBatchFileCallback, "json").fail(parseBatchFileCallback);
     },
     convertToExternal: function(internal) {
         var external = {};
@@ -1368,9 +1368,9 @@ function runBatchFileCallback(data) {
 
 function parseBatchFileCallback(data) {
     console.log("In parseBatchFileCallback");
+    batchState.loading = false;
     if (data.status === "ok") {
         batchState.showListSelectTable = false;
-        batchState.loading = false;
         batchState.showBatchFile = true;
         batchState.batchFile = data.results;
         data.results.packages.forEach(function(package) {

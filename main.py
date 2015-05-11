@@ -694,13 +694,13 @@ def runBatchFile ():
         node = request.form["node"]
     except KeyError:
         return json.jsonify(status="failure", error="run batch file missing node argument"), 400
- 
+
     if batchName != "":
-        fileBuf = batch.parseBatchFile(batchName)
+        results = batch.parseBatchFile(batchName)
         try:
-            return json.jsonify(status="failure", error=fileBuf['error']), 400
+            fileBuf = results['fileBuf']
         except KeyError:
-            pass
+            return json.jsonify(status="failure", error=fileBuf['error']), 400
 
         # Randomly generate a batch job UID to append to the job name to provide a grouping
         # for all jobs in the batch file for reporting purposes.
@@ -752,7 +752,11 @@ def parseBatchFile():
     batchName  = request.args.get("batchName", "")
     if batchName == "":
         return json.jsonify(status="failure", error="missing batch file name"), 400
-    return json.jsonify(status="ok", results=batch.parseBatchFile(batchName))
+    results = batch.parseBatchFile(batchName)
+    try:
+        return json.jsonify(status="failure", error=results['error']), 404
+    except KeyError:
+        return json.jsonify(status="ok", results=results['fileBuf'])
 
 # List all results available on catalog
 #TODO - list builds as failed and disable test detail
