@@ -74,11 +74,13 @@ def getJenkinsNodes():
     nodeLabels = []
 
     for node in nodes:
-        name = node['displayName']
-        if name != "master":
-            nodeNames.append(name)
-            root = ET.fromstring(requests.get(globals.jenkinsUrl + "/computer/" + name + "/config.xml").text)
-            nodeLabels.append(root.find("./label").text)
+        if not node['offline']:
+            name = node['displayName']
+            if name != "master":
+                nodeNames.append(name)
+                root = ET.fromstring(requests.get(globals.jenkinsUrl +
+                    "/computer/" + name + "/config.xml").text)
+                nodeLabels.append(root.find("./label").text)
 
     return json.jsonify(status="ok", nodeNames=nodeNames, nodeLabels=nodeLabels)
 
