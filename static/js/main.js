@@ -201,10 +201,8 @@ var searchState = {
                           "-" + String(searchState.multiple.batchFile.packages.length);
                   }
                   var name = searchState.multiple.batchFile.config.name;
-                  var file =
-                      JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
+                  var file = JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
                       undefined, 2);
-
                   $.post("/uploadBatchFile", {name: name, file: file},
                       multipleSaveCallback, "json").fail(uploadBatchFileCallback);
               },
@@ -312,9 +310,10 @@ var batchState = {
     },
 
     // Actions for individual batch files
-    batchFile: {},
-    loading: false,
-    showBatchFile: false, // Draw batch file detail table
+    loading: false,                         // parsing batch file.  Size is variable
+    showBatchFile: false,                   // draw batch file detail table
+    saveBatchFileName: "",                  // user input to save button for new batch file name
+    batchFile: {},                          // content of batch file.  All fields resolved
     buildAndTest: function(ev, el) {
         // TODO - default scheduling policy based on jenkinsState.nodeLabels
         $.post("/runBatchFile", {batchName: el.file.filename, node: "x86-ubuntu-14.04"},
@@ -331,8 +330,14 @@ var batchState = {
     backToBatchList: function(ev) {
         batchState.showBatchFile = false;
         batchState.showListSelectTable = true;
+        batchState.batchFile = {};
     },
     saveBatch: function(ev) {
+        batchState.saveBatchFileName = $("#saveBatchFileFilter").val();
+        batchState.batchFile.config.name = batchState.saveBatchFileName; 
+        var file = JSON.stringify(batchState.batchFile, undefined, 2);
+        $.post("/uploadBatchFile", {name: batchState.saveBatchFileName, file: file},
+               batchSaveCallback, "json").fail(uploadBatchFileCallback);
     },
     buildAndTestDetail: function(ev, el) {
         var el = $("#batchBuildServers")[0];
@@ -1359,6 +1364,15 @@ function multipleSaveCallback(data) {
     clearBatchFile(searchState.multiple.batchFile);
 }
 
+function batchSaveCallback(data) {
+    console.log("In batchSaveCallback");
+    if (data.status !== "ok") {
+        showAlert("", data);
+    } else {
+        batchState.fileList.push(batchState.batchFile);
+    }
+}
+
 function runBatchFileCallback(data) {
     console.log("In runBatchFileCallback");
     if (data.status !== "ok") {
@@ -1373,6 +1387,7 @@ function parseBatchFileCallback(data) {
         batchState.showListSelectTable = false;
         batchState.showBatchFile = true;
         batchState.batchFile = data.results;
+        batchState.saveBatchFileName = data.results.config.name; 
         data.results.packages.forEach(function(package) {
             package.down = function (ev) {
                 var i = data.results.packages.indexOf(package);
@@ -1492,19 +1507,19 @@ $(document).ready(function() {
     $('#singleBuildServers').multiselect({
         buttonClass: "btn btn-primary",
         buttonText: function(options, select) {
-            return "Select build system type";
+            return "Select build server";
         }
     });
     $('#generateBuildServers').multiselect({
         buttonClass: "btn btn-primary",
         buttonText: function(options, select) {
-            return "Select build system type";
+            return "Select build server";
         }
     });
     $('#batchBuildServers').multiselect({
         buttonClass: "btn btn-primary",
         buttonText: function(options, select) {
-            return "Select build system type";
+            return "Build server";
         }
     });
 });

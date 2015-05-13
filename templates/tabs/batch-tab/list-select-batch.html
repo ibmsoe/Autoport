@@ -87,29 +87,31 @@
           batch file includes dependent packages.
         </div>
         <br />
-        <div class="row buttonRight">
-            <a rv-on-click="batchState.backToBatchList">
-              <button type="button" class="btn btn-primary">
-                <span class="glyphicon glyphicon-chevron-left"></span>
-                Back
-              </button>
-            </a>
-            <a rv-on-click="batchState.saveBatch">
-              <button type="button" class="btn btn-primary">
-                Save
-              </button>
-            </a>
-
-            <!-- Yuck -->
-            <select id="batchBuildServers" multiple="multiple">
-              <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
-            </select>
-
-            <a rv-on-click="batchState.buildAndTestDetail">
-              <button type="button" class="btn btn-primary">
-                Build + Test
-              </button>
-            </a>
+        <div class="row">
+          <div class="col-lg-8">
+            <input type="text" class="form-control" rv-value="batchState.saveBatchFileName" id="saveBatchFileFilter"/>
+          </div>
+          <a rv-on-click="batchState.saveBatch">
+            <button type="button" class="btn btn-primary">
+              Save
+            </button>
+          </a>
+          <select id="batchBuildServers" multiple="multiple">
+            <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+          </select>
+          <a rv-on-click="batchState.buildAndTestDetail">
+            <button type="button" class="btn btn-primary">
+              Build + Test
+            </button>
+          </a>
+        </div>
+        <div class="row buttonLeft">
+          <a rv-on-click="batchState.backToBatchList">
+            <button type="button" class="btn btn-primary">
+              <span class="glyphicon glyphicon-chevron-left"></span>
+              Back
+            </button>
+          </a>
         </div>
       </span>
     </div>

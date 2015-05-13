@@ -94,6 +94,12 @@ a {
     float: right;
 }
 
+.buttonLeft {
+    margin-top: 10px;
+    margin-left: 0px;
+    float: left;
+}
+
 .fatLabel {
     font-size: 14px;
 }

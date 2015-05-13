@@ -324,12 +324,12 @@ def uploadBatchFile():
     try:
         name = request.form["name"]
     except KeyError:
-        return json.jsonify(status="failure", error="missing file"), 400
+        return json.jsonify(status="failure", error="missing file name"), 400
 
     try:
         fileStr = request.form["file"]
     except KeyError:
-        return json.jsonify(status="failure", error="missing file"), 400
+        return json.jsonify(status="failure", error="missing file"), 404
 
     if not os.path.exists(globals.localPathForBatchFiles):
         os.makedirs(globals.localPathForBatchFiles)
