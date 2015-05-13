@@ -309,24 +309,11 @@ var batchState = {
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
 
-    // Actions for individual batch files
+    // Details member variables and methods
+    batchFile: {},                          // content of batch file.  All fields resolved
     loading: false,                         // parsing batch file.  Size is variable
     showBatchFile: false,                   // draw batch file detail table
     saveBatchFileName: "",                  // user input to save button for new batch file name
-    batchFile: {},                          // content of batch file.  All fields resolved
-    buildAndTest: function(ev, el) {
-        // TODO - default scheduling policy based on jenkinsState.nodeLabels
-        $.post("/runBatchFile", {batchName: el.file.filename, node: "x86-ubuntu-14.04"},
-                runBatchFileCallback, "json").fail(runBatchFileCallback);
-        $.post("/runBatchFile", {batchName: el.file.filename, node: "ppcle-ubuntu-14.04"},
-                runBatchFileCallback, "json").fail(runBatchFileCallback);
-    },
-    detail: function(ev, el) {
-        batchState.loading = true;
-        batchState.showBatchFile = false;
-        $.getJSON("/parseBatchFile", {batchName: el.file.filename},
-            parseBatchFileCallback, "json").fail(parseBatchFileCallback);
-    },
     backToBatchList: function(ev) {
         batchState.showBatchFile = false;
         batchState.showListSelectTable = true;
@@ -364,6 +351,29 @@ var batchState = {
                        artifacts: build.artifacts}, addToJenkinsCallback,
                        "json").fail(addToJenkinsCallback);
             }
+        }
+    },
+
+    // Actions for individual batch files
+    buildAndTest: function(ev, el) {
+        // TODO - default scheduling policy based on jenkinsState.nodeLabels
+        $.post("/runBatchFile", {batchName: el.file.filename, node: "x86-ubuntu-14.04"},
+            runBatchFileCallback, "json").fail(runBatchFileCallback);
+        $.post("/runBatchFile", {batchName: el.file.filename, node: "ppcle-ubuntu-14.04"},
+            runBatchFileCallback, "json").fail(runBatchFileCallback);
+    },
+    detail: function(ev, el) {
+        batchState.loading = true;
+        batchState.showBatchFile = false;
+        $.getJSON("/parseBatchFile", {batchName: el.file.filename},
+            parseBatchFileCallback, "json").fail(parseBatchFileCallback);
+    },
+    remove: function(ev, el) {
+        $.post("/removeBatchFile", {filename: el.file.filename, location: el.file.location},
+            removeBatchFileCallback, "json").fail(removeBatchFileCallback);
+        var index = batchState.fileList.indexOf(el.file);
+        if(index > -1) {
+            batchState.fileList.splice(index, 1);
         }
     },
     convertToExternal: function(internal) {
@@ -1427,6 +1437,12 @@ function listBatchFilesCallback(data) {
         batchState.fileList = data.results;
         batchState.showListSelectTable = true;
     } else {
+        showAlert("Error!", data);
+    }
+}
+
+function removeBatchFileCallback(data) {
+    if (data.status === "failure") {
         showAlert("Error!", data);
     }
 }

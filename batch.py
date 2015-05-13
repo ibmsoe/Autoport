@@ -2,6 +2,7 @@ import globals
 import os
 import paramiko
 import tempfile
+import ntpath
 from buildAnalyzer import inferBuildSteps
 from stat import ST_SIZE, ST_MTIME
 from time import localtime, asctime
@@ -52,6 +53,26 @@ class Batch:
         except IOError:
             pass
         return filteredList
+
+    def removeBatchFile(self, filename, location):
+        if location == "gsa":
+            res = self.removeArchivedBatchFile(filename)
+        elif location == "local":
+            res = self.removeLocalBatchFile(filename)
+        return res
+
+    def removeArchivedBatchFile(self, fname):
+        try:
+            self.ftp_client.chdir(globals.pathForBatchFiles)
+            self.ftp_client.remove(ntpath.basename(fname))
+        except:
+            return {"error": "Could not remove archived file " + fname }
+
+    def removeLocalBatchFile(self, fname):
+        try:
+            os.remove(fname)
+        except:
+            return {"error": "Could not remove local file " + fname }
 
     # Fast look up for listing of all Batch Files.  Upon user selection of batch build and test,
     # the full contents of file are checked.  See parseBatchFile below

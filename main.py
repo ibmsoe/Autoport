@@ -739,6 +739,23 @@ def runBatchFile ():
         return json.jsonify(status="ok")
     return json.jsonify(status="failure", error="batch file no project is buildable"), 404
 
+@app.route("/removeBatchFile", methods=["GET", "POST"])
+def removeBatchFile():
+    try:
+        filename = request.form["filename"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing filename POST argument"), 400
+    
+    try:
+        location = request.form["location"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing location POST argument"), 400
+       
+    res = batch.removeBatchFile(filename, location)
+
+    if res != None:
+        return json.jsonify(status="failure", error=res['error'])
+    return json.jsonify(status="ok")
 
 # List available batch files
 @app.route("/listBatchFiles/<repositoryType>")
