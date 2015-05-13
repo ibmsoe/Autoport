@@ -268,3 +268,6 @@ fieldset[disabled] .form-control {
     margin: 5px
 }
 
+.no-text-glyphicon {
+    margin: 0px
+}
