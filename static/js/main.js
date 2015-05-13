@@ -376,6 +376,10 @@ var batchState = {
             batchState.fileList.splice(index, 1);
         }
     },
+    archive: function(ev, el) {
+        $.post("/archiveBatchFile", {filename: el.file.filename},
+            archiveBatchFileCallback, "json").fail(archiveBatchFileCallback);
+    },
     convertToExternal: function(internal) {
         var external = {};
         external["config"] = $.extend(true, {}, internal["config"]);
@@ -1442,6 +1446,12 @@ function listBatchFilesCallback(data) {
 }
 
 function removeBatchFileCallback(data) {
+    if (data.status === "failure") {
+        showAlert("Error!", data);
+    }
+}
+
+function archiveBatchFileCallback(data) {
     if (data.status === "failure") {
         showAlert("Error!", data);
     }

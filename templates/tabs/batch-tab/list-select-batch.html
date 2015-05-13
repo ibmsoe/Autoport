@@ -67,6 +67,11 @@
                 Details
               </button>
             </a>
+            <a rv-on-click="batchState.archive">
+              <button rv-show="file.location | isLocal" type="button" class="btn btn-primary">
+                Archive 
+              </button>
+            </a>
             <a rv-on-click="batchState.remove">
               <button type="button" class="btn btn-primary">
                 <span class="no-text-glyphicon glyphicon glyphicon-remove"></span>
@@ -150,8 +155,7 @@
             </a>
             <a rv-on-click="package.remove">
               <button type="button" class="btn btn-primary">
-                <span class="glyphicon glyphicon-remove"></span>
-                Remove
+                <span class="no-text-glyphicon glyphicon glyphicon-remove"></span>
               </button>
             </a>
           </td>

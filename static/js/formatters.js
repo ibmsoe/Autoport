@@ -58,3 +58,8 @@ rivets.formatters.isProjectHistory = function(value) {
 rivets.formatters.isProjectCompare = function(value) {
     return value === "projectCompare";
 };
+
+// Checks whether location is local or archived
+rivets.formatters.isLocal = function(value) {
+    return value === "local";
+};

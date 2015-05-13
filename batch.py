@@ -61,18 +61,28 @@ class Batch:
             res = self.removeLocalBatchFile(filename)
         return res
 
-    def removeArchivedBatchFile(self, fname):
+    def removeArchivedBatchFile(self, filename):
         try:
             self.ftp_client.chdir(globals.pathForBatchFiles)
-            self.ftp_client.remove(ntpath.basename(fname))
+            self.ftp_client.remove(ntpath.basename(filename))
         except:
-            return {"error": "Could not remove archived file " + fname }
+            return {"error": "Could not remove archived batch file " + filename }
 
-    def removeLocalBatchFile(self, fname):
+    def removeLocalBatchFile(self, filename):
         try:
-            os.remove(fname)
+            os.remove(filename)
         except:
-            return {"error": "Could not remove local file " + fname }
+            return {"error": "Could not remove batch local file " + filename }
+
+    # Uploads local batch file to archive. If batch file exists in the archive already
+    # this will overwrite it.
+    # TODO - Give the user a popup to confirm overwrite
+    def archiveBatchFile(self, filename):
+        try:
+            self.ftp_client.chdir(globals.pathForBatchFiles)
+            self.ftp_client.put(filename, ntpath.basename(filename))
+        except:
+            return {"error": "Could not archive batch file " + filename }
 
     # Fast look up for listing of all Batch Files.  Upon user selection of batch build and test,
     # the full contents of file are checked.  See parseBatchFile below

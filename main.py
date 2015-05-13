@@ -893,6 +893,19 @@ def getTestDetail():
         out.append({ "results": res, "project": meta, "repository": repo })
     return json.jsonify(status = "ok", results = out)
 
+@app.route("/archiveBatchFile", methods=["POST"])
+def archiveBatchFile():
+    try:
+        filename = request.form["filename"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing filename POST argument"), 400
+
+    res = batch.archiveBatchFile(filename)
+    
+    if res != None:
+        return json.jsonify(status="failure", error=res['error'])
+    return json.jsonify(status="ok")
+
 @app.route("/archiveProjects", methods=["POST"])
 def archiveProjects():
     projects = request.json['projects']
