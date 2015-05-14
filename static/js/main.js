@@ -311,6 +311,7 @@ var batchState = {
 
     // Details member variables and methods
     batchFile: {},                          // content of batch file.  All fields resolved
+    javaType: "",                           // Initial value in config section 
     loading: false,                         // parsing batch file.  Size is variable
     showBatchFile: false,                   // draw batch file detail table
     saveBatchFileName: "",                  // user input to save button for new batch file name
@@ -332,7 +333,7 @@ var batchState = {
         var javaType = "";
 
         config = batchState.batchFile.config;
-        if (config['java'] === "ibm")
+        if (config['java'] === "IBM Java")
             javaType = "JAVA_HOME=/opt/ibm/java"
 
         packages = batchState.batchFile.packages;
@@ -352,6 +353,23 @@ var batchState = {
                        "json").fail(addToJenkinsCallback);
             }
         }
+    },
+    selectJavaType: function(ev, el) {
+        console.log("ev = ", ev);
+        console.log("el = ", el);
+        var selection = $(ev.target).text().toLowerCase();
+        if (selection === "open jdk") {
+            batchState.batchFile.config.java = "System default";
+        }
+        else if (selection === "ibm java") {
+            batchState.batchFile.config.java = "IBM Java";
+        }
+    },
+    updateEnviron: function(ev, el) {
+
+    },
+    resetEnviron: function(ev, el) {
+        batchState.batchFile.config.java = batchState.javaType;
     },
 
     // Actions for individual batch files
@@ -415,8 +433,8 @@ var detailState = {
     pie: null, // Pie chart
     generatePie: null,
     //TODO - split single and generate out, this repetition is bad
-    javaType: "Open JDK", // Open JDK or IBM Java
-    generateJavaType: "Open JDK",
+    javaType: "OpenJDK", // OpenJDK or IBM Java
+    generateJavaType: "OpenJDK",
     javaTypeOptions: "",
     generateJavaTypeOptions: "",
     backToResults: function(ev) {
@@ -442,8 +460,8 @@ var detailState = {
     // When the radio button is pressed update the server environment data
     selectJavaType: function(ev) {
         var selection = $(ev.target).text().toLowerCase();
-        if (selection === "open jdk") {
-            detailState.javaType = "Open JDK";
+        if (selection === "openjdk") {
+            detailState.javaType = "OpenJDK";
             detailState.javaTypeOptions = "";
     	}
     	else if (selection === "ibm java") {
@@ -454,8 +472,8 @@ var detailState = {
     // TODO - this is bad, this will be changed
     selectGenerateJavaType: function(ev) {
         var selection = $(ev.target).text().toLowerCase();
-    	if (selection === "open jdk") {
-            detailState.generateJavaType = "Open JDK";
+    	if (selection === "openjdk") {
+            detailState.generateJavaType = "OpenJDK";
             detailState.generateJavaTypeOptions = "";
     	}
     	else if (selection === "ibm java") {
@@ -1402,6 +1420,7 @@ function parseBatchFileCallback(data) {
         batchState.showBatchFile = true;
         batchState.batchFile = data.results;
         batchState.saveBatchFileName = data.results.config.name; 
+        batchState.javaType = data.results.config.java;
         data.results.packages.forEach(function(package) {
             package.down = function (ev) {
                 var i = data.results.packages.indexOf(package);

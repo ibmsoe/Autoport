@@ -205,6 +205,10 @@ fieldset[disabled] .form-control {
     float: right;
 }
 
+.modalButtonLeft {
+    float: left;
+}
+
 .modalAttributes span {
     display: block;
     overflow: hidden;

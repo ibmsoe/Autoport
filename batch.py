@@ -111,9 +111,9 @@ class Batch:
             if env == "ibm":
                 environment = "IBM Java"
             else:
-                environment = "System Default"
+                environment = "OpenJDK"
         except KeyError:
-            environment = "System Default"
+            environment = "OpenJDK"
 
         try:
             owner = fileBuf['config']['owner']
@@ -145,18 +145,17 @@ class Batch:
 
         try:
             owner = fileBuf['config']['owner']
+            if owner == "":
+                fileBuf['config']['owner'] = "Anonymous"
         except KeyError:
-            owner = "Anonymous"
-            fileBuf['config']['owner'] = owner
+            fileBuf['config']['owner'] = "Anonymous"
 
         try:
             env = fileBuf['config']['java']
-            if env == "ibm":
-                environment = "IBM Java"
-            else:
-                environment = "System Default"
+            if env == "":
+                fileBuf['config']['java'] = "OpenJDK"
         except KeyError:
-            environment = "System Default"
+            fileBuf['config']['java'] = "OpenJDK"
 
         try:
             package = fileBuf['packages']

@@ -126,6 +126,38 @@
       </span>
     </div>
 
+    <!-- List batch file config section -->
+    <table class="table panel panel-default" rv-show="batchState.showBatchFile">
+      <thead>
+        <tr>
+          <th>File name</th>
+          <th>Owner</th>
+          <th>Java</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="result-row">
+          <td>
+            { batchState.batchFile.config.name }
+          </td>
+          <td>
+            { batchState.batchFile.config.owner }
+          </td>
+          <td>
+            { batchState.batchFile.config.java }
+          </td>
+          <td class="col-lg-2">
+            <button class="btn btn-primary modalButtonLeft" data-toggle="modal" data-target="#settingsBatchModal">
+              <span class="glyphicon glyphicon-wrench"></span>
+              Settings
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- List batch file package table -->
     <table class="table panel panel-default" rv-show="batchState.showBatchFile">
       <thead>
         <tr>
@@ -142,7 +174,7 @@
           <td>
             { package.tag }
           </td>
-          <td class="col-lg-3">
+          <td class="col-lg-2">
             <a rv-on-click="package.up">
               <button type="button" class="btn btn-primary">
                 <span class="no-text-glyphicon glyphicon glyphicon-arrow-up"></span>
@@ -162,6 +194,40 @@
         </tr>
       </tbody>
     </table>
+
+    <!-- batch file environment settings -->
+    <div class="modal fade" id="settingsBatchModal" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h4 class="modal-title" id="modalLabel">Set Environment</h4>
+          </div>
+          <div class="modal-body" id="settingsBatchModal">
+            <div class="attributes modalAttributes">
+              <div class="row">
+              <!-- Dropdown box for choosing what kind of Java to use. -->
+                <div class="col-lg-2 input-group-btn">
+                  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { batchState.batchFile.config.java } <span class="caret"></span></button>
+                    <ul class="dropdown-menu">
+                      <li rv-on-click="batchState.selectJavaType"><a>OpenJDK</a></li>
+                      <li rv-on-click="batchState.selectJavaType"><a>IBM Java</a></li>
+                    </ul>
+                </div>
+              </div>
+              <!-- Dropdown box for choosing what kind of JavaScript to use. -->
+              <!-- Dropdown box for choosing what kind of Python to use. -->
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            <button rv-on-click="batchState.resetEnviron" type="button"
+              class="btn btn-primary">Reset to Default</button>
+            <button rv-on-click="batchState.updateEnviron" type="button"
+              class="btn btn-primary" data-dismiss="modal">Save Changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
   </div>
 </div>

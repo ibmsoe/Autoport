@@ -710,7 +710,7 @@ def runBatchFile ():
 
         # Parse config data
         javaType = ""
-        if fileBuf['config']['java'] == "ibm":
+        if fileBuf['config']['java'] == "IBM Java":
             javaType = "JAVA_HOME=/opt/ibm/java"
 
         # Parse package data
