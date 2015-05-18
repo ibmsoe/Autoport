@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+		<hudson.model.StringParameterDefinition>
+          <name>PACKAGE_NAME</name>
+          <description/>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+	  </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode></assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/sh
+#
+# This script will retrieve information of a package
+# Inputs:   PACKAGE_NAME    :   name of the package to be installed/removed/updated
+# Output:   A json file with following data:
+#              packageName:         name of the package
+#              packageInstalled:    set to true if the package PACKAGE_NAME is installed
+#              installedVersion     the installed version of the package PACKAGE_NAME. 'N/A' in case not installed.
+#              updateAvailable:     set to true if a new version of the package PACKAGE_NAME is available.
+#              updateVersion:       the update version of the package PACKAGE_NAME available.
+#                                   If package is installed and there are no updates, 'updateVersion' takes the same value as the 
+#                                   'installedVersion'. If package is not installed, it takes a value of 'N/A'
+#
+# Future Scope: Modify the script to handle package listing on Ubuntu too.
+
+packageInstalled=false
+updateAvailable=false
+installedVersion="N/A"
+updateVersion="N/A"
+
+# Step 1. Check if package is installed and retrieve its version if installed.
+installedVersion=$(rpm -q --queryformat '%{VERSION}\n' $PACKAGE_NAME )
+if [ $? -eq 0 ]
+then
+    echo $PACKAGE_NAME "is installed. Version is" $installedVersion
+    packageInstalled=true
+elif [ $? -eq 1 ]
+then
+    echo $PACKAGE_NAME "is not installed."
+    installedVersion="N/A"
+elif [ $? -eg 127 ]
+then
+    echo "command not found"
+fi
+
+#Step 2. If package is installed, check for updates else check for its availability
+if $packageInstalled
+then    
+    updatePackageOutput=$(yum -q check-update $PACKAGE_NAME)
+    if [ $? -eq 100 ]   #if updates are available
+    then
+        updatePackageOutput=$(echo $updatePackageOutput) #this strips off whitespaces
+        if [ "${updatePackageOutput}x" != "x" ]
+        then
+            updateVersion=${updatePackageOutput#*\ }
+            updateVersion=${updateVersion%\ *}
+            echo "Update available. Version is" $updateVersion
+            updateAvailable=true
+        fi
+    elif [ $? -eq 1 ]
+    then
+        echo $PACKAGE_NAME "latest version is installed."
+        updateVersion=$installedVersion
+    fi
+else # if package is not installed, check for available version
+    availablePackageOutput=$(yum -q list available $PACKAGE_NAME| sed -e '1d') # strip the 1st line of the output of yum list
+    if [ $? -eq 0 ]
+    then
+        availablePackageOutput=$(echo $availablePackageOutput) #this strips off whitespaces
+        if [ "${availablePackageOutput}x" != "x" ]
+        then
+            updateVersion=${availablePackageOutput#*\ }
+            updateVersion=${updateVersion%\ *}
+            echo "Package available. Version is" $updateVersion
+            updateAvailable=true
+        fi
+    elif [ $? -eq 1 ]
+    then
+        echo $PACKAGE_NAME "not available"       
+    fi
+fi
+
+printf '[{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s"}]\n' "$PACKAGE_NAME" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" > packageListSingleSlave.json
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>*.json</artifacts>
+      <latestOnly>false</latestOnly>
+      <allowEmptyArchive>false</allowEmptyArchive>
+      <onlyIfSuccessful>true</onlyIfSuccessful>
+      <defaultExcludes>true</defaultExcludes>
+    </hudson.tasks.ArtifactArchiver>
+  </publishers>
+  <buildWrappers/>
+</project>

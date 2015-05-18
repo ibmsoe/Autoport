@@ -271,3 +271,8 @@ fieldset[disabled] .form-control {
 .no-text-glyphicon {
     margin: 0px
 }
+
+.embedded-panel{
+    margin: 10px 30px !important;
+    padding: 14px !important
+}
