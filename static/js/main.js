@@ -348,7 +348,7 @@ var batchState = {
                 $.post("/createJob", {id: package.id, tag: packages.tag, javaType: javaType,
                        node: buildServers[i], selectedBuild: build.selectedBuild,
                        selectedTest: build.selectedTest, selectedEnv: build.selectedEnv,
-                       artifacts: build.artifacts}, addToJenkinsCallback,
+                       artifacts: build.artifacts, buildSystem: build.buildSystem}, addToJenkinsCallback,
                        "json").fail(addToJenkinsCallback);
             }
         }
@@ -1270,7 +1270,7 @@ function showDetail(data) {
 
                 for (var i=0; i < buildServers.length; i++) {
                     console.log(detailState.repo.useVersion + " version");
-                    $.post("/createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion, javaType: detailState.javaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                    $.post("/createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion, javaType: detailState.javaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, buildSystem: buildInfo.buildSystem}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
             detailState.repo.updateVersion = function(e) {
@@ -1305,7 +1305,7 @@ function showDetail(data) {
                 var buildServers = getSelectedValues(el);
 
                 for(var i=0; i < buildServers.length; i++) {
-                    $.post("/createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion, javaType: detailState.generateJavaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                    $.post("/createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion, javaType: detailState.generateJavaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, buildSystem: buildInfo.buildSystem}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
             detailState.generateRepo.updateVersion = function(e) {

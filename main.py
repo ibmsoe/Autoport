@@ -377,7 +377,7 @@ def uploadBatchFile():
 
 # Common routine for createJob and runBatchJob
 def createJob_common(uid, id, tag, node, javaType,
-                     selectedBuild, selectedTest, selectedEnv, artifacts):
+                     selectedBuild, selectedTest, selectedEnv, artifacts, buildSystem):
 
     # Get repository
     repo = globals.cache.getRepo(id)
@@ -438,7 +438,7 @@ def createJob_common(uid, id, tag, node, javaType,
 
     # Job metadata as passed to jenkins
     jobMetadataName = "meta.arti"
-    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Architecture\": \"" + node + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
+    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Build System\":\"" + buildSystem + "\", \"Architecture\": \"" + node + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
 
     # add parameters information
     i = 1
@@ -505,7 +505,8 @@ def createJob(i_id = None,
               i_selectedBuild = None,
               i_selectedTest = None,
               i_selectedEnv = None,
-              i_artifacts = None):
+              i_artifacts = None,
+              i_buildSystem = None):
 
     # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
     # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one 
@@ -590,8 +591,17 @@ def createJob(i_id = None,
             artifacts = i_artifacts
         else:
             return json.jsonify(status="failure", error="missing artifacts"), 400
+    
+    # Get artifacts info
+    try:
+        buildSystem = request.form["buildSystem"]
+    except KeyError:
+        if i_buildSystem != None:
+            buildSystem = i_buildSystem
+        else:
+            return json.jsonify(status="failure", error="missing build system"), 400
 
-    rc = createJob_common(uid, id, tag, node, javaType, selectedBuild, selectedTest, selectedEnv, artifacts)
+    rc = createJob_common(uid, id, tag, node, javaType, selectedBuild, selectedTest, selectedEnv, artifacts, buildSystem)
 
     try:
         rcstatus = rc['status']
@@ -730,7 +740,8 @@ def runBatchFile ():
                       package['build']['selectedBuild'],
                       package['build']['selectedTest'],
                       package['build']['selectedEnv'],
-                      package['build']['artifacts'])
+                      package['build']['artifacts'],
+                      package['build']['buildSystem'])
             submittedJob = True
     else:
         return json.jsonify(status="failure", error="could not find batch file"), 404

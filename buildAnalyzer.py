@@ -9,6 +9,7 @@ def inferBuildSteps(listing, repo):
     # Gather all possible build, test, and environment options    
     # This is what gets returned
     build_info = {
+        'buildSystem': "",
         'buildOptions': [],
         'testOptions': [],
         'envOptions': [],
@@ -369,6 +370,7 @@ def inferBuildSteps(listing, repo):
     # Check the last element added to the langlist for readme/other important file info
     lang = langlist[-1]
     if lang['build']:
+        build_info['buildSystem'] = lang['build system']
         for readmeStr in grepstack:
             if readmeStr:
                 delim = ["`", "'", '"', "\n"]                   # delimeters used to denote end of cmd
