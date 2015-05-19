@@ -819,8 +819,8 @@ def getTestResults():
     rightname = resultPattern.match(rightbuild).group(2)
 
     try:
-        res = resParser.MavenBuildCompare(leftname, leftdir+"/test_result.arti",
-                                          rightname, rightdir+"/test_result.arti")
+        res = resParser.ResBuildCompare(leftname, leftdir,
+                                          rightname, rightdir)
     except BaseException as e:
         return json.jsonify(status="failure", error=str(e)), 500
 

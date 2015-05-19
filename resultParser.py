@@ -1,4 +1,6 @@
 import re
+import codecs
+import json
 
 class ResultParser:
     def MavenBuildSummary(self, logfilename):
@@ -80,7 +82,7 @@ class ResultParser:
         totals["results"] = results
         return totals
 
-    def MavenBuildCompare(self, leftName, left, rightName, right, only_diff = True):
+    def ResBuildCompare(self, leftName, left, rightName, right, only_diff = True):
         '''
             Compares the results of 2 different builds.
             @param self
@@ -92,8 +94,18 @@ class ResultParser:
         '''
         # eventually remove these and take the result of MavenBuildSummary as an
         # input of MavenBuildCompare?
-        left_r = self.MavenBuildSummary(left)
-        right_r = self.MavenBuildSummary(right)
+        result=[]
+        for filedir in [left, right]:
+            with codecs.open(filedir+'/meta.arti', encoding='utf-8', mode='rb') as f:
+                metadata = json.load(f)
+                f.close
+            buildsys = metadata.get('Build System','')
+            if buildsys == 'Python':
+                result.append(self.PythonBuildSummary(filedir+'/test_result.arti'))
+            else:
+                result.append(self.MavenBuildSummary(filedir+'/test_result.arti'))
+        left_r = result[0]
+        right_r = result[1]
 
         res = {
                 "total": { leftName: left_r["total"], rightName: right_r["total"] },
@@ -220,4 +232,41 @@ class ResultParser:
                     res["results"][suite][test]["duration"][leftName] = 0
 
         return res
+    def PythonBuildSummary(self,file,parsekeys=["failed", "error", "skipped","passed"]):
 
+        resultPattern = re.compile('^\=+([^\=]+)\=+$')
+        keysPattern = []
+        totals = {}
+        for item in parsekeys :
+            if item.strip() == '':
+                continue
+            totals[item] = 0
+            regexstr = r'(\d*)\s(\b%s\b)'%(item)
+            keysPattern.append(re.compile(regexstr))
+
+        totals['duration'] = 0.0
+        durPattern = re.compile(r'(\d*\.?\d*?)\sseconds')
+
+        with codecs.open(file,encoding='utf-8',mode='rb')as f:
+
+            for line in f.readlines():
+                resultMatch = resultPattern.match(line)
+                if resultMatch:
+                    for p in keysPattern:
+                        m = p.search(resultMatch.group(1))
+                        if m:
+                            totals[m.group(2)] = totals.get(m.group(2),0) + int(m.group(1))
+
+                    d=durPattern.search(resultMatch.group(1))
+                    if d:
+                        totals['duration'] = float(d.group(1))
+            f.close()
+
+        res = {}
+        res['total']    = totals['failed'] + totals['skipped'] + totals['passed']
+        res['failures'] = totals['failed']
+        res['errors']   = totals['error']
+        res['skipped']  = totals['skipped']
+        res['duration'] = totals['duration']
+        res['results']  = {}
+        return res

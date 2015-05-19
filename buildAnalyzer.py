@@ -47,7 +47,7 @@ def inferBuildSteps(listing, repo):
         'grep build': "python setup.py build",	# Search readme for this string. If found, use it as build cmd
         'grep test': "py.test",			# Same for test command. Maybe we can pick up some extra arguments
         'grep env': "",
-        'build' : "if [ -e setup.py ]; then python setup.py install > build_result.arti 2>&1; fi",
+        'build' : "if [ -e setup.py ]; then sudo python setup.py install > build_result.arti 2>&1; fi",
         'test' : "py.test > test_result.arti 2>&1",
         'env' : "",
         'artifacts': "*.arti",
