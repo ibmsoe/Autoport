@@ -1,0 +1,95 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+		<hudson.model.StringParameterDefinition>
+          <name>PACKAGE_NAME</name>
+          <description>The name of the package to be installed/removed/updated</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PACKAGE_VERSION</name>
+          <description>The version of the package to be installed/removed/updated</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ACTION</name>
+          <description>The action to be performed on the package. This will take either of the following values {"install", "remove", "update"}</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+	  </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode></assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/sh
+#
+# This script will install/remove/update packages from a RHEL build server
+# Inputs:   PACKAGE_NAME    :   name of the package to be installed/removed/updated
+#           PACKAGE_VERSION :   version of the package to be installed/removed/updated
+#           ACTION          :   action to be performed. This variable will take either of the following values {"install", "remove", "update"}          
+#
+# Exit Status:  0 if action ACTION was successful
+#               1 if action ACTION was unsuccessful
+#
+# Future Scope: Modify the script to handle package management on Ubuntu too.
+
+#Concatenate the package name and the version so that we install/remove/update the exact version as shown to the user in the UI
+FULL_PACKAGE_NAME="${PACKAGE_NAME}-$PACKAGE_VERSION"
+
+# actionSuccess will be set to true if the action 'ACTION' is successful
+actionSuccess=false
+
+case $ACTION in
+    "install")
+        echo Going to $ACTION package $FULL_PACKAGE_NAME
+        yum -y install $FULL_PACKAGE_NAME
+        installedVersion=$(rpm -q --queryformat '%{VERSION}\n' $PACKAGE_NAME )
+        if [ $? -eq 0 ]
+        then
+            actionSuccess=true
+        fi
+    ;;
+    "update")   
+        echo Going to $ACTION package $FULL_PACKAGE_NAME
+        yum -y update-to $FULL_PACKAGE_NAME
+        updatedVersion=$(rpm -q --queryformat '%{VERSION}\n' $PACKAGE_NAME )
+        if [ "$updatedVersion" == "$PACKAGE_VERSION" ]
+        then
+            actionSuccess=true
+        fi
+    ;;
+    "remove")  
+        echo Going to $ACTION package $FULL_PACKAGE_NAME
+        yum -y remove $FULL_PACKAGE_NAME
+        updatedVersion=$(rpm -q --queryformat '%{VERSION}\n' $PACKAGE_NAME )
+        if [ $? -eq 1 ]
+        then
+            actionSuccess=true
+        fi
+    ;;
+esac
+
+if $actionSuccess 
+then	
+	exit 0
+else	
+	exit 1
+fi</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers/>    
+  <buildWrappers/>
+</project>

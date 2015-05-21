@@ -570,8 +570,66 @@ var jenkinsState = {
     nodeNames: [],
     nodeLabels: [],
     jenkinsPanel: false,
+    jenkinsSlavePanel: false,
+    manageSingleSlavePanel: false,
+	manageMultipleSlavePanel: false,
     setJenkinsPanel: function(ev) {
         jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
+    },
+	setJenkinsSlavePanel: function(ev) {
+        jenkinsState.jenkinsSlavePanel = (jenkinsState.jenkinsSlavePanel) ? false : true;
+    },
+	setManageSingleSlavePanel: function(ev) {
+        jenkinsState.manageSingleSlavePanel = (jenkinsState.manageSingleSlavePanel) ? false : true;
+    },
+	setManageMultipleSlavePanel: function(ev) {
+        jenkinsState.manageMultipleSlavePanel = (jenkinsState.manageMultipleSlavePanel) ? false : true;
+    },
+    buildServer: "",                        // The selected slave/ build server to perform a list package operation
+    changeBuildServer: function (ev) {
+        jenkinsState.buildServer =  ev.target.innerHTML;
+        jenkinsState.singleSlavePackageTableReady = false; //hide the table if user changes the build server/slave selection
+    },
+    singleSlavePackageTableReady: false,    // Draw package table for single slave if true
+    loadingState: {
+                loading: false
+            },
+    packageListSingleSlave: [],             //Package list retrieved for a Single Slave 
+    listPackageForSingleSlave: function(ev) {
+        jenkinsState.singleSlavePackageTableReady = false;
+        jenkinsState.loadingState.loading = true;
+        $.getJSON("/listPackageForSingleSlave", 
+        {
+            packageFilter: $("#packageFilter_Single").val(),
+            buildServer: jenkinsState.buildServer
+        },
+        listPackageForSingleSlaveCallback).fail(listPackageForSingleSlaveCallback);        
+    },
+    installPackageForSingleSlave: function(ev, el) {
+        var action = ""
+        //If package is installed, update it else if package is not installed, install it
+        if( el.package.packageInstalled == true )
+            action = "update"
+        else if ( el.package.packageInstalled == false )
+            action = "install"
+        $.getJSON("/managePackageForSingleSlave", 
+        {
+            package_name: el.package.packageName,
+            package_version: el.package.updateVersion,
+            action: action,
+            buildServer: jenkinsState.buildServer
+        },
+        managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
+    },
+    removePackageForSingleSlave: function(ev, el) {
+        $.getJSON("/managePackageForSingleSlave", 
+        {
+            package_name: el.package.packageName,
+            package_version: el.package.installedVersion,
+            action: "remove",
+            buildServer: jenkinsState.buildServer
+        },
+        managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
     }
 };
 
@@ -1505,6 +1563,24 @@ function getJenkinsNodesCallback(data) {
     else {
         showAlert("Could not get Jenkins slaves", data);
     }
+}
+
+function listPackageForSingleSlaveCallback(data) {
+    if (data.status === "ok") {
+        jenkinsState.packageListSingleSlave = data.packageData
+        jenkinsState.singleSlavePackageTableReady = true;
+    } else {
+        showAlert("Error!", data);
+    }
+    jenkinsState.loadingState.loading = false;
+}
+
+function managePackageForSingleSlaveCallback(data) {
+    if (data.status === "ok") {        
+        alert ("The " + data.packageAction + " was " + data.buildStatus)        
+    } else {
+        showAlert("Error!", data);        
+    }    
 }
 
 $(document).ready(function() {
