@@ -14,7 +14,7 @@ import re
 import threading
 import paramiko
 from threadpool import makeRequests
-from time import gmtime, strftime, sleep
+from time import localtime, gmtime, strftime, sleep
 from flask import Flask, request, render_template, json
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
@@ -334,14 +334,13 @@ def uploadBatchFile():
     if not os.path.exists(globals.localPathForBatchFiles):
         os.makedirs(globals.localPathForBatchFiles)
 
-    # TODO - Fix timestamp.  Format wrong
     # Contruct time so that it works on windows.  No colons allowed
-    time = strftime("%Y-%m-%d-h%H-m%M-s%S", gmtime())
+    time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
 
     if name == "":
         name = "batch_file"
 
-    name = name + "." + time 
+    name = name + "." + time
     openPath = globals.localPathForBatchFiles + name
 
     f = open(openPath, "wb")
@@ -351,11 +350,11 @@ def uploadBatchFile():
     # We don't want to automatically be uploading to remote location, this code needs
     # to be moved into the batch table as an action for each individual batch file
     '''
-    # Copy batch file to a predetermined spot in the GSA 
+    # Copy batch file to a predetermined spot in the GSA
     # This portion of code requires paramiko installed.
     port = 22
     localpath = os.getcwd() + "/data/batch_files/" + name
-    
+
     # Unfortunately, this will not create a folder that is not already in the gsa.
     # Having stfp trying to create a folder with the same name everytime does not work either.
     remotepath = globals.pathForBatchFiles + name
@@ -419,7 +418,7 @@ def createJob_common(uid, id, tag, node, javaType,
         xml_default_branch.text = "tags/" + tag
         jobName += "." + tag
 
-    # Time job is created
+    # Time job is created.  Universal time is used as Jenkins is a multi-user shared resource
     time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
 
     # Name of new Folder
@@ -539,7 +538,7 @@ def createJob(i_id = None,
         else:
             return json.jsonify(status="failure", error="missing build node"), 400
 
-    # Check to see if we have a valid tag number as a post argument    
+    # Check to see if we have a valid tag number as a post argument
     try:
         tag = request.form["tag"]
     except KeyError:
@@ -547,7 +546,7 @@ def createJob(i_id = None,
             tag = i_tag
         else:
             tag = "Current"
-        
+
     # Get javaType
     try:
         javaType = request.form["javaType"]
@@ -566,7 +565,7 @@ def createJob(i_id = None,
             selectedBuild = i_selectedBuild
         else:
             return json.jsonify(status="failure", error="missing selected build command"), 400
-    
+
     # Get test info
     try:
         selectedTest = request.form["selectedTest"]
@@ -575,7 +574,7 @@ def createJob(i_id = None,
             selectedTest = i_selectedTest
         else:
             return json.jsonify(status="failure", error="missing selected test command"), 400
-    
+
     # Get environment info
     try:
         selectedEnv = request.form["selectedEnv"]
@@ -593,7 +592,7 @@ def createJob(i_id = None,
             artifacts = i_artifacts
         else:
             return json.jsonify(status="failure", error="missing artifacts"), 400
-    
+
     # Get artifacts info
     try:
         buildSystem = request.form["buildSystem"]
@@ -678,18 +677,18 @@ def moveArtifacts(jobName, localBaseDir, outDir):
             if "archive" in flist:
                 artifactsPath = artifactsPath + "archive/"
                 ftpClient.chdir(artifactsPath)
-            
+
                 # Contruct time so that it works on windows.  No colons allowed
-                time = strftime("%Y-%m-%d-h%H-m%M-s%S", gmtime())
+                time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
 
                 localArtifactsPath = localBaseDir + jobName + "." + time + "/"
                 os.mkdir(localArtifactsPath)
 
                 # Set output parm.  Only needed for synchronous call from List Package
                 outDir = localArtifactsPath
-                
+
                 flist = ftpClient.listdir()
- 
+
                 for f in flist:
                     ftpClient.get(f, localArtifactsPath + f)
             else:
@@ -763,12 +762,12 @@ def removeBatchFile():
         filename = request.form["filename"]
     except KeyError:
         return json.jsonify(status="failure", error="missing filename POST argument"), 400
-    
+
     try:
         location = request.form["location"]
     except KeyError:
         return json.jsonify(status="failure", error="missing location POST argument"), 400
-       
+ 
     res = batch.removeBatchFile(filename, location)
 
     if res != None:
@@ -787,9 +786,9 @@ def listBatchFiles(repositoryType):
 @app.route("/listPackageForSingleSlave")
 def listPackageForSingleSlave():
     packageName = request.args.get("packageFilter", "")
-    selectedBuildServer = request.args.get("buildServer", "")    
+    selectedBuildServer = request.args.get("buildServer", "")
     if selectedBuildServer == "":
-        return json.jsonify(status="failure", error="Build server not selected"), 400    
+        return json.jsonify(status="failure", error="Build server not selected"), 400
     elif packageName == "":
         return json.jsonify(status="failure", error="Package name not entered"), 400
 
@@ -797,25 +796,25 @@ def listPackageForSingleSlave():
     tree = ET.parse("./config_template_package_list_single_slave.xml")
     root = tree.getroot()
     # Find elements we want to modify
-    xml_node = root.find("./assignedNode")    
+    xml_node = root.find("./assignedNode")
     xml_parameter = root.find("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
-      
+
     # Modify selected elements
-    xml_node.text = selectedBuildServer        
+    xml_node.text = selectedBuildServer
     xml_parameter.text = packageName
-    
+
     # Set Job name
     #TODO: Should we create a new job every time or use the same job
     uid = randint(globals.minRandom, globals.maxRandom)
     jobName = "ListPackageSingleSlave" + '.' + selectedBuildServer + '.' + str(uid)
-    
+ 
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
-     
+ 
     # Send to Jenkins
     NO_PROXY = {
         'no': 'pass',
-    }    
+    }
 
     r = requests.post(
             globals.jenkinsUrl + "/createItem",
@@ -829,13 +828,13 @@ def listPackageForSingleSlave():
             proxies=NO_PROXY
         )
 
-    if r.status_code == 200:        
+    if r.status_code == 200:
         # Success, send the jenkins job and start it right away.
         startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
 
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
-        
+ 
         # Move artifacts.  Wait for completionas we need to return content of file.
         outDir = ""
         moveArtifacts(jobName, globals.localPathForListResults, outDir)
@@ -847,11 +846,11 @@ def listPackageForSingleSlave():
             localArtifactsFilePath = outDir + "packageListSingleSlave.json"
             packageJsonFile = open(localArtifactsFilePath)
             packageData = json.load(packageJsonFile)
-            packageJsonFile.close()        
+            packageJsonFile.close()
             return json.jsonify(status="ok", packageData=packageData )
         return json.jsonify(status="failure", error="Did not transfer package file"), 400
-        
-    if r.status_code == 400:        
+ 
+    if r.status_code == 400:
         return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job"), 400
 
 # Install/Delete/Update package on selected build server/slave via a Jenkins job
@@ -861,17 +860,17 @@ def managePackageForSingleSlave():
     packageVersion = request.args.get("package_version", "")
     packageAction = request.args.get("action", "")
     selectedBuildServer = request.args.get("buildServer", "")
-        
+
     # Read template XML file
     tree = ET.parse("./config_template_package_actions_single_slave.xml")
     root = tree.getroot()
     # Find elements we want to modify
-    xml_node = root.find("./assignedNode")    
+    xml_node = root.find("./assignedNode")
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
-      
+ 
     # Modify selected elements
     xml_node.text = selectedBuildServer
-        
+
     # add parameters information
     i = 1
     for param in xml_parameters:
@@ -882,19 +881,19 @@ def managePackageForSingleSlave():
         elif i == 3:
             param.text = packageAction
         i += 1
-    
+
     # Set Job name
     #TODO: Should we create a new job every time or use the same job
     uid = randint(globals.minRandom, globals.maxRandom)
     jobName = "ManagePackageSingleSlave" + '.' + selectedBuildServer + str(uid)
-        
+
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
-     
+ 
     # Send to Jenkins
     NO_PROXY = {
         'no': 'pass',
-    }    
+    }
     r = requests.post(
             globals.jenkinsUrl + "/createItem",
             headers={
@@ -912,7 +911,7 @@ def managePackageForSingleSlave():
 
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
-        
+
         #Check the status of the jenkins job
         checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
         building = True
@@ -944,7 +943,7 @@ def managePackageForSingleSlave():
         #grab the status of the last build
         buildInfo = json.loads(requests.get(checkBuildUrl).text)
         buildStatus = buildInfo['result']
-               
+ 
         if buildStatus == "SUCCESS":
             return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)   
         else:
@@ -952,7 +951,7 @@ def managePackageForSingleSlave():
             
     if r.status_code == 400:
         return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job to perform the action requested"), 400    
-    
+
 # Read and sanitize the contents of the named batch file
 @app.route("/parseBatchFile")
 def parseBatchFile():
@@ -982,16 +981,16 @@ def getTestResults():
     rightbuild = request.args.get("rightbuild", "")
     leftrepo = request.args.get("leftrepository", "local")
     rightrepo = request.args.get("rightrepository", "local")
-    
+ 
     if (leftbuild == "" or rightbuild == ""):
         return json.jsonify(status="failure", error="invalid argument"), 400
-    
+ 
     leftdir = catalog.getResults(leftbuild, leftrepo)
     rightdir = catalog.getResults(rightbuild, rightrepo)
-    
+ 
     if (leftdir == None or rightdir == None):
         return json.jsonify(status="failure", error="result not found"), 404
-    
+ 
     leftname = resultPattern.match(leftbuild).group(2)
     rightname = resultPattern.match(rightbuild).group(2)
 
@@ -1089,7 +1088,7 @@ def archiveBatchFile():
         return json.jsonify(status="failure", error="missing filename POST argument"), 400
 
     res = batch.archiveBatchFile(filename)
-    
+
     if res != None:
         return json.jsonify(status="failure", error=res['error'])
     return json.jsonify(status="ok")
