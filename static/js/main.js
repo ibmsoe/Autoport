@@ -126,9 +126,10 @@ var searchState = {
                 }
                 var json = JSON.stringify(batchState.convertToExternal(searchState.single.batchFile),
                     undefined, 2);
-                var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
-                window.open(data);
-                // TODO: Check return code of window.open() to determine if request was cancelled
+                var blob = new Blob([json], {type: "text/plain;charset=utf-8"});
+                saveAs(blob, searchState.single.batchFile.config.name);
+                
+                // TODO: Check return code of saveAs() to determine if request was cancelled
                 clearBatchFile(searchState.single.batchFile);
             },
             save: function (ev) {
@@ -183,10 +184,10 @@ var searchState = {
                   var json =
                       JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
                       undefined, 2);
-                  var data = "data: application/octet-stream;charset=utf-8," + encodeURIComponent(json);
-                  window.open(data);
+                  var blob = new Blob([json], {type: "text/plain;charset=utf-8"});
+                  saveAs(blob, searchState.multiple.batchFile.config.name);
 
-                  // TODO: Check return code of window.open() to determine if request was cancelled
+                  // TODO: Check return code of saveAs() to determine if request was cancelled
                   clearBatchFile(searchState.multiple.batchFile);
               },
               save: function (ev) {
