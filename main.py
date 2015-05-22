@@ -50,9 +50,6 @@ batch = Batch()
 #
 resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
-# Global variable to set the folder path where the artifacts will be saved locally. Variable to be used in listPackageForSingleSlave function
-localArtifactsStorageFolderPath = ""
-
 # Main page - just serve up main.html
 @app.route("/")
 def main():
@@ -484,7 +481,9 @@ def createJob_common(uid, id, tag, node, javaType,
         requests.get(startJobUrl, proxies=NO_PROXY)
 
         # Split off a thread to query for build completion and move artifacts to local machine
-        threadRequests = makeRequests(moveArtifacts, (jobName,globals.localPathForTestResults, ))
+        args = [((jobName, globals.localPathForTestResults, "dummy"), {})]
+        print "args=", args
+        threadRequests = makeRequests(moveArtifacts, args)
         [globals.threadPool.putRequest(req) for req in threadRequests]
 
         # Stays on the same page, after creating a new jenkins job.
@@ -621,12 +620,14 @@ def createJob(i_id = None,
 
 # Polls the Jenkins master to see when a job has completed and moves artifacts over to local
 # storage once/if they are available
-def moveArtifacts (jobName, destinationFolder):
-    global localArtifactsStorageFolderPath
+def moveArtifacts(jobName, localBaseDir, outDir):
+
+    print "moveArtifacts:", jobName, localBaseDir, outDir
+
     checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
-    building = True
 
     # poll until job stops building
+    building = True
     while building:
         sleep(10)
         try:
@@ -654,14 +655,14 @@ def moveArtifacts (jobName, destinationFolder):
     artifactsPath = globals.artifactsPathPrefix + jobName + "/builds/"
 
     try:
-        # just incase build finished but artifacts haven't moved over yet due to network
-        sleep(10)
-
         # create an FTP connection to Jenkins
         sshClient = paramiko.SSHClient()
         sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         sshClient.connect(urlparse(globals.jenkinsUrl).hostname, username=globals.configJenkinsUsername, key_filename=globals.configJenkinsKey)
         ftpClient = sshClient.open_sftp()
+
+        # just incase build finished but artifacts haven't moved over yet due to network
+        sleep(5)
 
         ftpClient.chdir(artifactsPath)
         flist = ftpClient.listdir()
@@ -681,16 +682,16 @@ def moveArtifacts (jobName, destinationFolder):
                 # Contruct time so that it works on windows.  No colons allowed
                 time = strftime("%Y-%m-%d-h%H-m%M-s%S", gmtime())
 
-                localArtifactsPath = destinationFolder + jobName + "." + time + "/"
+                localArtifactsPath = localBaseDir + jobName + "." + time + "/"
                 os.mkdir(localArtifactsPath)
+
+                # Set output parm.  Only needed for synchronous call from List Package
+                outDir = localArtifactsPath
                 
                 flist = ftpClient.listdir()
  
                 for f in flist:
                     ftpClient.get(f, localArtifactsPath + f)
-                
-                #return localArtifactsPath Can this be done? Will it impact the call to moveArtifacts in createJob_common function                 
-                localArtifactsStorageFolderPath = localArtifactsPath
             else:
                 print "archive folder missing " + jobName
 
@@ -785,13 +786,13 @@ def listBatchFiles(repositoryType):
 # List installed and available status of the package in packageName by creating and triggering a Jenkins job
 @app.route("/listPackageForSingleSlave")
 def listPackageForSingleSlave():
-    global localArtifactsStorageFolderPath
     packageName = request.args.get("packageFilter", "")
     selectedBuildServer = request.args.get("buildServer", "")    
     if selectedBuildServer == "":
         return json.jsonify(status="failure", error="Build server not selected"), 400    
     elif packageName == "":
         return json.jsonify(status="failure", error="Package name not entered"), 400
+
     # Read template XML file
     tree = ET.parse("./config_template_package_list_single_slave.xml")
     root = tree.getroot()
@@ -806,7 +807,7 @@ def listPackageForSingleSlave():
     # Set Job name
     #TODO: Should we create a new job every time or use the same job
     uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = "ListPackageSingleSlave" + '.' + selectedBuildServer + str(uid)
+    jobName = "ListPackageSingleSlave" + '.' + selectedBuildServer + '.' + str(uid)
     
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
@@ -815,6 +816,7 @@ def listPackageForSingleSlave():
     NO_PROXY = {
         'no': 'pass',
     }    
+
     r = requests.post(
             globals.jenkinsUrl + "/createItem",
             headers={
@@ -826,6 +828,7 @@ def listPackageForSingleSlave():
             data=configXml,
             proxies=NO_PROXY
         )
+
     if r.status_code == 200:        
         # Success, send the jenkins job and start it right away.
         startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
@@ -833,16 +836,20 @@ def listPackageForSingleSlave():
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
         
-        # move artifacts
-        moveArtifacts(jobName, globals.localPathForListResults)
-        
-        #read the json file        
-        localArtifactsFilePath = localArtifactsStorageFolderPath + "packageListSingleSlave.json"
-        packageJsonFile = open(localArtifactsFilePath)
-        packageData = json.load(packageJsonFile)
-        packageJsonFile.close()        
-        localArtifactsStorageFolderPath = ""
-        return json.jsonify(status="ok", packageData=packageData )
+        # Move artifacts.  Wait for completionas we need to return content of file.
+        outDir = ""
+        moveArtifacts(jobName, globals.localPathForListResults, outDir)
+        print "outDir=" + outDir
+        # TODO debug outDir not being set
+
+        #read the json file
+        if outDir != "":
+            localArtifactsFilePath = outDir + "packageListSingleSlave.json"
+            packageJsonFile = open(localArtifactsFilePath)
+            packageData = json.load(packageJsonFile)
+            packageJsonFile.close()        
+            return json.jsonify(status="ok", packageData=packageData )
+        return json.jsonify(status="failure", error="Did not transfer package file"), 400
         
     if r.status_code == 400:        
         return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job"), 400
