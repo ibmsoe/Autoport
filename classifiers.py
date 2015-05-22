@@ -29,16 +29,16 @@ def makeSimpleClassifier(higherIsBetter, neutralCount, goodCount):
 
 # Setup classifier functions
 star = makeSimpleClassifier(True, 500, 1000)
-fork = makeSimpleClassifier(True, 150, 400)
+fork = makeSimpleClassifier(True, 500, 1000)
 size = makeSimpleClassifier(False, 500000, 200000)
 date = makeSimpleClassifier(False, 60, 30)
 
 def lang(language):
-    if language in ['C', 'C++', 'Objective-C']:
+    if language in ['C', 'C++', 'Objective-C', 'C#', 'Objective-C++']:
         return BAD
-    elif language in ['Shell', 'Java', 'C#', 'Scala', 'Go']:
+    elif language in ['Java', 'Scala', 'Go', 'Clojure']:
         return NEUTRAL
-    elif language in ['JavaScript', 'Ruby', 'PHP', 'Python', 'Dart', 'Lua']:
+    elif language in ['JavaScript', 'Ruby', 'PHP', 'Python', 'Dart', 'Lua', 'Shell', 'HTML', 'CSS']:
         return GOOD
     return UNCERTAIN
 
