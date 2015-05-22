@@ -82,19 +82,14 @@
                 <li rv-on-click="detailState.selectGenerateJavaType"><a>IBM Java</a></li>
               </ul>
             </div>
-            
-            <button class="btn btn-primary" type="button" 
-              rv-on-click="detailState.generateRepo.addToJenkins">
-              Add to Jenkins
-            </button>
 
             <div class="dropdown">
-              <button class="btn btn-primary dropdown-toggle" type="button" 
+              <button class="btn btn-primary dropdown-toggle" type="button"
                 id="singleVersions" data-toggle="dropdown" aria-expanded="true">
                 Use { detailState.generateRepo.useVersion} version
                 <span class="caret"></span>
               </button>
-              <ul class="dropdown-menu dropdown-menu-right" role="menu" 
+              <ul class="dropdown-menu dropdown-menu-right" role="menu"
                 airia-labelledby="singleVersions">
                 <li role="presentation" class="dropdown-header">Recent</li>
                 <li role="presentation"><a role="menuitem" tabindex="-1"
@@ -108,6 +103,18 @@
                   <a role="menuitem" tabindex="-1">{ tag }</a></li>
               </ul>
             </div>
+
+            <div>
+              <select id="generateBuildServers" multiple="multiple">
+                <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+              </select>
+            </div>
+
+            <button class="btn btn-primary" type="button"
+              rv-on-click="detailState.generateRepo.addToJenkins">
+              Build + Test
+            </button>
+
           </div>
         </h1>
 
@@ -143,7 +150,7 @@
         <span rv-show="detailState.generateRepo.build.success" class="build-steps">
           <h3>Build steps</h3>
           <small>
-            The default options were inferred based on the existence of 
+            The default options were inferred based on the existence of
             <strong rv-text="detailState.generateRepo.build.reason"></strong>. When modifying build/test/env options ensure commands/variables are semicolon delimited.
           </small>
           <br />
@@ -156,7 +163,7 @@
               <li role="presentation" rv-each-tag="detailState.generateRepo.build.buildOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
             </ul>
             <br />
-            <input id="generateSelectedBuild" type="text" class="form-control" 
+            <input id="generateSelectedBuild" type="text" class="form-control"
               rv-value="detailState.generateRepo.build.selectedBuild | cleanOptionsOutput"/>
           </div>
           <br />
@@ -169,7 +176,7 @@
               <li role="presentation" rv-each-tag="detailState.generateRepo.build.testOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
             </ul>
             <br />
-            <input id="generateSelectedTest" type="text" class="form-control" 
+            <input id="generateSelectedTest" type="text" class="form-control"
               rv-value="detailState.generateRepo.build.selectedTest | cleanOptionsOutput"/>
           </div>
           <br />
@@ -182,14 +189,8 @@
               <li role="presentation" rv-each-tag="detailState.generateRepo.build.envOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeEnvOptions">{ tag }</a></li>
             </ul>
             <br />
-            <input id="generateSelectedEnv" type="text" class="form-control" 
+            <input id="generateSelectedEnv" type="text" class="form-control"
               rv-value="detailState.generateRepo.build.selectedEnv | cleanOptionsOutput"/>
-          </div>
-          <br />
-          <div>
-            <select id="generateBuildServers" multiple="multiple">
-              <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
-            </select>
           </div>
         </span>
         <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">

@@ -139,14 +139,16 @@
                 <li rv-on-click="detailState.selectJavaType"><a>IBM Java</a></li>
               </ul>
             </div>
-          
-            <button class="btn btn-primary" type="button" 
-              rv-on-click="detailState.repo.addToJenkins">
-              Add to Jenkins
-            </button>
+
+            <a rv-on-click="detailState.addToBatchFile">
+              <button type="button" class="singleDetailBatchButton btn btn-primary">
+                <span class="glyphicon glyphicon-plus"></span>
+                Add to Batch
+              </button>
+            </a>
 
             <div class="dropdown">
-              <button class="btn btn-primary dropdown-toggle" type="button" 
+              <button class="btn btn-primary dropdown-toggle" type="button"
                 id="singleVersions" data-toggle="dropdown">
                 Use { detailState.repo.useVersion} version
                 <span class="caret"></span>
@@ -165,12 +167,17 @@
               </ul>
             </div>
 
-            <a rv-on-click="detailState.addToBatchFile">
-              <button type="button" class="singleDetailBatchButton btn btn-primary">
-                <span class="glyphicon glyphicon-plus"></span>
-                Add to Batch
-              </button>
-            </a>
+            <div>
+              <select id="singleBuildServers" multiple="multiple">
+                <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+              </select>
+            </div>
+
+            <button class="btn btn-primary" type="button"
+              rv-on-click="detailState.repo.addToJenkins">
+              Build + Test
+            </button>
+
           </div>
         </h1>
 
@@ -206,7 +213,7 @@
         <span rv-show="detailState.repo.build.success" class="build-steps">
           <h3>Build steps</h3>
           <small>
-            The default options were inferred based on the existence of 
+            The default options were inferred based on the existence of
             <strong rv-text="detailState.repo.build.reason"></strong>. When modifying build/test/env options ensure commands/variables are semicolon delimited.
           </small>
           <br />
@@ -219,7 +226,7 @@
               <li rv-each-tag="detailState.repo.build.buildOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
             </ul>
             <br />
-              <input id="singleSelectedBuild" type="text" class="form-control" 
+              <input id="singleSelectedBuild" type="text" class="form-control"
                 rv-value="detailState.repo.build.selectedBuild | cleanOptionsOutput"/>
           </div>
           <br />
@@ -232,7 +239,7 @@
               <li rv-each-tag="detailState.repo.build.testOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
             </ul>
             <br />
-              <input id="singleSelectedTest" type="text" class="form-control" 
+              <input id="singleSelectedTest" type="text" class="form-control"
                 rv-value="detailState.repo.build.selectedTest | cleanOptionsOutput"/>
           </div>
           <br />
@@ -245,14 +252,8 @@
               <li rv-each-tag="detailState.repo.build.envOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeEnvOptions">{ tag }</a></li>
             </ul>
             <br />
-              <input id="singleSelectedEnv" type="text" class="form-control" 
+              <input id="singleSelectedEnv" type="text" class="form-control"
                 rv-value="detailState.repo.build.selectedEnv | cleanOptionsOutput"/>
-          </div>
-          <br />
-          <div>
-            <select id="singleBuildServers" multiple="multiple">
-              <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
-            </select>
           </div>
         </span>
         <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
