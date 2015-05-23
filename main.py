@@ -14,7 +14,7 @@ import re
 import threading
 import paramiko
 from threadpool import makeRequests
-from time import localtime, gmtime, strftime, sleep
+from time import localtime, strftime, sleep
 from flask import Flask, request, render_template, json
 from classifiers import classify
 from buildAnalyzer import inferBuildSteps
@@ -148,7 +148,7 @@ def search():
 
     if query == "":
         return json.jsonify(status="failure", error="missing query"), 400
-    
+
     if panel == "":
         return json.jsonify(status="failure", error="missing panel"), 400
 
@@ -187,7 +187,7 @@ def search():
     elif repos.totalCount <= maxResults:
         numResults = repos.totalCount
 
-    for repo in repos[:numResults]: 
+    for repo in repos[:numResults]:
         globals.cache.cacheRepo(repo)
         # If this is the top hit, and the name matches exactly, and
         # it has greater than 500 stars, then just assume that's the
@@ -248,7 +248,7 @@ def detail(id, repo=None):
     build = inferBuildSteps(globals.cache.getDir(repo), repo) # buildAnalyzer.py
 
     # Ignore errors related to build commands.  Need to show detailed project info
-    
+
     # Collect data
 
     # Get tag-related data
@@ -422,8 +422,8 @@ def createJob_common(uid, id, tag, node, javaType,
         xml_default_branch.text = "tags/" + tag
         jobName += "." + tag
 
-    # Time job is created.  Universal time is used as Jenkins is a multi-user shared resource
-    time = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+    # Time job is created.
+    time = strftime("%Y-%m-%d %H:%M:%S", localtime())
 
     # Name of new Folder
     jobFolder = jobName + "." + time
@@ -484,8 +484,7 @@ def createJob_common(uid, id, tag, node, javaType,
         requests.get(startJobUrl, proxies=NO_PROXY)
 
         # Split off a thread to query for build completion and move artifacts to local machine
-        args = [((jobName, globals.localPathForTestResults, "dummy"), {})]
-        print "args=", args
+        args = [((jobName, globals.localPathForTestResults), {})]
         threadRequests = makeRequests(moveArtifacts, args)
         [globals.threadPool.putRequest(req) for req in threadRequests]
 
@@ -623,10 +622,9 @@ def createJob(i_id = None,
 
 # Polls the Jenkins master to see when a job has completed and moves artifacts over to local
 # storage once/if they are available
-def moveArtifacts(jobName, localBaseDir, outDir):
+def moveArtifacts(jobName, localBaseDir):
 
-    print "moveArtifacts:", jobName, localBaseDir, outDir
-
+    outDir = ""
     checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
 
     # poll until job stops building
@@ -661,21 +659,40 @@ def moveArtifacts(jobName, localBaseDir, outDir):
         # create an FTP connection to Jenkins
         sshClient = paramiko.SSHClient()
         sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        sshClient.connect(urlparse(globals.jenkinsUrl).hostname, username=globals.configJenkinsUsername, key_filename=globals.configJenkinsKey)
+        sshClient.connect(urlparse(globals.jenkinsUrl).hostname,
+                          username=globals.configJenkinsUsername,
+                          key_filename=globals.configJenkinsKey)
         ftpClient = sshClient.open_sftp()
-
-        # just incase build finished but artifacts haven't moved over yet due to network
-        sleep(5)
-
         ftpClient.chdir(artifactsPath)
-        flist = ftpClient.listdir()
 
-        # 1 is a sym link to the first build for that job.
-        # If we delete each job after each run, we only care about this first build.
-        # Else we need to parse nextBuildNumber in the parent directory to get build number.
-        if "1" in flist:
-            artifactsPath = artifactsPath + "1/"
-            ftpClient.chdir(artifactsPath)
+        # Probably does not need to be in a loop as the build number
+        # is created as part of starting the job which occurred a
+        # a few instructions earlier but better safe than sorry.
+        for i in range(4):
+            flist = ftpClient.listdir()
+
+            # 1 is a sym link to the first build for that job.
+            # If we delete each job after each run, we only care about
+            # this first build.  Else we need to parse nextBuildNumber
+            # in the parent directory to get build number.
+            #
+            # TODO - Delete Job.  At present, we are producing a unique
+            # name so it is always build 1
+            if "1" in flist:
+                artifactsPath = artifactsPath + "1/"
+                ftpClient.chdir(artifactsPath)
+                break
+            else:
+                sleep(5)
+
+        # Now loop trying to get the build artifacts.  Artifact files
+        # appear to be written after the artifact parent directory and
+        # the artifact directory up to ten seconds after its parent.
+        # There we will place the sleep at the end of the loop as opposed
+        # to the top of the loop.  If artifacts are not copied, then we
+        # can move the sleep upfront but preliminary testing indicates
+        # that this will work.
+        for i in range(4):
             flist = ftpClient.listdir()
 
             if "archive" in flist:
@@ -692,14 +709,15 @@ def moveArtifacts(jobName, localBaseDir, outDir):
                 outDir = localArtifactsPath
 
                 flist = ftpClient.listdir()
-
                 for f in flist:
                     ftpClient.get(f, localArtifactsPath + f)
+                break
             else:
-                print "archive folder missing " + jobName
-
+                sleep(10)
     except IOError as e:
         print "archive move FTP failure" + jobName + " error: " + e
+
+    return outDir
 
 # Run Batch File - takes a batch file name and runs it
 # TODO - fix to provide support for multiple build servers instead of just x86 vs ppcle
@@ -814,7 +832,7 @@ def listPackageForSingleSlave():
  
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
- 
+
     # Send to Jenkins
     NO_PROXY = {
         'no': 'pass',
@@ -840,12 +858,9 @@ def listPackageForSingleSlave():
         requests.get(startJobUrl, proxies=NO_PROXY)
  
         # Move artifacts.  Wait for completionas we need to return content of file.
-        outDir = ""
-        moveArtifacts(jobName, globals.localPathForListResults, outDir)
-        print "outDir=" + outDir
-        # TODO debug outDir not being set
+        outDir = moveArtifacts(jobName, globals.localPathForListResults)
 
-        #read the json file
+        # Read the json file
         if outDir != "":
             localArtifactsFilePath = outDir + "packageListSingleSlave.json"
             packageJsonFile = open(localArtifactsFilePath)
@@ -947,12 +962,12 @@ def managePackageForSingleSlave():
         #grab the status of the last build
         buildInfo = json.loads(requests.get(checkBuildUrl).text)
         buildStatus = buildInfo['result']
- 
+
         if buildStatus == "SUCCESS":
             return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)   
         else:
             return json.jsonify(status="failure", error="Could not perform the action specified"), 400
-            
+
     if r.status_code == 400:
         return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job to perform the action requested"), 400    
 
@@ -985,16 +1000,16 @@ def getTestResults():
     rightbuild = request.args.get("rightbuild", "")
     leftrepo = request.args.get("leftrepository", "local")
     rightrepo = request.args.get("rightrepository", "local")
- 
+
     if (leftbuild == "" or rightbuild == ""):
         return json.jsonify(status="failure", error="invalid argument"), 400
- 
+
     leftdir = catalog.getResults(leftbuild, leftrepo)
     rightdir = catalog.getResults(rightbuild, rightrepo)
- 
+
     if (leftdir == None or rightdir == None):
         return json.jsonify(status="failure", error="result not found"), 404
- 
+
     leftname = resultPattern.match(leftbuild).group(2)
     rightname = resultPattern.match(rightbuild).group(2)
 
