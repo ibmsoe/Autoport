@@ -25,6 +25,7 @@ from resultParser import ResultParser
 from urlparse import urlparse
 from batch import Batch
 from random import randint
+from github import GithubException
 
 app = Flask(__name__)
 
@@ -299,24 +300,27 @@ def search_repositories():
     # lookup to when the batch file is submitted for build and test.   This is also
     # as the build information for current may change over time.  ie. ant to maven
     results = []
-    for repo in globals.github.search_repositories(q, sort=sort, order=order)[:limit]:
-        globals.cache.cacheRepo(repo)
-        results.append({
-            "id": repo.id,
-            "name": repo.name,
-            "owner": repo.owner.login,
-            "owner_url": repo.owner.html_url,
-            "stars": repo.stargazers_count,
-            "forks": repo.forks_count,
-            "url": repo.html_url,
-            "size_kb": repo.size,
-            "last_update": str(repo.updated_at),
-            "language": repo.language,
-            "description": repo.description,
-            "classifications": classify(repo)
-        })
-
-    return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
+    try:
+        for repo in globals.github.search_repositories(q, sort=sort, order=order)[:limit]:
+            globals.cache.cacheRepo(repo)
+            results.append({
+                "id": repo.id,
+                "name": repo.name,
+                "owner": repo.owner.login,
+                "owner_url": repo.owner.html_url,
+                "stars": repo.stargazers_count,
+                "forks": repo.forks_count,
+                "url": repo.html_url,
+                "size_kb": repo.size,
+                "last_update": str(repo.updated_at),
+                "language": repo.language,
+                "description": repo.description,
+                "classifications": classify(repo)
+            })
+        return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
+    except GithubException as e:
+        return json.jsonify(status="failure",
+                 error="GithubException ({0}): {1}".format(e.status, e.data['message'])), 400
 
 # Upload Batch File - takes a file and uploads it to a permanent location (TBD)
 @app.route("/uploadBatchFile", methods=['GET', 'POST'])
