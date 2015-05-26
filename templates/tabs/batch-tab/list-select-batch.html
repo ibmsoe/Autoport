@@ -27,60 +27,47 @@
     <br />
 
     <!-- List batch files table -->             
-    <table class="table panel panel-default" rv-show="batchState.showListSelectTable">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Location</th>
-          <th>Environment</th>
-          <th>File Details</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody rv-each-file="batchState.fileList">
-        <tr class="result-row">
-          <td>
-            { file.name }
-          </td>
-          <td>
-            { file.location }
-          </td>
-          <td>
-            { file.environment }
-          </td>
-          <td>
-            Size: { file.size } bytes
-            <br />
-            Date Modified: { file.datemodified }
-            <br />
-            Owner: { file.owner }
-          </td>
-          <td>
-            <a rv-on-click="batchState.buildAndTest">
-              <button type="button" class="btn btn-primary">
-                Build + Test
-              </button>
-            </a>
-            <a rv-on-click="batchState.detail">
-              <button type="button" class="btn btn-primary">
-                <span class="glyphicon glyphicon-zoom-in"></span>
-                Details
-              </button>
-            </a>
-            <a rv-on-click="batchState.archive">
-              <button rv-show="file.location | isLocal" type="button" class="btn btn-primary">
-                Archive 
-              </button>
-            </a>
-            <a rv-on-click="batchState.remove">
-              <button type="button" class="btn btn-primary">
-                <span class="no-text-glyphicon glyphicon glyphicon-remove"></span>
-              </button>
-            </a>
-          </td>
-        </tr>
-      </tbody>
-    </table>
+    <div rv-show="batchState.showListSelectTable">
+      <div id="batchListSelectToolbar" class="btn-group">
+        <a rv-on-click="batchState.buildAndTest">
+          <button type="button" class="btn btn-primary">
+            Build + Test
+          </button>
+        </a>
+        <a rv-on-click="batchState.detail">
+          <button type="button" class="btn btn-primary">
+            <span class="glyphicon glyphicon-zoom-in"></span>
+            Details
+          </button>
+        </a>
+        <a rv-show="batchState.selectedBatchFile.location | isLocal"
+          rv-on-click="batchState.archive">
+          <button type="button" class="btn btn-primary">
+            Archive
+          </button>
+        </a>
+        <a rv-on-click="batchState.remove">
+          <button type="button" class="btn btn-primary">
+            <span class="no-text-glyphicon glyphicon glyphicon-remove"></span>
+          </button>
+        </a>
+      </div>
+      <table class="table panel panel-default" id="batchListSelectTable"
+        data-pagination="true" data-click-to-select="true"
+        data-toolbar="#batchListSelectToolbar">
+        <thead>
+          <tr>
+            <th data-field="state"data-radio="true"></th>
+            <th data-field="name" data-sortable="true">Name</th>
+            <th data-field="location" data-sortable="true">Location</th>
+            <th data-field="environment" data-sortable="true">Environment</th>
+            <th data-field="owner" data-sortable="true">Owner</th>
+            <th data-field="size" data-sortable="true">Size</th>
+            <th data-field="datemodified" data-sortable="true">Date Modified</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
 
     {% include "tabs/batch-tab/loading.html" %}
 
