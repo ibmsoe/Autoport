@@ -863,6 +863,9 @@ function showAlert(message, data) {
 // Callback for when we receive data from a search query request
 function processSearchResults(data) {
     if (data.status !== "ok") {
+        if (searchState.multiple.loadingState.loading) {
+            searchState.multiple.loadingState.loading = false;
+        }
         showAlert("Bad response from /search!", data);
     } else if (data.type === "multiple") {
 
