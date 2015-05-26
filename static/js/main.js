@@ -294,6 +294,7 @@ var batchState = {
     // List/Select member variables and methods
     showListSelectTable: false, // Draw list/select table
     fileList: [],               // Stores batch files found in list/select
+    selectedBatchFile: {},
     listLocalBatchFiles: function(ev) {
         batchState.showListSelectTable = false;
         $.getJSON("/listBatchFiles/local", { filter: $("#batchFileFilter").val() },
@@ -376,27 +377,29 @@ var batchState = {
     // Actions for individual batch files
     buildAndTest: function(ev, el) {
         // TODO - default scheduling policy based on jenkinsState.nodeLabels
-        $.post("/runBatchFile", {batchName: el.file.filename, node: "x86-ubuntu-14.04"},
-            runBatchFileCallback, "json").fail(runBatchFileCallback);
-        $.post("/runBatchFile", {batchName: el.file.filename, node: "ppcle-ubuntu-14.04"},
-            runBatchFileCallback, "json").fail(runBatchFileCallback);
+        $.post("/runBatchFile", {batchName: batchState.selectedBatchFile.filename,
+            node: "x86-ubuntu-14.04"}, runBatchFileCallback, "json").fail(runBatchFileCallback);
+        $.post("/runBatchFile", {batchName: batchState.selectedBatchFile.filename,
+            node: "ppcle-ubuntu-14.04"}, runBatchFileCallback, "json").fail(runBatchFileCallback);
     },
     detail: function(ev, el) {
         batchState.loading = true;
         batchState.showBatchFile = false;
-        $.getJSON("/parseBatchFile", {batchName: el.file.filename},
+        $.getJSON("/parseBatchFile", {batchName: batchState.selectedBatchFile.filename},
             parseBatchFileCallback, "json").fail(parseBatchFileCallback);
     },
     remove: function(ev, el) {
-        $.post("/removeBatchFile", {filename: el.file.filename, location: el.file.location},
+        $.post("/removeBatchFile", {filename: batchState.selectedBatchFile.filename,
+            location: batchState.selectedBatchFile.location},
             removeBatchFileCallback, "json").fail(removeBatchFileCallback);
-        var index = batchState.fileList.indexOf(el.file);
+        var index = batchState.fileList.indexOf(batchState.selectedBatchFile);
         if(index > -1) {
             batchState.fileList.splice(index, 1);
         }
+        $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
     },
     archive: function(ev, el) {
-        $.post("/archiveBatchFile", {filename: el.file.filename},
+        $.post("/archiveBatchFile", {filename: batchState.selectedBatchFile.filename},
             archiveBatchFileCallback, "json").fail(archiveBatchFileCallback);
     },
     convertToExternal: function(internal) {
@@ -1518,6 +1521,8 @@ function listBatchFilesCallback(data) {
     if (data.status === "ok") {
         batchState.fileList = data.results;
         batchState.showListSelectTable = true;
+    
+        $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
     } else {
         showAlert("Error!", data);
     }
@@ -1643,5 +1648,12 @@ $(document).ready(function() {
         buttonText: function(options, select) {
             return "Build server";
         }
+    });
+    // Initializes an empty batch list/select table
+    $('#batchListSelectTable').bootstrapTable({
+        data: []
+    });
+    $('#batchListSelectTable').on('check.bs.table', function (e, row) {
+        batchState.selectedBatchFile = row;
     });
 });

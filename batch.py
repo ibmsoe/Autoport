@@ -91,6 +91,7 @@ class Batch:
         f = open(filename)
 
         size = st[ST_SIZE]
+        size = str(size) + " Bytes"
         datemodified = asctime(localtime(st[ST_MTIME]))
 
         try:
@@ -117,6 +118,8 @@ class Batch:
 
         try:
             owner = fileBuf['config']['owner']
+            if owner == "":
+                owner = "Anonymous"
         except KeyError:
             owner = "Anonymous"
 
