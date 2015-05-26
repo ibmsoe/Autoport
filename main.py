@@ -809,27 +809,35 @@ def listBatchFiles(repositoryType):
 def listPackageForSingleSlave():
     packageName = request.args.get("packageFilter", "")
     selectedBuildServer = request.args.get("buildServer", "")
-    if selectedBuildServer == "":
-        return json.jsonify(status="failure", error="Build server not selected"), 400
-    elif packageName == "":
+    selectedBuildServerDistribution = request.args.get("buildServerDistribution", "")
+    if packageName == "":
         return json.jsonify(status="failure", error="Package name not entered"), 400
+    elif selectedBuildServer == "":
+        return json.jsonify(status="failure", error="Build server not selected"), 400
 
     # Read template XML file
     tree = ET.parse("./config_template_package_list_single_slave.xml")
     root = tree.getroot()
     # Find elements we want to modify
     xml_node = root.find("./assignedNode")
-    xml_parameter = root.find("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
+    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
     # Modify selected elements
     xml_node.text = selectedBuildServer
-    xml_parameter.text = packageName
+
+    # add parameters information
+    i = 1
+    for param in xml_parameters:
+        if i == 1:
+            param.text = selectedBuildServerDistribution
+        elif i == 2:
+            param.text = packageName
+        i += 1
 
     # Set Job name
-    #TODO: Should we create a new job every time or use the same job
     uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = "ListPackageSingleSlave" + '.' + selectedBuildServer + '.' + str(uid)
- 
+    jobName = globals.localHostName + '.' + str(uid) + '.' + selectedBuildServer + '.' + "listPackageSingleSlave"
+
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
 
@@ -839,16 +847,16 @@ def listPackageForSingleSlave():
     }
 
     r = requests.post(
-            globals.jenkinsUrl + "/createItem",
-            headers={
-                'Content-Type': 'application/xml'
-            },
-            params={
-                'name': jobName
-            },
-            data=configXml,
-            proxies=NO_PROXY
-        )
+        globals.jenkinsUrl + "/createItem",
+        headers = {
+            'Content-Type': 'application/xml'
+        },
+        params = {
+            'name': jobName
+        },
+        data = configXml,
+        proxies = NO_PROXY
+    )
 
     if r.status_code == 200:
         # Success, send the jenkins job and start it right away.
@@ -856,8 +864,8 @@ def listPackageForSingleSlave():
 
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
- 
-        # Move artifacts.  Wait for completionas we need to return content of file.
+
+        # Move artifacts.  Wait for completion as we need to return content of file
         outDir = moveArtifacts(jobName, globals.localPathForListResults)
 
         # Read the json file
@@ -879,14 +887,16 @@ def managePackageForSingleSlave():
     packageVersion = request.args.get("package_version", "")
     packageAction = request.args.get("action", "")
     selectedBuildServer = request.args.get("buildServer", "")
+    selectedBuildServerDistribution = request.args.get("buildServerDistribution", "")
 
     # Read template XML file
     tree = ET.parse("./config_template_package_actions_single_slave.xml")
     root = tree.getroot()
+
     # Find elements we want to modify
     xml_node = root.find("./assignedNode")
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
- 
+
     # Modify selected elements
     xml_node.text = selectedBuildServer
 
@@ -894,36 +904,38 @@ def managePackageForSingleSlave():
     i = 1
     for param in xml_parameters:
         if i == 1:
-            param.text = packageName
+            param.text = selectedBuildServerDistribution
         elif i == 2:
-            param.text = packageVersion
+            param.text = packageName
         elif i == 3:
+            param.text = packageVersion
+        elif i == 4:
             param.text = packageAction
         i += 1
 
     # Set Job name
-    #TODO: Should we create a new job every time or use the same job
     uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = "ManagePackageSingleSlave" + '.' + selectedBuildServer + str(uid)
+    jobName = globals.localHostName + '.' + str(uid) + '.' + selectedBuildServer + '.' + "managePackageSingleSlave"
 
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
- 
+
     # Send to Jenkins
     NO_PROXY = {
         'no': 'pass',
     }
     r = requests.post(
-            globals.jenkinsUrl + "/createItem",
-            headers={
-                'Content-Type': 'application/xml'
-            },
-            params={
-                'name': jobName
-            },
-            data=configXml,
-            proxies=NO_PROXY
-        )
+        globals.jenkinsUrl + "/createItem",
+        headers = {
+            'Content-Type': 'application/xml'
+        },
+        params = {
+            'name': jobName
+        },
+        data = configXml,
+        proxies = NO_PROXY
+    )
+
     if r.status_code == 200:
         # Success, send the jenkins job and start it right away.
         startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
@@ -931,17 +943,17 @@ def managePackageForSingleSlave():
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
 
-        #Check the status of the jenkins job
+        # Check the status of the Jenkins job
         checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
         building = True
 
-        # poll until job stops building
+        # Poll until job stops building
         while building:
             sleep(10)
             try:
                 buildInfo = json.loads(requests.get(checkBuildUrl).text)
                 building = buildInfo['building']
-            # check to make sure build isn't queued, if it is wait for it to dequeue
+            # Check to make sure build isn't queued, if it is wait for it to dequeue
             except ValueError:
                 checkQueueUrl = globals.jenkinsUrl + "/job/" + jobName + "/api/json"
                 queued = True
@@ -959,12 +971,15 @@ def managePackageForSingleSlave():
                     count += 1
                 building = False
 
-        #grab the status of the last build
+        # TODO: grab log file from build server.  Needed for problem determination if it fails
+        # /home/jenkins/jenkins_home/jobs/<jobName>/builds/1/log
+
+        # Grab the status of the last build
         buildInfo = json.loads(requests.get(checkBuildUrl).text)
         buildStatus = buildInfo['result']
 
         if buildStatus == "SUCCESS":
-            return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)   
+            return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)
         else:
             return json.jsonify(status="failure", error="Could not perform the action specified"), 400
 

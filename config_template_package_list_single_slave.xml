@@ -6,6 +6,11 @@
   <properties>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>DISTRIBUTION</name>
+          <description>The Linus distribution of the build server.</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
 		<hudson.model.StringParameterDefinition>
           <name>PACKAGE_NAME</name>
           <description/>
@@ -26,76 +31,131 @@
     <hudson.tasks.Shell>
       <command>#!/bin/sh
 #
-# This script will retrieve information of a package
+# This script will retrieve information of a package from a build server. RHEL and UBUNTU distributions are supported
 # Inputs:   PACKAGE_NAME    :   name of the package to be installed/removed/updated
+#           DISTRIBUTION    :   Linux distribution of the build server
 # Output:   A json file with following data:
 #              packageName:         name of the package
 #              packageInstalled:    set to true if the package PACKAGE_NAME is installed
 #              installedVersion     the installed version of the package PACKAGE_NAME. 'N/A' in case not installed.
 #              updateAvailable:     set to true if a new version of the package PACKAGE_NAME is available.
 #              updateVersion:       the update version of the package PACKAGE_NAME available.
-#                                   If package is installed and there are no updates, 'updateVersion' takes the same value as the 
+#                                   If package is installed and there are no updates, 'updateVersion' takes the same value as the
 #                                   'installedVersion'. If package is not installed, it takes a value of 'N/A'
 #
-# Future Scope: Modify the script to handle package listing on Ubuntu too.
+# Future Scope: Handle more than one packages.
+
+set +o noclobber # Allow overwrite of files just in case it is set to off
 
 packageInstalled=false
 updateAvailable=false
 installedVersion="N/A"
 updateVersion="N/A"
 
-# Step 1. Check if package is installed and retrieve its version if installed.
-installedVersion=$(rpm -q --queryformat '%{VERSION}\n' $PACKAGE_NAME )
-if [ $? -eq 0 ]
-then
-    echo $PACKAGE_NAME "is installed. Version is" $installedVersion
-    packageInstalled=true
-elif [ $? -eq 1 ]
-then
-    echo $PACKAGE_NAME "is not installed."
-    installedVersion="N/A"
-elif [ $? -eg 127 ]
-then
-    echo "command not found"
-fi
-
-#Step 2. If package is installed, check for updates else check for its availability
-if $packageInstalled
-then    
-    updatePackageOutput=$(yum -q check-update $PACKAGE_NAME)
-    if [ $? -eq 100 ]   #if updates are available
-    then
-        updatePackageOutput=$(echo $updatePackageOutput) #this strips off whitespaces
-        if [ "${updatePackageOutput}x" != "x" ]
+case $DISTRIBUTION in
+    "RHEL")
+        # Step 1. Check if package is installed and retrieve its version if installed.
+        installedVersion=$(rpm -q --queryformat '%{VERSION}\n' $PACKAGE_NAME )
+        if [ $? -eq 0 ]
         then
-            updateVersion=${updatePackageOutput#*\ }
-            updateVersion=${updateVersion%\ *}
-            echo "Update available. Version is" $updateVersion
-            updateAvailable=true
-        fi
-    elif [ $? -eq 1 ]
-    then
-        echo $PACKAGE_NAME "latest version is installed."
-        updateVersion=$installedVersion
-    fi
-else # if package is not installed, check for available version
-    availablePackageOutput=$(yum -q list available $PACKAGE_NAME| sed -e '1d') # strip the 1st line of the output of yum list
-    if [ $? -eq 0 ]
-    then
-        availablePackageOutput=$(echo $availablePackageOutput) #this strips off whitespaces
-        if [ "${availablePackageOutput}x" != "x" ]
+            echo $PACKAGE_NAME "is installed. Version is" $installedVersion
+            packageInstalled=true
+        elif [ $? -eq 1 ]
         then
-            updateVersion=${availablePackageOutput#*\ }
-            updateVersion=${updateVersion%\ *}
-            echo "Package available. Version is" $updateVersion
-            updateAvailable=true
+            echo $PACKAGE_NAME "is not installed."
+            installedVersion="N/A"
+        elif [ $? -eg 127 ]
+        then
+            echo "command not found"
         fi
-    elif [ $? -eq 1 ]
-    then
-        echo $PACKAGE_NAME "not available"       
-    fi
-fi
 
+        #Step 2. If package is installed, check for updates else check for its availability
+        if $packageInstalled
+        then
+            updatePackageOutput=$(yum -q check-update $PACKAGE_NAME)
+            if [ $? -eq 100 ]   #if updates are available
+            then
+                updatePackageOutput=$(echo $updatePackageOutput) #this strips off whitespaces
+                if [ "${updatePackageOutput}x" != "x" ]
+                then
+                    updateVersion=${updatePackageOutput#*\ }
+                    updateVersion=${updateVersion%\ *}
+                    echo "Update available. Version is" $updateVersion
+                    updateAvailable=true
+                fi
+            elif [ $? -eq 1 ]
+            then
+                echo $PACKAGE_NAME "latest version is installed."
+                updateVersion=$installedVersion
+            fi
+        else # if package is not installed, check for available version
+            availablePackageOutput=$(yum -q list available $PACKAGE_NAME| sed -e '1d') # strip the 1st line of the output of yum list
+            if [ $? -eq 0 ]
+            then
+                availablePackageOutput=$(echo $availablePackageOutput) #this strips off whitespaces
+                if [ "${availablePackageOutput}x" != "x" ]
+                then
+                    updateVersion=${availablePackageOutput#*\ }
+                    updateVersion=${updateVersion%\ *}
+                    echo "Package available. Version is" $updateVersion
+                    updateAvailable=true
+                fi
+            elif [ $? -eq 1 ]
+            then
+                echo $PACKAGE_NAME "not available"
+            fi
+        fi
+    ;;
+    "UBUNTU")
+        lineNumber=1
+        packageNotFound=true
+        echo $packageNotFound > packageNotFound
+        apt-cache policy $PACKAGE_NAME | while read i
+        do
+            i=$( echo $i | tr -d '[[:space:]]') #trim spaces
+            if [ $lineNumber -eq 1 ]
+            then
+                i=${i%*:} # grab portion before the colon, this is the package name given in the output of apt-cache policy
+                if [ "$i" = "$PACKAGE_NAME" ]
+                then
+                   packageNotFound=false
+                   echo $packageNotFound > packageNotFound    # Write this to a file since, variables set inside this while loop are not available outside of the loop. [while in a sub-shell process]
+                fi
+            elif [ $lineNumber -eq 2 -o  $lineNumber -eq 3 ] # If package is not found, control will never reach here.
+            then
+                if [ !$packageNotFound ]
+                then
+                    i=${i##*:}  #extract version number, occurs after the colon
+                    echo "$i" > Line$lineNumber
+                fi
+            fi
+            lineNumber=$((lineNumber+1))
+        done
+
+        packageNotFoundValue=$(cat packageNotFound)
+            if [ $packageNotFoundValue = "false" ]
+            then
+                InstallOutput=$(cat Line2)
+                UpdateOutput=$(cat Line3)
+
+                if [ $InstallOutput != "(none)" ]
+                then
+                    packageInstalled=true
+                    installedVersion=$InstallOutput
+                fi
+
+                if [ $UpdateOutput != $InstallOutput ]
+                then
+                    updateAvailable=true
+                    updateVersion=$UpdateOutput
+                else
+                    updateVersion=$installedVersion
+                fi
+                rm -f Line*
+            fi
+        rm -f packageNotFound
+    ;;
+esac
 printf '[{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s"}]\n' "$PACKAGE_NAME" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" > packageListSingleSlave.json
 </command>
     </hudson.tasks.Shell>

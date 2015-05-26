@@ -1,17 +1,17 @@
 <!-- MANAGE JENKINS SLAVE NODES -->
-<div class="jumbotron"> 
+<div class="jumbotron">
   <div class="btn btn-default btn-block" rv-on-click="jenkinsState.setJenkinsSlavePanel" id="jenkinsSlaveButton">
     <h2 class="text-center">Manage Jenkins Slave Nodes</h2>
   </div>
 
   <div id="jenkinsSlavePanel" class="jumbotron-button-content" rv-show="jenkinsState.jenkinsSlavePanel">
-                            
+
     <!--List / Install / Remove software on a given build server START-->
-    <div class="jumbotron embedded-panel"> 
+    <div class="jumbotron embedded-panel">
       <div class="btn btn-default btn-block" rv-on-click="jenkinsState.setManageSingleSlavePanel" id="manageSingleSlaveButton">
         <h2 class="text-center">List / Install / Remove software on a given build server</h2>
       </div>
-                
+
       <div id="manageSingleSlavePanel" class="jumbotron-button-content" rv-show="jenkinsState.manageSingleSlavePanel">
         <!-- Build server selector, package input box-->
         <div class="row">
@@ -21,11 +21,11 @@
               placeholder="(e.g. firefox)"
               id="packageFilter_Single"/>
           </div>
-                  
+
           <div class="col-lg-4">
             <span class="dropdown">
               <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                Build server x
+                Build server
                 <span class="caret"></span>
               </button>
               <ul class="dropdown-menu" role="menu">
@@ -36,27 +36,27 @@
               <button type="button" class="btn btn-primary">
                 List
                </button>
-            </a>                                   
-          </div>          
+            </a>
+          </div>
         </div>
         <br/>
-        
+
         {% include "tabs/monitoring-tab/loading.html" %}
-        
+
         <div rv-show="jenkinsState.singleSlavePackageTableReady">
           <div class="alert alert-success">
-            <div>Actions taken on the list below apply only to build server x. The managed package list is not updated. In this way you may customize the runtime environment of a given build server to facilitate a specific porting effort. Select this build server when submitting Jenkins jobs.</div> 
+            <div>Actions taken on the list below apply only to build server x. The managed package list is not updated. In this way you may customize the runtime environment of a given build server to facilitate a specific porting effort. Select this build server when submitting Jenkins jobs.</div>
           </div>
           <br/>
           <br/>
-        
+
           <!-- START SINGLE SERVER PACKAGE LIST TABLE -->
           <table class="table panel panel-default">
             <thead>
               <tr>
-                <th>Package</th>                
+                <th>Package</th>
                 <th>Installed version</th>
-                <th>Latest version</th>                
+                <th>Latest version</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -69,8 +69,8 @@
                   { package.installedVersion }
                 </td>
                 <td>
-                  { package.updateVersion } 
-                </td>                
+                  { package.updateVersion }
+                </td>
                 <td>
                   <a rv-if="package.updateAvailable" rv-on-click="jenkinsState.installPackageForSingleSlave">
                     <button type="button" class="btn btn-primary">
@@ -86,18 +86,21 @@
               </tr>
             </tbody>
           </table>
-          <!-- END SINGLE SERVER PACKAGE LIST TABLE --> 
+          <!-- END SINGLE SERVER PACKAGE LIST TABLE -->
         </div>
+
+        {% include "tabs/monitoring-tab/packageloading.html" %}
+
       </div>
      </div>
     <!--List / Install / Remove software on a given build server END-->
-              
+
     <!--List / Install / Remove software across build servers START-->
-    <div class="jumbotron embedded-panel"> 
+    <div class="jumbotron embedded-panel">
       <div class="btn btn-default btn-block" rv-on-click="jenkinsState.setManageMultipleSlavePanel" id="manageMultipleSlaveButton">
         <h2 class="text-center">List / Install / Remove software across build servers</h2>
       </div>
-      
+
       <div id="manageMultipleSlavePanel" class="jumbotron-button-content" rv-show="jenkinsState.manageMultipleSlavePanel">
         <div class="row">
           <div class="col-lg-8">
@@ -106,46 +109,46 @@
               placeholder="(e.g. redis, cassandra, mongo)"
               id="packageFilter_Multiple"/>
           </div>
-      
+
           <div class="col-lg-4">
             <a>
               <button type="button" class="btn btn-primary">
                 List RHEL
               </button>
-            </a> 
+            </a>
             <a>
               <button type="button" class="btn btn-primary">
                 List Ubuntu
               </button>
-            </a> 
+            </a>
             <a>
               <button type="button" class="btn btn-primary">
                 List All
               </button>
-            </a> 
-          </div>                          
+            </a>
+          </div>
         </div>
         <br/>
-        
+
         <div class="alert alert-success">
           <a class="buttonRight">
             <button type="button" class="btn btn-primary">
               Synch
             </button>
           </a>
-          <div><u>Add</u> and <u>Remove</u> packages to the managed package list shown below.<br>Then, <u>Synch</u>ronize the list with build servers which will perform installs and un-installs.</div> 
-           
+          <div><u>Add</u> and <u>Remove</u> packages to the managed package list shown below.<br>Then, <u>Synch</u>ronize the list with build servers which will perform installs and un-installs.</div>
+
         </div>
         <br/>
         <br/>
-        <!-- START MULTIPLE SERVER PACKAGE LIST TABLE -->             
+        <!-- START MULTIPLE SERVER PACKAGE LIST TABLE -->
 
         <table class="table panel panel-default">
           <thead>
             <tr>
               <th>Package</th>
               <th>Platform</th>
-              <th>Managed version</th>                        
+              <th>Managed version</th>
               <th>Latest version</th>
               <th>Distribution</th>
               <th>Managed List Actions</th>
@@ -153,18 +156,18 @@
           </thead>
           <tbody>
             <tr class="result-row">
-              <td>                
-              </td>
-              <td>                
-              </td>
-              <td>                
-              </td>
-              <td>                
-              </td>
-              <td>                
+              <td>
               </td>
               <td>
-                <a> 
+              </td>
+              <td>
+              </td>
+              <td>
+              </td>
+              <td>
+              </td>
+              <td>
+                <a>
                   <button type="button" class="btn btn-primary">
                     Install
                   </button>
@@ -178,8 +181,8 @@
             </tr>
           </tbody>
         </table>
-        <!-- END MULTIPLE SERVER PACKAGE LIST TABLE -->             
-      </div>                                 
+        <!-- END MULTIPLE SERVER PACKAGE LIST TABLE -->
+      </div>
     </div>
     <!--List / Install / Remove software across build servers END-->
   </div>

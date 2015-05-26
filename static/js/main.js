@@ -576,66 +576,91 @@ var jenkinsState = {
     jenkinsPanel: false,
     jenkinsSlavePanel: false,
     manageSingleSlavePanel: false,
-	manageMultipleSlavePanel: false,
+    manageMultipleSlavePanel: false,
     setJenkinsPanel: function(ev) {
         jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
     },
-	setJenkinsSlavePanel: function(ev) {
+    setJenkinsSlavePanel: function(ev) {
         jenkinsState.jenkinsSlavePanel = (jenkinsState.jenkinsSlavePanel) ? false : true;
     },
-	setManageSingleSlavePanel: function(ev) {
+    setManageSingleSlavePanel: function(ev) {
         jenkinsState.manageSingleSlavePanel = (jenkinsState.manageSingleSlavePanel) ? false : true;
     },
-	setManageMultipleSlavePanel: function(ev) {
+    setManageMultipleSlavePanel: function(ev) {
         jenkinsState.manageMultipleSlavePanel = (jenkinsState.manageMultipleSlavePanel) ? false : true;
     },
     buildServer: "",                        // The selected slave/ build server to perform a list package operation
+    buildServerDistribution: "",            // The Linux distribution of the selected build server/slave. This is currently taken from the label of the jenkins slave settings
     changeBuildServer: function (ev) {
         jenkinsState.buildServer =  ev.target.innerHTML;
+        setBuildServerDistribution(jenkinsState.buildServer);
         jenkinsState.singleSlavePackageTableReady = false; //hide the table if user changes the build server/slave selection
     },
     singleSlavePackageTableReady: false,    // Draw package table for single slave if true
     loadingState: {
-                loading: false
-            },
+        packageListLoading: false,
+        packageActionLoading: false,
+    },
     packageListSingleSlave: [],             //Package list retrieved for a Single Slave 
     listPackageForSingleSlave: function(ev) {
         jenkinsState.singleSlavePackageTableReady = false;
-        jenkinsState.loadingState.loading = true;
+        jenkinsState.loadingState.packageListLoading = true;
         $.getJSON("/listPackageForSingleSlave", 
         {
             packageFilter: $("#packageFilter_Single").val(),
-            buildServer: jenkinsState.buildServer
+            buildServer: jenkinsState.buildServer,
+            buildServerDistribution: jenkinsState.buildServerDistribution
         },
-        listPackageForSingleSlaveCallback).fail(listPackageForSingleSlaveCallback);        
+        listPackageForSingleSlaveCallback).fail(listPackageForSingleSlaveCallback);
     },
     installPackageForSingleSlave: function(ev, el) {
         var action = ""
-        //If package is installed, update it else if package is not installed, install it
-        if( el.package.packageInstalled == true )
+
+        // If package is installed, update it else if package is not installed, install it
+        if (el.package.packageInstalled == true)
             action = "update"
-        else if ( el.package.packageInstalled == false )
+        else if (el.package.packageInstalled == false)
             action = "install"
+
+        jenkinsState.loadingState.packageActionLoading = true;
         $.getJSON("/managePackageForSingleSlave", 
         {
             package_name: el.package.packageName,
             package_version: el.package.updateVersion,
             action: action,
-            buildServer: jenkinsState.buildServer
+            buildServer: jenkinsState.buildServer,
+            buildServerDistribution: jenkinsState.buildServerDistribution
         },
         managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
     },
     removePackageForSingleSlave: function(ev, el) {
-        $.getJSON("/managePackageForSingleSlave", 
+        jenkinsState.loadingState.packageActionLoading = true;
+        $.getJSON("/managePackageForSingleSlave",
         {
             package_name: el.package.packageName,
             package_version: el.package.installedVersion,
             action: "remove",
-            buildServer: jenkinsState.buildServer
+            buildServer: jenkinsState.buildServer,
+            buildServerDistribution: jenkinsState.buildServerDistribution
         },
         managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
     }
 };
+
+// This function sets the variable jenkinsState.buildServerDistribution with the Linux distribution of the selected build server/slave.
+function setBuildServerDistribution(buildServerName) {
+    var label = ""
+    for (i = 0; i < jenkinsState.nodeNames.length; i++) {
+        if (jenkinsState.nodeNames[i] === buildServerName ){
+            label = jenkinsState.nodeLabels[i];
+            break;
+        }
+    }
+    if (label.search(/ubuntu/i) != -1)
+        jenkinsState.buildServerDistribution = "UBUNTU"
+    else if (label.search(/rhel/i) != -1)
+        jenkinsState.buildServerDistribution = "RHEL"
+}
 
 function handleProjectListBtns() {
     if (Object.keys(projectReportState.selectedProjects).length === 2) {
@@ -1575,21 +1600,25 @@ function getJenkinsNodesCallback(data) {
 }
 
 function listPackageForSingleSlaveCallback(data) {
+    jenkinsState.loadingState.packageListLoading = false;
+
     if (data.status === "ok") {
         jenkinsState.packageListSingleSlave = data.packageData
         jenkinsState.singleSlavePackageTableReady = true;
     } else {
         showAlert("Error!", data);
     }
-    jenkinsState.loadingState.loading = false;
 }
 
 function managePackageForSingleSlaveCallback(data) {
-    if (data.status === "ok") {        
-        alert ("The " + data.packageAction + " was " + data.buildStatus)        
+    jenkinsState.loadingState.packageActionLoading = false;
+
+    if (data.status === "ok") {
+        jenkinsState.singleSlavePackageTableReady = false;
+        alert ("The " + data.packageAction + " was " + data.buildStatus)
     } else {
-        showAlert("Error!", data);        
-    }    
+        showAlert("Error!", data);
+    }
 }
 
 $(document).ready(function() {

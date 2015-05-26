@@ -59,7 +59,7 @@ def init():
     localPathForListResults = configOptions['localpathforlistresults']
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
-    
+
     # globals not based on config file
     global github
     global cache
