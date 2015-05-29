@@ -23,14 +23,10 @@
           </div>
 
           <div class="col-lg-4">
-            <span class="dropdown">
-              <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
-                Build server
-                <span class="caret"></span>
-              </button>
-              <ul class="dropdown-menu" role="menu">
-                <li role="presentation" rv-each-tag="jenkinsState.nodeNames"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="jenkinsState.changeBuildServer" >{ tag }</a></li>
-              </ul>
+            <span>
+              <select id="singleJenkinsBuildServers" size="2" rv-on-change="jenkinsState.changeBuildServer"><!-- Adding the size attribute with a value > 1 ensures that none of the options are selected by default.-->
+                <option rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+              </select>
             </span>
             <a rv-on-click="jenkinsState.listPackageForSingleSlave">
               <button type="button" class="btn btn-primary">

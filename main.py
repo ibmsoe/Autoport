@@ -868,12 +868,17 @@ def listPackageForSingleSlave():
         # Move artifacts.  Wait for completion as we need to return content of file
         outDir = moveArtifacts(jobName, globals.localPathForListResults)
 
-        # Read the json file
+        # If present, read the json file and then delete it and its containing folder
         if outDir != "":
             localArtifactsFilePath = outDir + "packageListSingleSlave.json"
             packageJsonFile = open(localArtifactsFilePath)
             packageData = json.load(packageJsonFile)
             packageJsonFile.close()
+
+            #Delete the json file and its containing folder
+            os.remove(localArtifactsFilePath)
+            os.rmdir(outDir)
+
             return json.jsonify(status="ok", packageData=packageData )
         return json.jsonify(status="failure", error="Did not transfer package file"), 400
  
@@ -984,7 +989,7 @@ def managePackageForSingleSlave():
             return json.jsonify(status="failure", error="Could not perform the action specified"), 400
 
     if r.status_code == 400:
-        return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job to perform the action requested"), 400    
+        return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job to perform the action requested"), 400
 
 # Read and sanitize the contents of the named batch file
 @app.route("/parseBatchFile")

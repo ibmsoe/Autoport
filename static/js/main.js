@@ -591,8 +591,8 @@ var jenkinsState = {
     },
     buildServer: "",                        // The selected slave/ build server to perform a list package operation
     buildServerDistribution: "",            // The Linux distribution of the selected build server/slave. This is currently taken from the label of the jenkins slave settings
-    changeBuildServer: function (ev) {
-        jenkinsState.buildServer =  ev.target.innerHTML;
+    changeBuildServer: function () {
+        jenkinsState.buildServer =  $("#singleJenkinsBuildServers").find(":selected").text();
         setBuildServerDistribution(jenkinsState.buildServer);
         jenkinsState.singleSlavePackageTableReady = false; //hide the table if user changes the build server/slave selection
     },
@@ -601,11 +601,11 @@ var jenkinsState = {
         packageListLoading: false,
         packageActionLoading: false,
     },
-    packageListSingleSlave: [],             //Package list retrieved for a Single Slave 
+    packageListSingleSlave: [],             //Package list retrieved for a Single Slave
     listPackageForSingleSlave: function(ev) {
         jenkinsState.singleSlavePackageTableReady = false;
         jenkinsState.loadingState.packageListLoading = true;
-        $.getJSON("/listPackageForSingleSlave", 
+        $.getJSON("/listPackageForSingleSlave",
         {
             packageFilter: $("#packageFilter_Single").val(),
             buildServer: jenkinsState.buildServer,
@@ -623,7 +623,7 @@ var jenkinsState = {
             action = "install"
 
         jenkinsState.loadingState.packageActionLoading = true;
-        $.getJSON("/managePackageForSingleSlave", 
+        $.getJSON("/managePackageForSingleSlave",
         {
             package_name: el.package.packageName,
             package_version: el.package.updateVersion,
@@ -648,17 +648,10 @@ var jenkinsState = {
 };
 
 // This function sets the variable jenkinsState.buildServerDistribution with the Linux distribution of the selected build server/slave.
-function setBuildServerDistribution(buildServerName) {
-    var label = ""
-    for (i = 0; i < jenkinsState.nodeNames.length; i++) {
-        if (jenkinsState.nodeNames[i] === buildServerName ){
-            label = jenkinsState.nodeLabels[i];
-            break;
-        }
-    }
-    if (label.search(/ubuntu/i) != -1)
+function setBuildServerDistribution(buildServerLabel) {
+    if (buildServerLabel.search(/ubuntu/i) != -1)
         jenkinsState.buildServerDistribution = "UBUNTU"
-    else if (label.search(/rhel/i) != -1)
+    else if (buildServerLabel.search(/rhel/i) != -1)
         jenkinsState.buildServerDistribution = "RHEL"
 }
 
@@ -1676,6 +1669,12 @@ $(document).ready(function() {
         }
     });
     $('#batchBuildServers').multiselect({
+        buttonClass: "btn btn-primary",
+        buttonText: function(options, select) {
+            return "Build server";
+        }
+    });
+    $('#singleJenkinsBuildServers').multiselect({
         buttonClass: "btn btn-primary",
         buttonText: function(options, select) {
             return "Build server";
