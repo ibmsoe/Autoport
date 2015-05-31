@@ -40,10 +40,10 @@ def init():
     global pathForBatchFiles
     global localPathForTestResults
     global localPathForBatchFiles
-    global localPathForListResults
     global artifactsPathPrefix
     global threadPoolSize
 
+    # user configuration globals that are supported by the user interface
     jenkinsUrl = configOptions['jenkinsurl']
     mavenPath = configOptions['mavenpath']
     githubToken = configOptions['githubtoken']
@@ -56,20 +56,25 @@ def init():
     pathForBatchFiles = configOptions['pathforbatchfiles']
     localPathForTestResults = configOptions['localpathfortestresults']
     localPathForBatchFiles = configOptions['localpathforbatchfiles']
-    localPathForListResults = configOptions['localpathforlistresults']
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
 
     # globals not based on config file
     global github
     global cache
-    global nodes
+    global nodeLabels
+    global nodeNames
+    global nodeDetails
+    global nodeUbuntu
+    global nodeRHEL
     global sshClient
     global ftpClient
     global threadPool
     global localHostName
     global minRandom
     global maxRandom
+    global localPathForListResults
+    global localPathForConfig
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
@@ -86,3 +91,12 @@ def init():
     # set random number range for UUID
     minRandom = 100000
     maxRandom = 999999
+
+    localPathForListResults="./data/list_results/"
+    localPathForConfig="./data/config/"
+
+    nodeLabels = []
+    nodeNames = []
+    nodeDetails = []
+    nodeUbuntu = []
+    nodeRHEL = []

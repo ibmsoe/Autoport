@@ -357,8 +357,6 @@ var batchState = {
         }
     },
     selectJavaType: function(ev, el) {
-        console.log("ev = ", ev);
-        console.log("el = ", el);
         var selection = $(ev.target).text().toLowerCase();
         if (selection === "open jdk") {
             batchState.batchFile.config.java = "System default";
@@ -573,6 +571,9 @@ var reportState = {
 var jenkinsState = {
     nodeNames: [],
     nodeLabels: [],
+    nodeUbuntu: [],
+    nodeRHEL: [],
+    nodeDetails: [],
     jenkinsPanel: false,
     jenkinsSlavePanel: false,
     manageSingleSlavePanel: false,
@@ -590,10 +591,8 @@ var jenkinsState = {
         jenkinsState.manageMultipleSlavePanel = (jenkinsState.manageMultipleSlavePanel) ? false : true;
     },
     buildServer: "",                        // The selected slave/ build server to perform a list package operation
-    buildServerDistribution: "",            // The Linux distribution of the selected build server/slave. This is currently taken from the label of the jenkins slave settings
     changeBuildServer: function () {
         jenkinsState.buildServer =  $("#singleJenkinsBuildServers").find(":selected").text();
-        setBuildServerDistribution(jenkinsState.buildServer);
         jenkinsState.singleSlavePackageTableReady = false; //hide the table if user changes the build server/slave selection
     },
     singleSlavePackageTableReady: false,    // Draw package table for single slave if true
@@ -608,8 +607,7 @@ var jenkinsState = {
         $.getJSON("/listPackageForSingleSlave",
         {
             packageFilter: $("#packageFilter_Single").val(),
-            buildServer: jenkinsState.buildServer,
-            buildServerDistribution: jenkinsState.buildServerDistribution
+            buildServer: jenkinsState.buildServer
         },
         listPackageForSingleSlaveCallback).fail(listPackageForSingleSlaveCallback);
     },
@@ -628,8 +626,7 @@ var jenkinsState = {
             package_name: el.package.packageName,
             package_version: el.package.updateVersion,
             action: action,
-            buildServer: jenkinsState.buildServer,
-            buildServerDistribution: jenkinsState.buildServerDistribution
+            buildServer: jenkinsState.buildServer
         },
         managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
     },
@@ -640,20 +637,23 @@ var jenkinsState = {
             package_name: el.package.packageName,
             package_version: el.package.installedVersion,
             action: "remove",
-            buildServer: jenkinsState.buildServer,
-            buildServerDistribution: jenkinsState.buildServerDistribution
+            buildServer: jenkinsState.buildServer
         },
         managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
+    },
+    listManagedPackages: function(ev) {
+        var id = ev.target.id;
+        var distro = "All";
+
+        if (id === "mlRHEL")
+            distro = "RHEL";
+        else if (id === "mlUbuntu")
+            distro = "UBUNTU";
+
+        $.getJSON("/listManagedPackages", { distro: distro, package: $("#packageFilter_Multiple").val() },
+            listManagedPackagesCallback).fail(listManagedPackagesCallback);
     }
 };
-
-// This function sets the variable jenkinsState.buildServerDistribution with the Linux distribution of the selected build server/slave.
-function setBuildServerDistribution(buildServerLabel) {
-    if (buildServerLabel.search(/ubuntu/i) != -1)
-        jenkinsState.buildServerDistribution = "UBUNTU"
-    else if (buildServerLabel.search(/rhel/i) != -1)
-        jenkinsState.buildServerDistribution = "RHEL"
-}
 
 function handleProjectListBtns() {
     if (Object.keys(projectReportState.selectedProjects).length === 2) {
@@ -1574,7 +1574,7 @@ function addToJenkinsCallback(data) {
 
 function getJenkinsNodesCallback(data) {
     if (data.status === "ok") {
-        for(i = 0; i < data.nodeLabels.length; i++) {
+        for (i = 0; i < data.nodeLabels.length; i++) {
             var name = data.nodeNames[i];
             var label = data.nodeLabels[i];
             if ($.inArray(name, jenkinsState.nodeNames) === -1) {
@@ -1584,8 +1584,24 @@ function getJenkinsNodesCallback(data) {
                 jenkinsState.nodeLabels.push(data.nodeLabels[i]);
             }
         }
+        console.log("All nodes: ", jenkinsState.nodeLabels);
+    }
+    else {
+        showAlert("Could not get Jenkins slaves", data);
+    }
+}
 
-        console.log(jenkinsState.nodeLabels);
+function getJenkinsNodeDetailsCallback(data) {
+    console.log("In getJenkinsNodeDetailsCallback");
+    if (data.status === "ok") {
+        jenkinsState.nodeDetails = data.details;
+        jenkinsState.nodeUbuntu = data.ubuntu;
+        jenkinsState.nodeRHEL = data.rhel;
+        console.log("Ubuntu nodes: ", jenkinsState.nodeUbuntu);
+        console.log("RHEL nodes: ", jenkinsState.nodeRHEL);
+        for (i = 0; i < jenkinsState.nodeDetails.length; i++) {
+            console.log("Node details: ", jenkinsState.nodeDetails[i]);
+        }
     }
     else {
         showAlert("Could not get Jenkins slaves", data);
@@ -1609,6 +1625,13 @@ function managePackageForSingleSlaveCallback(data) {
     if (data.status === "ok") {
         jenkinsState.singleSlavePackageTableReady = false;
         alert ("The " + data.packageAction + " was " + data.buildStatus)
+    } else {
+        showAlert("Error!", data);
+    }
+}
+
+function listManagedPackagesCallback(data) {
+    if (data.status === "ok") {
     } else {
         showAlert("Error!", data);
     }
@@ -1644,13 +1667,22 @@ $(document).ready(function() {
     
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers
-    // TODO: exclude offline jenkins nodes
     // TODO: add selections for default (goes through jenkins master), linux distributions, specific build servers
     $.ajax({
         type: 'POST',
         url: "/getJenkinsNodes",
         data: {},
         success: getJenkinsNodesCallback,
+        dataType: "json",
+        async:false
+    });
+    // TODO : Make this asynchronous as there may be a lot of build slaves.  Enhance autoport driver to use threads
+    //        for parallelism but with a synchronous return wrt thread to aggregate data for caller
+    $.ajax({
+        type: 'POST',
+        url: "/getJenkinsNodeDetails",
+        data: {},
+        success: getJenkinsNodeDetailsCallback,
         dataType: "json",
         async:false
     });

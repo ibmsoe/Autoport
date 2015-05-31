@@ -13,6 +13,7 @@ import os
 import re
 import threading
 import paramiko
+from sharedData import SharedData
 from threadpool import makeRequests
 from time import localtime, strftime, sleep
 from flask import Flask, request, render_template, json
@@ -33,6 +34,7 @@ maxResults = 10
 resParser = ResultParser()
 
 catalog = Catalog(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
+sharedData = SharedData(urlparse(globals.jenkinsUrl).hostname)
 batch = Batch()
 
 # Be sure to update main.js also.
@@ -71,19 +73,51 @@ def getJenkinsNodes():
     except ValueError:
         return json.jsonify(status="failure", error="Jenkins nodes url or authentication error"), 400
 
-    nodeNames = []
-    nodeLabels = []
-
     for node in nodes:
         if not node['offline']:
             name = node['displayName']
             if name != "master":
-                nodeNames.append(name)
+                globals.nodeNames.append(name)
                 root = ET.fromstring(requests.get(globals.jenkinsUrl +
                     "/computer/" + name + "/config.xml").text)
-                nodeLabels.append(root.find("./label").text)
+                globals.nodeLabels.append(root.find("./label").text)
 
-    return json.jsonify(status="ok", nodeNames=nodeNames, nodeLabels=nodeLabels)
+    return json.jsonify(status="ok", nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels)
+
+def getDistro(buildServer):
+    distro = ""
+    for node in globals.nodeDetails:
+        if node['nodelabel'] == buildServer:
+            distro = node['distro']
+            break
+    return distro
+    
+# Get O/S details for build servers including distribution, release, version, hostname, ...
+# Don't fail as a lot of func is still possible.  Nodes may go offline at any time.
+# TODO - Run with threads in parallel synchronously as caller requires data
+
+@app.route("/getJenkinsNodeDetails", methods=["POST"])
+def getJenkinsNodeDetails():
+    action = "query-os"
+
+    for node in globals.nodeLabels:
+        results = queryNode(node, action)
+        try:
+            detail = results['detail']
+            globals.nodeDetails.append(detail)
+            nodeLabel = detail['nodelabel']
+            if detail['distro'] == "UBUNTU":
+                globals.nodeUbuntu.append(nodeLabel)
+            elif detail['distro'] == "RHEL":
+                globals.nodeRHEL.append(nodeLabel)
+        except KeyError:
+            pass
+
+    print "All nodes: ", globals.nodeLabels
+    print "Ubuntu nodes: ", globals.nodeUbuntu
+    print "RHEL nodes: ", globals.nodeRHEL
+
+    return json.jsonify(status="ok", details=globals.nodeDetails, ubuntu=globals.nodeUbuntu, rhel=globals.nodeRHEL)
 
 # Settings function
 @app.route("/settings", methods=['POST'])
@@ -809,15 +843,26 @@ def listBatchFiles(repositoryType):
 def listPackageForSingleSlave():
     packageName = request.args.get("packageFilter", "")
     selectedBuildServer = request.args.get("buildServer", "")
-    selectedBuildServerDistribution = request.args.get("buildServerDistribution", "")
+
     if packageName == "":
         return json.jsonify(status="failure", error="Package name not entered"), 400
-    elif selectedBuildServer == "":
+    if selectedBuildServer == "":
         return json.jsonify(status="failure", error="Build server not selected"), 400
+
+    results = listPackageForSingleSlave_common(packageName, selectedBuildServer)
+
+    try :
+        return json.jsonify(status="ok", packageData=results['packageData'])
+    except KeyError:
+        return json.jsonify(status="failure", error=results['error']), 404
+
+def listPackageForSingleSlave_common(packageName, selectedBuildServer):
+
 
     # Read template XML file
     tree = ET.parse("./config_template_package_list_single_slave.xml")
     root = tree.getroot()
+
     # Find elements we want to modify
     xml_node = root.find("./assignedNode")
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
@@ -825,11 +870,13 @@ def listPackageForSingleSlave():
     # Modify selected elements
     xml_node.text = selectedBuildServer
 
+    buildServerDistribution = getDistro(selectedBuildServer)
+
     # add parameters information
     i = 1
     for param in xml_parameters:
         if i == 1:
-            param.text = selectedBuildServerDistribution
+            param.text = buildServerDistribution
         elif i == 2:
             param.text = packageName
         i += 1
@@ -875,15 +922,92 @@ def listPackageForSingleSlave():
             packageData = json.load(packageJsonFile)
             packageJsonFile.close()
 
-            #Delete the json file and its containing folder
+            # Delete the json file and its containing folder
+            os.remove(localArtifactsFilePath)
+            os.rmdir(outDir)
+            return { 'status': "ok", 'packageData': packageData }
+
+        return { 'status': "failure", 'error': "Did not transfer package file" }
+ 
+    if r.status_code == 400:
+        return { 'status': "failure", 'error': "Could not create/trigger the Jenkins job" }
+
+# Query detailed Jenkin node state for managed lists 
+def queryNode(node, action):
+
+    # Read template XML file
+    tree = ET.parse("./config_template_query_slave.xml")
+    root = tree.getroot()
+    # Find elements we want to modify
+    xml_node = root.find("./assignedNode")
+    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
+
+    # Modify selected elements
+    xml_node.text = node
+
+    # add parameters information
+    i = 1
+    for param in xml_parameters:
+        if i == 1:
+            param.text = node
+        elif i == 2:
+            param.text = action
+        i += 1
+
+    # Set Job name
+    uid = randint(globals.minRandom, globals.maxRandom)
+    jobName = globals.localHostName + '.' + str(uid) + '.' + node + '.' + "querySingleSlave"
+
+    # Add header to the config
+    configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
+
+    # Send to Jenkins
+    NO_PROXY = {
+        'no': 'pass',
+    }
+
+    r = requests.post(
+        globals.jenkinsUrl + "/createItem",
+        headers = {
+            'Content-Type': 'application/xml'
+        },
+        params = {
+            'name': jobName
+        },
+        data = configXml,
+        proxies = NO_PROXY
+    )
+
+    if r.status_code == 200:
+        # Success, send the jenkins job and start it right away.
+        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
+
+        # Start Jenkins job
+        requests.get(startJobUrl, proxies=NO_PROXY)
+
+        # This is a synchronous call.  Wait for job to complete
+        outDir = moveArtifacts(jobName, globals.localPathForListResults)
+
+        # If present, read the json file.  Let's not treat this as a fatal error
+        jsonData = [] 
+        if outDir:
+            localArtifactsFilePath = outDir + action + ".json"
+            try:
+                jsonFile = open(localArtifactsFilePath)
+                jsonData = json.load(jsonFile)
+                jsonFile.close()
+            except KeyError:
+                pass
+            # Delete the json file and its containing folder
             os.remove(localArtifactsFilePath)
             os.rmdir(outDir)
 
-            return json.jsonify(status="ok", packageData=packageData )
-        return json.jsonify(status="failure", error="Did not transfer package file"), 400
- 
+        return { 'status': "success", 'detail': jsonData }
+
     if r.status_code == 400:
-        return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job"), 400
+        return { 'status': "failure", 'error': "Could not create/trigger the Jenkins Node Query job" }
+
+    return { 'status': "failure", 'error': "Unknown failure"  }
 
 # Install/Delete/Update package on selected build server/slave via a Jenkins job
 @app.route("/managePackageForSingleSlave")
@@ -892,7 +1016,6 @@ def managePackageForSingleSlave():
     packageVersion = request.args.get("package_version", "")
     packageAction = request.args.get("action", "")
     selectedBuildServer = request.args.get("buildServer", "")
-    selectedBuildServerDistribution = request.args.get("buildServerDistribution", "")
 
     # Read template XML file
     tree = ET.parse("./config_template_package_actions_single_slave.xml")
@@ -905,11 +1028,13 @@ def managePackageForSingleSlave():
     # Modify selected elements
     xml_node.text = selectedBuildServer
 
+    buildServerDistribution = getDistro(selectedBuildServer)
+
     # add parameters information
     i = 1
     for param in xml_parameters:
         if i == 1:
-            param.text = selectedBuildServerDistribution
+            param.text = buildServerDistribution
         elif i == 2:
             param.text = packageName
         elif i == 3:
@@ -990,6 +1115,50 @@ def managePackageForSingleSlave():
 
     if r.status_code == 400:
         return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job to perform the action requested"), 400
+
+# List installed and available status of the package in packageName by creating and triggering a Jenkins job
+@app.route("/listManagedPackages", methods=["GET"])
+def listManagedPackages():
+    try:
+        distro = request.args.get("distro", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing distro argument"), 400
+
+    try:
+        package = request.args.get("package", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing distro argument"), 400
+
+    if package == "":
+        return json.jsonify(status="failure", error="Package name not entered"), 400
+
+    print "Getting managed list"
+
+    # Get managed list
+    ml = sharedData.getManagedList()
+    if not ml:
+        return json.jsonify(status="failure", error="Could not get managed list.  Try again." )
+
+    print "Managed list: ", ml
+
+    # Create node list for query 
+    if distro == "UBUNTU":
+        nodes = globals.nodeUbuntu
+    elif distro == "RHEL":
+        nodes = globals.nodeRHEL
+    else:
+        nodes = globals.nodeLabels
+
+    for node in nodes:
+        print "Querying " + node + " for package " + package
+        results = listPackageForSingleSlave_common(node, package)
+        try:
+            print "package state: ", results['packageData']
+        except KeyError:
+            print "package error: " + results['error']
+            pass
+
+    return json.jsonify(status="ok", packages=ml)
 
 # Read and sanitize the contents of the named batch file
 @app.route("/parseBatchFile")

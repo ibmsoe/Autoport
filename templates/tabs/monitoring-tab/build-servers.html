@@ -41,7 +41,7 @@
 
         <div rv-show="jenkinsState.singleSlavePackageTableReady">
           <div class="alert alert-success">
-            <div>Actions taken on the list below apply only to build server x. The managed package list is not updated. In this way you may customize the runtime environment of a given build server to facilitate a specific porting effort. Select this build server when submitting Jenkins jobs.</div>
+            <div>Actions taken on the list below apply only to the chosen build server.  The managed package list is not updated. In this way you may customize the runtime environment of a given build server to facilitate a specific porting effort. Select this build server when submitting Jenkins jobs.</div>
           </div>
           <br/>
           <br/>
@@ -108,17 +108,17 @@
 
           <div class="col-lg-4">
             <a>
-              <button type="button" class="btn btn-primary">
+              <button id="mlRHEL" type="button" class="btn btn-primary" rv-on-click="jenkinsState.listManagedPackages">
                 List RHEL
               </button>
             </a>
             <a>
-              <button type="button" class="btn btn-primary">
+              <button id="mlUbuntu" type="button" class="btn btn-primary" rv-on-click="jenkinsState.listManagedPackages">
                 List Ubuntu
               </button>
             </a>
             <a>
-              <button type="button" class="btn btn-primary">
+              <button id="mlAll" type="button" class="btn btn-primary" rv-on-click="jenkinsState.listManagedPackages">
                 List All
               </button>
             </a>

@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>NODE</name>
+          <description>The target node</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>ACTION</name>
+          <description>The action to be performed</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode></assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>
+#!/bin/sh
+#
+# This script will invoke a command on the build server. RHEL and UBUNTU distributions are supported
+# Inputs:   ACTION        "query-os"     Query basic O/S parameters
+#           NODE                         NodeLabel for current node
+#
+# Output:   A json file for "query-os" containing the following fields:
+#           distro:                      RHEL or Ubuntu
+#           rel:                         Distribution Release
+#           vers:                        Distribution Version
+#           arch:                        Processor Architecture
+#           hostname:                    Short hostname
+#           nodelabel:                   Jenkins node label 
+
+set +o noclobber # Allow overwrite of files just in case it is set to off
+set +x
+
+uname -a
+
+echo "NODE: " $NODE
+echo "ACTION: " $ACTION
+
+DISTRIBUTION="UBUNTU"
+if [ -e /etc/redhat-release ] ; then
+    DISTRIBUTION="RHEL"
+fi
+
+echo "DISTRIBUTION: " $DISTRIBUTION
+
+case $ACTION in
+    "query-os")
+        case $DISTRIBUTION in
+             "RHEL")
+                 cat /etc/redhat-release
+                 rpm -qa | grep redhat-release
+                 DISTRO='"distro": "RHEL"'
+                 REL1=`rpm -q --queryformat '%{VERSION}' $(rpm -qa '(redhat)-release(|-server|-workstation|-client|-computenode)')`
+                 echo "REL1"=$REL1
+                 REL=`cat /etc/redhat-release | awk '{print $7}'`
+                 VER=`cat /etc/redhat-release | awk '{print $7}'`
+                 ;;
+             "UBUNTU")
+                 lsb_release -i -r
+                 cat /etc/issue
+                 DISTRO='"distro": "UBUNTU"'
+                 REL=`lsb_release -r | awk '{print $2}'`
+                 VER=`cat /etc/issue | awk '{print $2}'`
+                 ;;
+        esac
+
+        ARCH=`uname -m`
+        HOSTNAME=`hostname`
+        echo "{$DISTRO, \"rel\": \"$REL\",\"version\": \"$VER\", \"arch\": \"$ARCH\", \"hostname\": \"$HOSTNAME\", \"nodelabel\": \"$NODE\"}" > $ACTION.json
+        ;;
+esac
+
+if [ -e $ACTION.json ] ; then
+    cat $ACTION.json
+else
+    echo "No command artifacts produced!"
+fi
+
+exit 0
+</command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>*.json</artifacts>
+      <latestOnly>false</latestOnly>
+      <allowEmptyArchive>false</allowEmptyArchive>
+      <onlyIfSuccessful>true</onlyIfSuccessful>
+      <defaultExcludes>true</defaultExcludes>
+    </hudson.tasks.ArtifactArchiver>
+  </publishers>
+  <buildWrappers/>
+</project>
