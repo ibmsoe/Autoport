@@ -153,6 +153,21 @@
             </tr>
           </table>
         </div>
+        <!-- for diff output -->
+          <div class="diffrow">
+            <div class="diffcol">
+                <div id="leftres" style="width: calc(100%); height: 480px; border: 1px solid; overflow:scroll;"
+                     onscroll="document.getElementById('rightres').scrollTop = this.scrollTop; document.getElementById('rightres').scrollLeft = this.scrollLeft;">
+                    <span id="leftdiff"></span>
+                </div>
+            </div>
+            <div class="diffcol">
+                <div id="rightres" style="width: calc(100%); height: 480px; border: 1px solid; overflow:scroll;"
+                     onscroll="document.getElementById('leftres').scrollTop = this.scrollTop; document.getElementById('leftres').scrollLeft = this.scrollLeft;">
+                    <span id="rightdiff"></span>
+                </div>
+            </div>
+          </div>
       </span>
       <a class="backToResults" rv-on-click="projectReportState.backToList">
         <button type="button" class="btn btn-info">

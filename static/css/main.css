@@ -272,6 +272,18 @@ fieldset[disabled] .form-control {
     margin: 5px
 }
 
+/* for diff output display */
+.diffrow {
+    width: 100%;
+    height: calc(100% - 40px);
+}
+.diffcol {
+    width: calc(100% / 2 - 6px);
+    height: 100%;
+    float: left;
+}
+
+
 .no-text-glyphicon {
     margin: 0px
 }

@@ -1,6 +1,7 @@
 import re
 import codecs
 import json
+import diff_match_patch
 
 class ResultParser:
     def MavenBuildSummary(self, logfilename):
@@ -107,12 +108,19 @@ class ResultParser:
         left_r = result[0]
         right_r = result[1]
 
+        # Diff between leftfile and rightfile and hightlight the error lines
+        diff_content = self.ResBuildDiff(left+'/test_result.arti', right+'/test_result.arti')
+        left_diff = diff_content[0]
+        right_diff = diff_content[1]
+
         res = {
                 "total": { leftName: left_r["total"], rightName: right_r["total"] },
                 "failures": { leftName: left_r["failures"], rightName: right_r["failures"] },
                 "errors": { leftName: left_r["errors"], rightName: right_r["errors"] },
                 "skipped": { leftName: left_r["skipped"], rightName: right_r["skipped"] },
                 "duration": { leftName: left_r["duration"], rightName: right_r["duration"] },
+                # For diff output
+                "diff": { leftName: left_diff["diff"], rightName: right_diff["diff"] },
                 "results": {}
               }
 
@@ -270,3 +278,66 @@ class ResultParser:
         res['duration'] = totals['duration']
         res['results']  = {}
         return res
+
+    def ResBuildDiff(self, leftlogfilename, rightlogfilename):
+
+        leftf = codecs.open(leftlogfilename,encoding='utf-8',mode='rb')
+        leftlog = leftf.readlines()
+        leftf.close()
+
+        rightf = codecs.open(rightlogfilename,encoding='utf-8',mode='rb')
+        rightlog = rightf.readlines()
+        rightf.close()
+
+        lefttext = ""
+        for line in leftlog:
+            text = (self.renderline(line).replace("&", "&amp;")
+                        .replace("<", "&lt;")
+                        .replace(">", "&gt;"))
+            lefttext = lefttext + text
+
+        righttext = ""
+        for line in rightlog:
+            text = (self.renderline(line).replace("&", "&amp;")
+                        .replace("<", "&lt;")
+                        .replace(">", "&gt;"))
+            righttext = lefttext + text
+
+        diff_obj = diff_match_patch.diff_match_patch()
+        diffs = diff_obj.diff_main(lefttext, righttext)
+        diff_obj.diff_cleanupSemantic(diffs)
+
+        diffcontent = []
+        left_content = []
+        right_content = []
+        for (flag, data) in diffs:
+            text = data.replace("\n", "<br>")
+
+            if flag == diff_obj.DIFF_DELETE:
+                # left_content.append("""<font style=\"background:#aaaaff;\">%s</font>""" % text)
+                left_content.append("""<span>%s</span>""" % text)
+            elif flag == diff_obj.DIFF_INSERT:
+                #right_content.append("""<font style=\"background:#e6ffe6;\">%s</font>""" % text)
+                right_content.append("""<span>%s</span>""" % text)
+            elif flag == diff_obj.DIFF_EQUAL:
+                left_content.append("<span>%s</span>" % text)
+                right_content.append("<span>%s</span>" % text)
+
+        leftres={}
+        rightres={}
+        leftres['diff'] = "".join(left_content)
+        rightres['diff'] = "".join(right_content)
+
+        diffcontent.append(leftres)
+        diffcontent.append(rightres)
+
+        return diffcontent
+
+    def renderline(self, text):
+        highlitewords = ["not fount", "error", "failure", "not successful", "denied", "failed", "unable to", "no such", "unexpected", "not exist"]
+        for word in highlitewords:
+            if word in text.lower():
+                return ("""<span><font style=\"background:#ff9797;\">%s</font></span><br>""" % text)
+
+        return text
+
