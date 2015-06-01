@@ -1151,7 +1151,7 @@ def listManagedPackages():
 
     for node in nodes:
         print "Querying " + node + " for package " + package
-        results = listPackageForSingleSlave_common(node, package)
+        results = listPackageForSingleSlave_common(package, node)
         try:
             print "package state: ", results['packageData']
         except KeyError:
