@@ -84,14 +84,6 @@ def getJenkinsNodes():
 
     return json.jsonify(status="ok", nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels)
 
-def getDistro(buildServer):
-    distro = ""
-    for node in globals.nodeDetails:
-        if node['nodelabel'] == buildServer:
-            distro = node['distro']
-            break
-    return distro
-    
 # Get O/S details for build servers including distribution, release, version, hostname, ...
 # Don't fail as a lot of func is still possible.  Nodes may go offline at any time.
 # TODO - Run with threads in parallel synchronously as caller requires data
@@ -870,7 +862,7 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer):
     # Modify selected elements
     xml_node.text = selectedBuildServer
 
-    buildServerDistribution = getDistro(selectedBuildServer)
+    buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
 
     # add parameters information
     i = 1
@@ -1028,7 +1020,7 @@ def managePackageForSingleSlave():
     # Modify selected elements
     xml_node.text = selectedBuildServer
 
-    buildServerDistribution = getDistro(selectedBuildServer)
+    buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
 
     # add parameters information
     i = 1
@@ -1132,16 +1124,13 @@ def listManagedPackages():
     if package == "":
         return json.jsonify(status="failure", error="Package name not entered"), 400
 
-    print "Getting managed list"
-
     # Get managed list
     ml = sharedData.getManagedList()
     if not ml:
         return json.jsonify(status="failure", error="Could not get managed list.  Try again." )
 
-    print "Managed list: ", ml
-
-    # Create node list for query 
+    # Create node list for query
+    nodes = []
     if distro == "UBUNTU":
         nodes = globals.nodeUbuntu
     elif distro == "RHEL":
@@ -1149,16 +1138,30 @@ def listManagedPackages():
     else:
         nodes = globals.nodeLabels
 
+    packageList = []
     for node in nodes:
-        print "Querying " + node + " for package " + package
+        i = globals.nodeLabels.index(node)
         results = listPackageForSingleSlave_common(package, node)
         try:
-            print "package state: ", results['packageData']
+            for pkg in results['packageData']:
+                pkg['nodeLabel'] = node
+                pkg['osversion'] = globals.nodeDetails[i]['version']
+                pkg['arch'] = globals.nodeDetails[i]['arch']
+                managedP, managedV = sharedData.getManagedPackage(ml, pkg['packageName'], node)
+                if managedP:
+                    if managedV:
+                        pkg['managedPackageVersion'] = ManagedV
+                    else:
+                        pkg['managedPackageVersion'] = pkg['installedVersion']
+                else:
+                    pkg['managedPackageVersion'] = "N/A"
+                break
+            packageList.append(pkg)
         except KeyError:
-            print "package error: " + results['error']
-            pass
+             return json.jsonify(status="failure", error=results['error'] ), 404
 
-    return json.jsonify(status="ok", packages=ml)
+    print "managedPackageList=", packageList
+    return json.jsonify(status="ok", packages=packageList)
 
 # Read and sanitize the contents of the named batch file
 @app.route("/parseBatchFile")

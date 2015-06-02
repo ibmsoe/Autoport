@@ -125,6 +125,19 @@ class SharedData:
 
         return sharedPath
 
+    def getDistro(self, buildServer):
+        distroName = ""
+        distroRelease = ""
+        distroVersion = ""
+        for node in globals.nodeDetails:
+            if node['nodelabel'] == buildServer:
+                distroName = node['distro']
+                distroRelease = node['rel']
+                distroVersion = node['version']
+                break
+
+        return (distroName, distroRelease, distroVersion)
+
     def getManagedList(self):
         localData = self.getLocalData("ManagedList.json")
         sharedData = self.getSharedData("ManagedList.json")
@@ -159,3 +172,28 @@ class SharedData:
             data = localData
 
         return data
+
+    def getManagedPackage(self, managedList, packageName, node):
+        # Allow user to pass in managedList in case he needs to perform multiple lookups
+        if not managedList:
+            managedList = topology.getManagedList()
+
+        distroName, distroRel, distroVersion = self.getDistro(node)
+
+        pkgName = ""
+        pkgVersion = ""
+        for runtime in managedList['managedRuntime']:
+            if runtime['distro'] != distroName:
+                continue
+            if runtime['distroVersion'] != distroRel and runtime['distroVersion'] != distroVersion:
+                continue
+            for package in runtime['autoportPackages']:
+                if package['name'] == packageName:
+                    try:
+                        pkgName = package['name']
+                        pkgVersion = package['version']
+                    except KeyError:
+                        break
+            break
+
+        return pkgName, pkgVersion

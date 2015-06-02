@@ -1,7 +1,7 @@
 {
     "comment" : "IMPORTANT READ sharedData.py before updating",
     "version" : "1",
-    "sequence" : "1",
+    "sequence" : "2",
     "name" : "ManagedList.json",
     "managedRuntime" : [ 
         {
@@ -35,7 +35,7 @@
                 { "owner": "Anonymous", "name": "bootstrap", "version": "1.7.7" } ]
        },
        {
-            "distro": "Ubuntu",
+            "distro": "UBUNTU",
             "distroVersion": "14.04",
             "autoportPackages": [
                 { "name": "git" },
