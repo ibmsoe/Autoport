@@ -120,7 +120,7 @@ var searchState = {
             },
             download: function (ev) {
                 if (searchState.single.batchFile.config.name === "") {
-                    searchState.single.batchFile.config.name = 
+                    searchState.single.batchFile.config.name =
                         searchState.single.batchFile.packages[0].name +
                         "-" + String(searchState.single.batchFile.packages.length);
                 }
@@ -128,13 +128,13 @@ var searchState = {
                     undefined, 2);
                 var blob = new Blob([json], {type: "text/plain;charset=utf-8"});
                 saveAs(blob, searchState.single.batchFile.config.name);
-                
+
                 // TODO: Check return code of saveAs() to determine if request was cancelled
                 clearBatchFile(searchState.single.batchFile);
             },
             save: function (ev) {
                 if (searchState.single.batchFile.config.name === "") {
-                    searchState.single.batchFile.config.name = 
+                    searchState.single.batchFile.config.name =
                         searchState.single.batchFile.packages[0].name +
                         "-" + String(searchState.single.batchFile.packages.length);
                 }
@@ -273,11 +273,11 @@ var batchState = {
     setImportPanel: function () {
         batchState.showImportPanel = !batchState.showImportPanel;
     },
-    
+
     // Import member variables and methods
     upload: function (ev) {
-        var file = $('#batchFile')[0].files[0]; 
-        
+        var file = $('#batchFile')[0].files[0];
+
         if (file) {
             var reader = new FileReader();
             reader.readAsText(file);
@@ -287,7 +287,7 @@ var batchState = {
                 name = batchFile.config.name;
                 $.post("/uploadBatchFile", {name: name, file: e.target.result},
                     uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
-            };	
+            };
         }
     },
 
@@ -313,7 +313,7 @@ var batchState = {
 
     // Details member variables and methods
     batchFile: {},                          // content of batch file.  All fields resolved
-    javaType: "",                           // Initial value in config section 
+    javaType: "",                           // Initial value in config section
     loading: false,                         // parsing batch file.  Size is variable
     showBatchFile: false,                   // draw batch file detail table
     saveBatchFileName: "",                  // user input to save button for new batch file name
@@ -324,7 +324,7 @@ var batchState = {
     },
     saveBatch: function(ev) {
         batchState.saveBatchFileName = $("#saveBatchFileFilter").val();
-        batchState.batchFile.config.name = batchState.saveBatchFileName; 
+        batchState.batchFile.config.name = batchState.saveBatchFileName;
         var file = JSON.stringify(batchState.batchFile, undefined, 2);
         $.post("/uploadBatchFile", {name: batchState.saveBatchFileName, file: file},
                batchSaveCallback, "json").fail(uploadBatchFileCallback);
@@ -530,7 +530,7 @@ var reportState = {
     listLocalProjects: function(ev) {
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
-        
+
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "local";
         $.getJSON("/listTestResults/local", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
@@ -539,7 +539,7 @@ var reportState = {
     listGSAProjects: function(ev) {
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
-        
+
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "archived";
         $.getJSON("/listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
@@ -548,7 +548,7 @@ var reportState = {
     listAllProjects: function(ev) {
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
-        
+
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "all";
         $.getJSON("/listTestResults/all", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
@@ -595,11 +595,13 @@ var jenkinsState = {
         jenkinsState.buildServer =  $("#singleJenkinsBuildServers").find(":selected").text();
         jenkinsState.singleSlavePackageTableReady = false; //hide the table if user changes the build server/slave selection
     },
-    singleSlavePackageTableReady: false,    // Draw package table for single slave if true
     loadingState: {
         packageListLoading: false,
         packageActionLoading: false,
+        managedPackageListLoading: false,
+        managedPackageActionLoading: false,
     },
+    singleSlavePackageTableReady: false,    // Draw package table for single slave if true
     packageListSingleSlave: [],             //Package list retrieved for a Single Slave
     listPackageForSingleSlave: function(ev) {
         jenkinsState.singleSlavePackageTableReady = false;
@@ -641,7 +643,12 @@ var jenkinsState = {
         },
         managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
     },
+    managedPackageTableReady: false,    // Draw managed package table if true
+    managedPackageList: [],           //Managed Package list
     listManagedPackages: function(ev) {
+        jenkinsState.managedPackageTableReady = false;
+        jenkinsState.loadingState.managedPackageListLoading = true;
+
         var id = ev.target.id;
         var distro = "All";
 
@@ -843,7 +850,7 @@ rivets.bind($('#toolContainer'), {
 function doSearch(autoselect) {
     if (typeof(autoselect)==='undefined') autoselect = true;
     if (typeof(autoselect)!=='boolean') autoselect = true;
-	
+
     // Do not switch to loading state if query is empty
     searchState.single.query = $('#query').val();
     if (searchState.single.query.length > 0) {
@@ -963,7 +970,7 @@ function doGetResultList() {
         //TODO - add loading bar
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
-        
+
         $.getJSON("/listTestResults", {}, processResultList).fail(processResultList);
         break;
       default:
@@ -1157,7 +1164,7 @@ function processTestDetail(data) {
                         tc["failures"]+"</td><td class=\"testResult\">"+
                         tc["errors"]+"</td><td class=\"testResult\">"+
                         tc["skipped"]+"</td></tr>";
-                    
+
                 }
             }
             tableContent += "<tr><th>Totals</th><th class=\"testResultArch\">"+
@@ -1356,16 +1363,16 @@ function showDetail(data) {
             detailState.repo = data.repo;
             detailState.repo.addToJenkins = function(e) {
                 var buildInfo = detailState.repo.build;
-        
+
                 var selectedBuild = $("#singleSelectedBuild").val();
                 selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
-        
+
                 var selectedTest = $("#singleSelectedTest").val();
                 selectedTest = selectedTest === "NA" ? "" : selectedTest;
-        
+
                 var selectedEnv = $("#singleSelectedEnv").val();
                 selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
-        
+
                 var el = $("#singleBuildServers")[0];
                 var buildServers = getSelectedValues(el);
 
@@ -1392,16 +1399,16 @@ function showDetail(data) {
             detailState.generateRepo = data.repo;
             detailState.generateRepo.addToJenkins = function(e) {
                 var buildInfo = detailState.generateRepo.build;
-                
+
                 var selectedBuild = $("#generateSelectedBuild").val();
                 selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
-                
+
                 var selectedTest = $("#generateSelectedTest").val();
                 selectedTest = selectedTest === "NA" ? "" : selectedTest;
-                
+
                 var selectedEnv = $("#generateSelectedEnv").val();
                 selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
-                
+
                 var el = $("#generateBuildServers")[0];
                 var buildServers = getSelectedValues(el);
 
@@ -1502,7 +1509,7 @@ function parseBatchFileCallback(data) {
         batchState.showListSelectTable = false;
         batchState.showBatchFile = true;
         batchState.batchFile = data.results;
-        batchState.saveBatchFileName = data.results.config.name; 
+        batchState.saveBatchFileName = data.results.config.name;
         batchState.javaType = data.results.config.java;
         data.results.packages.forEach(function(package) {
             package.down = function (ev) {
@@ -1542,7 +1549,7 @@ function listBatchFilesCallback(data) {
     if (data.status === "ok") {
         batchState.fileList = data.results;
         batchState.showListSelectTable = true;
-    
+
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
     } else {
         showAlert("Error!", data);
@@ -1631,7 +1638,11 @@ function managePackageForSingleSlaveCallback(data) {
 }
 
 function listManagedPackagesCallback(data) {
+    jenkinsState.loadingState.managedPackageListLoading = false;
+
     if (data.status === "ok") {
+        jenkinsState.managedPackageList = data.packages;
+        jenkinsState.managedPackageTableReady = true;
     } else {
         showAlert("Error!", data);
     }
@@ -1664,7 +1675,7 @@ $(document).ready(function() {
             } }
         ]
     });
-    
+
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers
     // TODO: add selections for default (goes through jenkins master), linux distributions, specific build servers

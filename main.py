@@ -67,6 +67,10 @@ def init():
 def getJenkinsNodes():
     nodesUrl = globals.jenkinsUrl + "/computer/api/json?pretty=true"
 
+    # Empty the global lists
+    del globals.nodeNames[:]
+    del globals.nodeLabels[:]
+
     try:
         nodesResults = json.loads(requests.get(nodesUrl).text)
         nodes = nodesResults['computer']
@@ -91,6 +95,11 @@ def getJenkinsNodes():
 @app.route("/getJenkinsNodeDetails", methods=["POST"])
 def getJenkinsNodeDetails():
     action = "query-os"
+
+    # Empty the global lists
+    del globals.nodeDetails[:]
+    del globals.nodeUbuntu[:]
+    del globals.nodeRHEL[:]
 
     for node in globals.nodeLabels:
         results = queryNode(node, action)
@@ -539,7 +548,7 @@ def createJob(i_id = None,
               i_buildSystem = None):
 
     # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
-    # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one 
+    # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one
     # is found. This should be an extremely rare occurence.
     # TODO - check to see if job already exists
     uid = randint(globals.minRandom, globals.maxRandom)
@@ -815,7 +824,7 @@ def removeBatchFile():
         location = request.form["location"]
     except KeyError:
         return json.jsonify(status="failure", error="missing location POST argument"), 400
- 
+
     res = batch.removeBatchFile(filename, location)
 
     if res != None:
@@ -920,11 +929,11 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer):
             return { 'status': "ok", 'packageData': packageData }
 
         return { 'status': "failure", 'error': "Did not transfer package file" }
- 
+
     if r.status_code == 400:
         return { 'status': "failure", 'error': "Could not create/trigger the Jenkins job" }
 
-# Query detailed Jenkin node state for managed lists 
+# Query detailed Jenkin node state for managed lists
 def queryNode(node, action):
 
     # Read template XML file
@@ -981,7 +990,7 @@ def queryNode(node, action):
         outDir = moveArtifacts(jobName, globals.localPathForListResults)
 
         # If present, read the json file.  Let's not treat this as a fatal error
-        jsonData = [] 
+        jsonData = []
         if outDir:
             localArtifactsFilePath = outDir + action + ".json"
             try:
@@ -1145,6 +1154,7 @@ def listManagedPackages():
         try:
             for pkg in results['packageData']:
                 pkg['nodeLabel'] = node
+                pkg['distro'] = globals.nodeDetails[i]['distro']
                 pkg['osversion'] = globals.nodeDetails[i]['version']
                 pkg['arch'] = globals.nodeDetails[i]['arch']
                 managedP, managedV = sharedData.getManagedPackage(ml, pkg['packageName'], node)

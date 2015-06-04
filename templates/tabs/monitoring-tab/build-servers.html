@@ -126,58 +126,71 @@
         </div>
         <br/>
 
-        <div class="alert alert-success">
-          <a class="buttonRight">
-            <button type="button" class="btn btn-primary">
-              Synch
-            </button>
-          </a>
-          <div><u>Add</u> and <u>Remove</u> packages to the managed package list shown below.<br>Then, <u>Synch</u>ronize the list with build servers which will perform installs and un-installs.</div>
+        {% include "tabs/monitoring-tab/managed-packages-loading.html" %}
 
+        <div rv-show="jenkinsState.managedPackageTableReady">
+          <div class="alert alert-success">
+            <a class="buttonRight">
+              <button type="button" class="btn btn-primary">
+                Synch
+              </button>
+            </a>
+            <div><u>Add</u> and <u>Remove</u> packages to the managed package list shown below.<br>Then, <u>Synch</u>ronize the list with build servers which will perform installs and un-installs.</div>
+
+          </div>
+          <br/>
+          <br/>
+          <!-- START MULTIPLE SERVER PACKAGE LIST TABLE -->
+
+          <table class="table panel panel-default">
+            <thead>
+              <tr>
+                <th>Package</th>
+                <th>Platform</th>
+                <th>Managed Version</th>
+                <th>Latest Version</th>
+                <th>Distribution</th>
+                <th>O/S Version</th>
+                <th>Managed List Actions</th>
+              </tr>
+            </thead>
+            <tbody rv-each-package="jenkinsState.managedPackageList">
+              <tr class="result-row">
+                <td>
+                  { package.packageName }
+                </td>
+                <td>
+                  { package.arch }
+                </td>
+                <td>
+                  { package.managedPackageVersion }
+                </td>
+                <td>
+                  { package.updateVersion }
+                </td>
+                <td>
+                  { package.distro }
+                </td>
+                <td>
+                  { package.osversion }
+                </td>
+                <td>
+                  <a>
+                    <button type="button" class="btn btn-primary">
+                      Add
+                    </button>
+                  </a>
+                  <a>
+                    <button type="button" class="btn btn-primary">
+                      Remove
+                    </button>
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <!-- END MULTIPLE SERVER PACKAGE LIST TABLE -->
         </div>
-        <br/>
-        <br/>
-        <!-- START MULTIPLE SERVER PACKAGE LIST TABLE -->
-
-        <table class="table panel panel-default">
-          <thead>
-            <tr>
-              <th>Package</th>
-              <th>Platform</th>
-              <th>Managed version</th>
-              <th>Latest version</th>
-              <th>Distribution</th>
-              <th>Managed List Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="result-row">
-              <td>
-              </td>
-              <td>
-              </td>
-              <td>
-              </td>
-              <td>
-              </td>
-              <td>
-              </td>
-              <td>
-                <a>
-                  <button type="button" class="btn btn-primary">
-                    Install
-                  </button>
-                </a>
-                <a>
-                  <button type="button" class="btn btn-primary">
-                    Remove
-                  </button>
-                </a>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-        <!-- END MULTIPLE SERVER PACKAGE LIST TABLE -->
       </div>
     </div>
     <!--List / Install / Remove software across build servers END-->
