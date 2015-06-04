@@ -1119,7 +1119,7 @@ def listManagedPackages():
     try:
         package = request.args.get("package", "")
     except KeyError:
-        return json.jsonify(status="failure", error="missing distro argument"), 400
+        return json.jsonify(status="failure", error="missing package argument"), 400
 
     if package == "":
         return json.jsonify(status="failure", error="Package name not entered"), 400
@@ -1150,7 +1150,7 @@ def listManagedPackages():
                 managedP, managedV = sharedData.getManagedPackage(ml, pkg['packageName'], node)
                 if managedP:
                     if managedV:
-                        pkg['managedPackageVersion'] = ManagedV
+                        pkg['managedPackageVersion'] = managedV
                     else:
                         pkg['managedPackageVersion'] = pkg['installedVersion']
                 else:
