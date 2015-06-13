@@ -35,6 +35,7 @@ import os
 import globals
 import paramiko
 from flask import json
+from collections import OrderedDict
 
 class SharedData:
     def __init__(self, jenkinsHost,
@@ -46,6 +47,7 @@ class SharedData:
         self.__jenkinsKey = jenkinsKey
         self.__sharedDataDir = sharedDataDir
         self.__localDataDir = globals.localPathForConfig
+        self.__localHostName = globals.localHostName
         try:
             self.__jenkinsSshClient = paramiko.SSHClient()
             self.__jenkinsSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -59,7 +61,7 @@ class SharedData:
         localPath = self.__localDataDir + name
         try:
             f = open(localPath)
-            dataStr = json.load(f)
+            dataStr = json.load(f, object_pairs_hook=OrderedDict) # Load the json data maintaining its original order.
             f.close();
         except IOError as e:
             print str(e)
@@ -67,11 +69,10 @@ class SharedData:
         return dataStr
 
     def putLocalData(self, data, prefix):
-        localPath = self.__localDataDir + "putShared" + data['name']
+        localPath = self.__localDataDir + prefix + data['name']
         try:
             f = open(localPath, 'w')
-            dataStr = json.dumps(data)
-            f.write(dataStr);
+            json.dump(data, f, indent=4, sort_keys=False) # writes back in pretty printed json form
             f.close();
         except IOError as e:
             print str(e)
@@ -154,7 +155,7 @@ class SharedData:
         sharedSequence = int(sharedData['sequence'])
 
         if localSequence <= sharedSequence:
-            data = sharedData
+            data = self.mergeManagedLists(localData, sharedData)
         else:
             update = False
             for sharedRuntime in sharedData['managedRuntime']:
@@ -182,6 +183,7 @@ class SharedData:
 
         pkgName = ""
         pkgVersion = ""
+        userAddedVersion = "N/A"
         for runtime in managedList['managedRuntime']:
             if runtime['distro'] != distroName:
                 continue
@@ -194,6 +196,105 @@ class SharedData:
                         pkgVersion = package['version']
                     except KeyError:
                         break
+            for package in runtime['autoportChefPackages']:
+                if package['name'] == packageName:
+                    try:
+                        pkgName = package['name']
+                        pkgVersion = package['version']
+                    except KeyError:
+                        break
+            for package in runtime['userPackages']:
+                if package['name'] == packageName and package['owner'] == self.__localHostName:
+                    try:
+                        userAddedVersion = package['version']
+                    except KeyError:
+                        break
             break
 
-        return pkgName, pkgVersion
+        return pkgName, pkgVersion, userAddedVersion
+
+    def addToManagedList(self, packageName, packageVersion, distro):
+        # Read the file in memory
+        localManagedListFileData = self.getLocalData("ManagedList.json")
+
+        # Perform additions to memory list
+        for sharedRuntime in localManagedListFileData['managedRuntime']:
+            if sharedRuntime['distro'] == distro:
+                addFlag = True
+                for package in sharedRuntime['userPackages']:
+                    if package['name'] == packageName and package['owner'] == self.__localHostName:
+                    # If package is already present for the current user, check its version and update the version if they are different
+                        if package['version'] != packageVersion:
+                            package['version'] = packageVersion
+                        addFlag = False
+                        break
+                if addFlag == True:
+                    sharedRuntime['userPackages'].append({"owner":self.__localHostName, "name":packageName, "version":packageVersion})
+                break
+
+        # Write back to the local managed list file
+        localPath = self.putLocalData(localManagedListFileData, "")
+
+    def removeFromManagedList(self, packageName, distro):
+        # Read the file in memory
+        localManagedListFileData = self.getLocalData("ManagedList.json")
+
+        # Perform deletion to memory list
+        for sharedRuntime in localManagedListFileData['managedRuntime']:
+            if sharedRuntime['distro'] == distro:
+                for package in sharedRuntime['userPackages']:
+                    if package['name'] == packageName and package['owner'] == self.__localHostName:
+                    # If package is present for the current user, remove it
+                        sharedRuntime['userPackages'].remove(package)
+                        break
+
+        # Write back to the local managed list file
+        localPath = self.putLocalData(localManagedListFileData, "")
+
+    # Synchronize and commit the managed list in shared location with the changes done in local list
+    def synchManagedPackageList(self):
+        localData = self.getLocalData("ManagedList.json")
+        sharedData = self.getSharedData("ManagedList.json")
+
+        if not sharedData:
+            data = localData
+        else:
+            data = self.mergeManagedLists(localData, sharedData)
+
+        path = self.putSharedData(localData, sharedData)
+
+        return path
+
+    # Merges the local and shared Managed Lists, taking the static data from shared and merging the userPackages from both locations
+    def mergeManagedLists(self, localData, sharedData):
+        mergedData = sharedData
+
+        for localRuntime in localData['managedRuntime']:
+            for sharedRuntime in mergedData['managedRuntime']:
+                if localRuntime['distro'] == sharedRuntime['distro']:
+                    if localRuntime['distroVersion'] == sharedRuntime['distroVersion']:
+                        # For each userPackage in localData belonging to the current user, iterate over the shared userPackages and if no match is found append it. In case a match is found with difference in versions, use the version from localData
+                        for localPackage in localRuntime['userPackages']:
+                            if localPackage['owner'] == self.__localHostName:
+                                addLocalPackage = True
+                                for sharedPackage in sharedRuntime['userPackages']:
+                                    if localPackage['name'] == sharedPackage['name'] and localPackage['owner'] == sharedPackage['owner']:
+                                        if localPackage['version'] != sharedPackage['version']:
+                                            sharedPackage['version'] = localPackage['version']
+                                        addLocalPackage = False
+                                        break
+                                if addLocalPackage == True:
+                                    sharedRuntime['userPackages'].append(localPackage)
+                        # For each userPackage in sharedData belonging to the current user, iterate over the local userPackages and remove the ones present in shared but not in localData.
+                        # This is the case when user has removed a previously added and synched package from the UI but not done a re-synch.
+                        for sharedPackage in sharedRuntime['userPackages']:
+                            if sharedPackage['owner'] == self.__localHostName:
+                                removePackage = True
+                                for localPackage in localRuntime['userPackages']:
+                                    if sharedPackage['owner'] == localPackage['owner'] and sharedPackage['name'] == localPackage['name'] and sharedPackage['version'] == localPackage['version']:
+                                        removePackage = False
+                                        break
+                                if removePackage == True:
+                                    sharedRuntime['userPackages'].remove(sharedPackage)
+
+        return mergedData

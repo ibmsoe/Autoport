@@ -1157,14 +1157,41 @@ def listManagedPackages():
                 pkg['distro'] = globals.nodeDetails[i]['distro']
                 pkg['osversion'] = globals.nodeDetails[i]['version']
                 pkg['arch'] = globals.nodeDetails[i]['arch']
-                managedP, managedV = sharedData.getManagedPackage(ml, pkg['packageName'], node)
+
+                showAddButton = False
+                showRemoveButton = False
+
+                managedP, managedV, userAddedVersion = sharedData.getManagedPackage(ml, pkg['packageName'], node)
+
+                #For a package present in autoport[chef]packages, managedPackageVersion is
+                #    1. the version in the autoport[chef]packages section,
+                #    or 2. the installed version in case 1. is not available
+                #    or 3 the latest available version. in case 2. is not available
+                #For package not present in autoport[chef]packages, the managedPackageVersion is "N/A"
                 if managedP:
                     if managedV:
                         pkg['managedPackageVersion'] = managedV
-                    else:
+                        if pkg['updateVersion'] != "N/A" and pkg['updateVersion'] != managedV:
+                            showAddButton = True
+                    elif pkg['packageInstalled']:
                         pkg['managedPackageVersion'] = pkg['installedVersion']
+                        if pkg['updateVersion'] != "N/A" and pkg['updateVersion'] != pkg['installedVersion']:
+                            showAddButton = True
+                    elif pkg['updateAvailable']:
+                        pkg['managedPackageVersion'] = pkg['updateVersion']
+                        if pkg['updateVersion'] != "N/A":
+                            showAddButton = True
                 else:
                     pkg['managedPackageVersion'] = "N/A"
+                    if pkg['updateVersion'] != "N/A":
+                        showAddButton = True
+                pkg['userAddedVersion'] = userAddedVersion
+                if userAddedVersion != "N/A":
+                    showRemoveButton = True
+                    if pkg['userAddedVersion'] == pkg['updateVersion']:
+                        showAddButton = False
+                pkg['showAddButton'] = showAddButton
+                pkg['showRemoveButton'] = showRemoveButton
                 break
             packageList.append(pkg)
         except KeyError:
@@ -1172,6 +1199,64 @@ def listManagedPackages():
 
     print "managedPackageList=", packageList
     return json.jsonify(status="ok", packages=packageList)
+
+# Add package selected by user to the local Managed List
+@app.route("/addToManagedList")
+def addToManagedList():
+    try:
+        packageName = request.args.get("package_name", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing package name argument"), 400
+
+    try:
+        packageVersion = request.args.get("package_version", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing package version argument"), 400
+
+    try:
+        distro = request.args.get("distro", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing distro argument"), 400
+
+    sharedData.addToManagedList(packageName, packageVersion, distro)
+
+    return json.jsonify(status="ok")
+
+# Remove package selected by user from the local Managed List
+@app.route("/removeFromManagedList")
+def removeFromManagedList():
+    try:
+        packageName = request.args.get("package_name", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing package name argument"), 400
+
+    try:
+        distro = request.args.get("distro", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing distro argument"), 400
+
+    sharedData.removeFromManagedList(packageName, distro)
+
+    return json.jsonify(status="ok")
+
+# Synch the local managed package file with the one on Jenkins master.
+#TODO: add logic to perform installations on the selected build server group
+@app.route("/synchManagedPackageList")
+def synchManagedPackageList():
+    try:
+        serverGroup = request.args.get("serverGroup", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing serverGroup argument"), 400
+
+    if serverGroup == "":
+        return json.jsonify(status="failure", error="serverGroup not available"), 400
+
+    path = sharedData.synchManagedPackageList()
+
+    if not path:
+        return json.jsonify(status="failure", error="Could not synch the managed list.  Try again." )
+
+    return json.jsonify(status="ok")
 
 # Read and sanitize the contents of the named batch file
 @app.route("/parseBatchFile")

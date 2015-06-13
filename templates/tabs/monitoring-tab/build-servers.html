@@ -131,7 +131,7 @@
         <div rv-show="jenkinsState.managedPackageTableReady">
           <div class="alert alert-success">
             <a class="buttonRight">
-              <button type="button" class="btn btn-primary">
+              <button type="button" class="btn btn-primary" rv-on-click="jenkinsState.synchManagedPackageList">
                 Synch
               </button>
             </a>
@@ -149,6 +149,7 @@
                 <th>Platform</th>
                 <th>Managed Version</th>
                 <th>Latest Version</th>
+                <th>User Added Version</th>
                 <th>Distribution</th>
                 <th>O/S Version</th>
                 <th>Managed List Actions</th>
@@ -169,18 +170,21 @@
                   { package.updateVersion }
                 </td>
                 <td>
+                  { package.userAddedVersion }
+                </td>
+                <td>
                   { package.distro }
                 </td>
                 <td>
                   { package.osversion }
                 </td>
                 <td>
-                  <a>
+                  <a rv-if="package.showAddButton" rv-on-click="jenkinsState.addToManagedList">
                     <button type="button" class="btn btn-primary">
                       Add
                     </button>
                   </a>
-                  <a>
+                  <a rv-if="package.showRemoveButton" rv-on-click="jenkinsState.removeFromManagedList">
                     <button type="button" class="btn btn-primary">
                       Remove
                     </button>

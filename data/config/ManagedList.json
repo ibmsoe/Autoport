@@ -1,83 +1,219 @@
 {
-    "comment" : "IMPORTANT READ sharedData.py before updating",
-    "version" : "1",
-    "sequence" : "2",
-    "name" : "ManagedList.json",
-    "managedRuntime" : [ 
+    "comment": "IMPORTANT READ sharedData.py before updating",
+    "version": "1",
+    "sequence": "3",
+    "name": "ManagedList.json",
+    "managedRuntime": [
         {
             "distro": "RHEL",
             "distroVersion": "7.1",
             "autoportPackages": [
-                { "name": "git" },
-                { "name": "java-1.7.0-openjdk" },
-                { "name": "java-1.7.0-openjdk-headless" },
-                { "name": "ant" },
-                { "name": "maven" },
-                { "name": "zlib" },
-                { "name": "snappy" },
-                { "name": "autoconf" },
-                { "name": "libtool" },
-                { "name": "lzo" },
-                { "name": "automake" },
-                { "name": "make" },
-                { "name": "tcl" },
-                { "name": "perl" },
-                { "name": "perl-CPAN" },
-                { "name": "python", "version": "2.7" },
-                { "name": "python-setuptools" },
-                { "name": "ruby" },
-                { "name": "cmake" } ],
+                {
+                    "name": "git"
+                },
+                {
+                    "name": "java-1.7.0-openjdk"
+                },
+                {
+                    "name": "java-1.7.0-openjdk-headless"
+                },
+                {
+                    "name": "ant"
+                },
+                {
+                    "name": "maven"
+                },
+                {
+                    "name": "zlib"
+                },
+                {
+                    "name": "snappy"
+                },
+                {
+                    "name": "autoconf"
+                },
+                {
+                    "name": "libtool"
+                },
+                {
+                    "name": "lzo"
+                },
+                {
+                    "name": "automake"
+                },
+                {
+                    "name": "make"
+                },
+                {
+                    "name": "tcl"
+                },
+                {
+                    "name": "perl"
+                },
+                {
+                    "name": "perl-CPAN"
+                },
+                {
+                    "name": "python",
+                    "version": "2.7"
+                },
+                {
+                    "name": "python-setuptools"
+                },
+                {
+                    "name": "ruby"
+                },
+                {
+                    "name": "cmake"
+                }
+            ],
             "autoportChefPackages": [
-                { "name": "protobuf" },
-                { "name": "ibm-java" },
-                { "name": "IBM SDK for Node.js", "version": "1.2" } ],
+                {
+                    "name": "protobuf"
+                },
+                {
+                    "name": "ibm-java"
+                },
+                {
+                    "name": "IBM SDK for Node.js",
+                    "version": "1.2"
+                }
+            ],
             "userPackages": [
-                { "owner": "Anonymous", "name": "bootstrap", "version": "1.7.7" } ]
-       },
-       {
+                {
+                    "owner": "Anonymous",
+                    "name": "bootstrap",
+                    "version": "1.7.7"
+                }
+            ]
+        },
+        {
             "distro": "UBUNTU",
             "distroVersion": "14.04",
             "autoportPackages": [
-                { "name": "git" },
-                { "name": "openjdk-7-jre" },
-                { "name": "openjdk-7-jre-headless" },
-                { "name": "ant" },
-                { "name": "libprotobuf-dev" },
-                { "name": "libprotobuf-java" },
-                { "name": "protobuf-compiler" },
-                { "name": "maven" },
-                { "name": "zlib" },
-                { "name": "snappy" },
-                { "name": "snappy-java" },
-                { "name": "autoconf" },
-                { "name": "libtool" },
-                { "name": "g++" },
-                { "name": "lzo" },
-                { "name": "automake" },
-                { "name": "make" },
-                { "name": "tcl8-dev" },
-                { "name": "perl" },
-                { "name": "libpath-tiny-perl" },
-                { "name": "libfile-remove-perl" },
-                { "name": "libmodule-install-perl" },
-                { "name": "libyaml-tiny-perl" },
-                { "name": "libtest-strict-perl" },
-                { "name": "python", "version": "2.7" },
-                { "name": "python-pytest" },
-                { "name": "python-setuptools" },
-                { "name": "ruby" },
-                { "name": "cmake" },
-                { "name": "scons" },
-                { "name": "scala" },
-                { "name": "sbt" },
-                { "name": "gradle" },
-                { "name": "nodejs" },
-                { "name": "npm" } ],
+                {
+                    "name": "git"
+                },
+                {
+                    "name": "openjdk-7-jre"
+                },
+                {
+                    "name": "openjdk-7-jre-headless"
+                },
+                {
+                    "name": "ant"
+                },
+                {
+                    "name": "libprotobuf-dev"
+                },
+                {
+                    "name": "libprotobuf-java"
+                },
+                {
+                    "name": "protobuf-compiler"
+                },
+                {
+                    "name": "maven"
+                },
+                {
+                    "name": "zlib"
+                },
+                {
+                    "name": "snappy"
+                },
+                {
+                    "name": "snappy-java"
+                },
+                {
+                    "name": "autoconf"
+                },
+                {
+                    "name": "libtool"
+                },
+                {
+                    "name": "g++"
+                },
+                {
+                    "name": "lzo"
+                },
+                {
+                    "name": "automake"
+                },
+                {
+                    "name": "make"
+                },
+                {
+                    "name": "tcl8-dev"
+                },
+                {
+                    "name": "perl"
+                },
+                {
+                    "name": "libpath-tiny-perl"
+                },
+                {
+                    "name": "libfile-remove-perl"
+                },
+                {
+                    "name": "libmodule-install-perl"
+                },
+                {
+                    "name": "libyaml-tiny-perl"
+                },
+                {
+                    "name": "libtest-strict-perl"
+                },
+                {
+                    "name": "python",
+                    "version": "2.7"
+                },
+                {
+                    "name": "python-pytest"
+                },
+                {
+                    "name": "python-setuptools"
+                },
+                {
+                    "name": "ruby"
+                },
+                {
+                    "name": "cmake"
+                },
+                {
+                    "name": "scons"
+                },
+                {
+                    "name": "scala"
+                },
+                {
+                    "name": "sbt"
+                },
+                {
+                    "name": "gradle"
+                },
+                {
+                    "name": "nodejs"
+                },
+                {
+                    "name": "npm"
+                }
+            ],
             "autoportChefPackages": [
-                { "name": "ibm-java" },
-                { "name": "IBM SDK for Node.js", "version": "1.2" } ],
+                {
+                    "name": "ibm-java"
+                },
+                {
+                    "name": "IBM SDK for Node.js",
+                    "version": "1.2"
+                }
+            ],
             "userPackages": [
-                { "owner": "Anonymous", "name": "bootstrap", "version": "1.7.7" } ]
-       } 
+                {
+                    "owner": "Anonymous",
+                    "name": "bootstrap",
+                    "version": "1.7.7"
+                }
+            ]
+        }
     ]
 }

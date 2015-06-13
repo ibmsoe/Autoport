@@ -645,20 +645,41 @@ var jenkinsState = {
     },
     managedPackageTableReady: false,    // Draw managed package table if true
     managedPackageList: [],           //Managed Package list
+    serverGroup: "",                  // Takes value All or UBUNTU or RHEL depending on the "List x" button clicked. Variable to be used during Synch operation.
     listManagedPackages: function(ev) {
         jenkinsState.managedPackageTableReady = false;
         jenkinsState.loadingState.managedPackageListLoading = true;
 
         var id = ev.target.id;
-        var distro = "All";
+        jenkinsState.serverGroup = "All";
 
         if (id === "mlRHEL")
-            distro = "RHEL";
+            jenkinsState.serverGroup = "RHEL";
         else if (id === "mlUbuntu")
-            distro = "UBUNTU";
+            jenkinsState.serverGroup = "UBUNTU";
 
-        $.getJSON("/listManagedPackages", { distro: distro, package: $("#packageFilter_Multiple").val() },
+        $.getJSON("/listManagedPackages", { distro: jenkinsState.serverGroup, package: $("#packageFilter_Multiple").val() },
             listManagedPackagesCallback).fail(listManagedPackagesCallback);
+    },
+    addToManagedList: function(ev, el) {
+        $.getJSON("/addToManagedList",
+        {
+            package_name: el.package.packageName,
+            package_version: el.package.updateVersion,
+            distro: el.package.distro
+        },
+        editManagedListCallback).fail(editManagedListCallback);
+    },
+    removeFromManagedList: function(ev, el) {
+        $.getJSON("/removeFromManagedList",
+        {
+            package_name: el.package.packageName,
+            distro: el.package.distro
+        },
+        editManagedListCallback).fail(editManagedListCallback);
+    },
+    synchManagedPackageList: function() {
+        $.getJSON("/synchManagedPackageList", { serverGroup: jenkinsState.serverGroup }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
     }
 };
 
@@ -1643,6 +1664,20 @@ function listManagedPackagesCallback(data) {
     if (data.status === "ok") {
         jenkinsState.managedPackageList = data.packages;
         jenkinsState.managedPackageTableReady = true;
+    } else {
+        showAlert("Error!", data);
+    }
+}
+
+function editManagedListCallback(data) {
+    if (data.status === "ok") {
+        showAlert("Success!");
+    }
+}
+
+function synchManagedPackageListCallback(data) {
+    if (data.status === "ok") {
+        showAlert("Success!");
     } else {
         showAlert("Error!", data);
     }
