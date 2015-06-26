@@ -1073,6 +1073,8 @@ function processResultList(data) {
 
 function processBuildResults(data) {
     var tableContent = "";
+    var difftableConent ="";
+
     if (data.status != "ok") {
         showAlert("Error:", data);
     } else {
@@ -1141,10 +1143,15 @@ function processBuildResults(data) {
             data.results["failures"][data.rightCol]+"</th><th class=\"testResult\">"+
             data.results["errors"][data.rightCol]+"</th><th class=\"testResult\">"+
             data.results["skipped"][data.rightCol]+"</th></tr>";
+
         $("#prjHeader").html("for " + data.leftProject.Package + " version " +
             data.leftProject.Version + " on " + data.leftProject.Architecture +
             " / " + data.rightProject.Package + " version " +
             data.rightProject.Version + " on " + data.rightProject.Architecture);
+
+        //for diff output
+        $("#leftdiff").html(data.results["diff"][data.leftCol]);
+        $("#rightdiff").html(data.results["diff"][data.rightCol]);
     }
     $("#testResultsTable").html(tableContent);
     projectReportState.prjTableReady = true;
