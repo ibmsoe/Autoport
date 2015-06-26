@@ -40,6 +40,7 @@ def init():
     global pathForBatchFiles
     global localPathForTestResults
     global localPathForBatchFiles
+    global localPathForBatchTestResults
     global artifactsPathPrefix
     global threadPoolSize
 
@@ -56,6 +57,7 @@ def init():
     pathForBatchFiles = configOptions['pathforbatchfiles']
     localPathForTestResults = configOptions['localpathfortestresults']
     localPathForBatchFiles = configOptions['localpathforbatchfiles']
+    localPathForBatchTestResults = configOptions['localpathforbatchtestresults']
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
 

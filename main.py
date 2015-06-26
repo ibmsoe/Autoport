@@ -13,6 +13,7 @@ import os
 import re
 import threading
 import paramiko
+import ntpath
 from sharedData import SharedData
 from threadpool import makeRequests
 from time import localtime, strftime, sleep
@@ -405,8 +406,9 @@ def uploadBatchFile():
     return json.jsonify(status="ok")
 
 # Common routine for createJob and runBatchJob
+# TODO - added buildSystem = "NA" for batch jobs, need to add buildSystem to batch files
 def createJob_common(uid, id, tag, node, javaType,
-                     selectedBuild, selectedTest, selectedEnv, artifacts, buildSystem):
+                     selectedBuild, selectedTest, selectedEnv, artifacts, buildSystem = "NA"):
 
     # Get repository
     repo = globals.cache.getRepo(id)
@@ -510,12 +512,12 @@ def createJob_common(uid, id, tag, node, javaType,
         requests.get(startJobUrl, proxies=NO_PROXY)
 
         # Split off a thread to query for build completion and move artifacts to local machine
-        args = [((jobName, globals.localPathForTestResults), {})]
+        args = [((jobName, globals.localPathForTestResults, time), {})]
         threadRequests = makeRequests(moveArtifacts, args)
         [globals.threadPool.putRequest(req) for req in threadRequests]
 
         # Stays on the same page, after creating a new jenkins job.
-        return { 'status':"ok", 'sjobUrl':startJobUrl, 'hjobUrl':homeJobUrl }
+        return { 'status':"ok", 'sjobUrl':startJobUrl, 'hjobUrl':homeJobUrl, 'jobFolder':jobFolder}
 
     if r.status_code == 400:
         return { 'status':"failure", 'error':"jenkins HTTP error job exists : " + jobName, 'rstatus':r.status_code }
@@ -648,13 +650,14 @@ def createJob(i_id = None,
 
 # Polls the Jenkins master to see when a job has completed and moves artifacts over to local
 # storage once/if they are available
-def moveArtifacts(jobName, localBaseDir):
+def moveArtifacts(jobName, localBaseDir, time):
 
     outDir = ""
     checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
 
     # poll until job stops building
     building = True
+    print jobName
     while building:
         sleep(10)
         try:
@@ -726,7 +729,7 @@ def moveArtifacts(jobName, localBaseDir):
                 ftpClient.chdir(artifactsPath)
 
                 # Contruct time so that it works on windows.  No colons allowed
-                time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
+                #time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
 
                 localArtifactsPath = localBaseDir + jobName + "." + time + "/"
                 os.mkdir(localArtifactsPath)
@@ -777,6 +780,10 @@ def runBatchFile ():
         if fileBuf['config']['java'] == "IBM Java":
             javaType = "JAVA_HOME=/opt/ibm/java"
 
+        # Create batch results template, stores list of job names associated with batch file
+        print globals.localPathForBatchTestResults + ntpath.basename(batchName)
+        f = open(globals.localPathForBatchTestResults + ntpath.basename(batchName), 'a+')
+
         # Parse package data
         submittedJob = False
         for package in fileBuf['packages']:
@@ -786,7 +793,7 @@ def runBatchFile ():
             if selectedBuild == "":
                 continue
 
-            createJob_common(uid,
+            createJob_results = createJob_common(uid,
                       package['id'],
                       package['tag'],
                       node,
@@ -794,15 +801,42 @@ def runBatchFile ():
                       package['build']['selectedBuild'],
                       package['build']['selectedTest'],
                       package['build']['selectedEnv'],
-                      package['build']['artifacts'],
-                      package['build']['buildSystem'])
+                      package['build']['artifacts'])
             submittedJob = True
+
+            print createJob_results['jobFolder']
+            f.write(createJob_results['jobFolder'] + "\n")
+        f.close()
     else:
         return json.jsonify(status="failure", error="could not find batch file"), 404
 
     if submittedJob:
         return json.jsonify(status="ok")
     return json.jsonify(status="failure", error="batch file no project is buildable"), 404
+
+@app.route("/getBatchResults", methods=["GET", "POST"])
+def getBatchResults():
+    try:
+        batchName = request.form["batchName"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing batchName POST argument"), 400
+
+    f = open(globals.localPathForBatchTestResults + ntpath.basename(batchName), 'r')
+    results = []
+
+    for line in f:
+        jobName = line[:-1]
+
+        if os.path.exists(globals.localPathForTestResults + jobName):
+            status = "Completed"
+        else:
+            status = "Not Completed"
+
+        results.append({"name":jobName, "status":status})
+
+    f.close()
+        
+    return json.jsonify(status="ok", results=results)
 
 @app.route("/removeBatchFile", methods=["GET", "POST"])
 def removeBatchFile():
