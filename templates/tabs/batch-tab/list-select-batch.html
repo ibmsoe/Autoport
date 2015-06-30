@@ -46,6 +46,11 @@
             Archive
           </button>
         </a>
+        <a rv-on-click="batchState.showReport">
+          <button type="button" class="btn btn-primary">
+            Show Report
+          </button>
+        </a>
         <a rv-on-click="batchState.remove">
           <button type="button" class="btn btn-primary">
             <span class="no-text-glyphicon glyphicon glyphicon-remove"></span>
@@ -64,6 +69,38 @@
             <th data-field="owner" data-sortable="true">Owner</th>
             <th data-field="size" data-sortable="true">Size</th>
             <th data-field="datemodified" data-sortable="true">Date Modified</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+    
+    <!-- Show batch files reports table -->
+    <div rv-show="batchState.showBatchReportsTable">
+      <div id="batchReportsToolbar" class="btn-group">
+        <a>
+          <button type="button" class="btn btn-primary">
+            Test History
+          </button>
+        </a>
+        <a>
+          <button type="button" class="btn btn-primary">
+            Test Detail
+          </button>
+        </a>
+        <a>
+          <button type="button" class="btn btn-primary">
+            Test Compare (2)
+          </button>
+        </a>
+      </div>
+      <table class="table panel panel-default" id="batchReportsTable"
+        data-pagination="true" data-click-to-select="true"
+        data-toolbar="#batchReportsToolbar">
+        <thead>
+          <tr>
+            <th data-field="state"data-radio="true"></th>
+            <th data-field="name" data-sortable="true">Name</th>
+            <th data-field="status" data-sortable="true">Status</th>
           </tr>
         </thead>
       </table>

@@ -14,6 +14,7 @@ var globalState = {
     localPathForTestResults: "",
     pathForTestResults: "",
     localPathForBatchFiles: "",
+    localPathForBatchTestResults: "",
     pathForBatchFiles: "",
     githubToken: "",
     configUsername: "",
@@ -296,20 +297,28 @@ var batchState = {
     fileList: [],               // Stores batch files found in list/select
     selectedBatchFile: {},
     listLocalBatchFiles: function(ev) {
+        batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
         $.getJSON("/listBatchFiles/local", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
     listArchivedBatchFiles: function(ev) {
+        batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
         $.getJSON("/listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
     listAllBatchFiles: function(ev) {
+        batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
         $.getJSON("/listBatchFiles/all", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
+
+    // Batch reports member variables and methods
+    showBatchReportsTable: false,
+    currentBatchJobs: [],
+    selectedBatchJob: {},
 
     // Details member variables and methods
     batchFile: {},                          // content of batch file.  All fields resolved
@@ -385,6 +394,11 @@ var batchState = {
         batchState.showBatchFile = false;
         $.getJSON("/parseBatchFile", {batchName: batchState.selectedBatchFile.filename},
             parseBatchFileCallback, "json").fail(parseBatchFileCallback);
+    },
+    showReport: function(ev, el) {
+        batchState.showListSelectTable = false;
+        $.post("/getBatchResults", {batchName: batchState.selectedBatchFile.filename},
+            getBatchResultsCallback, "json").fail(getBatchResultsCallback);
     },
     remove: function(ev, el) {
         $.post("/removeBatchFile", {filename: batchState.selectedBatchFile.filename,
@@ -1530,6 +1544,14 @@ function runBatchFileCallback(data) {
     }
 }
 
+function getBatchResultsCallback(data) {
+    console.log("In getBatchResultsCallback");
+    batchState.currentBatchJobs = data.results;
+    console.log(batchState.currentBatchJobs);
+    batchState.showBatchReportsTable = true;
+    $('#batchReportsTable').bootstrapTable('load', batchState.currentBatchJobs);
+}
+
 function parseBatchFileCallback(data) {
     console.log("In parseBatchFileCallback");
     batchState.loading = false;
@@ -1576,6 +1598,7 @@ function parseBatchFileCallback(data) {
 function listBatchFilesCallback(data) {
     if (data.status === "ok") {
         batchState.fileList = data.results;
+        console.log(batchState.fileList);
         batchState.showListSelectTable = true;
 
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
@@ -1764,6 +1787,13 @@ $(document).ready(function() {
         buttonText: function(options, select) {
             return "Build server";
         }
+    });
+    // Initializes an empty bach reports table
+    $('#batchReportsTable').bootstrapTable({
+        data: []
+    });
+    $('#batchReportsTable').on('check.bs.table', function (e, row) {
+        batchState.selectedBatchJob = row;
     });
     // Initializes an empty batch list/select table
     $('#batchListSelectTable').bootstrapTable({
