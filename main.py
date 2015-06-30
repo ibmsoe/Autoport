@@ -113,6 +113,7 @@ def getJenkinsNodeDetails():
             elif detail['distro'] == "RHEL":
                 globals.nodeRHEL.append(nodeLabel)
         except KeyError:
+            print "No O/S information for node " + node 
             pass
 
     print "All nodes: ", globals.nodeLabels
@@ -416,7 +417,7 @@ def uploadBatchFile():
 
 # Common routine for createJob and runBatchJob
 # TODO - added buildSystem = "NA" for batch jobs, need to add buildSystem to batch files
-def createJob_common(uid, id, tag, node, javaType,
+def createJob_common(time, uid, id, tag, node, javaType,
                      selectedBuild, selectedTest, selectedEnv, artifacts, buildSystem = "NA"):
 
     # Get repository
@@ -459,11 +460,11 @@ def createJob_common(uid, id, tag, node, javaType,
         xml_default_branch.text = "tags/" + tag
         jobName += "." + tag
 
-    # Time job is created.
-    time = strftime("%Y-%m-%d %H:%M:%S", localtime())
+    # Time job is created.  Parameter to Jenkins.  Blanks allowed
+    timestr = strftime("%Y-%m-%d %H:%M:%S", time)
 
-    # Name of new Folder
-    jobFolder = jobName + "." + time
+    # Name of jenkins new Folder
+    jobFolder = jobName + "." + timestr
 
     xml_build_command.text = selectedBuild
     xml_test_command.text = selectedTest
@@ -478,7 +479,7 @@ def createJob_common(uid, id, tag, node, javaType,
 
     # Job metadata as passed to jenkins
     jobMetadataName = "meta.arti"
-    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Build System\":\"" + buildSystem + "\", \"Architecture\": \"" + node + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + time + "\"}"
+    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Build System\":\"" + buildSystem + "\", \"Architecture\": \"" + node + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + timestr + "\"}"
 
     # add parameters information
     i = 1
@@ -520,13 +521,18 @@ def createJob_common(uid, id, tag, node, javaType,
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
 
+        # local directory for build artifacts.  No colons allowed for windows compatibility
+        timestr = strftime("%Y-%m-%d-h%H-m%M-s%S", time)
+        artifactFolder = jobName + "." + timestr
+
         # Split off a thread to query for build completion and move artifacts to local machine
-        args = [((jobName, globals.localPathForTestResults, time), {})]
+        args = [((jobName, globals.localPathForTestResults, timestr), {})]
         threadRequests = makeRequests(moveArtifacts, args)
         [globals.threadPool.putRequest(req) for req in threadRequests]
 
         # Stays on the same page, after creating a new jenkins job.
-        return { 'status':"ok", 'sjobUrl':startJobUrl, 'hjobUrl':homeJobUrl, 'jobFolder':jobFolder}
+        return { 'status':"ok", 'sjobUrl':startJobUrl, 'hjobUrl':homeJobUrl,
+                 'jobFolder':jobFolder, 'artifactFolder': artifactFolder }
 
     if r.status_code == 400:
         return { 'status':"failure", 'error':"jenkins HTTP error job exists : " + jobName, 'rstatus':r.status_code }
@@ -642,7 +648,8 @@ def createJob(i_id = None,
         else:
             return json.jsonify(status="failure", error="missing build system"), 400
 
-    rc = createJob_common(uid, id, tag, node, javaType, selectedBuild, selectedTest, selectedEnv, artifacts, buildSystem)
+    rc = createJob_common(localtime(), uid, id, tag, node, javaType, selectedBuild,
+                          selectedTest, selectedEnv, artifacts, buildSystem)
 
     try:
         rcstatus = rc['status']
@@ -666,12 +673,12 @@ def moveArtifacts(jobName, localBaseDir, time):
 
     # poll until job stops building
     building = True
-    print jobName
     while building:
-        sleep(10)
         try:
             buildInfo = json.loads(requests.get(checkBuildUrl).text)
             building = buildInfo['building']
+            if building:
+                sleep(3)
         # check to make sure build isn't queued, if it is wait for it to dequeue
         except ValueError:
             checkQueueUrl = globals.jenkinsUrl + "/job/" + jobName + "/api/json"
@@ -688,6 +695,8 @@ def moveArtifacts(jobName, localBaseDir, time):
                 except ValueError:
                     print "project failed to start building/queuing" + jobName
                 count += 1
+            if count == 20:
+                return outDir
             building = False
 
     # grab the build artifacts through ftp if build was successful
@@ -737,9 +746,6 @@ def moveArtifacts(jobName, localBaseDir, time):
                 artifactsPath = artifactsPath + "archive/"
                 ftpClient.chdir(artifactsPath)
 
-                # Contruct time so that it works on windows.  No colons allowed
-                #time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
-
                 localArtifactsPath = localBaseDir + jobName + "." + time + "/"
                 os.mkdir(localArtifactsPath)
 
@@ -780,6 +786,8 @@ def runBatchFile ():
         except KeyError:
             return json.jsonify(status="failure", error=fileBuf['error']), 400
 
+        time = localtime()
+
         # Randomly generate a batch job UID to append to the job name to provide a grouping
         # for all jobs in the batch file for reporting purposes.
         uid = randint(globals.minRandom, globals.maxRandom)
@@ -790,7 +798,6 @@ def runBatchFile ():
             javaType = "JAVA_HOME=/opt/ibm/java"
 
         # Create batch results template, stores list of job names associated with batch file
-        print globals.localPathForBatchTestResults + ntpath.basename(batchName)
         f = open(globals.localPathForBatchTestResults + ntpath.basename(batchName), 'a+')
 
         # Parse package data
@@ -802,7 +809,8 @@ def runBatchFile ():
             if selectedBuild == "":
                 continue
 
-            createJob_results = createJob_common(uid,
+            createJob_results = createJob_common(time, 
+                      uid,
                       package['id'],
                       package['tag'],
                       node,
@@ -813,8 +821,7 @@ def runBatchFile ():
                       package['build']['artifacts'])
             submittedJob = True
 
-            print createJob_results['jobFolder']
-            f.write(createJob_results['jobFolder'] + "\n")
+            f.write(createJob_results['artifactFolder'] + "\n")
         f.close()
     else:
         return json.jsonify(status="failure", error="could not find batch file"), 404
@@ -948,7 +955,8 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer):
         requests.get(startJobUrl, proxies=NO_PROXY)
 
         # Move artifacts.  Wait for completion as we need to return content of file
-        outDir = moveArtifacts(jobName, globals.localPathForListResults)
+        time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
+        outDir = moveArtifacts(jobName, globals.localPathForListResults, time)
 
         # If present, read the json file and then delete it and its containing folder
         if outDir != "":
@@ -1021,10 +1029,11 @@ def queryNode(node, action):
         requests.get(startJobUrl, proxies=NO_PROXY)
 
         # This is a synchronous call.  Wait for job to complete
-        outDir = moveArtifacts(jobName, globals.localPathForListResults)
+        time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
+        outDir = moveArtifacts(jobName, globals.localPathForListResults, time)
 
         # If present, read the json file.  Let's not treat this as a fatal error
-        jsonData = []
+        jsonData = {}
         if outDir:
             localArtifactsFilePath = outDir + action + ".json"
             try:
