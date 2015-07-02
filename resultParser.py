@@ -289,19 +289,24 @@ class ResultParser:
         rightlog = rightf.readlines()
         rightf.close()
 
+        errorWords = self.getErrorWords('errorwords')
+        packageDict = self.buildPackageDict('UbuntuPackageList')
+
         lefttext = ""
         for line in leftlog:
-            text = (self.renderline(line).replace("&", "&amp;")
+            text = (line.replace("&", "&amp;")
                         .replace("<", "&lt;")
                         .replace(">", "&gt;"))
+            text = self.renderline(text, errorWords, packageDict)
             lefttext = lefttext + text
 
         righttext = ""
         for line in rightlog:
-            text = (self.renderline(line).replace("&", "&amp;")
+            text = (line.replace("&", "&amp;")
                         .replace("<", "&lt;")
                         .replace(">", "&gt;"))
-            righttext = lefttext + text
+            text = self.renderline(text, errorWords, packageDict)
+            righttext = righttext + text
 
         diff_obj = diff_match_patch.diff_match_patch()
         diffs = diff_obj.diff_main(lefttext, righttext)
@@ -333,11 +338,39 @@ class ResultParser:
 
         return diffcontent
 
-    def renderline(self, text):
-        highlitewords = ["not fount", "error", "failure", "not successful", "denied", "failed", "unable to", "no such", "unexpected", "not exist"]
-        for word in highlitewords:
-            if word in text.lower():
-                return ("""<span><font style=\"background:#ff9797;\">%s</font></span><br>""" % text)
+    def renderline(self, text, errorWords, packageDict):
+        if 'failures: 0' in text.lower() or 'errors: 0' in text.lower():
+            return text
+
+        for errword in errorWords:
+            if errword in text.lower():
+                print text
+                words = text.lower().split(' ')
+                for word in words:
+                    if packageDict.has_key(word):
+                        text = (text.replace(word,"<a href=\"http://packages.ubuntu.com/trusty/%s\">%s</a>"%(word,word)))
+                return ("""<span><font style=\"background:#ff9797;\">%s</font></span>""" % text.rstrip()+"\n")
 
         return text
+
+    def getErrorWords(self, filename):
+        errorWords = []
+        with open(filename, 'r') as f:
+            for line in f.readlines():
+                errorWords.append(line.strip('\n'))
+            f.close()
+        return errorWords
+
+    def buildPackageDict(self, filename):
+        dict = {}
+        with open(filename,'r') as f:
+            for line in f.readlines():
+                index = line.find(', ', 0)
+                packageName = line[:index]
+                packageDesc = line[index+2:]
+                if ' ' in packageName:
+                    packageName = packageName[:packageName.find(' ', 0)]
+                dict[packageName] = packageDesc
+            f.close()
+        return dict
 
