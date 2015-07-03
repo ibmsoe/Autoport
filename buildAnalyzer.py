@@ -62,7 +62,7 @@ def inferBuildSteps(listing, repo):
         'grep test': "npm test",			# Same for test command. Maybe we can pick up some extra arguments
         'grep env': "",
         'build' : "if [ -e package.json ]; then npm install > build_result.arti 2>&1; fi",
-        'test' : "npm test > test_result.arti 2>&1",
+        'test' : "if [ -e package.json ]; then npm test > test_result.arti 2>&1; fi",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "primary language",
