@@ -103,6 +103,8 @@ class ResultParser:
             buildsys = metadata.get('Build System','')
             if buildsys == 'Python':
                 result.append(self.PythonBuildSummary(filedir+'/test_result.arti'))
+            elif buildsys == 'JavaScript':
+                result.append(self.JavaScriptBuildSummary(filedir + '/test_result.arti'))
             else:
                 result.append(self.MavenBuildSummary(filedir+'/test_result.arti'))
         left_r = result[0]
@@ -373,4 +375,89 @@ class ResultParser:
                 dict[packageName] = packageDesc
             f.close()
         return dict
+    def JavaScriptBuildSummary(self, file, parsekeys=["failed", "error", "skipped", "passed"]):
 
+        totals = {}
+        for item in parsekeys:
+            totals[item] = 0
+        totals['duration'] = 0.0
+        testframework = ''
+
+        with codecs.open(file, encoding='utf-8', mode='rb')as f:
+            readlines = f.readlines()
+            f.close()
+
+            for linenumber, line in enumerate(readlines):
+                if testframework == '':
+                    if linenumber < 10:
+                        if line[0] == u'>':
+                            for c in ['mocha', 'testem', 'jasmine', 'jest']:
+                                if c in line:
+                                    testframework = c
+                                    break
+                    else:
+                        break
+                else:
+                    break
+            readlines.reverse()
+
+            if testframework == 'jasmine':  # 33 tests, 55 assertions, 0 failures
+                totalPattern = re.compile(r'(\d+) tests, (\d+) assertions, (\d+) failures')
+                for line in readlines:
+                    match = totalPattern.match(line)
+                    if match:
+                        totals['passed'] = int(match.group(1) + match.group(2))
+                        totals['failed'] = int(match.group(3))
+                        break
+            elif testframework == 'testem':
+                failPattern = re.compile(r'# fail (\d+)')
+                passPattern = re.compile(r'# pass (\d+)')
+                for line in readlines:
+                    match = failPattern.match(line)
+                    if match:
+                        totals['failed'] = int(match.group(1))
+                        break
+                    else:
+                        match = passPattern.match(line)
+                        if match:
+                            totals['passed'] = int(match.group(1))
+            elif testframework == 'jest':   # 1 test passed (1 total)
+                                        # Run time: 0.855s
+                passPattern = re.compile(r'(\d+) test passed \((\d+) total\)')
+                durationPattern = re.compile(r'Run time: (\d+.?\d*)s')
+                for line in readlines:
+                    match = durationPattern.match(line)
+                    if match:
+                        totals['passed'] = match.group(1)
+                        totals['failed'] = match.group(2) - match.group(1)
+                        break
+                    else:
+                        match = passPattern.match(line)
+                        if match:
+                            totals['duration'] = float(match.group(1))
+            else:                       # default  :  264 passing (18s)
+                failPattern = re.compile(r'\s+(\d+)\).+')
+                passPattern = re.compile(r'\s+(\d+) passing \((\d+[s|ms])\)')
+                for line in readlines:
+                    match = failPattern.match(line)
+                    if match:
+                        totals['failed'] = int(match.group(1))
+                        break
+                    else:
+                        match = passPattern.match(line)
+                        if match:
+                            totals['passed'] = int(match.group(1))
+                            durationstr = match.group(2)
+                            if durationstr[-2:] == 'ms':
+                                totals['duration'] = float(durationstr[:-2]) / 1000
+                            else:
+                                totals['duration'] = float(durationstr[:-1])
+
+        res = {}
+        res['total'] = totals['failed'] + totals['skipped'] + totals['passed']
+        res['failures'] = totals['failed']
+        res['errors']   = totals['error']
+        res['skipped']  = totals['skipped']
+        res['duration'] = totals['duration']
+        res['results']  = {}
+        return res
