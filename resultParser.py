@@ -291,8 +291,8 @@ class ResultParser:
         rightlog = rightf.readlines()
         rightf.close()
 
-        errorWords = self.getErrorWords('errorwords')
-        packageDict = self.buildPackageDict('UbuntuPackageList')
+        errorWords = self.getErrorWords('./data/rules/errorwords')
+        packageDict = self.buildPackageDict('./data/rules/LinuxPackageList')
 
         lefttext = ""
         for line in leftlog:
