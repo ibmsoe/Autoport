@@ -1,0 +1,192 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>DISTRIBUTION</name>
+          <description>The Linux distribution of the build server.</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+	  </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode></assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+#
+# This script will retrieve information of all installed packages from a build server.
+# RHEL and UBUNTU distributions are supported
+# Input:   DISTRIBUTION    :   Linux distribution of the build server
+#
+# Output:   A json file with following data:
+#              packageName:         name of the package
+#              packageInstalled:    set to true if the package PACKAGE_NAME is installed
+#              summary:             summary of the package
+#              installedVersion:    the installed version of the package PACKAGE_NAME. 'N/A' in case not installed.
+#              updateAvailable:     set to true if a new version of the package PACKAGE_NAME is available.
+#              updateVersion:       the latest version of the package PACKAGE_NAME available.
+#                                   If there are no updates and package is installed,'updateVersion' takes the same value as the
+#                                   'installedVersion' else it takes the value 'N/A'
+#
+# NOTE: For Ubuntu, this script depends on the presence of apt-show-versions package. In case it is not installed, we try to install it.
+#     The less than symbol has been escaped by substituting it with &lt; noticed when reading this file from the source code
+#
+
+set +o noclobber # Allow overwrite of files just in case it is set to off
+
+case $DISTRIBUTION in
+    "RHEL")
+        echo "#### Getting a list of all installed packages using command rpm -qa --queryformat '%{NAME}.%{ARCH}\t%{VERSION}-%{RELEASE}   %{SUMMARY}\n' | sed \"s/\"/'/g\"  "
+        rpm -qa --queryformat '%{NAME}.%{ARCH}\t%{VERSION}-%{RELEASE}   %{SUMMARY}\n' | sed "s/\"/'/g"  > InstalledPackagesInfo.txt  # get information about all installed packages
+        # The last part of the command replaces all double quotes to single quotes in dpkg output.
+
+        # Get information about updates for installed packages
+        echo "#### Getting a list of updates available for the installed packages. The command is yum list updates"
+        yum list updates > UpdatesForInstalledPackages.txt
+        lineNumber=$(cat -n UpdatesForInstalledPackages.txt | grep "Updated Packages" | awk '{print $1;}')  # get line number of the line where string "Updated Packages" is present. We want only those lines which come after this line.
+        if [ "$lineNumber" != "" ]; then
+            sed -i "1,${lineNumber}d" UpdatesForInstalledPackages.txt  # remove the lines from 1 till the $lineNumber
+        fi
+
+        echo "#### Iterating over the packages in the installed list and generating data for each."
+        echo '[' > packageListSingleSlave.json
+
+        packageNumber=1
+        while read line # Read a line i.e. read information about a single installed package
+        do
+            # Set variables
+            packageInstalled=true
+            updateAvailable=false
+            installedVersion="N/A"
+            summary="N/A"
+
+            packageName=$(echo $line | awk '{print $1}')        # Grab the first column of the line
+            installedVersion=$(echo $line | awk '{print $2}')   # Grab the second column of the line
+            summary=${line##*   }            # Grab the last field, data after the last  '   ' (three spaces), this is the summary
+            updateVersion=$installedVersion
+            # Then for the pkg, find the latest version:
+            catOutput=$(cat UpdatesForInstalledPackages.txt | grep $packageName)
+            if [ "${catOutput}x" != "x" ]; then
+                updateVersion=$(echo $catOutput | awk '{print $2}')   # Grab the second field
+                updateVersion=${updateVersion#*:}
+                updateAvailable=true
+            fi
+
+            prefix=","
+            if [ $packageNumber -eq 1 ]
+            then
+                prefix=""
+            fi
+            printf '%s{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s","summary":"%s"}\n' "$prefix" "$packageName" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$summary" >>  packageListSingleSlave.json
+
+            packageNumber=$((packageNumber+1))
+
+        done &lt; InstalledPackagesInfo.txt
+
+        echo ']' >> packageListSingleSlave.json
+        echo "#### Completed fetching data for installed packages."
+
+        rm -f InstalledPackagesInfo.txt
+        rm -f UpdatesForInstalledPackages.txt
+    ;;
+    "UBUNTU")
+        # Check if apt-show-versions is installed, else install it as we need it in this script
+        echo "#### Checking if apt-show-versions is installed. If not, we will try to install it as it is needed to generate list for installed packages."
+        output=$( dpkg -l | grep '^.i' | grep apt-show-versions)
+        aptShowVersionPackagePresent=true
+        if [ "${output}x" = "x" ]; then # package apt-show-versions is not installed, so install it
+            echo "#### apt-show-versions is not installed, hence installing it."
+            sudo apt-get update
+            sudo apt-get -y --force-yes install apt-show-versions
+            if [ $? -ne 0 ]; then
+                echo "#### Could not install apt-show-versions."
+                aptShowVersionPackagePresent=false
+            else
+                echo "#### Installed package apt-show-versions."
+            fi
+        else
+            echo "#### apt-show-versions is installed. Proceeding with package list generation."
+        fi
+
+        # If apt-show-versions is installed, proceed with generation of the json file
+        if [ $aptShowVersionPackagePresent = "true" ]; then
+            echo "#### Getting a list of all installed packages using command dpkg -l | grep '^.i' | sed \"s/\"/'/g\" "
+            dpkg -l | grep '^.i' | sed "s/\"/'/g" > InstalledPackagesInfo.txt # get information about all installed packages.
+            # The last part of the command replaces all double quotes to single quotes in dpkg output.
+
+            echo "#### Getting a list of updates available for the installed packages. The command is apt-show-versions -u"
+            apt-show-versions -u > UpdatesForInstalledPackages.txt  # get information about updates for installed packages
+
+            echo "#### Iterating over the packages in the installed list and generating data for each."
+            echo '[' > packageListSingleSlave.json
+
+            packageNumber=1
+            while read line # Read a line i.e. read information about a single installed package
+            do
+                # Set variables
+                packageInstalled=true
+                updateAvailable=false
+                installedVersion="N/A"
+                summary="N/A"
+
+                packageName=$(echo $line | awk '{print $2}')        # Grab the second column of the line
+                installedVersion=$(echo $line | awk '{print $3}')   # Grab the third column of the line
+                installedVersion=${installedVersion#*:}             # Sometimes the version has a &lt;digit>: before the version, removing it.
+                summary=${line##*  }                                # Grab the last field, data after the last  '  ' (two spaces), this is the installed version
+                updateVersion=$installedVersion
+                # Then for the pkg, find the latest version:
+                catOutput=$(cat UpdatesForInstalledPackages.txt | grep $packageName:)
+                if [ "${catOutput}x" != "x" ];then
+                    updateVersion=${catOutput##* }   # Grab the last field, data after the last ' ', this is the latest version
+                    updateVersion=${updateVersion#*:}
+                    updateAvailable=true
+                fi
+
+                prefix=","
+                if [ $packageNumber -eq 1 ]
+                then
+                    prefix=""
+                fi
+                printf '%s{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s","summary":"%s"}\n' "$prefix" "$packageName" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$summary" >>  packageListSingleSlave.json
+
+                packageNumber=$((packageNumber+1))
+
+            done &lt; InstalledPackagesInfo.txt
+
+            echo ']' >> packageListSingleSlave.json
+            echo "#### Completed fetching data for installed packages."
+
+            rm -f InstalledPackagesInfo.txt
+            rm -f UpdatesForInstalledPackages.txt
+        else
+            echo "#### Cannot fetch the package information as apt-show-versions could not be installed."
+            echo '{"Failure_reason": "Could not generate the package data as apt-show-versions could not be installed"}' > packageListSingleSlave.json
+        fi
+    ;;
+esac
+      </command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>*.json</artifacts>
+      <latestOnly>false</latestOnly>
+      <allowEmptyArchive>false</allowEmptyArchive>
+      <onlyIfSuccessful>true</onlyIfSuccessful>
+      <defaultExcludes>true</defaultExcludes>
+    </hudson.tasks.ArtifactArchiver>
+  </publishers>
+  <buildWrappers/>
+</project>
