@@ -228,7 +228,7 @@ class SharedData:
         os.remove(localPath)
 
         # Executing the command on the custom repository to add the file to
-        # exsisting repository.
+        # existing repository.
         exit_status, stderr = self.executeRemoteCommand(command)
 
         if exit_status != 0:
@@ -241,8 +241,11 @@ class SharedData:
     def uploadChefData(self):
         # This routine is responsible for uploading chef-data to Jenkins Master
         # and also uploading the latest cookbook to chef-server.
+
+        # Initial version in Managed List is 0.1.0
         localCookbookVersion = "0.0.0"
         sharedCookbookVersion = "0.0.0"
+
         filename = "chef-repo.tar.gz"
         localPath = self.__localDataDir + filename
         remotePath = self.__sharedDataDir
@@ -255,10 +258,14 @@ class SharedData:
 
         # Fetching cookbook_version from ManagedList.json on jenkins Master
         sharedData = self.getSharedData("ManagedList.json")
-        if localData.has_key('cookbook_version'):
-            localCookbookVersion = localData['cookbook_version']
-        if sharedData.has_key('cookbook_version'):
-            sharedCookbookVersion = sharedData['cookbook_version']
+
+        try:
+            if localData:
+                localCookbookVersion = localData['cookbook_version']
+            if sharedData:
+                sharedCookbookVersion = sharedData['cookbook_version']
+        except KeyError:
+            pass
 
         # Chef-data is uploaded to Jenkins Master
         # if the cookbook_version in ManagedList.json of jenkins Master is less than
