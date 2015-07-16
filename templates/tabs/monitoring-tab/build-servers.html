@@ -41,46 +41,38 @@
 
         <div rv-show="jenkinsState.singleSlavePackageTableReady">
           <div class="alert alert-success">
-            <div>Actions taken on the list below apply only to the chosen build server.  The managed package list is not updated. In this way you may customize the runtime environment of a given build server to facilitate a specific porting effort. Select this build server when submitting Jenkins jobs.</div>
+            <div>Actions taken on the list below apply only to the chosen build server.  The managed package list is not updated. In this way you may customize the runtime environment of a given build server to facilitate a specific porting effort. Select the package and then the action to be taken.</div>
           </div>
-          <br/>
-          <br/>
+          <div id="singleServerPackageListToolbar" class="btn-group">
+              <a rv-show="jenkinsState.selectedSingleSlavePackage.updateAvailable" rv-on-click="jenkinsState.installPackageForSingleSlave">
+                <button type="button" class="btn btn-primary">
+                  Update
+                </button>
+              </a> 
+              <a rv-show="jenkinsState.selectedSingleSlavePackage.packageInstalled" rv-on-click="jenkinsState.removePackageForSingleSlave">
+                <button type="button" class="btn btn-primary">
+                  Remove
+                </button>
+              </a>
+              <a rv-show="jenkinsState.showUnselectPackageButton" rv-on-click="jenkinsState.unselectPackageForSingleSlave" >
+                <button type="button" class="btn btn-primary">
+                  Unselect
+                </button>
+              </a>
+          </div>
 
           <!-- START SINGLE SERVER PACKAGE LIST TABLE -->
-          <table class="table panel panel-default">
+          <table class="table panel panel-default" id="singleServerPackageListTable" data-pagination="true" data-click-to-select="true"data-toolbar="#singleServerPackageListToolbar">
             <thead>
               <tr>
-                <th>Package</th>
-                <th>Installed version</th>
-                <th>Latest version</th>
-                <th>Actions</th>
+                <th data-field="state" data-radio="true"></th>
+                <th data-field="packageName" data-sortable="true">Package</th>
+                <th data-field="installedVersion" data-sortable="true">Installed Version</th>
+                <th data-field="updateVersion" data-sortable="true">Latest Version</th>
+                <th data-field="updateAvailable" data-sortable="true" data-formatter="updatableFormatter">Updatable</th>
+                <th data-field="summary" data-sortable="true">Package Summary</th>
               </tr>
             </thead>
-            <tbody rv-each-package="jenkinsState.packageListSingleSlave">
-              <tr class="result-row">
-                <td>
-                  { package.packageName }
-                </td>
-                <td>
-                  { package.installedVersion }
-                </td>
-                <td>
-                  { package.updateVersion }
-                </td>
-                <td>
-                  <a rv-if="package.updateAvailable" rv-on-click="jenkinsState.installPackageForSingleSlave">
-                    <button type="button" class="btn btn-primary">
-                      Install
-                    </button>
-                  </a>
-                  <a rv-if="package.packageInstalled" rv-on-click="jenkinsState.removePackageForSingleSlave">
-                    <button type="button" class="btn btn-primary">
-                      Remove
-                    </button>
-                  </a>
-                </td>
-              </tr>
-            </tbody>
           </table>
           <!-- END SINGLE SERVER PACKAGE LIST TABLE -->
         </div>

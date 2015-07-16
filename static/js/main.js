@@ -607,7 +607,7 @@ var jenkinsState = {
     buildServer: "",                        // The selected slave/ build server to perform a list package operation
     changeBuildServer: function () {
         jenkinsState.buildServer =  $("#singleJenkinsBuildServers").find(":selected").text();
-        jenkinsState.singleSlavePackageTableReady = false; //hide the table if user changes the build server/slave selection
+        jenkinsState.singleSlavePackageTableReady = false; // hide the table if user changes the build server/slave selection
     },
     loadingState: {
         packageListLoading: false,
@@ -616,10 +616,14 @@ var jenkinsState = {
         managedPackageActionLoading: false,
     },
     singleSlavePackageTableReady: false,    // Draw package table for single slave if true
-    packageListSingleSlave: [],             //Package list retrieved for a Single Slave
+    packageListSingleSlave: [],             // Package list retrieved for a Single Slave
+    selectedSingleSlavePackage: {},         // Package selected by the user
+    showUnselectPackageButton: false,       // True if a package is selected, false otherwise
     listPackageForSingleSlave: function(ev) {
         jenkinsState.singleSlavePackageTableReady = false;
         jenkinsState.loadingState.packageListLoading = true;
+        jenkinsState.selectedSingleSlavePackage = [];
+        jenkinsState.showUnselectPackageButton = false;
         $.getJSON("/listPackageForSingleSlave",
         {
             packageFilter: $("#packageFilter_Single").val(),
@@ -627,39 +631,44 @@ var jenkinsState = {
         },
         listPackageForSingleSlaveCallback).fail(listPackageForSingleSlaveCallback);
     },
-    installPackageForSingleSlave: function(ev, el) {
+    unselectPackageForSingleSlave: function(ev) {
+        $("#singleServerPackageListTable").bootstrapTable("uncheckBy", {field:"packageName", values:[jenkinsState.selectedSingleSlavePackage.packageName]})
+        jenkinsState.selectedSingleSlavePackage = [];
+        jenkinsState.showUnselectPackageButton = false;
+    },
+    installPackageForSingleSlave: function(ev) {
         var action = ""
 
         // If package is installed, update it else if package is not installed, install it
-        if (el.package.packageInstalled == true)
+        if (jenkinsState.selectedSingleSlavePackage.packageInstalled == true)
             action = "update"
-        else if (el.package.packageInstalled == false)
+        else if (jenkinsState.selectedSingleSlavePackage.packageInstalled == false)
             action = "install"
 
         jenkinsState.loadingState.packageActionLoading = true;
         $.getJSON("/managePackageForSingleSlave",
         {
-            package_name: el.package.packageName,
-            package_version: el.package.updateVersion,
+            package_name: jenkinsState.selectedSingleSlavePackage.packageName,
+            package_version: jenkinsState.selectedSingleSlavePackage.updateVersion,
             action: action,
             buildServer: jenkinsState.buildServer
         },
         managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
     },
-    removePackageForSingleSlave: function(ev, el) {
+    removePackageForSingleSlave: function(ev) {
         jenkinsState.loadingState.packageActionLoading = true;
         $.getJSON("/managePackageForSingleSlave",
         {
-            package_name: el.package.packageName,
-            package_version: el.package.installedVersion,
+            package_name: jenkinsState.selectedSingleSlavePackage.packageName,
+            package_version: jenkinsState.selectedSingleSlavePackage.installedVersion,
             action: "remove",
             buildServer: jenkinsState.buildServer
         },
         managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
     },
-    managedPackageTableReady: false,    // Draw managed package table if true
-    managedPackageList: [],           //Managed Package list
-    serverGroup: "",                  // Takes value All or UBUNTU or RHEL depending on the "List x" button clicked. Variable to be used during Synch operation.
+    managedPackageTableReady: false,   // Draw managed package table if true
+    managedPackageList: [],            // Managed Package list
+    serverGroup: "",                   // Takes value All or UBUNTU or RHEL depending on the "List x" button clicked. Variable to be used during Synch operation.
     listManagedPackages: function(ev) {
         jenkinsState.managedPackageTableReady = false;
         jenkinsState.loadingState.managedPackageListLoading = true;
@@ -1672,6 +1681,8 @@ function listPackageForSingleSlaveCallback(data) {
     if (data.status === "ok") {
         jenkinsState.packageListSingleSlave = data.packageData
         jenkinsState.singleSlavePackageTableReady = true;
+
+        $('#singleServerPackageListTable').bootstrapTable('load', jenkinsState.packageListSingleSlave);
     } else {
         showAlert("Error!", data);
     }
@@ -1802,4 +1813,17 @@ $(document).ready(function() {
     $('#batchListSelectTable').on('check.bs.table', function (e, row) {
         batchState.selectedBatchFile = row;
     });
+    // Initializes an empty package list table on the single slave panel
+    $('#singleServerPackageListTable').bootstrapTable({
+        data: []
+    });
+    $('#singleServerPackageListTable').on('check.bs.table', function (e, row) {
+        jenkinsState.selectedSingleSlavePackage = row;
+        jenkinsState.showUnselectPackageButton = true;
+    });
+    $('#singleServerPackageListTable').on('page-change.bs.table', function (e, row) {
+        // On a page change, Bootstrap addon unchecks the package checked by the user. In order to show the package it as selected once the user goes back to the earlier page, do the following:
+        $("#singleServerPackageListTable").bootstrapTable("checkBy", {field:"packageName", values:[jenkinsState.selectedSingleSlavePackage.packageName]})
+    });
+
 });

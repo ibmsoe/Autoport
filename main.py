@@ -113,7 +113,7 @@ def getJenkinsNodeDetails():
             elif detail['distro'] == "RHEL":
                 globals.nodeRHEL.append(nodeLabel)
         except KeyError:
-            print "No O/S information for node " + node 
+            print "No O/S information for node " + node
             pass
 
     print "All nodes: ", globals.nodeLabels
@@ -809,7 +809,7 @@ def runBatchFile ():
             if selectedBuild == "":
                 continue
 
-            createJob_results = createJob_common(time, 
+            createJob_results = createJob_common(time,
                       uid,
                       package['id'],
                       package['tag'],
@@ -851,7 +851,7 @@ def getBatchResults():
         results.append({"name":jobName, "status":status})
 
     f.close()
-        
+
     return json.jsonify(status="ok", results=results)
 
 @app.route("/removeBatchFile", methods=["GET", "POST"])
@@ -880,23 +880,183 @@ def listBatchFiles(repositoryType):
         return json.jsonify(status="failure", error="Invalid repository type"), 400
     return json.jsonify(status="ok", results=batch.listBatchFiles(repositoryType, filt.lower()))
 
-# List installed and available status of the package in packageName by creating and triggering a Jenkins job
+# List information about packages on a build server by creating and triggering a Jenkins job on it
 @app.route("/listPackageForSingleSlave")
 def listPackageForSingleSlave():
-    packageName = request.args.get("packageFilter", "")
+    packageFilter = request.args.get("packageFilter", "")
     selectedBuildServer = request.args.get("buildServer", "")
 
-    if packageName == "":
-        return json.jsonify(status="failure", error="Package name not entered"), 400
     if selectedBuildServer == "":
         return json.jsonify(status="failure", error="Build server not selected"), 400
 
-    results = listPackageForSingleSlave_common(packageName, selectedBuildServer)
+    if packageFilter == "":
+        results = queryInstalledPackagesForSingleSlave(selectedBuildServer)
+    else:
+        results = {}
+        results['error'] = "Not implemented yet"
 
     try :
         return json.jsonify(status="ok", packageData=results['packageData'])
+
     except KeyError:
         return json.jsonify(status="failure", error=results['error']), 404
+
+def queryInstalledPackagesForSingleSlave(selectedBuildServer):
+# TODO Re-factor this code and the one to be written for searchPackagesForSingleSlave to use common function, Also check the one used by listManagedPackages.
+
+# Read template XML file
+    tree = ET.parse("./config_template_query_installed_packages_single_slave.xml")
+    root = tree.getroot()
+
+    # Find elements we want to modify
+    xml_node = root.find("./assignedNode")
+    xml_parameter = root.find("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
+
+    # Modify selected elements
+    xml_node.text = selectedBuildServer
+
+    buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
+
+    # add parameters information
+    xml_parameter.text = buildServerDistribution
+
+    # Set Job name
+    uid = randint(globals.minRandom, globals.maxRandom)
+    jobName = globals.localHostName + '.' + str(uid) + '.' + selectedBuildServer + '.' + "listPackageSingleSlave"
+
+    # Add header to the config
+    configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
+
+    # Send to Jenkins
+    NO_PROXY = {
+        'no': 'pass',
+    }
+
+    r = requests.post(
+        globals.jenkinsUrl + "/createItem",
+        headers = {
+            'Content-Type': 'application/xml'
+        },
+        params = {
+            'name': jobName
+        },
+        data = configXml,
+        proxies = NO_PROXY
+    )
+
+    if r.status_code == 200:
+        # Success, send the jenkins job and start it right away.
+        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
+
+        # Start Jenkins job
+        requests.get(startJobUrl, proxies=NO_PROXY)
+
+        # Move artifacts.  Wait for completion as we need to return content of file
+        time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
+        outDir = moveArtifacts(jobName, globals.localPathForListResults, time)
+
+        # If present, read the json file and then delete it and its containing folder
+        if outDir != "":
+            localArtifactsFilePath = outDir + "packageListSingleSlave.json"
+            packageJsonFile = open(localArtifactsFilePath)
+            packageData = json.load(packageJsonFile)
+            packageJsonFile.close()
+
+            # Delete the json file and its containing folder
+            os.remove(localArtifactsFilePath)
+            os.rmdir(outDir)
+
+            # In case we were not able to generate the package data due to absence of apt-show-versions package on Ubuntu server, the json file has contents: {"Failure_reason": "Could not generate the package data"}.
+            key = "Failure_reason"
+            if key in packageData:
+                failure_reason = packageData[key]
+                return { 'status': "failure", 'error': failure_reason }
+            else:
+                return { 'status': "ok", 'packageData': packageData }
+
+        return { 'status': "failure", 'error': "Did not transfer package file" }
+
+    if r.status_code == 400:
+        return { 'status': "failure", 'error': "Could not create/trigger the Jenkins job" }
+
+# Query detailed Jenkin node state for managed lists
+def queryNode(node, action):
+
+    # Read template XML file
+    tree = ET.parse("./config_template_query_slave.xml")
+    root = tree.getroot()
+    # Find elements we want to modify
+    xml_node = root.find("./assignedNode")
+    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
+
+    # Modify selected elements
+    xml_node.text = node
+
+    # add parameters information
+    i = 1
+    for param in xml_parameters:
+        if i == 1:
+            param.text = node
+        elif i == 2:
+            param.text = action
+        i += 1
+
+    # Set Job name
+    uid = randint(globals.minRandom, globals.maxRandom)
+    jobName = globals.localHostName + '.' + str(uid) + '.' + node + '.' + "querySingleSlave"
+
+    # Add header to the config
+    configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
+
+    # Send to Jenkins
+    NO_PROXY = {
+        'no': 'pass',
+    }
+
+    r = requests.post(
+        globals.jenkinsUrl + "/createItem",
+        headers = {
+            'Content-Type': 'application/xml'
+        },
+        params = {
+            'name': jobName
+        },
+        data = configXml,
+        proxies = NO_PROXY
+    )
+
+    if r.status_code == 200:
+        # Success, send the jenkins job and start it right away.
+        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
+
+        # Start Jenkins job
+        requests.get(startJobUrl, proxies=NO_PROXY)
+
+        # This is a synchronous call.  Wait for job to complete
+        time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
+        outDir = moveArtifacts(jobName, globals.localPathForListResults, time)
+
+        # If present, read the json file.  Let's not treat this as a fatal error
+        jsonData = {}
+        if outDir:
+            localArtifactsFilePath = outDir + action + ".json"
+            try:
+                jsonFile = open(localArtifactsFilePath)
+                jsonData = json.load(jsonFile)
+                jsonFile.close()
+            except KeyError:
+                pass
+            # Delete the json file and its containing folder
+            os.remove(localArtifactsFilePath)
+            os.rmdir(outDir)
+
+        return { 'status': "success", 'detail': jsonData }
+
+    if r.status_code == 400:
+        return { 'status': "failure", 'error': "Could not create/trigger the Jenkins Node Query job" }
+
+    return { 'status': "failure", 'error': "Unknown failure"  }
+
 
 def listPackageForSingleSlave_common(packageName, selectedBuildServer):
 

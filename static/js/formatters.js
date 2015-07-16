@@ -1,4 +1,8 @@
-// Rivets.js formatters
+// This file has the formatters used for Rivet.js and for Bootstrap Table addon
+// When adding a new formatter, add it in the appropriate section
+
+/************************************* Rivets.js formatters **********************************************/
+
 // rv-size formatter
 rivets.formatters.size = function(value) {
 	if(value > 1024) {
@@ -63,3 +67,10 @@ rivets.formatters.isProjectCompare = function(value) {
 rivets.formatters.isLocal = function(value) {
     return value === "local";
 };
+
+/************************************* Bootstrap Table addon formatters *********************************************/
+
+// Returns 'Yes' if the package is up-datable, 'No' otherwise
+function updatableFormatter(value, row) {
+    return (value === true ? "Yes" : "No");
+}
