@@ -592,6 +592,7 @@ var jenkinsState = {
     jenkinsSlavePanel: false,
     manageSingleSlavePanel: false,
     manageMultipleSlavePanel: false,
+    uploadPackagePanel: false,
     setJenkinsPanel: function(ev) {
         jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
     },
@@ -603,6 +604,9 @@ var jenkinsState = {
     },
     setManageMultipleSlavePanel: function(ev) {
         jenkinsState.manageMultipleSlavePanel = (jenkinsState.manageMultipleSlavePanel) ? false : true;
+    },
+    setUploadPackagePanel: function(ev) {
+        jenkinsState.uploadPackagePanel = (jenkinsState.uploadPackagePanel) ? false : true;
     },
     buildServer: "",                        // The selected slave/ build server to perform a list package operation
     changeBuildServer: function () {
@@ -694,6 +698,26 @@ var jenkinsState = {
     },
     synchManagedPackageList: function() {
         $.getJSON("/synchManagedPackageList", { serverGroup: jenkinsState.serverGroup }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
+    },
+    uploadPackage: function (ev) {
+        jenkinsState.loadingState.packageUploadLoading = true
+        var file = $('#packageFile')[0].files[0];
+
+        var formData = new FormData();
+        formData.append('packageFile', file);
+
+                $.ajax({
+                 url: "/uploadToRepo",
+                 type: 'POST',
+                 data: formData,
+                        async: true,
+                success: uploadPackageCallback,
+                        cache: false,
+                contentType: false,
+                        processData: false
+                 }).fail(uploadPackageCallback);
+
+            return false;
     }
 };
 
@@ -905,6 +929,10 @@ $('#query').change(doSearch);
 
 $('#batchFile').change(function () {
     $('#uploadFilename').val("File selected:  " + $('#batchFile').val());
+});
+
+$('#packageFile').change(function () {
+    $('#uploadPackageName').val("File selected: " + $('#packageFile').val());
 });
 
 function showAlert(message, data) {
@@ -1509,6 +1537,17 @@ function uploadBatchFileCallback(data) {
     console.log("In uploadBatchFileCallback");
     if (data.status !== "ok") {
         showAlert("", data);
+    }
+}
+
+function uploadPackageCallback(data) {
+    jenkinsState.loadingState.packageUploadLoading = false
+    console.log("In uploadPackageCallback");
+    if (data.status !== "ok") {
+        showAlert("", data);
+    }
+    if (data.status == "ok") {
+        showAlert("Uploaded Successfully !");
     }
 }
 

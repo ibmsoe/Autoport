@@ -1,0 +1,21 @@
+<div class="jumbotron">
+  <div class="btn btn-default btn-block" rv-on-click="jenkinsState.setUploadPackagePanel">
+    <h2 class="text-center">Upload Packages To Repository</h2>
+  </div>
+
+  <div rv-show="jenkinsState.uploadPackagePanel" class="input-group jumbotron-button-content" style="">
+    <input type="text" disabled="" id="uploadPackageName" placeholder="No file selected for uploading." class="form-control">
+    <div class="input-group-btn">
+      <div class="btn btn-default btn-file">
+        Select File <input type="file" name="packageFile" id="packageFile">
+      </div>
+    </div>
+    <div class="input-group-btn">
+      <div rv-on-click="jenkinsState.uploadPackage" class="btn btn-primary">
+        Upload
+      </div>
+    </div>
+  </div>
+</br>
+{% include "tabs/monitoring-tab/package-upload-loading.html" %}
+</div>

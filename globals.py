@@ -77,14 +77,15 @@ def init():
     global maxRandom
     global localPathForListResults
     global localPathForConfig
+    global localPathForPackages
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
 
     # used for caching repo data
     cache = Cache(github)
-   
-    # create pool of worker threads that query Jenkins for job completion 
+
+    # create pool of worker threads that query Jenkins for job completion
     threadPool = ThreadPool(threadPoolSize)
 
     # get local hostname to append to job names
@@ -96,6 +97,7 @@ def init():
 
     localPathForListResults="./data/list_results/"
     localPathForConfig="./data/config/"
+    localPathForPackages="./data/packages/"
 
     nodeLabels = []
     nodeNames = []
