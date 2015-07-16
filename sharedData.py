@@ -34,25 +34,33 @@
 import os
 import globals
 import paramiko
+import tarfile
+import zipfile
 from flask import json
 from collections import OrderedDict
+from contextlib import closing
+from distutils.version import StrictVersion
 
 class SharedData:
     def __init__(self, jenkinsHost,
             jenkinsUser="root",
             jenkinsKey=globals.configJenkinsKey,
-            sharedDataDir="/var/opt/autoport/"):
+            sharedDataDir="/var/opt/autoport/",
+            repoPathPrefix="/var/www/autoport_repo"):
         self.__jenkinsHost = jenkinsHost
         self.__jenkinsUser = jenkinsUser
         self.__jenkinsKey = jenkinsKey
         self.__sharedDataDir = sharedDataDir
+        self.__repoPathPrefix = repoPathPrefix
         self.__localDataDir = globals.localPathForConfig
+        self.__localPackageDir = globals.localPathForPackages
         self.__localHostName = globals.localHostName
         try:
             self.__jenkinsSshClient = paramiko.SSHClient()
             self.__jenkinsSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.__jenkinsSshClient.connect(self.__jenkinsHost, username=self.__jenkinsUser, key_filename=self.__jenkinsKey)
             self.__jenkinsFtpClient = self.__jenkinsSshClient.open_sftp()
+            self.__jenkinsTransportSession = self.__jenkinsSshClient.get_transport()
         except IOError as e:
             print str(e)
             assert(False)
@@ -125,6 +133,149 @@ class SharedData:
             assert(False)
 
         return sharedPath
+
+    def putLocalFile(self, file):
+        # Saving file to a local path on the autoport host.
+        try:
+            localPath = os.path.join(self.__localPackageDir, file.filename)
+            file.save(localPath)
+        except IOError as e:
+            print str(e)
+            assert(False)
+        return localPath
+
+    def allowedRepoPkgExtensions(self, filename):
+        # Check the valid file types to be uploaded to repository
+        # based on the extensions.
+
+        # Add extra extensions to the list if required in future.
+
+        EXTENSIONS = ['.rpm','.deb','.zip','tar.gz','tar.bz2']
+        return any([filename.endswith(x) for x in EXTENSIONS])
+
+    def getRepoDetails(self, localPath, filename):
+        # Framing remotepath and command, to transfer the file
+        # and update the custom repository
+        # based on type (rpm/deb/tar.gz)
+        repoPath = ""
+        command  = ""
+        repo_base_dir = self.__repoPathPrefix
+        name, extension = os.path.splitext(localPath)
+        if extension == '.rpm':
+            repoPath = "%s/rpms" % (repo_base_dir)
+            command = "createrepo --update -v %s" % (repoPath)
+        elif extension == '.deb':
+            repoPath = "%s/debs/ubuntu" % (repo_base_dir)
+            command = "reprepro -V -b %s includedeb autoport_repo \
+                       %s/%s" % (repoPath, repoPath, filename)
+        elif tarfile.is_tarfile(localPath) or zipfile.is_zipfile(localPath):
+            repoPath = "%s/archives/" % (repo_base_dir)
+            command = ""
+        return repoPath, command
+
+    def putRemoteFile(self, localPath, remotePath, filename):
+        # Transfer the file to remote location.
+        try:
+            self.__jenkinsFtpClient.chdir(remotePath)
+        except IOError as e:
+            self.__jenkinsFtpClient.mkdir(remotePath)
+        try:
+            remotePath = os.path.join(remotePath, filename)
+            self.__jenkinsFtpClient.put(localPath, remotePath)
+
+        except IOError as e:
+            print str(e)
+            assert(False)
+
+    def executeRemoteCommand(self, command):
+        # Execute remote commands on Jenkins Master
+        stderr = ""
+        exit_status = 0
+        if command:
+            transport = self.__jenkinsTransportSession
+            channel = transport.open_channel(kind = "session")
+            channel.exec_command(command)
+            exit_status = channel.recv_exit_status()
+            if exit_status != 0:
+                stderr = channel.makefile_stderr('rb', -1).readlines()
+        return exit_status, stderr
+
+    def buildTarFile(self, output_filename, source_dir):
+        # Routine to create tar file
+        with closing(tarfile.open(output_filename, "w:gz")) as tar:
+            tar.add(source_dir, arcname=os.path.basename(source_dir))
+
+    def uploadPackage(self, file):
+
+        # Saving the file to a local path on autoport host
+        localPath = self.putLocalFile(file)
+
+        # Based on the file type, deciding the remote path where the file is
+        # to be saved and framing the appropriate command to add it to custom repository.
+        remotePath, command  = self.getRepoDetails(localPath, file.filename)
+
+        # If no remotePath is returned , file is not a valid rpm/deb or archive
+        # hence deleting the package uploaded to temporary location
+        if not remotePath:
+            os.remove(localPath)
+            return "Inappropriate or Invalid file-type"
+
+        # Saving the file to remote path on the custom repository
+        self.putRemoteFile(localPath, remotePath, file.filename)
+
+        # After the file is sucessfully saved to the remote location, deleting
+        # the file from local path on autoport host.
+        os.remove(localPath)
+
+        # Executing the command on the custom repository to add the file to
+        # exsisting repository.
+        exit_status, stderr = self.executeRemoteCommand(command)
+
+        if exit_status != 0:
+            # In case there is a failure in adding packages to repository,
+            # clean up action would run to remove the uploaded package.
+            cleanup_command = "rm -rf %s/%s" % (remotePath, file.filename)
+            self.executeRemoteCommand(cleanup_command)
+            return stderr
+
+    def uploadChefData(self):
+        # This routine is responsible for uploading chef-data to Jenkins Master
+        # and also uploading the latest cookbook to chef-server.
+        localCookbookVersion = "0.0.0"
+        sharedCookbookVersion = "0.0.0"
+        filename = "chef-repo.tar.gz"
+        localPath = self.__localDataDir + filename
+        remotePath = self.__sharedDataDir
+
+        # Building tar file of the chef-repo and placing in local config dir
+        self.buildTarFile(localPath, "chef-repo")
+
+        # Fetching cookbook_version from ManagedList.json on autoport instance
+        localData = self.getLocalData("ManagedList.json")
+
+        # Fetching cookbook_version from ManagedList.json on jenkins Master
+        sharedData = self.getSharedData("ManagedList.json")
+        if localData.has_key('cookbook_version'):
+            localCookbookVersion = localData['cookbook_version']
+        if sharedData.has_key('cookbook_version'):
+            sharedCookbookVersion = sharedData['cookbook_version']
+
+        # Chef-data is uploaded to Jenkins Master
+        # if the cookbook_version in ManagedList.json of jenkins Master is less than
+        # cookbook_version in ManagedList.json of autoport host
+
+        if StrictVersion(localCookbookVersion) > StrictVersion(sharedCookbookVersion):
+            # Transfer the chef tar file to the shared location on Jenkins Master
+            self.putRemoteFile(localPath, remotePath, filename)
+
+            command = "cd "+ remotePath + "&&tar -xvf " + filename + "&&cd chef-repo&&knife ssl fetch&&knife upload /"
+            exit_status, stderr = self.executeRemoteCommand(command)
+
+            # Transfer ManagedList to the shared location on Jenkins Master
+            # only if cookbook upload operation is successful
+            if exit_status == 0:
+                self.putSharedData(localData, sharedData)
+            return stderr
 
     def getDistro(self, buildServer):
         distroName = ""

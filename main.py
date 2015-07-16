@@ -1608,7 +1608,47 @@ def archiveProjects():
     errors, alreadyThere = catalog.archiveResults(projects)
     return json.jsonify(status="ok", errors=errors, alreadyThere=alreadyThere)
 
+
+#Upload rpms debs and archives to custom repository
+@app.route('/uploadToRepo', methods=['GET','POST'])
+def uploadToRepo():
+    postedFile = dict(request.files)
+    try:
+        file = postedFile['packageFile'][0]
+    except KeyError:
+        return json.jsonify(status="failure",
+                    error="No File selected for upload"), 400
+
+    # Checking package extension before uploading
+    if file and sharedData.allowedRepoPkgExtensions(file.filename):
+        status_msg = sharedData.uploadPackage(file)
+        if status_msg:
+           return json.jsonify(status="failure",
+                error=status_msg), 400
+        else:
+            return json.jsonify(status="ok")
+    else:
+        return json.jsonify(status="failure",
+                error="Inappropriate file-type"), 400
+
+def autoportInitialisation():
+    # This is the method which would be called in main , even before
+    # starting the flask application. This would be responsibe for doing
+    # intial setup which is required for autoport application.
+
+    # Uploading chef data to chef-server as part of intial setup.
+
+    console_out = sharedData.uploadChefData()
+    if console_out:
+        # Even if chef-data upload fails we allow the application to start up
+        # but reason of failure is displayed on the stdout.
+        print "Applcation intialisation failed.\n"
+        print "Failure Reason: %s" %console_out
+
 if __name__ == "__main__":
+
+    autoportInitialisation()
+
     p = argparse.ArgumentParser()
     p.add_argument("-p", "--public",               action="store_true", help="specifies for the web server to listen over the public network, defaults to only listening on private localhost")
     p.add_argument("-u", "--jenkinsURL",                                help="specifies the URL for the Jenkins server, defaults to '" + globals.jenkinsUrl + "'")
