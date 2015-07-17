@@ -889,11 +889,15 @@ def listPackageForSingleSlave():
     if selectedBuildServer == "":
         return json.jsonify(status="failure", error="Build server not selected"), 400
 
+    # If packageFilter is not provided, get info only about installed packages. Else get info about packages matching the filter
     if packageFilter == "":
-        results = queryInstalledPackagesForSingleSlave(selectedBuildServer)
+        configXmlFilePath="./config_template_query_installed_packages_single_slave.xml"
+        jobNameSuffix = "listAllInstalledPackagesSingleSlave"
     else:
-        results = {}
-        results['error'] = "Not implemented yet"
+        configXmlFilePath = "./config_template_search_packages_single_slave.xml"
+        jobNameSuffix = "listAllPackagesSingleSlave"
+
+    results = createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, configXmlFilePath, jobNameSuffix)
 
     try :
         return json.jsonify(status="ok", packageData=results['packageData'])
@@ -901,28 +905,30 @@ def listPackageForSingleSlave():
     except KeyError:
         return json.jsonify(status="failure", error=results['error']), 404
 
-def queryInstalledPackagesForSingleSlave(selectedBuildServer):
-# TODO Re-factor this code and the one to be written for searchPackagesForSingleSlave to use common function, Also check the one used by listManagedPackages.
-
+def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, configXmlFilePath, jobNameSuffix):
 # Read template XML file
-    tree = ET.parse("./config_template_query_installed_packages_single_slave.xml")
+    tree = ET.parse(configXmlFilePath)
     root = tree.getroot()
 
-    # Find elements we want to modify
+    # Assign the node where we want to run the Jenkins job
     xml_node = root.find("./assignedNode")
-    xml_parameter = root.find("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
-
-    # Modify selected elements
     xml_node.text = selectedBuildServer
 
+    # Add the values for the Jenkins Job parameters
+    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
     buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
-
     # add parameters information
-    xml_parameter.text = buildServerDistribution
+    job_input_param_number = 1
+    for param in xml_parameters:
+        if job_input_param_number == 1:
+            param.text = buildServerDistribution
+        elif job_input_param_number == 2:
+            param.text = packageFilter
+        job_input_param_number += 1
 
     # Set Job name
     uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = globals.localHostName + '.' + str(uid) + '.' + selectedBuildServer + '.' + "listPackageSingleSlave"
+    jobName = globals.localHostName + '.' + str(uid) + '.' + selectedBuildServer + '.' + jobNameSuffix
 
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
