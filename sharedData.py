@@ -150,7 +150,7 @@ class SharedData:
 
         # Add extra extensions to the list if required in future.
 
-        EXTENSIONS = ['.rpm','.deb','.zip','tar.gz','tar.bz2']
+        EXTENSIONS = ['.rpm', '.deb', '.zip', '.tar', '.tgz', '.tar.gz', '.tar.bz2']
         return any([filename.endswith(x) for x in EXTENSIONS])
 
     def getRepoDetails(self, localPath, filename):
@@ -165,7 +165,7 @@ class SharedData:
             repoPath = "%s/rpms" % (repo_base_dir)
             command = "createrepo --update -v %s" % (repoPath)
         elif extension == '.deb':
-            repoPath = "%s/debs/ubuntu" % (repo_base_dir)
+            repoPath = "%s/debs/" % (repo_base_dir)
             command = "reprepro -V -b %s includedeb autoport_repo \
                        %s/%s" % (repoPath, repoPath, filename)
         elif tarfile.is_tarfile(localPath) or zipfile.is_zipfile(localPath):
