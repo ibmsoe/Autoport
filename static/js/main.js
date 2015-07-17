@@ -733,8 +733,10 @@ var jenkinsState = {
 function handleProjectListBtns() {
     if (Object.keys(projectReportState.selectedProjects).length === 2) {
         $("#compareResultsBtn").removeClass("disabled");
+                $("#compareLogsBtn").removeClass("disabled");
     } else {
         $("#compareResultsBtn").addClass("disabled");
+        $("#compareLogsBtn").addClass("disabled");
     }
     if (Object.keys(projectReportState.selectedProjects).length === 0) {
         $("#testHistoryBtn").addClass("disabled");
@@ -879,6 +881,27 @@ var projectReportState = {
         } else {
             $('#resultCompareSelectionAlert').modal();
         }
+    },
+    compareLogs: function() {
+        var sel = Object.keys(projectReportState.selectedProjects);
+        if (sel.length === 2) {
+            var leftProject = sel[0];
+            var rightProject = sel[1];
+            var leftRepo = projectReportState.selectedProjects[leftProject];
+            var rightRepo = projectReportState.selectedProjects[rightProject];
+            //TODO - add loading bar
+            projectReportState.prjCompareReady = false;
+            projectReportState.prjTableReady = false;
+            $.getJSON("/getDiffLogResults",
+                      {
+                        leftbuild: leftProject,
+                        rightbuild: rightProject,
+                        leftrepository: leftRepo,
+                        rightrepository: rightRepo
+                      },
+                      processLogCompareResults).fail(processLogCompareResults);
+        } else {
+            $('#resultCompareSelectionAlert').modal();        }
     },
     archive: function() {
         var sel = Object.keys(projectReportState.selectedProjects);
@@ -1200,12 +1223,36 @@ function processBuildResults(data) {
             " / " + data.rightProject.Package + " version " +
             data.rightProject.Version + " on " + data.rightProject.Architecture);
 
-        //for diff output
-        $("#leftdiff").html(data.results["diff"][data.leftCol]);
-        $("#rightdiff").html(data.results["diff"][data.rightCol]);
     }
     $("#testResultsTable").html(tableContent);
     projectReportState.prjTableReady = true;
+}
+
+function processLogCompareResults(data) {
+    if (data.status != "ok") {
+        showAlert("Error:", data);
+    } else {
+        var leftHeader = "";
+        var rightHeader = "";
+        if (data.leftProject.Architecture !== data.rightProject.Architecture) {
+            leftHeader = data.leftProject.Architecture;
+            rightHeader = data.rightProject.Architecture;
+        } else if (data.leftProject.Version !== data.rightProject.Version) {
+            leftHeader = data.leftProject.Version;
+            rightHeader = data.rightProject.Version;
+        } else {
+            leftHeader = data.leftProject.Date;
+            rightHeader = data.rightProject.Date;
+        }
+        $("#leftdiff").html(data.results["diff"][data.leftCol]);
+        $("#rightdiff").html(data.results["diff"][data.rightCol]);
+        $("#logdiffHeader").html("for " + data.leftProject.Package + " version " +
+            data.leftProject.Version + " on " + data.leftProject.Architecture +
+            " / " + data.rightProject.Package + " version " +
+            data.rightProject.Version + " on " + data.rightProject.Architecture);
+        $('#logdiffModal').modal('show');
+    }
+    projectReportState.prjCompareReady = true;
 }
 
 function processTestDetail(data) {
