@@ -1524,6 +1524,47 @@ def getTestResults():
                         rightProject = rightmeta,
                         results = res)
 
+# Get diff log output
+@app.route("/getDiffLogResults")
+def getDiffLogResults():
+    leftbuild  = request.args.get("leftbuild", "")
+    rightbuild = request.args.get("rightbuild", "")
+    leftrepo = request.args.get("leftrepository", "local")
+    rightrepo = request.args.get("rightrepository", "local")
+
+    if (leftbuild == "" or rightbuild == ""):
+        return json.jsonify(status="failure", error="invalid argument"), 400
+
+    leftdir = catalog.getResults(leftbuild, leftrepo)
+    rightdir = catalog.getResults(rightbuild, rightrepo)
+
+    if (leftdir == None or rightdir == None):
+        return json.jsonify(status="failure", error="result not found"), 404
+
+    leftname = resultPattern.match(leftbuild).group(2)
+    rightname = resultPattern.match(rightbuild).group(2)
+
+    try:
+        res = resParser.ResLogCompare(leftname, leftdir,
+                                          rightname, rightdir)
+    except BaseException as e:
+        return json.jsonify(status="failure", error=str(e)), 500
+
+    lf = open(leftdir+"/meta.arti")
+    rf = open(rightdir+"/meta.arti")
+    leftmeta = json.load(lf)
+    rightmeta = json.load(rf)
+    lf.close()
+    rf.close()
+
+    catalog.cleanTmp()
+    return json.jsonify(status = "ok",
+                        leftCol = leftname,
+                        rightCol = rightname,
+                        leftProject = leftmeta,
+                        rightProject = rightmeta,
+                        results = res)
+
 @app.route("/getTestHistory", methods=["POST"])
 def getTestHistory():
     projects = request.json['projects']
