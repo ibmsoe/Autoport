@@ -1,0 +1,273 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>DISTRIBUTION</name>
+          <description>The Linux distribution of the build server.</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PACKAGE_NAME_FILTER</name>
+          <description>The package name filter. We want to search packages having this string in their names or description</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+	  </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.scm.NullSCM"/>
+  <assignedNode></assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>#!/bin/bash
+#
+# This script will retrieve information of all packages(installed as well as no-installed ones) from a build server.
+# RHEL and UBUNTU distributions are supported
+# Input:   DISTRIBUTION          :   Linux distribution of the build server.
+#          PACKAGE_NAME_FILTER   :   Package name filter.
+# Output:   A json file with following data:
+#              packageName:         name of the package
+#              packageInstalled:    set to true if the package PACKAGE_NAME is installed
+#              summary:             summary of the package
+#              installedVersion:    the installed version of the package PACKAGE_NAME. 'N/A' in case not installed.
+#              updateAvailable:     set to true if a new version of the package PACKAGE_NAME is available.
+#              updateVersion:       the latest version of the package PACKAGE_NAME available.
+#                                   If there are no updates and package is installed,'updateVersion' takes the same value as the
+#                                   'installedVersion' else it takes the value 'N/A'
+#
+# NOTE: The less than symbol has been escaped by substituting it with &lt; noticed when reading this file from the source code
+#
+
+set +o noclobber # Allow overwrite of files just in case it is set to off
+
+case $DISTRIBUTION in
+    "UBUNTU")
+       echo "#### Getting a list of all packages matching the filter $PACKAGE_NAME_FILTER. We search for all packages - installed as well as available"
+       echo "#### The command used is using command apt-cache search $PACKAGE_NAME_FILTER | grep $PACKAGE_NAME_FILTER | sed \"s/\"/'/g\" "
+       apt-cache search $PACKAGE_NAME_FILTER | grep -i $PACKAGE_NAME_FILTER | sed "s/\"/'/g"  > AllPackagesInfo.txt # List of all packages matching the filter
+
+        echo "#### Iterating over the packages matching the filter and generating data for each."
+        echo '[' > packageListSingleSlave.json
+        packageNumber=1
+        while read line # Read a line i.e read record for one package
+        do
+            # Set variables
+            packageInstalled=false
+            updateAvailable=false
+            installedVersion="N/A"
+            updateVersion="N/A"
+            summary="N/A"
+            lineNumber=1
+
+            packageName=${line%% -*}
+            summary=${line#*- }
+            apt-cache policy $packageName > singlePackageInformation.txt
+
+            while read i
+            do
+                i=$( echo $i | tr -d '[[:space:]]') #trim spaces
+                if [ $lineNumber -eq 2 ]    # Installed information #If package is not found, control will never reach here.
+                then
+                    i=${i##*:}  #extract version number, occurs after the colon
+                    if [ $i != "(none)" ]
+                    then
+                        packageInstalled=true
+                        installedVersion=$i
+                    fi
+                elif [ $lineNumber -eq 3 ] # Update Available information # If package is not found, control will never reach here.
+                then
+                    i=${i##*:}  #extract version number, occurs after the colon
+                    if [ $i != $installedVersion ]
+                    then
+                        updateAvailable=true
+                        updateVersion=$i
+                    else
+                        updateVersion=$installedVersion
+                    fi
+                fi
+                lineNumber=$((lineNumber+1))
+            done &lt; singlePackageInformation.txt
+
+            rm -f singlePackageInformation.txt
+
+            if [ $packageNumber -eq 1 ]
+            then
+                    prefix=""
+            else
+                    prefix=","
+            fi
+            printf '%s{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s","summary":"%s"}\n' "$prefix" "$packageName" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$summary" >> packageListSingleSlave.json
+
+            packageNumber=$((packageNumber+1))
+
+        done &lt; AllPackagesInfo.txt
+        echo ']' >> packageListSingleSlave.json
+        echo "#### Completed fetching data for all packages."
+        rm -f AllPackagesInfo.txt
+    ;;
+    "RHEL")
+        # get search keyword and fetch all the packages matching given keyword, dump the result for later use.
+        echo "#### Getting a list of all packages matching the filter $PACKAGE_NAME_FILTER. We search for all packages - installed as well as available"
+        echo "#### The command used is using command yum info *$PACKAGE_NAME_FILTER* "
+        yum info "*$PACKAGE_NAME_FILTER*" > AllPackagesInfo.txt
+
+        # initializing variables needed.
+        installed_packages=()
+        installed_packages_counter=0
+        updates_packages=()
+        updates_packages_counter=0
+        package_array=()
+        package_array_counter=0
+        file_data=()
+        return_val='' # This will be used as return value for return data from functions
+
+        # This function will return true if the key to be checked is in required list.
+        # Inputs arguments:
+        #   input_string    String
+        # Returns
+        #   Boolean indicating whether key is valid or not
+        function check_if_required_key {
+            required_keys=("Name" "Version" "Summary" "Arch" "Release")
+            input_string="$1"
+            for i in "${required_keys[@]}"; do
+                if test "${input_string#*$i}" != "$input_string";then
+                    return_val=true
+                    return 0
+                fi
+            done
+            return_val=false
+        }
+
+        # This function will strip input string of extra leading/trailing spaces
+        # Inputs arguments:
+        #   input_string    String
+        # Returns
+        #   String without leading or trailing spaces
+        function strip_extra_spaces {
+            input_string="$1"
+            return_val=$(echo "${input_string}" | sed -e 's/^ *//g;s/ *$//g')
+        }
+
+        # This function will accept input string with delimiter to separate string into two separate arrays
+        # one containing installed packages and other containing available updates.
+        # Input arguments:
+        #   input_string String
+        #   delimiter   String
+        #   is_installed_package    boolean
+        function separate_installed_packages_from_list {
+            if [ $package_array_counter -eq 0 ]; then
+                package_array[$package_array_counter]="{"
+                package_array_counter=$(($package_array_counter + 1))
+            fi
+            strip_extra_spaces "$1"
+            input_string="$return_val"
+            input_string=`echo $input_string | sed "s/\"/\'/g"`
+            delimiter="$2"
+            is_installed_package=$3
+
+            if [ -z "$input_string" -a $package_array_counter -gt 0 ]; then
+                if $is_installed_package ; then
+                    if [ $installed_packages_counter -gt 0 ];then
+                        separator=","
+                    else
+                        separator=""
+                    fi
+                    package_array[$package_array_counter]="\"packageInstalled\" : true, \"updateAvailable\" : false, \"updateVersion\": \"N/A\" }"
+                    installed_packages[$installed_packages_counter]=`echo $separator ${package_array[@]}`
+                    installed_packages_counter=$((installed_packages_counter + 1))
+                else
+                    if [ $updates_packages_counter -gt 0 ];then
+                        separator=","
+                    else
+                        separator=""
+                    fi
+                    package_array[$package_array_counter]="\"packageInstalled\" : false, \"updateAvailable\" : true, \"installedVersion\": \"N/A\" }"
+                    updates_packages[$updates_packages_counter]=`echo $separator ${package_array[@]}`
+                    updates_packages_counter=$((updates_packages_counter + 1))
+                fi
+                package_array_counter=0
+            else
+                check_if_required_key "$input_string"
+                is_required_key=$return_val
+                if ! $is_required_key; then
+                    return 0
+                fi
+                data_string="\"$input_string\" ,"
+                # Change key "name" -> "packageName"
+                data_string=`echo $data_string | sed "s/Name/packageName/g"`
+                if $is_installed_package ; then
+                    data_string=`echo $data_string | sed "s/Version/installedVersion/g"`
+                else
+                    data_string=`echo $data_string | sed "s/Version/updateVersion/g"`
+                fi
+                package_array[$package_array_counter]=`echo $data_string | sed "s/ : /\" : \"/g"`
+                package_array_counter=$(($package_array_counter + 1))
+            fi
+        }
+
+        # This function will return true if the key to be checked is in required list.
+        # Inputs arguments:
+        #   input_string    String
+        # Returns
+        #   Boolean indicating whether key is valid or not
+        function read_file {
+            file_name="$1"
+            delimiter=' : '
+            should_begin=false
+            is_installed_package=true
+            while IFS='' read -r line || [[ -n $line ]]; do
+                search_string_install='Installed Packages'
+                search_string_updates='Available Packages'
+
+                if test "${line#*$search_string_updates}" != "$line";then
+                    is_installed_package=false
+                fi
+
+                if ! $should_begin ; then
+                    if test "${line#*$search_string_install}" != "$line";then
+                        should_begin=true
+                    elif test "${line#*$search_string_updates}" != "$line";then
+                        should_begin=true
+                    fi
+                else
+                    if test "${line#*$search_string_updates}" = "$line";then
+                        separate_installed_packages_from_list "$line" "$delimiter" $is_installed_package
+                    fi
+                fi
+
+            done &lt; "$file_name"
+        }
+
+        read_file 'AllPackagesInfo.txt'
+        echo "#### Iterating over the packages matching the filter and generating data for each."
+        json_data=`echo "{\"installed\": [${installed_packages[@]}], \"updates\": [${updates_packages[@]}]}"`
+        # Below python scriplet reads json lists and prepares final list of packages with update version and install version so that its usable by application
+        python -c "import json;import sys; final_list=[];installed_list=[];updates_list=[]; data=json.loads(sys.argv[1]);final_list.extend([{'packageName': '%s.%s' % (str(i['packageName']),str(i['Arch'])),'updateAvailable': bool(j['updateAvailable']), 'summary': str(i['Summary']), 'updateVersion': '%s-%s' % (str(j['updateVersion']),str(j['Release'])), 'packageInstalled': bool(i['packageInstalled']), 'installedVersion': '%s-%s' % (str(i['installedVersion']), str(i['Release']))} for i in data['installed'] for j in data['updates'] if '%s.%s' % (str(i['packageName']),str(i['Arch'])) == '%s.%s' % (str(j['packageName']),str(j['Arch']))]);installed_list.extend(['%s.%s' % (str(i['packageName']),str(i['Arch'])) for i in data['installed']]);updates_list.extend(['%s.%s' % (str(i['packageName']),str(i['Arch'])) for i in data['updates']]);final_list.extend([{'packageName': '%s.%s' % (str(i['packageName']),str(i['Arch'])), 'updateAvailable': bool(i['updateAvailable']), 'summary': str(i['Summary']), 'updateVersion': '%s-%s' % (str(i['updateVersion']), str(i['Release'])), 'packageInstalled': bool(i['packageInstalled']), 'installedVersion': str(i['installedVersion'])} for i in data['updates'] if '%s.%s' % (str(i['packageName']),str(i['Arch'])) not in installed_list ]);final_list.extend([{'packageName': '%s.%s' % (str(i['packageName']),str(i['Arch'])), 'updateAvailable': bool(i['updateAvailable']), 'summary': str(i['Summary']), 'updateVersion': '%s-%s' % (str(i['installedVersion']), str(i['Release'])), 'packageInstalled': bool(i['packageInstalled']), 'installedVersion': '%s-%s' % (str(i['installedVersion']), str(i['Release']))} for i in data['installed'] if i['packageName'] not in updates_list ]);print json.dumps(final_list)" "$json_data" > packageListSingleSlave.json
+        echo "#### Completed fetching data for all packages."
+        rm -f 'AllPackagesInfo.txt'
+        ;;
+esac
+     </command>
+    </hudson.tasks.Shell>
+  </builders>
+  <publishers>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>*.json</artifacts>
+      <latestOnly>false</latestOnly>
+      <allowEmptyArchive>false</allowEmptyArchive>
+      <onlyIfSuccessful>true</onlyIfSuccessful>
+      <defaultExcludes>true</defaultExcludes>
+    </hudson.tasks.ArtifactArchiver>
+  </publishers>
+  <buildWrappers/>
+</project>
