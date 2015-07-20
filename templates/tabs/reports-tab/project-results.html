@@ -2,7 +2,7 @@
   <div class="btn btn-default btn-block" rv-on-click="reportState.setJobManagePanel" id="jobManageButton">
     <h2 class="text-center">Manage/Compare project results</h2>
   </div>
-  
+
   <div id="jobManagePanel" class="jumbotron-button-content" rv-show="reportState.jobManagePanel">
 
     <!-- Project reports list selector (local, archived, all) -->
@@ -13,7 +13,7 @@
             placeholder="(e.g. redis, cassandra, mongo)"
             id="projectFilter"/>
       </div>
-      
+
       <div class="col-lg-4">
         <a rv-on-click="reportState.listLocalProjects">
           <button type="button" class="btn btn-primary">
@@ -32,8 +32,8 @@
         </a>
       </div>
     </div>
- 
-    <br /> 
+
+    <br />
 
     <!-- Invalid number of selected projects error modal -->
     <div class="modal fade" id="resultCompareSelectionAlert" tabindex="-1">
@@ -75,7 +75,6 @@
         </div>
       </div>
     </div>
-
     <!-- Project reports status bar/action selector -->
     <div class="alert alert-success clearfix"
          id="testCompareRunAlert"
@@ -113,37 +112,33 @@
             rv-on-click="projectReportState.archive">
         Archive
         </button>
-        <span class="buttonRight">
-          <button type="button" class="btn btn-primary"
-            rv-on-click="projectReportState.selectAll">
-          Select All
-          </button>
-          <button type="button" class="btn btn-primary"
-            rv-on-click="projectReportState.selectNone">
-          Select None
-          </button>
-        </span>
+        <button type="button"
+            class="btn btn-primary disabled"
+            id="unselectProjectBtn">
+        Unselect
+        </button>
       </div>
     </div>
 
-    <!-- Project reports list/select table -->
-    <div id="testCompareSelectPanel"
-        class="table panel panel-default"
-        rv-show="projectReportState.prjCompareReady">
-      <table class="table table-hover" id="projectListTable">
+  <br />
+
+  <div rv-show = "projectReportState.prjCompareReady">
+    <!--Project results table-->
+      <table class="table panel panel-default" id="testCompareSelectPanel"
+        data-pagnation="true" data-click-to-select="true"
+        data-toolbar="#projectListToolbar">
         <thead>
           <tr>
-            <th>Project name</th>
-            <th>Version</th>
-            <th>Environment</th>
-            <th>Operating System</th>
-            <th>Completed</th>
-            <th>Repository</th>
-            <th>Actions</th>
+            <th data-field="state" data-checkbox="true"></th>
+            <th data-field="name" data-align="center"data-sortable="true">Project Name</th>
+            <th data-field="version" data-align="center" data-sortable="true">Version</th>
+            <th data-field="env" data-align="center" data-sortable="true">Environment</th>
+            <!--TODO: OS-->
+            <th data-field="os" data-align="center" data-sortable="true">Operating System</th>
+            <th data-field="repository" data-align="center" data-sortable="true">Repository</th>
+            <th data-field="completed" data-align="center" data-sortable="true">Date Completed</th>
           </tr>
         </thead>
-        <tbody id="projectsTable">
-        </tbody>
       </table>
     </div>
 
@@ -170,6 +165,6 @@
         </button>
       </a>
     </div>
-  
+
   </div>
 </div>

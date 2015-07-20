@@ -730,101 +730,20 @@ var jenkinsState = {
     }
 };
 
-function handleProjectListBtns() {
-    if (Object.keys(projectReportState.selectedProjects).length === 2) {
-        $("#compareResultsBtn").removeClass("disabled");
-                $("#compareLogsBtn").removeClass("disabled");
-    } else {
-        $("#compareResultsBtn").addClass("disabled");
-        $("#compareLogsBtn").addClass("disabled");
-    }
-    if (Object.keys(projectReportState.selectedProjects).length === 0) {
-        $("#testHistoryBtn").addClass("disabled");
-        $("#testDetailBtn").addClass("disabled");
-        $("#resultArchiveBtn").addClass("disabled");
-    } else {
-        $("#testHistoryBtn").removeClass("disabled");
-        $("#testDetailBtn").removeClass("disabled");
-        $("#resultArchiveBtn").removeClass("disabled");
-    }
-}
-
 var projectReportState = {
     prjCompareReady: false,
     compareRepo: "local",
     compareType: "project",
     projects: [],
     projectsTable: null,
-    selectedProjects: {},
     prjTableReady: false,
-    selectProject: function(id) {
-        // find the corresponding project object.
-        var projectName = "";
-        var projectRepo = "";
-        var isSelected = false;
-        for (prj in projectReportState.projects) {
-            if (projectReportState.projects[prj].id == id) {
-                projectName = projectReportState.projects[prj].fullName;
-                projectRepo = projectReportState.projects[prj].repository;
-                isSelected = projectReportState.projects[prj].selectStatus;
-                projectReportState.projects[prj].selectStatus = !isSelected;
-                // Find the entry in the table
-                projectReportState.projectsTable.data().each(function(d){
-                    if (d.id == id) {
-                        d.selectStatus = !isSelected;
-                    }
-                });
-                break;
-            }
-        }
-        if (projectName === "") {
-            // Not found
-            return;
-        }
-        var pos = projectReportState.selectedProjects[projectName];
-        if (pos !== undefined) {
-            delete projectReportState.selectedProjects[projectName];
-        } else {
-            projectReportState.selectedProjects[projectName] = projectRepo;
-        }
-        projectReportState.projectsTable.rows().invalidate().draw();
-        handleProjectListBtns();
-    },
-    selectAll: function() {
-        for (prj in projectReportState.projects) {
-            var projectName = projectReportState.projects[prj].fullName;
-            var projectRepo = projectReportState.projects[prj].repository;
-            if (projectReportState.selectedProjects.indexOf(projectName) === -1) {
-                projectReportState.selectedProjects[projectName] = projectRepo;
-                projectReportState.projects[prj].selectStatus = true;
-            }
-        }
-        projectReportState.projectsTable.data().each(function(d) {
-            d.selectStatus = true;
-        });
-        projectReportState.projectsTable.rows().invalidate().draw();
-        handleProjectListBtns();
-    },
-    selectNone: function() {
-        for (prj in projectReportState.projects) {
-            var projectName = projectReportState.projects[prj].fullName;
-            projectReportState.projects[prj].selectStatus = false;
-            if (projectReportState.selectedProjects[projectName] !== undefined) {
-                delete projectReportState.selectedProjects[projectName];
-            }
-        }
-        projectReportState.projectsTable.data().each( function(d) {
-            d.selectStatus = false;
-        });
-        projectReportState.selectedProjects = {};
-        projectReportState.projectsTable.rows().invalidate().draw();
-        handleProjectListBtns();
-    },
     testHistory: function() { // TODO single project or multiple?
-        var sel = Object.keys(projectReportState.selectedProjects);
+        var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+        var sel = [];
         var query = {};
-        for (proj in sel) {
-            query[sel[proj]] = projectReportState.selectedProjects[sel[proj]];
+        for (var i = 0; i < selectedProjects.length; i ++) {
+            sel[i] = selectedProjects[i].fullName;
+            query[sel[i]] = selectedProjects[i].repository;
         }
         //TODO - add loading bar
         projectReportState.prjCompareReady = false;
@@ -841,10 +760,12 @@ var projectReportState = {
         }).fail(processTestHistory);
     },
     testDetail: function() {
-        var sel = Object.keys(projectReportState.selectedProjects);
+        var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+        var sel = [];
         var query = {};
-        for (proj in sel) {
-            query[sel[proj]] = projectReportState.selectedProjects[sel[proj]];
+        for (var i = 0; i < selectedProjects.length; i ++) {
+            sel[i] = selectedProjects[i].fullName;
+            query[sel[i]] = selectedProjects[i].repository;
         }
         //TODO - add loading bar
         projectReportState.prjCompareReady = false;
@@ -861,12 +782,16 @@ var projectReportState = {
         }).fail(processTestDetail);
     },
     compareResults: function() {
-        var sel = Object.keys(projectReportState.selectedProjects);
+        var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+        var sel = [];
+        for (var i = 0; i < selectedProjects.length; i++){
+            sel[i] = selectedProjects[i].fullName;
+        }
         if (sel.length === 2) {
             var leftProject = sel[0];
             var rightProject = sel[1];
-            var leftRepo = projectReportState.selectedProjects[leftProject];
-            var rightRepo = projectReportState.selectedProjects[rightProject];
+            var leftRepo = selectedProjects[0].repository;
+            var rightRepo = selectedProjects[1].repository;
             //TODO - add loading bar
             projectReportState.prjCompareReady = false;
             projectReportState.prjTableReady = false;
@@ -883,12 +808,16 @@ var projectReportState = {
         }
     },
     compareLogs: function() {
-        var sel = Object.keys(projectReportState.selectedProjects);
+        var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+        var sel = [];
+        for (var i = 0; i < selectedProjects.length; i++){
+            sel[i] = selectedProjects[i].fullName;
+        }
         if (sel.length === 2) {
             var leftProject = sel[0];
             var rightProject = sel[1];
-            var leftRepo = projectReportState.selectedProjects[leftProject];
-            var rightRepo = projectReportState.selectedProjects[rightProject];
+            var leftRepo = selectedProjects[0].repository;
+            var rightRepo = selectedProjects[1].repository;
             //TODO - add loading bar
             projectReportState.prjCompareReady = false;
             projectReportState.prjTableReady = false;
@@ -904,10 +833,12 @@ var projectReportState = {
             $('#resultCompareSelectionAlert').modal();        }
     },
     archive: function() {
-        var sel = Object.keys(projectReportState.selectedProjects);
+        var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+        var sel = [];
         var query = {};
-        for (proj in sel) {
-            query[sel[proj]] = projectReportState.selectedProjects[sel[proj]];
+        for (var i = 0; i < selectedProjects.length; i ++) {
+            sel[i] = selectedProjects[i].fullName;
+            query[sel[i]] = selectedProjects[i].repository;
         }
         $.ajax({
                 type: "POST",
@@ -1076,7 +1007,6 @@ function doGetResultList() {
 function processResultList(data) {
     projectReportState.selectedProjects = [];
     projectReportState.projects = [];
-    projectReportState.projectsTable.clear();
     if (data === undefined || data.status != "ok") {
         showAlert("Error:", data);
     } else {
@@ -1105,43 +1035,12 @@ function processResultList(data) {
                       version: prjObject[5],
                     completed: prjObject[6],
                    repository: data.results[project][1],
-                 selectStatus: false,
-                    selectBtn: '<a rv-href="#" rv-on-click="project.select">'+
-                               '<button type="button" class="btn" rv-id="'+
-                               prjId+data.results[project][1]+
-                               '<span class="glyphicon glyphicon-remove"></span>'+
-                               'Select</button></a>',
-                       select: function(ev) {
-                           projectReportState.selectProject(ev.target.id);
-                       }
-                });
-                projectReportState.projectsTable.row.add({
-                     fullName: prjObject[0],
-                           id: prjId+data.results[project][1],
-                     hostname: prjObject[1],
-                          uid: prjObject[2],
-                         name: prjObject[4],
-                          env: prjObject[3],
-                           os: "", // TODO
-                      version: prjObject[5],
-                    completed: prjObject[6],
-                   repository: data.results[project][1],
-                 selectStatus: false,
-                    selectBtn: '<a rv-href="#" onClick="projectReportState.selectProject(\''+
-                               prjId+data.results[project][1]+'\')">'+
-                               '<button type="button" class="btn" id="'+
-                               prjId+data.results[project][1]+'">'+
-                               '<span class="glyphicon glyphicon-remove"></span>'+
-                               'Select</button></a>',
-                       select: function(ev) {
-                           projectReportState.selectProject(ev.target.id);
-                       }
                 });
             }
         }
         detailState.autoSelected = false;
         projectReportState.prjCompareReady = true;
-        projectReportState.projectsTable.draw();
+        $('#testCompareSelectPanel').bootstrapTable('load', projectReportState.projects);
     }
 }
 
@@ -1811,33 +1710,6 @@ function synchManagedPackageListCallback(data) {
 }
 
 $(document).ready(function() {
-    projectReportState.projectsTable = $("#projectListTable").DataTable({
-        order: [[4, "desc"]],
-        ordering: true,
-        paging: true,
-        searching: false,
-        data: projectReportState.projects,
-        columns: [
-            { "data": "name", "ordering": "true" },
-            { "data": "version", "ordering": "true" },
-            { "data": "env", "ordering": "true" },
-            { "data": "os", "ordering": "true" },
-            { "data": "completed", "ordering": "true" },
-            { "data": "repository", "ordering": "true" },
-            { "data": "selectStatus", "ordering": "false", "render": function(data, type, row) {
-                return '<a rv-href="#" onClick="projectReportState.selectProject(\''+
-                               row.id+'\')">'+
-                               '<button type="button" class="btn'+(data?' btn-primary':'')+
-                               '" id="'+
-                               row.id+'">'+
-                               '<span class="glyphicon glyphicon-'+
-                               (data?'ok':'remove')+
-                               '"></span>'+
-                               'Select</button></a>';
-            } }
-        ]
-    });
-
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers
     // TODO: add selections for default (goes through jenkins master), linux distributions, specific build servers
@@ -1911,5 +1783,39 @@ $(document).ready(function() {
         // On a page change, Bootstrap addon unchecks the package checked by the user. In order to show the package it as selected once the user goes back to the earlier page, do the following:
         $("#singleServerPackageListTable").bootstrapTable("checkBy", {field:"packageName", values:[jenkinsState.selectedSingleSlavePackage.packageName]})
     });
+    //Initalize Project Results table
+    $('#testCompareSelectPanel').bootstrapTable({
+        data: []
+    });
+    $('#testCompareSelectPanel').on('check.bs.table', function (e, row) {
+        projectReportState.projects = row;
+    });
 
+    //Unsselect function for project result list table
+    $('#unselectProjectBtn').click(function () {
+        $('#testCompareSelectPanel').bootstrapTable('uncheckAll');
+    });
+
+    //Handles display of project list buttons
+    $('#testCompareSelectPanel').change(function() {
+        var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+        if (selectedProjects.length === 2) {
+            $("#compareResultsBtn").removeClass("disabled");
+            $("#compareLogsBtn").removeClass("disabled");
+        } else {
+            $("#compareResultsBtn").addClass("disabled");
+            $("#compareLogsBtn").addClass("disabled");
+        }
+        if (selectedProjects.length === 0) {
+            $("#testHistoryBtn").addClass("disabled");
+            $("#testDetailBtn").addClass("disabled");
+            $("#resultArchiveBtn").addClass("disabled");
+            $("#unselectProjectBtn").addClass("disabled");
+        } else {
+            $("#testHistoryBtn").removeClass("disabled");
+            $("#testDetailBtn").removeClass("disabled");
+            $("#resultArchiveBtn").removeClass("disabled");
+            $("#unselectProjectBtn").removeClass("disabled");
+        }
+    });
 });
