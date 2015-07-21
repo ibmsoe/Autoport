@@ -39,7 +39,7 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>#!/bin/sh
+      <command>#!/bin/bash
 #
 # This script will install/remove/update a package from a build server. RHEL and UBUNTU distributions are supported
 # Inputs:   DISTRIBUTION    :   Linux distribution of the build server
@@ -56,12 +56,14 @@ actionSuccess=false
 
 case $DISTRIBUTION in
     "RHEL")
-        #Concatenate the package name and the version so that we install/remove/update the exact version as shown to the user in the UI
-        FULL_PACKAGE_NAME="${PACKAGE_NAME}-$PACKAGE_VERSION"
+        # Concatenate the package name and the version so that we install/remove/update the exact version as shown to the user in the UI.
+        # If the PACKAGE_NAME = dos2unix.ppc64 and PACKAGE_VERSION = 3.1-37.el64 , then
+        # FULL_PACKAGE_NAME = dos2unix-3.1-37.el64.ppc64 . This is the format used by the yum install, remove and update-to commands.
+        FULL_PACKAGE_NAME=${PACKAGE_NAME%.*}-$PACKAGE_VERSION.${PACKAGE_NAME##*.}
 
         case $ACTION in
             "install")
-                echo Going to $ACTION package $FULL_PACKAGE_NAME
+                echo "#### Going to $ACTION package $FULL_PACKAGE_NAME"
                 sudo yum -y install $FULL_PACKAGE_NAME
                 installedVersion=$(rpm -q --queryformat '%{VERSION}\n' $PACKAGE_NAME )
                 if [ $? -eq 0 ]
@@ -70,7 +72,7 @@ case $DISTRIBUTION in
                 fi
             ;;
             "update")
-                echo Going to $ACTION package $FULL_PACKAGE_NAME
+                echo "#### Going to $ACTION package $FULL_PACKAGE_NAME"
                 sudo yum -y update-to $FULL_PACKAGE_NAME
                 updatedVersion=$(rpm -q --queryformat '%{VERSION}\n' $PACKAGE_NAME )
                 if [ "$updatedVersion" == "$PACKAGE_VERSION" ]
@@ -79,7 +81,7 @@ case $DISTRIBUTION in
                 fi
             ;;
             "remove")
-                echo Going to $ACTION package $FULL_PACKAGE_NAME
+                echo "#### Going to $ACTION package $FULL_PACKAGE_NAME"
                 sudo yum -y remove $FULL_PACKAGE_NAME
                 updatedVersion=$(rpm -q --queryformat '%{VERSION}\n' $PACKAGE_NAME )
                 if [ $? -eq 1 ]
@@ -90,27 +92,32 @@ case $DISTRIBUTION in
         esac
     ;;
     "UBUNTU")
+        # Concatenate the package name and the version so that we install/remove/update the exact version as shown to the user in the UI.
+        # If the PACKAGE_NAME = dos2unix and PACKAGE_VERSION = 3.1-37 , then
+        # FULL_PACKAGE_NAME = dos2unix=3.1-37 . This is the format used by the apt-get install and remove commands.
+        FULL_PACKAGE_NAME="${PACKAGE_NAME}=$PACKAGE_VERSION"
+
         case $ACTION in
         "install")
-            echo Going to $ACTION package $PACKAGE_NAME
+            echo "#### Going to $ACTION package $FULL_PACKAGE_NAME"
             sudo apt-get update
-            sudo apt-get -y install $PACKAGE_NAME
+            sudo apt-get -y --force-yes install $FULL_PACKAGE_NAME
             if [ $? -eq 0 ]; then
                 actionSuccess=true
             fi
         ;;
         "update")
-            echo Going to $ACTION package $PACKAGE_NAME
+            echo "#### Going to $ACTION package $PACKAGE_NAME"
             sudo apt-get update
-            sudo apt-get --only-upgrade install $PACKAGE_NAME
+            sudo apt-get --only-upgrade -y --force-yes install $PACKAGE_NAME
             if [ $? -eq 0 ]; then
                 actionSuccess=true
             fi
         ;;
         "remove")
-            echo Going to $ACTION package $PACKAGE_NAME
+            echo "#### Going to $ACTION package $FULL_PACKAGE_NAME"
             sudo apt-get update
-            sudo apt-get -y remove $PACKAGE_NAME
+            sudo apt-get -y remove $FULL_PACKAGE_NAME
             if [ $? -eq 0 ]; then
                 actionSuccess=true
             fi
@@ -121,9 +128,11 @@ esac
 
 if $actionSuccess
 then
+    echo "#### The action $ACTION was successful for package $PACKAGE_NAME"
 	exit 0
 else
-	exit 1
+    echo "#### The action $ACTION was un-successful for package $PACKAGE_NAME"
+    exit 1
 fi</command>
     </hudson.tasks.Shell>
   </builders>
