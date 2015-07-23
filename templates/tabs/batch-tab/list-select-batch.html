@@ -4,7 +4,7 @@
   </div>
 
   <div class="jumbotron-button-content" rv-show="batchState.showListPanel">
-    
+
     <!-- Batch file list selector (local, archived, all) -->
     <div class="row">
       <div class="col-lg-8">
@@ -26,43 +26,42 @@
 
     <br />
 
-    <!-- List batch files table -->             
+    <!-- List batch files table -->
     <div rv-show="batchState.showListSelectTable">
       <div id="batchListSelectToolbar" class="btn-group">
+        <button type="button" class="btn btn-primary"
+         style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+          <span class="glyphicon glyphicon-zoom-in"></span>
+            Details
+        </button>
+        <select id="batchBuildServers" multiple="multiple" style="margin-right: 10px; float: left">
+          <option rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
+        </select>
         <a rv-on-click="batchState.buildAndTest">
-          <button type="button" class="btn btn-primary">
+          <button type="button" class="btn btn-primary" style="margin-left: 10px; margin-right: 10px; border-radius: 5px; float: left">
             Build + Test
           </button>
         </a>
-        <a rv-on-click="batchState.detail">
-          <button type="button" class="btn btn-primary">
-            <span class="glyphicon glyphicon-zoom-in"></span>
-            Details
+        <a rv-on-click="batchState.showReport">
+          <button type="button" class="btn btn-primary"
+           style="float: left; margin-right: 10px">
+            Show Status
           </button>
         </a>
         <a rv-show="batchState.selectedBatchFile.location | isLocal"
           rv-on-click="batchState.archive">
-          <button type="button" class="btn btn-primary">
+          <button type="button" class="btn btn-primary"
+           style="float: left; margin-right: 10px">
             Archive
-          </button>
-        </a>
-        <a rv-on-click="batchState.showReport">
-          <button type="button" class="btn btn-primary">
-            Show Report
-          </button>
-        </a>
-        <a rv-on-click="batchState.remove">
-          <button type="button" class="btn btn-primary">
-            <span class="no-text-glyphicon glyphicon glyphicon-remove"></span>
           </button>
         </a>
       </div>
       <table class="table panel panel-default" id="batchListSelectTable"
         data-pagination="true" data-click-to-select="true"
-        data-toolbar="#batchListSelectToolbar">
+        data-toolbar="#batchListSelectToolbar" data-single-select="true">
         <thead>
           <tr>
-            <th data-field="state"data-radio="true"></th>
+            <th data-field="state"data-checkbox="true"></th>
             <th data-field="name" data-sortable="true">Name</th>
             <th data-field="location" data-sortable="true">Location</th>
             <th data-field="environment" data-sortable="true">Environment</th>
@@ -73,7 +72,7 @@
         </thead>
       </table>
     </div>
-    
+
     <!-- Show batch files reports table -->
     <div rv-show="batchState.showBatchReportsTable">
       <div id="batchReportsToolbar" class="btn-group">
