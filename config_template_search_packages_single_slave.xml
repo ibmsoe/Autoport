@@ -137,7 +137,7 @@ case $DISTRIBUTION in
         # Returns
         #   Boolean indicating whether key is valid or not
         function check_if_required_key {
-            required_keys=("Name" "Version" "Summary" "Arch" "Release")
+            required_keys=("Name : " "Version : " "Summary : " "Arch : " "Release : ")
             input_string="$1"
             for i in "${required_keys[@]}"; do
                 if test "${input_string#*$i}" != "$input_string";then
@@ -171,7 +171,8 @@ case $DISTRIBUTION in
             fi
             strip_extra_spaces "$1"
             input_string="$return_val"
-            input_string=`echo $input_string | sed "s/\"/\'/g"`
+            input_string=$(echo $input_string | sed "s/\"/\'/g")
+            input_string=$(echo $input_string | sed "s/\\\//g")
             delimiter="$2"
             is_installed_package=$3
 
