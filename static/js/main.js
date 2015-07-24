@@ -592,6 +592,7 @@ var jenkinsState = {
     jenkinsSlavePanel: false,
     manageSingleSlavePanel: false,
     manageMultipleSlavePanel: false,
+    manageManagePanelFilter: false,
     uploadPackagePanel: false,
     setJenkinsPanel: function(ev) {
         jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
@@ -672,11 +673,14 @@ var jenkinsState = {
     },
     managedPackageTableReady: false,   // Draw managed package table if true
     managedPackageList: [],            // Managed Package list
+
+    selectedMultiSlavePackage: {},     // Managed Packages selected by the user
     serverGroup: "",                   // Takes value All or UBUNTU or RHEL depending on the "List x" button clicked. Variable to be used during Synch operation.
     listManagedPackages: function(ev) {
         jenkinsState.managedPackageTableReady = false;
         jenkinsState.loadingState.managedPackageListLoading = true;
 
+	jenkinsState.selectedMultiSlavePackage = {};
         var id = ev.target.id;
         jenkinsState.serverGroup = "All";
 
@@ -684,24 +688,29 @@ var jenkinsState = {
             jenkinsState.serverGroup = "RHEL";
         else if (id === "mlUbuntu")
             jenkinsState.serverGroup = "UBUNTU";
-
+        jenkinsState.manageManagePanelFilter = ($("#packageFilter_Multiple").val()!='')?true:false;
         $.getJSON("/listManagedPackages", { distro: jenkinsState.serverGroup, package: $("#packageFilter_Multiple").val() },
             listManagedPackagesCallback).fail(listManagedPackagesCallback);
     },
     addToManagedList: function(ev, el) {
         $.getJSON("/addToManagedList",
         {
-            package_name: el.package.packageName,
-            package_version: el.package.updateVersion,
-            distro: el.package.distro
+            action: 'add',
+	    package_name: jenkinsState.selectedMultiSlavePackage.packageName,
+	    package_version: jenkinsState.selectedMultiSlavePackage.updateVersion,
+	    distro: jenkinsState.selectedMultiSlavePackage.distro,
+            arch: jenkinsState.selectedMultiSlavePackage.arch
         },
         editManagedListCallback).fail(editManagedListCallback);
     },
     removeFromManagedList: function(ev, el) {
         $.getJSON("/removeFromManagedList",
         {
-            package_name: el.package.packageName,
-            distro: el.package.distro
+            package_name: jenkinsState.selectedMultiSlavePackage.packageName,
+            distro: jenkinsState.selectedMultiSlavePackage.distro,
+	    action: 'remove',
+            arch: jenkinsState.selectedMultiSlavePackage.arch
+		
         },
         editManagedListCallback).fail(editManagedListCallback);
     },
@@ -1690,6 +1699,7 @@ function listManagedPackagesCallback(data) {
     if (data.status === "ok") {
         jenkinsState.managedPackageList = data.packages;
         jenkinsState.managedPackageTableReady = true;
+ 	$('#multiServerPackageListTable').bootstrapTable('load', jenkinsState.managedPackageList);
     } else {
         showAlert("Error!", data);
     }
@@ -1783,6 +1793,21 @@ $(document).ready(function() {
         // On a page change, Bootstrap addon unchecks the package checked by the user. In order to show the package it as selected once the user goes back to the earlier page, do the following:
         $("#singleServerPackageListTable").bootstrapTable("checkBy", {field:"packageName", values:[jenkinsState.selectedSingleSlavePackage.packageName]})
     });
+
+    $('#multiServerPackageListTable').bootstrapTable({
+        data: []
+    });
+    $('#multiServerPackageListTable').on('check.bs.table', function (e, row) {
+        jenkinsState.selectedMultiSlavePackage = row;
+
+        //jenkinsState.showUnselectPackageButton = true;
+    });
+    $('#multiServerPackageListTable').on('page-change.bs.table', function (e, row) {
+        // On a page change, Bootstrap addon unchecks the package checked by the user. In order to show the package it as selected once the user goes back to the earlier page, do the following:
+        $("#multiServerPackageListTable").bootstrapTable("checkBy", {field:"packageName", values:[jenkinsState.selectedMultiSlavePackage.packageName]})
+    });
+
+
     //Initalize Project Results table
     $('#testCompareSelectPanel').bootstrapTable({
         data: []

@@ -332,46 +332,66 @@ class SharedData:
 
         return data
 
-    def getManagedPackage(self, managedList, packageName, node):
+     
+    def getManagedPackage(self, managedList, pkg, node):
         # Allow user to pass in managedList in case he needs to perform multiple lookups
         if not managedList:
             managedList = topology.getManagedList()
 
         distroName, distroRel, distroVersion = self.getDistro(node)
 
-        pkgName = ""
+	# The version becomes managed version if it satisfies the below cases 
+	# case 1: If the jenkins returned package arch matches with arch of ManagedList and version available in ManagedList then the version from ManagedList becomes the Managed Version
+        # case 2: If the jenkins returned package has the arch but not in ManagedList and version available in ManagedList then the version from ManagedList becomes the Managed Version
+        # case 3: If in the above two cases the ManagedList doesn't contain version for given package then installedVersion becomes the managed version 
+        packageName = pkg["packageName"]
         pkgVersion = ""
-        userAddedVersion = "N/A"
+        userAddedVersion = "No"
         for runtime in managedList['managedRuntime']:
             if runtime['distro'] != distroName:
                 continue
             if runtime['distroVersion'] != distroRel and runtime['distroVersion'] != distroVersion:
                 continue
-            for package in runtime['autoportPackages']:
-                if package['name'] == packageName:
-                    try:
-                        pkgName = package['name']
-                        pkgVersion = package['version']
-                    except KeyError:
-                        break
             for package in runtime['autoportChefPackages']:
-                if package['name'] == packageName:
-                    try:
-                        pkgName = package['name']
-                        pkgVersion = package['version']
-                    except KeyError:
-                        break
-            for package in runtime['userPackages']:
-                if package['name'] == packageName and package['owner'] == self.__localHostName:
-                    try:
+            	if package['name'] == pkg['packageName']:
+			if "arch" in package and package['arch'] == pkg['arch']:
+			    if "version" in package:
+			        pkgVersion = package['version']
+			    else:
+			        pkgVersion = pkg['updateVersion']
+			else:
+			    if "version" in package:
+			        pkgVersion = package['version']
+			    else:
+			        pkgVersion = pkg['updateVersion']
+		if pkgVersion:
+		    break
+	    if not pkgVersion:
+		for package in runtime['autoportPackages']:
+		    if package['name'] == pkg['packageName']:
+			if "arch" in package and package['arch'] == pkg['arch']:
+			    if "version" in package:
+		    	        pkgVersion = package['version']
+			    else:
+				pkgVersion = pkg['updateVersion']
+			else:
+			    if "version" in package:
+			        pkgVersion = package['version']
+		  	    else:
+			        pkgVersion = pkg['updateVersion']
+		    if pkgVersion:
+		        break
+	    for package in runtime['userPackages']:
+	        if package['name'] == packageName and package['owner'] == self.__localHostName and "arch" in package and package['arch'] == pkg['arch']:
+		    try:
                         userAddedVersion = package['version']
                     except KeyError:
                         break
-            break
+	if not pkgVersion:
+            pkgVersion="N/A"    
+        return packageName, pkgVersion, userAddedVersion
 
-        return pkgName, pkgVersion, userAddedVersion
-
-    def addToManagedList(self, packageName, packageVersion, distro):
+    def addToManagedList(self, packageName, packageVersion, distro, arch, action):
         # Read the file in memory
         localManagedListFileData = self.getLocalData("ManagedList.json")
 
@@ -380,20 +400,20 @@ class SharedData:
             if sharedRuntime['distro'] == distro:
                 addFlag = True
                 for package in sharedRuntime['userPackages']:
-                    if package['name'] == packageName and package['owner'] == self.__localHostName:
+                    if package['name'] == packageName and  package['arch'] == arch and package['owner'] == self.__localHostName:
                     # If package is already present for the current user, check its version and update the version if they are different
                         if package['version'] != packageVersion:
                             package['version'] = packageVersion
                         addFlag = False
                         break
                 if addFlag == True:
-                    sharedRuntime['userPackages'].append({"owner":self.__localHostName, "name":packageName, "version":packageVersion})
+                    sharedRuntime['userPackages'].append({"owner":self.__localHostName, "name":packageName, "version":packageVersion, "arch":arch, "action":action})
                 break
 
         # Write back to the local managed list file
         localPath = self.putLocalData(localManagedListFileData, "")
 
-    def removeFromManagedList(self, packageName, distro):
+    def removeFromManagedList(self, packageName, distro, arch, action):
         # Read the file in memory
         localManagedListFileData = self.getLocalData("ManagedList.json")
 
@@ -401,9 +421,12 @@ class SharedData:
         for sharedRuntime in localManagedListFileData['managedRuntime']:
             if sharedRuntime['distro'] == distro:
                 for package in sharedRuntime['userPackages']:
-                    if package['name'] == packageName and package['owner'] == self.__localHostName:
-                    # If package is present for the current user, remove it
-                        sharedRuntime['userPackages'].remove(package)
+                    if package['name'] == packageName and  package['arch'] == arch and package['owner'] == self.__localHostName:
+                    # If package is present for the current user, update action
+                        # sharedRuntime['userPackages'].remove(package)
+			package['action'] = action
+			#localManagedListFileData['managedRuntime'].sharedRuntime 
+			#sharedRuntime['userPackages']['action'] = action
                         break
 
         # Write back to the local managed list file

@@ -121,6 +121,9 @@
         {% include "tabs/monitoring-tab/managed-packages-loading.html" %}
 
         <div rv-show="jenkinsState.managedPackageTableReady">
+	  <div class="alert alert-success" rv-show="jenkinsState.manageManagePanelFilter">
+	    Package search result is based on the package name and package description.	
+	  </div>	
           <div class="alert alert-success">
             <a class="buttonRight">
               <button type="button" class="btn btn-primary" rv-on-click="jenkinsState.synchManagedPackageList">
@@ -131,59 +134,39 @@
 
           </div>
           <br/>
-          <br/>
           <!-- START MULTIPLE SERVER PACKAGE LIST TABLE -->
+	    <div id="multiServerPackageListToolbar" class="btn-group">
+              <a rv-show="jenkinsState.selectedMultiSlavePackage.showAddButton" rv-on-click="jenkinsState.addToManagedList">
+                <button type="button" class="btn btn-primary">
+                  Add
+                </button>
+              </a>
+              <a rv-show="jenkinsState.selectedMultiSlavePackage.showRemoveButton" rv-on-click="jenkinsState.removeFromManagedList">
+                <button type="button" class="btn btn-primary">
+                  Remove
+                </button>
+              </a>
+              <!-- a rv-show="jenkinsState.showUnselectPackageButton" rv-on-click="jenkinsState.unselectPackageForSingleSlave" >
+                <button type="button" class="btn btn-primary">
+                  Unselect
+                </button>
+              </a -->
+          </div>
 
-          <table class="table panel panel-default">
+	 <!-- START MULTI SERVER PACKAGE LIST TABLE -->
+          <table class="table panel panel-default" id="multiServerPackageListTable" data-sort-name="packageName" data-pagination="true" data-click-to-select="true" data-toolbar="#multiServerPackageListToolbar">
             <thead>
               <tr>
-                <th>Package</th>
-                <th>Platform</th>
-                <th>Managed Version</th>
-                <th>Latest Version</th>
-                <th>User Added Version</th>
-                <th>Distribution</th>
-                <th>O/S Version</th>
-                <th>Managed List Actions</th>
+                <th data-field="state" data-radio="true"></th>
+                <th data-field="packageName" data-sortable="true">Package</th>
+		<th data-field="managedPackageVersion" data-sortable="true">Managed Version</th>
+                <th data-field="installedVersion" data-sortable="true">Installed Version</th>
+                <th data-field="updateVersion" data-sortable="true">Latest Version</th>
+		<th data-field="userAddedVersion" data-sortable="true">User Specified Version</th>
+		<th data-field="os" data-sortable="true">OS</th>
+		<th data-field="arch" data-sortable="true">Arch</th>
               </tr>
             </thead>
-            <tbody rv-each-package="jenkinsState.managedPackageList">
-              <tr class="result-row">
-                <td>
-                  { package.packageName }
-                </td>
-                <td>
-                  { package.arch }
-                </td>
-                <td>
-                  { package.managedPackageVersion }
-                </td>
-                <td>
-                  { package.updateVersion }
-                </td>
-                <td>
-                  { package.userAddedVersion }
-                </td>
-                <td>
-                  { package.distro }
-                </td>
-                <td>
-                  { package.osversion }
-                </td>
-                <td>
-                  <a rv-if="package.showAddButton" rv-on-click="jenkinsState.addToManagedList">
-                    <button type="button" class="btn btn-primary">
-                      Add
-                    </button>
-                  </a>
-                  <a rv-if="package.showRemoveButton" rv-on-click="jenkinsState.removeFromManagedList">
-                    <button type="button" class="btn btn-primary">
-                      Remove
-                    </button>
-                  </a>
-                </td>
-              </tr>
-            </tbody>
           </table>
           <!-- END MULTIPLE SERVER PACKAGE LIST TABLE -->
         </div>

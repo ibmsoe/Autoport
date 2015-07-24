@@ -28,6 +28,7 @@ from urlparse import urlparse
 from batch import Batch
 from random import randint
 from github import GithubException
+from distutils.version import LooseVersion
 
 app = Flask(__name__)
 
@@ -1339,9 +1340,6 @@ def listManagedPackages():
     except KeyError:
         return json.jsonify(status="failure", error="missing package argument"), 400
 
-    if package == "":
-        return json.jsonify(status="failure", error="Package name not entered"), 400
-
     # Get managed list
     ml = sharedData.getManagedList()
     if not ml:
@@ -1356,57 +1354,62 @@ def listManagedPackages():
     else:
         nodes = globals.nodeLabels
 
+    # If no packages in query string parameters then retrieving the packages CSV from ManagedList.json
+    if package == "":
+        distroType = distro if distro=="UBUNTU" or distro=="RHEL" else 'All'
+        packageNames = getPackagesCSVFromManagedList(distroType, ml);
+    else:
+        configXmlFilePath = "./config_template_search_packages_single_slave.xml"
+        jobNameSuffix = "listAllManagePackageByFilter"
     packageList = []
     for node in nodes:
         i = globals.nodeLabels.index(node)
-        results = listPackageForSingleSlave_common(package, node)
+        
+	if  package == "":
+            results = listPackageForSingleSlave_common(packageNames, node)
+        else:
+            results = createJob_SingleSlavePanel_Common(node, package, configXmlFilePath, jobNameSuffix)
         try:
             for pkg in results['packageData']:
                 pkg['nodeLabel'] = node
                 pkg['distro'] = globals.nodeDetails[i]['distro']
                 pkg['osversion'] = globals.nodeDetails[i]['version']
                 pkg['arch'] = globals.nodeDetails[i]['arch']
-
+		pkg['os'] = pkg['distro']+"-"+pkg['osversion'] 
                 showAddButton = False
                 showRemoveButton = False
-
-                managedP, managedV, userAddedVersion = sharedData.getManagedPackage(ml, pkg['packageName'], node)
-
-                #For a package present in autoport[chef]packages, managedPackageVersion is
-                #    1. the version in the autoport[chef]packages section,
-                #    or 2. the installed version in case 1. is not available
-                #    or 3 the latest available version. in case 2. is not available
-                #For package not present in autoport[chef]packages, the managedPackageVersion is "N/A"
+                
+                managedP, managedV, userAddedVersion = sharedData.getManagedPackage(ml, pkg, node)
+                # User will be shown ADD button if "Managed Version" is less than "Latest Version" or "Installed Version" is less than the "Latest Version"
+		# User will be show Delete button if a installed version is available on the slave node
+		pkg['managedPackageVersion'] = managedV
                 if managedP:
-                    if managedV:
-                        pkg['managedPackageVersion'] = managedV
-                        if pkg['updateVersion'] != "N/A" and pkg['updateVersion'] != managedV:
-                            showAddButton = True
-                    elif pkg['packageInstalled']:
-                        pkg['managedPackageVersion'] = pkg['installedVersion']
-                        if pkg['updateVersion'] != "N/A" and pkg['updateVersion'] != pkg['installedVersion']:
-                            showAddButton = True
-                    elif pkg['updateAvailable']:
-                        pkg['managedPackageVersion'] = pkg['updateVersion']
-                        if pkg['updateVersion'] != "N/A":
-                            showAddButton = True
-                else:
-                    pkg['managedPackageVersion'] = "N/A"
-                    if pkg['updateVersion'] != "N/A":
-                        showAddButton = True
-                pkg['userAddedVersion'] = userAddedVersion
-                if userAddedVersion != "N/A":
-                    showRemoveButton = True
-                    if pkg['userAddedVersion'] == pkg['updateVersion']:
-                        showAddButton = False
-                pkg['showAddButton'] = showAddButton
-                pkg['showRemoveButton'] = showRemoveButton
-                break
-            packageList.append(pkg)
+                    if "updateVersion" in pkg and pkg["updateVersion"] and pkg["updateVersion"]!="N/A":
+			if managedV and managedV!="N/A":
+			    if LooseVersion(pkg["updateVersion"]) > LooseVersion(managedV):
+				showAddButton = True
+			if not showAddButton:
+			    if "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":	
+				if LooseVersion(pkg["updateVersion"]) > LooseVersion(pkg["installedVersion"]):
+					showAddButton = True 
+		    pkg['userAddedVersion'] = userAddedVersion
+		    if userAddedVersion != "No":
+			showRemoveButton = True
+			if pkg['userAddedVersion'] == pkg['updateVersion']:
+				showAddButton = False
+                    elif "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":
+                        showRemoveButton = True
+		else:
+		    if pkg['updateVersion'] != "N/A":
+			showAddButton = True
+                if not showAddButton and pkg['updateAvailable']:
+		    showAddButton = True   
+		pkg['showAddButton'] = showAddButton
+		pkg['showRemoveButton'] = showRemoveButton   
+                packageList.append(pkg)
         except KeyError:
              return json.jsonify(status="failure", error=results['error'] ), 404
 
-    print "managedPackageList=", packageList
     return json.jsonify(status="ok", packages=packageList)
 
 # Add package selected by user to the local Managed List
@@ -1427,9 +1430,20 @@ def addToManagedList():
     except KeyError:
         return json.jsonify(status="failure", error="missing distro argument"), 400
 
-    sharedData.addToManagedList(packageName, packageVersion, distro)
+    try:
+        arch = request.args.get("arch", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing arch argument"), 400
 
-    return json.jsonify(status="ok")
+    try:
+        action = request.args.get("action", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing action argument"), 400
+
+
+    sharedData.addToManagedList(packageName, packageVersion, distro, arch, action)
+
+    return json.jsonify(status="ok",details={'action':action,'version':packageVersion})
 
 # Remove package selected by user from the local Managed List
 @app.route("/removeFromManagedList")
@@ -1443,10 +1457,22 @@ def removeFromManagedList():
         distro = request.args.get("distro", "")
     except KeyError:
         return json.jsonify(status="failure", error="missing distro argument"), 400
+   
+    try:
+        arch = request.args.get("arch", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing arch argument"), 400
 
-    sharedData.removeFromManagedList(packageName, distro)
+    try:
+        action = request.args.get("action", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing action argument"), 400
 
-    return json.jsonify(status="ok")
+
+
+    sharedData.removeFromManagedList(packageName, distro, arch, action)
+
+    return json.jsonify(status="ok", details = {'action' : action})
 
 # Synch the local managed package file with the one on Jenkins master.
 #TODO: add logic to perform installations on the selected build server group
@@ -1655,6 +1681,19 @@ def archiveProjects():
     errors, alreadyThere = catalog.archiveResults(projects)
     return json.jsonify(status="ok", errors=errors, alreadyThere=alreadyThere)
 
+# Returns a comma separated list of package names from the Managed List json file
+def getPackagesCSVFromManagedList(slaveNodeDistro, mljson):
+    uniquePackages = set()
+    for runtime in mljson['managedRuntime']:
+        if runtime['distro'] == slaveNodeDistro or slaveNodeDistro == "All":
+            for package in runtime['autoportPackages']:
+                uniquePackages.add(package['name']);
+	    for package in runtime['autoportChefPackages']:    
+	        uniquePackages.add(package['name']);
+	    for package in runtime['userPackages']:    
+	        uniquePackages.add(package['name']);
+    packagesCSV = ",".join(list(uniquePackages))
+    return packagesCSV;
 
 #Upload rpms debs and archives to custom repository
 @app.route('/uploadToRepo', methods=['GET','POST'])
