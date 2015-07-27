@@ -112,11 +112,6 @@
             rv-on-click="projectReportState.archive">
         Archive
         </button>
-        <button type="button"
-            class="btn btn-primary disabled"
-            id="unselectProjectBtn">
-        Unselect
-        </button>
       </div>
     </div>
 
@@ -126,7 +121,7 @@
     <!--Project results table-->
       <table class="table panel panel-default" id="testCompareSelectPanel"
         data-pagnation="true" data-click-to-select="true"
-        data-toolbar="#projectListToolbar">
+        data-toolbar="#projectListToolbar" data-checkbox-header="false">
         <thead>
           <tr>
             <th data-field="state" data-checkbox="true"></th>

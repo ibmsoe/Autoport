@@ -778,7 +778,7 @@ def runBatchFile ():
     try:
         node = request.form["node"]
     except KeyError:
-        return json.jsonify(status="failure", error="run batch file missing node argument"), 400
+        return json.jsonify(status="failure", error="missing buildServer argument"), 400
 
     if batchName != "":
         results = batch.parseBatchFile(batchName)

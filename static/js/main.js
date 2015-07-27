@@ -383,11 +383,22 @@ var batchState = {
 
     // Actions for individual batch files
     buildAndTest: function(ev, el) {
-        // TODO - default scheduling policy based on jenkinsState.nodeLabels
-        $.post("/runBatchFile", {batchName: batchState.selectedBatchFile.filename,
-            node: "x86-ubuntu-14.04"}, runBatchFileCallback, "json").fail(runBatchFileCallback);
-        $.post("/runBatchFile", {batchName: batchState.selectedBatchFile.filename,
-            node: "ppcle-ubuntu-14.04"}, runBatchFileCallback, "json").fail(runBatchFileCallback);
+        var servers = document.getElementById('batchBuildServers'),
+            options = servers.getElementsByTagName('option'),
+            selectedServers = [];
+            for (var i=options.length; i--;) {
+                if (options[i].selected) selectedServers.push(options[i].value)
+            }
+        if (selectedServers.length == 0){
+            $.post("/runBatchFile", {batchName: batchState.selectedBatchFile.filename,
+                node: undefined}, runBatchFileCallback, "json").fail(runBatchFileCallback);
+        }
+        else{
+            for (var i = 0; i < values.length; i++){
+                $.post("/runBatchFile", {batchName: batchState.selectedBatchFile.filename,
+                    node: selectedServers[i]}, runBatchFileCallback, "json").fail(runBatchFileCallback);
+            }
+        }
     },
     detail: function(ev, el) {
         batchState.loading = true;
