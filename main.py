@@ -838,22 +838,24 @@ def getBatchResults():
     except KeyError:
         return json.jsonify(status="failure", error="missing batchName POST argument"), 400
 
-    f = open(globals.localPathForBatchTestResults + ntpath.basename(batchName), 'r')
     results = []
+    try:
+        f = open(globals.localPathForTestResults + ntpath.basename(batchName), 'r')
 
-    for line in f:
-        jobName = line[:-1]
+        for line in f:
+            jobName = line[:-1]
 
-        if os.path.exists(globals.localPathForTestResults + jobName):
-            status = "Completed"
-        else:
-            status = "Not Completed"
+            if os.path.exists(globals.localPathForTestResults + jobName):
+                status = "Completed"
+            else:
+                status = "Not Completed"
 
-        results.append({"name":jobName, "status":status})
+            results.append({"name":jobName, "status":status})
 
-    f.close()
-
-    return json.jsonify(status="ok", results=results)
+        f.close()
+        return json.jsonify(status="ok", results=results)
+    except IOError as e:
+        return json.jsonify(status="ok", results=results)
 
 @app.route("/removeBatchFile", methods=["GET", "POST"])
 def removeBatchFile():
@@ -1364,8 +1366,8 @@ def listManagedPackages():
     packageList = []
     for node in nodes:
         i = globals.nodeLabels.index(node)
-        
-	if  package == "":
+
+    if  package == "":
             results = listPackageForSingleSlave_common(packageNames, node)
         else:
             results = createJob_SingleSlavePanel_Common(node, package, configXmlFilePath, jobNameSuffix)
@@ -1375,37 +1377,37 @@ def listManagedPackages():
                 pkg['distro'] = globals.nodeDetails[i]['distro']
                 pkg['osversion'] = globals.nodeDetails[i]['version']
                 pkg['arch'] = globals.nodeDetails[i]['arch']
-		pkg['os'] = pkg['distro']+"-"+pkg['osversion'] 
+                pkg['os'] = pkg['distro']+"-"+pkg['osversion']
                 showAddButton = False
                 showRemoveButton = False
-                
+
                 managedP, managedV, userAddedVersion = sharedData.getManagedPackage(ml, pkg, node)
                 # User will be shown ADD button if "Managed Version" is less than "Latest Version" or "Installed Version" is less than the "Latest Version"
-		# User will be show Delete button if a installed version is available on the slave node
-		pkg['managedPackageVersion'] = managedV
+                # User will be show Delete button if a installed version is available on the slave node
+                pkg['managedPackageVersion'] = managedV
                 if managedP:
                     if "updateVersion" in pkg and pkg["updateVersion"] and pkg["updateVersion"]!="N/A":
-			if managedV and managedV!="N/A":
-			    if LooseVersion(pkg["updateVersion"]) > LooseVersion(managedV):
-				showAddButton = True
-			if not showAddButton:
-			    if "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":	
-				if LooseVersion(pkg["updateVersion"]) > LooseVersion(pkg["installedVersion"]):
-					showAddButton = True 
-		    pkg['userAddedVersion'] = userAddedVersion
-		    if userAddedVersion != "No":
-			showRemoveButton = True
-			if pkg['userAddedVersion'] == pkg['updateVersion']:
-				showAddButton = False
+                        if managedV and managedV!="N/A":
+                            if LooseVersion(pkg["updateVersion"]) > LooseVersion(managedV):
+                                showAddButton = True
+                            if not showAddButton:
+                                if "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":
+                                    if LooseVersion(pkg["updateVersion"]) > LooseVersion(pkg["installedVersion"]):
+                                        showAddButton = True
+                    pkg['userAddedVersion'] = userAddedVersion
+                    if userAddedVersion != "No":
+                        showRemoveButton = True
+                            if pkg['userAddedVersion'] == pkg['updateVersion']:
+                                showAddButton = False
                     elif "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":
                         showRemoveButton = True
-		else:
-		    if pkg['updateVersion'] != "N/A":
-			showAddButton = True
+                else:
+                    if pkg['updateVersion'] != "N/A":
+                        showAddButton = True
                 if not showAddButton and pkg['updateAvailable']:
-		    showAddButton = True   
-		pkg['showAddButton'] = showAddButton
-		pkg['showRemoveButton'] = showRemoveButton   
+                    showAddButton = True
+                pkg['showAddButton'] = showAddButton
+                pkg['showRemoveButton'] = showRemoveButton
                 packageList.append(pkg)
         except KeyError:
              return json.jsonify(status="failure", error=results['error'] ), 404
@@ -1457,7 +1459,7 @@ def removeFromManagedList():
         distro = request.args.get("distro", "")
     except KeyError:
         return json.jsonify(status="failure", error="missing distro argument"), 400
-   
+
     try:
         arch = request.args.get("arch", "")
     except KeyError:
@@ -1688,10 +1690,10 @@ def getPackagesCSVFromManagedList(slaveNodeDistro, mljson):
         if runtime['distro'] == slaveNodeDistro or slaveNodeDistro == "All":
             for package in runtime['autoportPackages']:
                 uniquePackages.add(package['name']);
-	    for package in runtime['autoportChefPackages']:    
-	        uniquePackages.add(package['name']);
-	    for package in runtime['userPackages']:    
-	        uniquePackages.add(package['name']);
+        for package in runtime['autoportChefPackages']:
+            uniquePackages.add(package['name']);
+        for package in runtime['userPackages']:
+            uniquePackages.add(package['name']);
     packagesCSV = ",".join(list(uniquePackages))
     return packagesCSV;
 

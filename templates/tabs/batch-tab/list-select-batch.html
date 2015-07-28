@@ -75,23 +75,6 @@
 
     <!-- Show batch files reports table -->
     <div rv-show="batchState.showBatchReportsTable">
-      <div id="batchReportsToolbar" class="btn-group">
-        <a>
-          <button type="button" class="btn btn-primary">
-            Test History
-          </button>
-        </a>
-        <a>
-          <button type="button" class="btn btn-primary">
-            Test Detail
-          </button>
-        </a>
-        <a>
-          <button type="button" class="btn btn-primary">
-            Test Compare (2)
-          </button>
-        </a>
-      </div>
       <table class="table panel panel-default" id="batchReportsTable"
         data-pagination="true" data-click-to-select="true"
         data-toolbar="#batchReportsToolbar">
@@ -103,6 +86,14 @@
           </tr>
         </thead>
       </table>
+      <div class="row buttonLeft">
+        <a rv-on-click="batchState.backToBatchList">
+          <button class="btn btn-info" type="button">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            Back to list
+          </button>
+        </a>
+      </div>
     </div>
 
     {% include "tabs/batch-tab/loading.html" %}
