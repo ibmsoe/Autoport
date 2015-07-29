@@ -1367,7 +1367,7 @@ def listManagedPackages():
     for node in nodes:
         i = globals.nodeLabels.index(node)
 
-    if  package == "":
+        if  package == "":
             results = listPackageForSingleSlave_common(packageNames, node)
         else:
             results = createJob_SingleSlavePanel_Common(node, package, configXmlFilePath, jobNameSuffix)
@@ -1384,21 +1384,23 @@ def listManagedPackages():
                 managedP, managedV, userAddedVersion = sharedData.getManagedPackage(ml, pkg, node)
                 # User will be shown ADD button if "Managed Version" is less than "Latest Version" or "Installed Version" is less than the "Latest Version"
                 # User will be show Delete button if a installed version is available on the slave node
+
                 pkg['managedPackageVersion'] = managedV
                 if managedP:
                     if "updateVersion" in pkg and pkg["updateVersion"] and pkg["updateVersion"]!="N/A":
+
                         if managedV and managedV!="N/A":
                             if LooseVersion(pkg["updateVersion"]) > LooseVersion(managedV):
                                 showAddButton = True
-                            if not showAddButton:
-                                if "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":
-                                    if LooseVersion(pkg["updateVersion"]) > LooseVersion(pkg["installedVersion"]):
-                                        showAddButton = True
+                        if not showAddButton:
+                            if "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":
+                                if LooseVersion(pkg["updateVersion"]) > LooseVersion(pkg["installedVersion"]):
+                                    showAddButton = True
                     pkg['userAddedVersion'] = userAddedVersion
                     if userAddedVersion != "No":
                         showRemoveButton = True
-                            if pkg['userAddedVersion'] == pkg['updateVersion']:
-                                showAddButton = False
+                        if pkg['userAddedVersion'] == pkg['updateVersion']:
+                            showAddButton = False
                     elif "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":
                         showRemoveButton = True
                 else:
@@ -1410,7 +1412,7 @@ def listManagedPackages():
                 pkg['showRemoveButton'] = showRemoveButton
                 packageList.append(pkg)
         except KeyError:
-             return json.jsonify(status="failure", error=results['error'] ), 404
+            return json.jsonify(status="failure", error=results['error'] ), 404
 
     return json.jsonify(status="ok", packages=packageList)
 
