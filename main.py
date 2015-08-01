@@ -219,10 +219,11 @@ def search():
     except IOError as e:
         return json.jsonify(status="failure", error="Could not contact github: " + str(e)), 503
 
-    if repos.totalCount == 0:
+    if not repos or repos.totalCount == 0:
         # TODO - return no results page
         return json.jsonify(status="failure", error="no results"), 418
-    elif repos.totalCount <= maxResults:
+
+    if repos.totalCount <= maxResults:
         numResults = repos.totalCount
 
     for repo in repos[:numResults]:
@@ -314,11 +315,30 @@ def detail(id, repo=None):
     # Send
     return json.jsonify(status="ok", repo=repoData, type="detail", panel=panel)
 
+# This function recomputes the search criteria for multi-project search
+def changeQuery(q, key, newval):
+    newq = []
+    list = q.split()
+    for ele in list:
+        keylist = ele.split(':>')
+        if len(keylist) == 1:
+            keylist = ele.split(':0..')
+        if key in keylist:
+            newval = '0..' + str(newval)
+            keylist[1] = newval
+            keylist=':'.join(keylist)
+        else:
+            keylist=':>'.join(keylist)
+        newq.append(keylist)
+    newq = ' '.join(newq)
+    return newq
+
 # Search repositories - return JSON search results for the GitHub
 # /search/repositories API call. See the following for details:
 #   https://developer.github.com/v3/search/
 @app.route("/search/repositories")
 def search_repositories():
+
     # GitHub API parameters
     q     = request.args.get("q",     "")
     sort  = request.args.get("sort",  "stars")
@@ -333,32 +353,99 @@ def search_repositories():
 
     # This algorithm must be fast as it is used to collect information on potentially
     # thousands of projects.  Number of projects is a user specified field.  Don't look
-    # detailed information as this search is used to perform discovery of popular
-    # projects for research purposes, not necessarily to build.  We defer the build
-    # lookup to when the batch file is submitted for build and test.   This is also
-    # as the build information for current may change over time.  ie. ant to maven
+    # for detailed information as this search is used to perform discovery, not
+    # necessarily to build.  We collect detailed information when batch files are
+    # submitted for build and test as build information may change. ie. ant to maven
+
+    remaining = limit
+    githubLimit = 300
+    if limit < githubLimit:
+        githubLimit = limit
     results = []
+
     try:
-        for repo in globals.github.search_repositories(q, sort=sort, order=order)[:limit]:
-            globals.cache.cacheRepo(repo)
-            results.append({
-                "id": repo.id,
-                "name": repo.name,
-                "owner": repo.owner.login,
-                "owner_url": repo.owner.html_url,
-                "stars": repo.stargazers_count,
-                "forks": repo.forks_count,
-                "url": repo.html_url,
-                "size_kb": repo.size,
-                "last_update": str(repo.updated_at),
-                "language": repo.language,
-                "description": repo.description,
-                "classifications": classify(repo)
-            })
-        return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
+        while remaining:
+            cnt = 0;
+            print q
+            repos = globals.github.search_repositories(q, sort=sort, order=order)[:githubLimit]
+            for repo in repos:
+                globals.cache.cacheRepo(repo)
+                remaining -= 1
+                cnt += 1
+                results.append({
+                    "id": repo.id,
+                    "name": repo.name,
+                    "owner": repo.owner.login,
+                    "owner_url": repo.owner.html_url,
+                    "stars": repo.stargazers_count,
+                    "forks": repo.forks_count,
+                    "url": repo.html_url,
+                    "size_kb": repo.size,
+                    "last_update": str(repo.updated_at),
+                    "language": repo.language,
+                    "description": repo.description,
+                    "classifications": classify(repo)
+                })
+                if not remaining:
+                    break
+
+            # Github documents a max of 1000 search results per query.  We limit the
+            # search to a fraction of that with githubLimit (300) to avoid the search
+            # rate limit.  We assume fewer results than githubLimit means there is no
+            # more data to be had.
+            if cnt < githubLimit or remaining <= 0:
+                break
+
+            print "queued = " + str(limit-remaining), "remaining = " + str(remaining)
+
+            # We are going to search again up to the fork or star count of the last
+            # entry.  There may be more of these entries that we haven't discovered
+            # yet, so we remove them.  We will collect them in the next loop.
+            if sort == "stars":
+                trailingCnt = results[-1]['stars']
+            else:
+                trailingCnt = results[-1]['forks']
+
+            print "name =", results[-1]['name']
+
+            while results:
+                if sort == "stars":
+                    currentCnt = results[-1]['stars']
+                else:
+                    currentCnt = results[-1]['forks']
+
+                if trailingCnt == currentCnt:
+                    results.pop()
+                    remaining += 1
+                else:
+                    break
+
+            # Change the query from sort:0 to sort:0..TrailingCnt
+            q = changeQuery(q, sort, trailingCnt)
+
+            # Pace queries.  Avoid rate limit exception
+            sleep(15)
+
     except GithubException as e:
-        return json.jsonify(status="failure",
-                 error="GithubException ({0}): {1}".format(e.status, e.data['message'])), 400
+        # This rate limit applies to the core apis, not search according to the
+        # github documentation, but I couldn't figure out how to get the search limit
+        # data.  I don't think github has implemented it yet.
+        print "WARNING[rateLimit exceeded]"
+        rateLimit = globals.github.get_rate_limit()
+        print "rateLimit.limit = ", rateLimit.rate.limit
+        print "rateLimit.remaining = ", rateLimit.rate.remaining
+        print "rateLimit.reset = ", rateLimit.rate.reset
+
+    # Return search results if we have any.  The user specified Limit is a maximum.
+    # There is no guarantee that there are that many entries.  Some data is better
+    # than no data.  The user can always try again if he wants more.
+    if results:
+        cnt = limit - remaining
+        print "/search/repositories Requested = " + str(limit) + " Returned = " + str(cnt)
+        return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
+
+    return json.jsonify(status="failure",
+            error="GithubException ({0}): {1}".format(e.status, e.data['message'])), 400
 
 # Upload Batch File - takes a file and uploads it to a permanent location (TBD)
 @app.route("/uploadBatchFile", methods=['GET', 'POST'])
@@ -1740,8 +1827,11 @@ if __name__ == "__main__":
     autoportInitialisation()
 
     p = argparse.ArgumentParser()
-    p.add_argument("-p", "--public",               action="store_true", help="specifies for the web server to listen over the public network, defaults to only listening on private localhost")
-    p.add_argument("-u", "--jenkinsURL",                                help="specifies the URL for the Jenkins server, defaults to '" + globals.jenkinsUrl + "'")
+    p.add_argument("-p", "--public", action="store_true",
+                   help="specifies for the web server to listen over the public network,\
+                   defaults to only listening on private localhost")
+    p.add_argument("-u", "--jenkinsURL", help="specifies the URL for the Jenkins server,\
+                   defaults to '" + globals.jenkinsUrl + "'")
     args = p.parse_args()
 
     if args.jenkinsURL:
