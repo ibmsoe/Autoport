@@ -48,7 +48,7 @@
                 <button type="button" class="btn btn-primary">
                   Install / Update
                 </button>
-              </a> 
+              </a>
               <a rv-show="jenkinsState.selectedSingleSlavePackage.packageInstalled" rv-on-click="jenkinsState.removePackageForSingleSlave">
                 <button type="button" class="btn btn-primary">
                   Remove
@@ -121,50 +121,51 @@
         {% include "tabs/monitoring-tab/managed-packages-loading.html" %}
 
         <div rv-show="jenkinsState.managedPackageTableReady">
-	  <div class="alert alert-success" rv-show="jenkinsState.manageManagePanelFilter">
-	    Package search result is based on the package name and package description.	
-	  </div>	
+            <div class="alert alert-success" rv-show="jenkinsState.manageManagePanelFilter">
+                Package search result is based on the package name and package description.
+            </div>
           <div class="alert alert-success">
             <a class="buttonRight">
-              <button type="button" class="btn btn-primary" rv-on-click="jenkinsState.synchManagedPackageList">
+              <button type="button" id="syncManagedPackageButton" class="btn btn-primary" rv-on-click="jenkinsState.synchManagedPackageList">
                 Synch
               </button>
             </a>
-            <div><u>Add</u> and <u>Remove</u> packages to the managed package list shown below.<br>Then, <u>Synch</u>ronize the list with build servers which will perform installs and un-installs.</div>
+            <div>This tool defines a minimum set of packages that cannot be removed. You can upgrade or downgrade these packages, but not remove them. You can also search for new packages and add or remove them. The synchronize action applies the list to build servers and performs installs and un-installs.</div>
 
           </div>
           <br/>
+          {% include "tabs/monitoring-tab/managed-packages-action-loading.html" %}
           <!-- START MULTIPLE SERVER PACKAGE LIST TABLE -->
-	    <div id="multiServerPackageListToolbar" class="btn-group">
-              <a rv-show="jenkinsState.selectedMultiSlavePackage.showAddButton" rv-on-click="jenkinsState.addToManagedList">
-                <button type="button" class="btn btn-primary">
+          <div id="multiServerPackageListToolbar" class="btn-group">
+              <a rv-on-click="jenkinsState.addToManagedList">
+                <button type="button" class="btn btn-primary" id="addToManagedList">
                   Add
                 </button>
               </a>
-              <a rv-show="jenkinsState.selectedMultiSlavePackage.showRemoveButton" rv-on-click="jenkinsState.removeFromManagedList">
-                <button type="button" class="btn btn-primary">
+              <a  rv-on-click="jenkinsState.removeFromManagedList">
+                <button id="removeFromManagedList" type="button" class="btn btn-primary">
                   Remove
                 </button>
               </a>
-              <!-- a rv-show="jenkinsState.showUnselectPackageButton" rv-on-click="jenkinsState.unselectPackageForSingleSlave" >
+              <a rv-show="jenkinsState.showUnselectMultiPackageButton" rv-on-click="jenkinsState.unselectPackageForMultiSlave" >
                 <button type="button" class="btn btn-primary">
                   Unselect
                 </button>
-              </a -->
+              </a>
           </div>
 
-	 <!-- START MULTI SERVER PACKAGE LIST TABLE -->
-          <table class="table panel panel-default" id="multiServerPackageListTable" data-sort-name="packageName" data-pagination="true" data-click-to-select="true" data-toolbar="#multiServerPackageListToolbar">
+          <!-- START MULTI SERVER PACKAGE LIST TABLE -->
+          <table class="table panel panel-default" id="multiServerPackageListTable" data-sort-name="packageName" data-pagination="true" data-click-to-select="true" data-maintain-selected="true" data-toolbar="#multiServerPackageListToolbar">
             <thead>
               <tr>
-                <th data-field="state" data-radio="true"></th>
+                <th data-field="state" data-checkbox="true"></th>
                 <th data-field="packageName" data-sortable="true">Package</th>
-		<th data-field="managedPackageVersion" data-sortable="true">Managed Version</th>
+                <th data-field="managedPackageVersion" data-sortable="true">Managed Version</th>
                 <th data-field="installedVersion" data-sortable="true">Installed Version</th>
                 <th data-field="updateVersion" data-sortable="true">Latest Version</th>
-		<th data-field="userAddedVersion" data-sortable="true">User Specified Version</th>
-		<th data-field="os" data-sortable="true">OS</th>
-		<th data-field="arch" data-sortable="true">Arch</th>
+                <th data-field="removablePackage" data-sortable="true">Removable</th>
+                <th data-field="os" data-sortable="true">OS</th>
+                <th data-field="arch" data-sortable="true">Arch</th>
               </tr>
             </thead>
           </table>

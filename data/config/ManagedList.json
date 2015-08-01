@@ -1,8 +1,8 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "5",
-    "cookbook_version": "0.1.0",
+    "sequence": "7",
+    "cookbook_version": "0.1.1",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -68,7 +68,7 @@
                 },
                 {
                     "name": "python",
-                    "version": "2.7"
+                    "version": "2.7.5-5ubuntu3"
                 },
                 {
                     "name": "python-setuptools"
@@ -170,12 +170,10 @@
                     "name": "make"
                 },
                 {
-                    "name": "java-1.7.0-openjdk",
-                    "version": "7"
+                    "name": "java-1.7.0-openjdk"
                 },
                 {
-                    "name": "java-1.7.0-openjdk-devel",
-                    "version": "7"
+                    "name": "java-1.7.0-openjdk-devel"
                 },
                 {
                     "name": "ant"
@@ -211,14 +209,14 @@
                     "name": "perl"
                 },
                 {
-                    "name": "perl-cpan"
+                    "name": "perl-CPAN"
                 },
                 {
                     "name": "perl-file-Remove"
                 },
                 {
                     "name": "python",
-                    "version": "2.7"
+                    "version": "2.7.5-16.el7"
                 },
                 {
                     "name": "python-setuptools"
@@ -244,7 +242,7 @@
             ],
             "autoportChefPackages": [
                 {
-                    "name": "openjdk-7-jdk",
+                    "name": "java-1.7.0-openjdk",
                     "version": "7"
                 },
                 {
@@ -259,9 +257,10 @@
                     "name": "ant"
                 },
                 {
-                    "name": "maven",
+                    "name": "apache-maven",
                     "version": "3.0.5",
-                    "arch": "x86_64"
+                    "arch": "x86_64",
+                    "tag": "maven"
                 },
                 {
                     "name": "gradle",
@@ -283,15 +282,18 @@
                 {
                     "name": "File-Remove",
                     "version": "1.52",
-                    "arch": "x86_64"
+                    "arch": "x86_64",
+                    "tag": "perl-file-remove"
                 },
                 {
                     "name": "Module-Install",
-                    "version": "1.14"
+                    "version": "1.14",
+                    "tag": "perl-module-install"
                 },
                 {
                     "name": "YAML-Tiny",
-                    "version": "1.64"
+                    "version": "1.64",
+                    "tag": "perl-yaml-tiny"
                 },
                 {
                     "name": "Test-Strict",
@@ -304,11 +306,13 @@
                 {
                     "name": "py",
                     "version": "1.4.26",
-                    "arch": "x86_64"
+                    "arch": "x86_64",
+                    "tag": "python-py"
                 },
                 {
                     "name": "pytest",
-                    "version": "2.6.4"
+                    "version": "2.6.4",
+                    "tag": "pytest"
                 }
             ],
             "userPackages": []

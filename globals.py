@@ -78,6 +78,7 @@ def init():
     global localPathForListResults
     global localPathForConfig
     global localPathForPackages
+    global localPathForChefLogs
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
@@ -98,6 +99,7 @@ def init():
     localPathForListResults="./data/list_results/"
     localPathForConfig="./data/config/"
     localPathForPackages="./data/packages/"
+    localPathForChefLogs="./data/chef_logs/"
 
     nodeLabels = []
     nodeNames = []

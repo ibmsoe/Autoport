@@ -36,6 +36,7 @@ import globals
 import paramiko
 import tarfile
 import zipfile
+import re
 from flask import json
 from collections import OrderedDict
 from contextlib import closing
@@ -112,7 +113,7 @@ class SharedData:
             self.__jenkinsFtpClient.mkdir(self.__sharedDataDir)
 
         try:
-            # Return an error if shared data was written by another 
+            # Return an error if shared data was written by another
             # instance of autoport after we read it.  Calling code
             # should start over
             nowData = self.getSharedData(data['name'])
@@ -153,7 +154,7 @@ class SharedData:
         EXTENSIONS = ['.rpm', '.deb', '.zip', '.tar', '.tgz', '.tar.gz', '.tar.bz2']
         return any([filename.endswith(x) for x in EXTENSIONS])
 
-    def getRepoDetails(self, localPath, filename):
+    def getRepoDetails(self, localPath, filename, sourceType):
         # Framing remotepath and command, to transfer the file
         # and update the custom repository
         # based on type (rpm/deb/tar.gz)
@@ -170,7 +171,28 @@ class SharedData:
                        %s/%s" % (repoPath, repoPath, filename)
         elif tarfile.is_tarfile(localPath) or zipfile.is_zipfile(localPath):
             repoPath = "%s/archives/" % (repo_base_dir)
-            command = ""
+            # archive.log holds tar filename, version and sourceType CSV
+            archiveLogPath = "%s/archives/archive.log" % (repo_base_dir)
+
+            # Extracting source filename
+            sourceName = re.findall("(?:)[\(a-z),(A-Z),-]+",filename)[0]
+            if sourceName[len(sourceName)-1] == "-":
+                sourceName = sourceName[:sourceName.rfind('-')]
+
+            # Extracting source file version
+            sourceVersion = re.findall("(?:)[\d.]+",filename)[0]
+
+            # If source file doesn't have version associated then regex returns a dot(.)
+            if sourceVersion == ".":
+                sourceVersion = ""
+            elif sourceVersion[len(sourceVersion)-1] == "." :
+                sourceVersion = sourceVersion[:sourceVersion.rfind('.')]
+
+            # Command which writes the source filename, version and sourceType CSV into archive.log
+            # Command also avoids duplicate entries
+            logEntry = sourceName + "," + sourceVersion +"," + sourceType + "," + sourceName
+            command = "touch " + archiveLogPath + "; grep -q -F \"" + logEntry + "\" "+ archiveLogPath + " || echo \"" + logEntry + "\" >> " + archiveLogPath
+
         return repoPath, command
 
     def putRemoteFile(self, localPath, remotePath, filename):
@@ -205,14 +227,14 @@ class SharedData:
         with closing(tarfile.open(output_filename, "w:gz")) as tar:
             tar.add(source_dir, arcname=os.path.basename(source_dir))
 
-    def uploadPackage(self, file):
+    def uploadPackage(self, file, sourceType):
 
         # Saving the file to a local path on autoport host
         localPath = self.putLocalFile(file)
 
         # Based on the file type, deciding the remote path where the file is
         # to be saved and framing the appropriate command to add it to custom repository.
-        remotePath, command  = self.getRepoDetails(localPath, file.filename)
+        remotePath, command  = self.getRepoDetails(localPath, file.filename, sourceType)
 
         # If no remotePath is returned , file is not a valid rpm/deb or archive
         # hence deleting the package uploaded to temporary location
@@ -332,7 +354,7 @@ class SharedData:
 
         return data
 
-     
+
     def getManagedPackage(self, managedList, pkg, node):
         # Allow user to pass in managedList in case he needs to perform multiple lookups
         if not managedList:
@@ -340,10 +362,10 @@ class SharedData:
 
         distroName, distroRel, distroVersion = self.getDistro(node)
 
-	# The version becomes managed version if it satisfies the below cases 
-	# case 1: If the jenkins returned package arch matches with arch of ManagedList and version available in ManagedList then the version from ManagedList becomes the Managed Version
+        # The version becomes managed version if it satisfies the below cases
+        # case 1: If the jenkins returned package arch matches with arch of ManagedList and version available in ManagedList then the version from ManagedList becomes the Managed Version
         # case 2: If the jenkins returned package has the arch but not in ManagedList and version available in ManagedList then the version from ManagedList becomes the Managed Version
-        # case 3: If in the above two cases the ManagedList doesn't contain version for given package then installedVersion becomes the managed version 
+        # case 3: If in the above two cases the ManagedList doesn't contain version for given package then installedVersion becomes the managed version
         packageName = pkg["packageName"]
         pkgVersion = ""
         userAddedVersion = "No"
@@ -353,81 +375,96 @@ class SharedData:
             if runtime['distroVersion'] != distroRel and runtime['distroVersion'] != distroVersion:
                 continue
             for package in runtime['autoportChefPackages']:
-            	if package['name'] == pkg['packageName']:
-			if "arch" in package and package['arch'] == pkg['arch']:
-			    if "version" in package:
-			        pkgVersion = package['version']
-			    else:
-			        pkgVersion = pkg['updateVersion']
-			else:
-			    if "version" in package:
-			        pkgVersion = package['version']
-			    else:
-			        pkgVersion = pkg['updateVersion']
-		if pkgVersion:
-		    break
-	    if not pkgVersion:
-		for package in runtime['autoportPackages']:
-		    if package['name'] == pkg['packageName']:
-			if "arch" in package and package['arch'] == pkg['arch']:
-			    if "version" in package:
-		    	        pkgVersion = package['version']
-			    else:
-				pkgVersion = pkg['updateVersion']
-			else:
-			    if "version" in package:
-			        pkgVersion = package['version']
-		  	    else:
-			        pkgVersion = pkg['updateVersion']
-		    if pkgVersion:
-		        break
-	    for package in runtime['userPackages']:
-	        if package['name'] == packageName and package['owner'] == self.__localHostName and "arch" in package and package['arch'] == pkg['arch']:
-		    try:
+                if package['name'] == pkg['packageName'] or ("tagName" in package and package["tagName"] == pkg['packageName']):
+                    if "arch" in package and package['arch'] == pkg['arch']:
+                        if "version" in package:
+                            pkgVersion = package['version']
+                        else:
+                            pkgVersion = pkg['updateVersion']
+                    else:
+                        if "version" in package:
+                            pkgVersion = package['version']
+                        else:
+                            pkgVersion = pkg['updateVersion']
+                if pkgVersion:
+                    break
+            if not pkgVersion:
+                for package in runtime['autoportPackages']:
+                    if package['name'] == pkg['packageName']:
+                        if "arch" in package and package['arch'] == pkg['arch']:
+                            if "version" in package:
+                                pkgVersion = package['version']
+                            else:
+                                pkgVersion = pkg['updateVersion']
+                        else:
+                            if "version" in package:
+                                pkgVersion = package['version']
+                            else:
+                                pkgVersion = pkg['updateVersion']
+                    if pkgVersion:
+                        break
+            for package in runtime['userPackages']:
+                if package['name'] == packageName and package['owner'] == self.__localHostName and "arch" in package and package['arch'] == pkg['arch']:
+                    try:
                         userAddedVersion = package['version']
                     except KeyError:
                         break
-	if not pkgVersion:
-            pkgVersion="N/A"    
+        if not pkgVersion:
+            pkgVersion="N/A"
         return packageName, pkgVersion, userAddedVersion
 
-    def addToManagedList(self, packageName, packageVersion, distro, arch, action):
+    def addToManagedList(self, packageDataList, action): # packageName, packageVersion, distro, arch, action):
         # Read the file in memory
         localManagedListFileData = self.getLocalData("ManagedList.json")
 
         # Perform additions to memory list
-        for sharedRuntime in localManagedListFileData['managedRuntime']:
-            if sharedRuntime['distro'] == distro:
-                addFlag = True
-                for package in sharedRuntime['userPackages']:
-                    if package['name'] == packageName and  package['arch'] == arch and package['owner'] == self.__localHostName:
-                    # If package is already present for the current user, check its version and update the version if they are different
-                        if package['version'] != packageVersion:
-                            package['version'] = packageVersion
-                        addFlag = False
-                        break
-                if addFlag == True:
-                    sharedRuntime['userPackages'].append({"owner":self.__localHostName, "name":packageName, "version":packageVersion, "arch":arch, "action":action})
-                break
+        for pkgData in packageDataList:
+            packageName = pkgData['package_name']
+            packageVersion =  pkgData['package_version']
+            distro = pkgData['distro']
+            arch =  pkgData['arch']
+            packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
 
+            for sharedRuntime in localManagedListFileData['managedRuntime']:
+                if pkgData['removable'] == 'No':
+                    continue
+                if sharedRuntime['distro'] == distro:
+                    addFlag = True
+                    for package in sharedRuntime['userPackages']:
+                        if package['name'] == packageName and  package['arch'] == arch and package['owner'] == self.__localHostName:
+                        # If package is already present for the current user, check its version and update the version if they are different
+                            if package['version'] != packageVersion:
+                                package['version'] = packageVersion
+                            addFlag = False
+                            break
+                    if addFlag == True:
+                        sharedRuntime['userPackages'].append({"owner":self.__localHostName, "name":packageName, "version":packageVersion, "arch":arch, "action":action, "type": packageType})
+                        break
         # Write back to the local managed list file
         localPath = self.putLocalData(localManagedListFileData, "")
 
-    def removeFromManagedList(self, packageName, distro, arch, action):
+    def removeFromManagedList(self, packageDataList, action):
         # Read the file in memory
         localManagedListFileData = self.getLocalData("ManagedList.json")
 
         # Perform deletion to memory list
-        for sharedRuntime in localManagedListFileData['managedRuntime']:
-            if sharedRuntime['distro'] == distro:
-                for package in sharedRuntime['userPackages']:
-                    if package['name'] == packageName and  package['arch'] == arch and package['owner'] == self.__localHostName:
-                    # If package is present for the current user, update action
-                        # sharedRuntime['userPackages'].remove(package)
-			package['action'] = action
-			#localManagedListFileData['managedRuntime'].sharedRuntime 
-			#sharedRuntime['userPackages']['action'] = action
-                        break
+        for pkgData in packageDataList:
+            for sharedRuntime in localManagedListFileData['managedRuntime']:
+                packageName = pkgData['package_name']
+                packageVersion =  pkgData['package_version']
+                distro = pkgData['distro']
+                arch =  pkgData['arch']
+                if pkgData['removable'] == 'No':
+                  continue
+                if sharedRuntime['distro'] == distro:
+                    for package in sharedRuntime['userPackages']:
+                        if package['name'] == packageName and  package['arch'] == arch and package['owner'] == self.__localHostName:
+                            # If package is present for the current user, update action
+                            if "installed_version" in pkgData and pkgData["installed_version"]!="N/A":
+                                package['action'] = action
+                            else:
+                                sharedRuntime['userPackages'].remove(package)
+                            break
 
         # Write back to the local managed list file
         localPath = self.putLocalData(localManagedListFileData, "")
