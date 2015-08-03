@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <title>Log Comparison</title>
+        <link href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='css/lib/bootstrap-multiselect.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='css/lib/bootstrap-table.min.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='css/lib/bootstrap-table.min.css') }}" rel="stylesheet"/>
+        <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/bootstrap-multiselect.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/bootstrap-table.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/bootstrap-table-en-US.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/jquery-2.1.4.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/rivets.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/binders.js') }}"></script>
+
+        <script src="http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js"></script>
+        <script src="http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+        <!-- Bootstrap -->
+        <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet"/>
+        <!-- project specific -->
+        <link href="{{ url_for('.static', filename='css/main.css') }}" rel="stylesheet"/>
+    </head>
+
+    <body>
+        <header>
+            <div class="header">
+                <h1 class="logo">Smart Log Comparison</h1>
+            </div>
+        </header>
+
+        <br>
+        <div class="container-fluid">
+            <div class="row-fluid">
+                <div class="panel panel-primary">
+                    <div class="panel-heading"><h4 class="panel-title">for {{leftname|safe}} / {{rightname|safe}}</span></h4></div>
+                    <div class="panel-body">
+                        <div class="diffrow">
+                            <div class="diffcol">
+                                <div id="leftres" style="height: 500px; border: 1px solid #ccc; overflow:scroll;"
+                                    onscroll="document.getElementById('rightres').scrollTop = this.scrollTop; document.getElementById('rightres').scrollLeft = this.scrollLeft;">
+                                    {{left_content|safe}}
+                                </div>
+                            </div>
+                            <div class="diffcol">
+                                <div id="rightres" style="height: 500px; border: 1px solid #ccc; overflow:scroll;"
+                                    onscroll="document.getElementById('leftres').scrollTop = this.scrollTop; document.getElementById('leftres').scrollLeft = this.scrollLeft;">
+                                    {{right_content|safe}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+               </div>
+            </div>
+        </div>
+    </body>
+</html>

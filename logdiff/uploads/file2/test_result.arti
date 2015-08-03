@@ -1,0 +1,325 @@
+[INFO] Scanning for projects...
+[INFO]                                                                         
+[INFO] ------------------------------------------------------------------------
+[INFO] Building JUnit 4.13-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+[INFO] 
+[INFO] --- maven-enforcer-plugin:1.4:enforce (enforce-versions) @ junit ---
+[INFO] 
+[INFO] --- replacer:1.5.3:replace (default) @ junit ---
+[INFO] Replacement run on 1 file.
+[INFO] 
+[INFO] --- maven-resources-plugin:2.7:resources (default-resources) @ junit ---
+[INFO] Using 'ISO-8859-1' encoding to copy filtered resources.
+[INFO] Copying 2 resources
+[INFO] Copying 1 resource
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.3:compile (default-compile) @ junit ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 195 source files to /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/target/classes
+[WARNING] bootstrap class path not set in conjunction with -source 1.5
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/main/java/org/junit/matchers/JUnitMatchers.java:[7,34] [deprecation] StacktracePrintingMatcher in org.junit.internal.matchers has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/main/java/org/junit/rules/ExpectedExceptionMatcherBuilder.java:[4,32] [deprecation] JUnitMatchers in org.junit.matchers has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/main/java/junit/extensions/TestDecorator.java:[3,22] [deprecation] Assert in junit.framework has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/main/java/junit/extensions/TestDecorator.java:[13,35] [deprecation] Assert in junit.framework has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/main/java/org/junit/rules/ExpectedException.java:[8,41] [deprecation] ThrowableCauseMatcher in org.junit.internal.matchers has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/main/java/junit/framework/TestResult.java:[90,28] [deprecation] Assert in junit.framework has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/main/java/org/junit/rules/ExpectedException.java:[260,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[INFO] 
+[INFO] --- maven-resources-plugin:2.7:testResources (default-testResources) @ junit ---
+[INFO] Using 'ISO-8859-1' encoding to copy filtered resources.
+[INFO] Copying 2 resources
+[INFO] 
+[INFO] --- maven-compiler-plugin:3.3:testCompile (default-testCompile) @ junit ---
+[INFO] Changes detected - recompiling the module!
+[INFO] Compiling 200 source files to /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/target/test-classes
+[WARNING] bootstrap class path not set in conjunction with -source 1.5
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/validation/BadlyFormedClassesTest.java:[7,33] [deprecation] JUnit4ClassRunner in org.junit.internal.runners has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/internal/matchers/StacktracePrintingMatcherTest.java:[10,41] [deprecation] StacktracePrintingMatcher in org.junit.internal.matchers has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/internal/matchers/StacktracePrintingMatcherTest.java:[11,41] [deprecation] StacktracePrintingMatcher in org.junit.internal.matchers has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/internal/matchers/ThrowableCauseMatcherTest.java:[7,41] [deprecation] ThrowableCauseMatcher in org.junit.internal.matchers has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatchmanTest.java:[3,29] [deprecation] Assert in junit.framework has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatchmanTest.java:[11,22] [deprecation] TestWatchman in org.junit.rules has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/deprecated/JUnit4ClassRunnerTest.java:[8,33] [deprecation] JUnit4ClassRunner in org.junit.internal.runners has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/AllTests.java:[33,33] [deprecation] JUnit4ClassRunnerTest in org.junit.tests.deprecated has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/MethodRulesTest.java:[19,22] [deprecation] TestWatchman in org.junit.rules has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/validation/BadlyFormedClassesTest.java:[31,13] [deprecation] JUnit4ClassRunner in org.junit.internal.runners has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/deprecated/JUnit4ClassRunnerTest.java:[21,13] [deprecation] JUnit4ClassRunner in org.junit.internal.runners has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/deprecated/JUnit4ClassRunnerTest.java:[41,13] [deprecation] JUnit4ClassRunner in org.junit.internal.runners has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/AllTests.java:[180,8] [deprecation] JUnit4ClassRunnerTest in org.junit.tests.deprecated has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/ParameterSignatureTest.java:[53,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/runners/model/FrameworkMethodTest.java:[48,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/running/classes/ParentRunnerTest.java:[75,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/running/classes/ParentRunnerTest.java:[152,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/running/classes/ParentRunnerTest.java:[153,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithNamedDataPoints.java:[69,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithDataPointMethod.java:[41,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithDataPointMethod.java:[59,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithDataPointMethod.java:[66,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithDataPointMethod.java:[95,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithDataPointMethod.java:[102,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/extendingwithstubs/StubbedTheoriesTest.java:[13,8] [deprecation] <T>assumeThat(T,Matcher<T>) in Assume has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assumeThat(T,Matcher<T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/TheoriesPerformanceTest.java:[36,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/SuccessfulWithDataPointFields.java:[31,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/SuccessfulWithDataPointFields.java:[66,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/running/classes/ParameterizedTestTest.java:[332,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/runner/FilterFactoriesTest.java:[53,8] [deprecation] <T>assumeThat(T,Matcher<T>) in Assume has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assumeThat(T,Matcher<T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/running/classes/ParentRunnerFilteringTest.java:[134,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[108,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[113,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[157,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[256,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[276,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[299,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[384,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[416,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[443,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[444,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/categories/CategoryTest.java:[445,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/internal/matchers/StacktracePrintingMatcherTest.java:[33,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/internal/matchers/StacktracePrintingMatcherTest.java:[35,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/ClassRulesTest.java:[150,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/ObjectContractTest.java:[34,8] [deprecation] <T>assumeThat(T,Matcher<T>) in Assume has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assumeThat(T,Matcher<T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/ObjectContractTest.java:[35,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/internal/matchers/ThrowableCauseMatcherTest.java:[16,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[28,8] [deprecation] <T>assumeThat(T,Matcher<T>) in Assume has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assumeThat(T,Matcher<T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[29,19] [deprecation] <T>AssumptionViolatedException(T,Matcher<T>) in AssumptionViolatedException has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in constructor <T>AssumptionViolatedException(T,Matcher<T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[29,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[35,19] [deprecation] <T>AssumptionViolatedException(T,Matcher<T>) in AssumptionViolatedException has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in constructor <T>AssumptionViolatedException(T,Matcher<T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[35,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[41,40] [deprecation] <T>AssumptionViolatedException(T,Matcher<T>) in AssumptionViolatedException has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in constructor <T>AssumptionViolatedException(T,Matcher<T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[42,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[48,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[56,6] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/AssumptionViolatedExceptionTest.java:[93,6] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/junit3compatibility/AllTestsTest.java:[51,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/assertion/AssertionTest.java:[557,12] [deprecation] <T>assertThat(String,T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(String,T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/assertion/AssertionTest.java:[568,12] [deprecation] <T>assertThat(String,T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(String,T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/assertion/AssertionTest.java:[582,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[26,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[32,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[47,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[53,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[63,12] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[69,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[84,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[104,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[128,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[162,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/theories/runner/WithExtendedParameterSources.java:[182,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/runners/model/FrameworkFieldTest.java:[48,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/listening/TextListenerTest.java:[63,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/listening/TextListenerTest.java:[64,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/manipulation/SingleMethodTest.java:[188,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[36,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[56,27] [deprecation] skipped(AssumptionViolatedException,Description) in TestWatcher has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[72,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[80,27] [deprecation] skipped(AssumptionViolatedException,Description) in TestWatcher has been deprecated
+[WARNING] /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[95,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[96,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[97,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[116,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[138,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[139,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[140,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[161,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[162,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[163,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[189,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[190,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[191,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/tests/experimental/rules/TestWatcherTest.java:[192,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/rules/StopwatchTest.java:[172,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/rules/StopwatchTest.java:[173,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/rules/StopwatchTest.java:[174,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[WARNING]   where T is a type-variable:
+    T extends Object declared in method <T>assertThat(T,Matcher<? super T>)
+/home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/src/test/java/org/junit/rules/StopwatchTest.java:[176,8] [deprecation] <T>assertThat(T,Matcher<? super T>) in Assert has been deprecated
+[INFO] 
+[INFO] --- maven-surefire-plugin:2.18.1:test (default-test) @ junit ---
+[INFO] Surefire report directory: /home/jenkins/workspace/ADMINIB-AU7CN5L.269347.x86-ubuntu-14.04.N-junit.current/target/surefire-reports
+
+-------------------------------------------------------
+ T E S T S
+-------------------------------------------------------
+Running org.junit.tests.AllTests
+Tests run: 948, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 7.35 sec - in org.junit.tests.AllTests
+
+Results :
+
+Tests run: 948, Failures: 0, Errors: 0, Skipped: 0
+
+[INFO] 
+[INFO] --- animal-sniffer-maven-plugin:1.14:check (signature-check) @ junit ---
+[INFO] Checking unresolved references to org.codehaus.mojo.signature:java15:1.0
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time: 19.330s
+[INFO] Finished at: Tue Jul 14 21:31:02 CDT 2015
+[INFO] Final Memory: 13M/456M
+[INFO] ------------------------------------------------------------------------

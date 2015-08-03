@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Smart Log Comparison</title>
+        <link href="{{ url_for('static', filename='css/lib/bootstrap.min.css') }}" rel="stylesheet">
+        <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='css/lib/bootstrap-multiselect.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='css/lib/bootstrap-table.min.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='css/lib/bootstrap-table.min.css') }}" rel="stylesheet"/>
+        <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/bootstrap-multiselect.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/bootstrap-table.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/bootstrap-table-en-US.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/jquery-2.1.4.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/rivets.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/binders.js') }}"></script>
+
+        <script src="http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js"></script>
+        <script src="http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+    </head>
+    <body>
+        <header>
+            <div class="header">
+                <h1 class="logo">Smart Log Comparison</h1>
+            </div>
+        </header>
+        {% include "error.html" %}
+
+
+    <!-- Invalid number of selected projects error modal -->
+        <div class="modal fade" id="resultCompareSelectionAlert" tabindex="-1">
+            <div class="modal-dialog modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">
+                        <span class="glyphicon glyphicon-remove"></span>
+                        </button>
+                        <h4 class="modal-title" id="myModalLabel">Error</h4>
+                    </div>
+                    <div class="modal-body">
+                        You can only run comparison on 2 log files or 2 text fragments..
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- log compare results display in a modal fashion -->
+        {% include "logdiff-results.html"%}
+
+        <ul id="myTab" class="nav nav-tabs">
+            <li  class="active"><a href="#filecomp" data-toggle="tab">Log Files Comparison</a></li>
+            <li><a href="#textcomp" data-toggle="tab">Text Fragments Comparison</a>
+            </li>
+        </ul>
+        <br>
+        <div id="myTabContent" class="tab-content">
+            <div class="tab-pane fade  in active" id="filecomp">
+                <!--div class="inputdiv"-->
+                <form id="upload-files"  class="form-horizontal" role="form">
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="file1">First File</label>
+                        <div class="col-sm-8">
+                            <input class="form-control" type="file" id="file1" name="file1" placeholder="First File">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label" for="file2">Second File</label>
+                        <div class="col-sm-8">
+                            <input class="form-control" type="file" id="file2" name="file2" placeholder="Second File">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-sm-offset-2 col-sm-8">
+                            <button  id="filecompbtn" type="button" class="btn btn-primary"  disabled onclick="filecompfunc();" >Compare</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="tab-pane fade" id="textcomp">
+                <div class="container-fluid">
+                    <form class="form-horizontal" method="post" enctype="multipart/form-data">
+                        <div class="row">
+                            <div class="col-sm-6">
+                                <textarea name="text1" id="text1" style="height: 540px; border: 1px solid; overflow:scroll;"
+                                onscroll="document.getElementById('text2').scrollTop = this.scrollTop; document.getElementById('text2').scrollLeft = this.scrollLeft;">
+                                </textarea>
+                            </div>
+                            <div class="col-sm-6">
+                                <textarea name="text2" id="text2" style="height: 540px; border: 1px solid; overflow:scroll;"
+                                onscroll="document.getElementById('text1').scrollTop = this.scrollTop; document.getElementById('text1').scrollLeft = this.scrollLeft;">
+                                </textarea>
+                            </div>
+                        </div>
+                        <br>
+                        <button id="textcompbtn" type="button" class="btn btn-primary"  disabled onclick="textcompfunc();">Compare</button>
+                    </form>
+                </div>
+            </div>
+
+
+        </div>
+
+    </body>
+    {% include "includes/js-includes.html" %}
+    <script src="{{ url_for('.static', filename='js/logdiffmain.js') }}"></script>
+</html>

@@ -1,0 +1,33 @@
+<div class="modal fade" id="logdiffModal" tabindex="-1">
+    <div class="modal-dialog" style="width: auto;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modalLabel">Comparison Results</h4>
+            </div>
+            <div class="modal-body">
+                <div class="panel panel-primary">
+                    <div class="panel-heading"><h4 class="panel-title"><span id="logdiffHeader"></span></h4></div>
+                    <div class="panel-body">
+                        <div class="diffrow">
+                            <div class="diffcol">
+                                <div id="leftres" style="height: 410px; border: 1px solid #ccc; overflow:scroll;"
+                                        onscroll="document.getElementById('rightres').scrollTop = this.scrollTop; document.getElementById('rightres').scrollLeft = this.scrollLeft;">
+                                        <span id="leftdiff"></span>
+                                </div>
+                                </div>
+                            <div class="diffcol">
+                                <div id="rightres" style="height: 410px; border: 1px solid #ccc; overflow:scroll;"
+                                        onscroll="document.getElementById('leftres').scrollTop = this.scrollTop; document.getElementById('leftres').scrollLeft = this.scrollLeft;">
+                                        <span id="rightdiff"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
