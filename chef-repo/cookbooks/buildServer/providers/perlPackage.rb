@@ -17,7 +17,7 @@ action :install do
   guard_condition = "#{perl_prefix_dir}/bin/perl \
                    -M#{module_string} -e 'print \"$#{module_string}::VERSION\"'"
 
-  directory archive_location do
+  directory extract_location do
     mode '0755'
     owner 'root'
     group 'root'
@@ -25,7 +25,7 @@ action :install do
   end
 
   remote_file "#{archive_location}/#{archive_name}" do
-    source "#{repo_location}/#{archive_name}"
+    source "#{repo_location}/archives/#{archive_name}"
     owner 'root'
     group 'root'
     mode '0775'

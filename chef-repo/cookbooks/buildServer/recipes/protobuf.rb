@@ -10,6 +10,7 @@ when 'ubuntu'
       'python-protobuf'
     ]
   end
+  opt = '--force-yes'
 when 'redhat'
   protobuf_pkgs = [
     'protobuf',
@@ -17,6 +18,7 @@ when 'redhat'
     'protobuf-compiler',
     'protobuf-python'
   ]
+  opt = ''
 end
 
 if protobuf_pkgs.any?

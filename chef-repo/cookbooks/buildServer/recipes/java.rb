@@ -18,20 +18,21 @@ when 'ubuntu'
     "openjdk-#{version}-jdk"
   ]
   java_home = "/usr/lib/jvm/java-1.#{version}.0"
-
+  opt = '--force-yes'
 when 'redhat'
   java_packages = [
     "java-1.#{version}.0-openjdk",
     "java-1.#{version}.0-openjdk-devel"
   ]
   java_home = "/usr/lib/jvm/java-#{version}-openjdk-#{arch}"
+   opt =''
 end
 
 if java_packages.any?
   java_packages.each do |pkg|
     package pkg do
       action :install
-      options '--force-yes'
+      options opt
     end
   end
 

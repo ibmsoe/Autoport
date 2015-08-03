@@ -3,7 +3,7 @@
 # Development tools is a reference to all packages needed to compile software and build new rpms.
 
 if node['kernel']['machine'] == 'x86_64'
-  case node[:platform]
+  case node['platform']
   when 'ubuntu'
     package 'build-essential'
   when 'redhat'
