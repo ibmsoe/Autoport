@@ -15,6 +15,7 @@ import threading
 import paramiko
 import ntpath
 from sharedData import SharedData
+from chefData import ChefData
 from threadpool import makeRequests
 from time import localtime, strftime, sleep
 from flask import Flask, request, render_template, json
@@ -37,6 +38,7 @@ resParser = ResultParser()
 
 catalog = Catalog(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
 sharedData = SharedData(urlparse(globals.jenkinsUrl).hostname)
+chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
 batch = Batch()
 
 # Be sure to update main.js also.
@@ -1055,7 +1057,10 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
         if outDir != "":
             localArtifactsFilePath = outDir + "packageListSingleSlave.json"
             packageJsonFile = open(localArtifactsFilePath)
-            packageData = json.load(packageJsonFile)
+            try:
+                packageData = json.load(packageJsonFile)
+            except ValueError, ex:
+                packageData = []
             packageJsonFile.close()
 
             # Delete the json file and its containing folder
@@ -1316,105 +1321,128 @@ def managePackageForSingleSlave():
     packageVersion = request.args.get("package_version", "")
     packageAction = request.args.get("action", "")
     selectedBuildServer = request.args.get("buildServer", "")
+    packageType = request.args.get("type", "")
+    host = ''
 
-    # Read template XML file
-    tree = ET.parse("./config_template_package_actions_single_slave.xml")
-    root = tree.getroot()
+    # If there is a pacakgeType available , it indicates that this is a source install
+    # and chef job needs to be created for it.
+    if packageType:
+       for node in globals.nodeDetails:
+          if node['nodelabel'] == selectedBuildServer:
+              host = node['hostname']
+       chefAttr, runList = chefData.setChefDataForPackage(packageName, packageVersion, packageType)
+       job = createChefJob(host, chefAttr, runList)
+       buildStatus = ""
+       try:
+           if job['status'] == "success":
+               buildStatus = monitorChefJobs(job['jobName'], sync = True)
+       except KeyError as e:
+           print str(e)
+           assert(False)
+       if buildStatus == "SUCCESS":
+           return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction,
+                               buildStatus=buildStatus)
+       else:
+           return json.jsonify(status="failure", error="Could not perform the action specified"), 400
+    else:
+        # Read template XML file
+        tree = ET.parse("./config_template_package_actions_single_slave.xml")
+        root = tree.getroot()
 
-    # Find elements we want to modify
-    xml_node = root.find("./assignedNode")
-    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
+        # Find elements we want to modify
+        xml_node = root.find("./assignedNode")
+        xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
-    # Modify selected elements
-    xml_node.text = selectedBuildServer
+        # Modify selected elements
+        xml_node.text = selectedBuildServer
 
-    buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
+        buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
 
-    # add parameters information
-    i = 1
-    for param in xml_parameters:
-        if i == 1:
-            param.text = buildServerDistribution
-        elif i == 2:
-            param.text = packageName
-        elif i == 3:
-            param.text = packageVersion
-        elif i == 4:
-            param.text = packageAction
-        i += 1
+        # add parameters information
+        i = 1
+        for param in xml_parameters:
+            if i == 1:
+                param.text = buildServerDistribution
+            elif i == 2:
+                param.text = packageName
+            elif i == 3:
+                param.text = packageVersion
+            elif i == 4:
+                param.text = packageAction
+            i += 1
 
-    # Set Job name
-    uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = globals.localHostName + '.' + str(uid) + '.' + selectedBuildServer + '.' + "managePackageSingleSlave"
+        # Set Job name
+        uid = randint(globals.minRandom, globals.maxRandom)
+        jobName = globals.localHostName + '.' + str(uid) + '.' + selectedBuildServer + '.' + "managePackageSingleSlave"
 
-    # Add header to the config
-    configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
+        # Add header to the config
+        configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
 
-    # Send to Jenkins
-    NO_PROXY = {
-        'no': 'pass',
-    }
-    r = requests.post(
-        globals.jenkinsUrl + "/createItem",
-        headers = {
-            'Content-Type': 'application/xml'
-        },
-        params = {
-            'name': jobName
-        },
-        data = configXml,
-        proxies = NO_PROXY
-    )
+        # Send to Jenkins
+        NO_PROXY = {
+            'no': 'pass',
+        }
+        r = requests.post(
+            globals.jenkinsUrl + "/createItem",
+            headers = {
+                'Content-Type': 'application/xml'
+            },
+            params = {
+                'name': jobName
+            },
+            data = configXml,
+            proxies = NO_PROXY
+        )
 
-    if r.status_code == 200:
-        # Success, send the jenkins job and start it right away.
-        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
+        if r.status_code == 200:
+            # Success, send the jenkins job and start it right away.
+            startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
 
-        # Start Jenkins job
-        requests.get(startJobUrl, proxies=NO_PROXY)
+            # Start Jenkins job
+            requests.get(startJobUrl, proxies=NO_PROXY)
 
-        # Check the status of the Jenkins job
-        checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
-        building = True
+            # Check the status of the Jenkins job
+            checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
+            building = True
 
-        # Poll until job stops building
-        while building:
-            sleep(10)
-            try:
-                buildInfo = json.loads(requests.get(checkBuildUrl).text)
-                building = buildInfo['building']
-            # Check to make sure build isn't queued, if it is wait for it to dequeue
-            except ValueError:
-                checkQueueUrl = globals.jenkinsUrl + "/job/" + jobName + "/api/json"
-                queued = True
+            # Poll until job stops building
+            while building:
+                sleep(10)
+                try:
+                    buildInfo = json.loads(requests.get(checkBuildUrl).text)
+                    building = buildInfo['building']
+                # Check to make sure build isn't queued, if it is wait for it to dequeue
+                except ValueError:
+                    checkQueueUrl = globals.jenkinsUrl + "/job/" + jobName + "/api/json"
+                    queued = True
 
-                count = 0;
-                while queued and count < 20:
-                    sleep(10)
-                    try:
-                        r = requests.get(checkQueueUrl).text
-                        projectInfo = json.loads(r)
-                        inQueue = projectInfo['inQueue']
-                    # if it's not in the queue and not building something went wrong
-                    except ValueError:
-                        print "project failed to start building/queuing" + jobName
-                    count += 1
-                building = False
+                    count = 0;
+                    while queued and count < 20:
+                        sleep(10)
+                        try:
+                            r = requests.get(checkQueueUrl).text
+                            projectInfo = json.loads(r)
+                            inQueue = projectInfo['inQueue']
+                        # if it's not in the queue and not building something went wrong
+                        except ValueError:
+                            print "project failed to start building/queuing" + jobName
+                        count += 1
+                    building = False
 
-        # TODO: grab log file from build server.  Needed for problem determination if it fails
-        # /home/jenkins/jenkins_home/jobs/<jobName>/builds/1/log
+            # TODO: grab log file from build server.  Needed for problem determination if it fails
+            # /home/jenkins/jenkins_home/jobs/<jobName>/builds/1/log
 
-        # Grab the status of the last build
-        buildInfo = json.loads(requests.get(checkBuildUrl).text)
-        buildStatus = buildInfo['result']
+            # Grab the status of the last build
+            buildInfo = json.loads(requests.get(checkBuildUrl).text)
+            buildStatus = buildInfo['result']
 
-        if buildStatus == "SUCCESS":
-            return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)
-        else:
-            return json.jsonify(status="failure", error="Could not perform the action specified"), 400
+            if buildStatus == "SUCCESS":
+                return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)
+            else:
+                return json.jsonify(status="failure", error="Could not perform the action specified"), 400
 
-    if r.status_code == 400:
-        return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job to perform the action requested"), 400
+        if r.status_code == 400:
+            return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job to perform the action requested"), 400
 
 # List installed and available status of the package in packageName by creating and triggering a Jenkins job
 @app.route("/listManagedPackages", methods=["GET"])
@@ -1467,15 +1495,15 @@ def listManagedPackages():
                 pkg['os'] = pkg['distro']+"-"+pkg['osversion']
                 showAddButton = False
                 showRemoveButton = False
+                removablePackage = 'No'
 
                 managedP, managedV, userAddedVersion = sharedData.getManagedPackage(ml, pkg, node)
-                # User will be shown ADD button if "Managed Version" is less than "Latest Version" or "Installed Version" is less than the "Latest Version"
+                # User will be shown ADD button if "Managed Version" is less than "Latest Version" or "Installed Version"
+                # is less than the "Latest Version"
                 # User will be show Delete button if a installed version is available on the slave node
-
                 pkg['managedPackageVersion'] = managedV
                 if managedP:
                     if "updateVersion" in pkg and pkg["updateVersion"] and pkg["updateVersion"]!="N/A":
-
                         if managedV and managedV!="N/A":
                             if LooseVersion(pkg["updateVersion"]) > LooseVersion(managedV):
                                 showAddButton = True
@@ -1486,17 +1514,20 @@ def listManagedPackages():
                     pkg['userAddedVersion'] = userAddedVersion
                     if userAddedVersion != "No":
                         showRemoveButton = True
+                        removablePackage = 'Yes'
                         if pkg['userAddedVersion'] == pkg['updateVersion']:
                             showAddButton = False
-                    elif "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":
-                        showRemoveButton = True
+                    if managedV and managedV=="N/A" and "updateVersion" in  pkg and pkg["updateVersion"]!="N/A":
+                        removablePackage = 'Yes'
                 else:
+                    removablePackage = 'Yes'
                     if pkg['updateVersion'] != "N/A":
                         showAddButton = True
                 if not showAddButton and pkg['updateAvailable']:
                     showAddButton = True
                 pkg['showAddButton'] = showAddButton
                 pkg['showRemoveButton'] = showRemoveButton
+                pkg['removablePackage'] = removablePackage
                 packageList.append(pkg)
         except KeyError:
             return json.jsonify(status="failure", error=results['error'] ), 404
@@ -1504,69 +1535,37 @@ def listManagedPackages():
     return json.jsonify(status="ok", packages=packageList)
 
 # Add package selected by user to the local Managed List
-@app.route("/addToManagedList")
+@app.route("/addToManagedList", methods=["POST"])
 def addToManagedList():
-    try:
-        packageName = request.args.get("package_name", "")
-    except KeyError:
-        return json.jsonify(status="failure", error="missing package name argument"), 400
 
     try:
-        packageVersion = request.args.get("package_version", "")
-    except KeyError:
-        return json.jsonify(status="failure", error="missing package version argument"), 400
-
-    try:
-        distro = request.args.get("distro", "")
-    except KeyError:
-        return json.jsonify(status="failure", error="missing distro argument"), 400
-
-    try:
-        arch = request.args.get("arch", "")
-    except KeyError:
-        return json.jsonify(status="failure", error="missing arch argument"), 400
-
-    try:
-        action = request.args.get("action", "")
+        requestData = request.form;
+        action = requestData['action']
+        try:
+           packageDataString = requestData['packageDataList']
+           packageDataList = json.loads(packageDataString)
+           sharedData.addToManagedList(packageDataList, action)
+        except KeyError as e:
+           return json.jsonify(status="failure", error="missing packageDataList argument"), 400
     except KeyError:
         return json.jsonify(status="failure", error="missing action argument"), 400
 
-
-    sharedData.addToManagedList(packageName, packageVersion, distro, arch, action)
-
-    return json.jsonify(status="ok",details={'action':action,'version':packageVersion})
+    return json.jsonify(status="ok")
 
 # Remove package selected by user from the local Managed List
-@app.route("/removeFromManagedList")
+@app.route("/removeFromManagedList", methods=["POST"])
 def removeFromManagedList():
     try:
-        packageName = request.args.get("package_name", "")
+        requestData = request.form;
+        action = requestData['action']
+        packageDataString = requestData['packageDataList']
+        packageDataList = json.loads(packageDataString)
+        sharedData.removeFromManagedList(packageDataList, action)
     except KeyError:
-        return json.jsonify(status="failure", error="missing package name argument"), 400
-
-    try:
-        distro = request.args.get("distro", "")
-    except KeyError:
-        return json.jsonify(status="failure", error="missing distro argument"), 400
-
-    try:
-        arch = request.args.get("arch", "")
-    except KeyError:
-        return json.jsonify(status="failure", error="missing arch argument"), 400
-
-    try:
-        action = request.args.get("action", "")
-    except KeyError:
-        return json.jsonify(status="failure", error="missing action argument"), 400
-
-
-
-    sharedData.removeFromManagedList(packageName, distro, arch, action)
-
+        return json.jsonify(status="failure", error="missing packageDataList argument"), 400
     return json.jsonify(status="ok", details = {'action' : action})
 
 # Synch the local managed package file with the one on Jenkins master.
-#TODO: add logic to perform installations on the selected build server group
 @app.route("/synchManagedPackageList")
 def synchManagedPackageList():
     try:
@@ -1582,7 +1581,170 @@ def synchManagedPackageList():
     if not path:
         return json.jsonify(status="failure", error="Could not synch the managed list.  Try again." )
 
-    return json.jsonify(status="ok")
+    jobs = createSynchJobParameters(serverGroup)
+
+    return json.jsonify(status="ok",
+           message= str(len(jobs)) + " installation jobs are initiated in the backgroud.")
+
+def createSynchJobParameters(serverGroup):
+    # dict to hold job names of all the chef jobs to be monitored
+    jobs = []
+
+    # Dictionary to hold hosts,chefAttr,RunList per distro
+    # and release wise.
+    distroDetails = {}
+
+    try:
+        # Creating a dictionary holding all the distro and their respective
+        # release versions
+        for entry in globals.nodeDetails:
+            distro = entry['distro']
+            if distro not in distroDetails:
+                distroDetails[distro] = {}
+            if entry['rel'] not in distroDetails[distro]:
+                distroDetails[distro].update({entry['rel']:{'hosts':[]}})
+
+        # Updating the above created dictionary with list of hosts belonging
+        # to a specific distro and release
+        for node in globals.nodeDetails:
+            for distro, releases in distroDetails.iteritems():
+                if node['distro'] == distro and node['rel'] in releases:
+                    rel = node['rel']
+                    distroDetails[distro][rel]['hosts'].append(node['hostname'])
+
+        # Getting chefAttributes and Chef runList per distro and release
+        # and updating above created dictionary.
+        for distro in distroDetails:
+            for rel in distroDetails[distro]:
+                chefAttr = {}
+                runList = {}
+                chefAttr, runList = chefData.setChefDataForSynch(distro, rel)
+                distroDetails[distro][rel]['chefAttr'] = chefAttr
+                distroDetails[distro][rel]['runList'] = runList
+    except KeyError as e:
+            print str(e)
+            assert(False)
+
+    # Invoking chef job creation with appropriate build parameters
+    # for each node under given serverGroup.
+    if serverGroup != 'All' and serverGroup in distroDetails:
+        for rel in distroDetails[serverGroup]:
+            for host in distroDetails[serverGroup][rel]['hosts']:
+                job = createChefJob(host, distroDetails[serverGroup][rel]['chefAttr'],
+                               distroDetails[serverGroup][rel]['runList'], "managed-pacakge")
+                try:
+                   if job['status'] == "success":
+                      jobs.append(job['jobName'])
+                except KeyError as e:
+                   print str(e)
+                   assert(False)
+
+    elif serverGroup == 'All':
+        for distro in distroDetails.values():
+            for rel in distro.values():
+                for host in rel['hosts']:
+                    job = createChefJob(host, rel['chefAttr'], rel['runList'], "managed-pacakge")
+                    try:
+                       if job['status'] == "success":
+                           jobs.append(job['jobName'])
+                    except KeyError as e:
+                        print str(e)
+                        assert(False)
+
+    threadRequests = makeRequests(monitorChefJobs, jobs)
+    [globals.threadPool.putRequest(req) for req in threadRequests]
+
+    return jobs
+
+def createChefJob(host, chefAttr, runList, jobType="single-pacakge"):
+    tree = ET.parse("./config_template_knife_bootstrap.xml")
+    root = tree.getroot()
+
+    # Job is always triggered on the chef-workstation , and hence assigned node is always master.
+    xml_node = root.find("./assignedNode")
+    xml_node.text = "master"
+
+    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
+
+    i = 1
+    for param in xml_parameters:
+        if i == 1:
+            param.text = host
+        elif i == 2:
+            param.text = json.dumps(chefAttr)
+        elif i == 3:
+            param.text = json.dumps(runList)
+        i += 1
+
+    uid = randint(globals.minRandom, globals.maxRandom)
+    jobName = globals.localHostName + '.' + str(uid) + '.'+ host + '.' + "KnifeBootstrap-" + jobType + "-install"
+    configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
+    NO_PROXY = {
+        'no': 'pass',
+    }
+
+    r = requests.post(
+        globals.jenkinsUrl + "/createItem",
+        headers = {
+            'Content-Type': 'application/xml'
+        },
+        params = {
+            'name': jobName
+        },
+        data = configXml,
+        proxies = NO_PROXY
+    )
+
+    if r.status_code == 200:
+        # Success, send the jenkins job and start it right away.
+        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
+        # Start Jenkins job
+        requests.get(startJobUrl, proxies=NO_PROXY)
+        return { 'status':"success", 'jobName':jobName }
+    else:
+        return { 'status':"failure", 'error':"job creation failed for: " + jobName, 'rstatus':r.status_code }
+
+def monitorChefJobs(jobName, sync=False):
+    # Monitor each job in chefJobs
+    building = True
+    checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
+    while building:
+        sleep(10)
+        try:
+            buildInfo = json.loads(requests.get(checkBuildUrl).text)
+            building = buildInfo['building']
+            if not building:
+                jobStatus = buildInfo['result']
+            # Check to make sure build isn't queued, if it is wait for it to dequeue
+        except ValueError:
+            checkQueueUrl = globals.jenkinsUrl + "/job/" + jobName + "/api/json"
+            queued = True
+            count = 0;
+            while queued and count < 20:
+                sleep(60)
+                try:
+                    r = requests.get(checkQueueUrl).text
+                    projectInfo = json.loads(r)
+                    inQueue = projectInfo['inQueue']
+                # if it's not in the queue and not building something went wrong
+                except ValueError:
+                    print "project failed to start building/queuing" + jobName
+                count += 1
+            building = False
+
+    consoleLog = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/consoleText"
+    log = str(requests.get(consoleLog).text)
+    logfile = open(globals.localPathForChefLogs + jobName, 'w')
+    logfile.write(log)
+    logfile.close()
+
+    if jobStatus == 'SUCCESS':
+        print "TODO: Delete the build"
+        if sync == True:
+            return "SUCCESS"
+    else:
+        if sync == True:
+            return "FAILURE"
 
 # Read and sanitize the contents of the named batch file
 @app.route("/parseBatchFile")
@@ -1779,10 +1941,10 @@ def getPackagesCSVFromManagedList(slaveNodeDistro, mljson):
         if runtime['distro'] == slaveNodeDistro or slaveNodeDistro == "All":
             for package in runtime['autoportPackages']:
                 uniquePackages.add(package['name']);
-        for package in runtime['autoportChefPackages']:
-            uniquePackages.add(package['name']);
-        for package in runtime['userPackages']:
-            uniquePackages.add(package['name']);
+            for package in runtime['autoportChefPackages']:
+                uniquePackages.add(package['name']);
+            for package in runtime['userPackages']:
+                uniquePackages.add(package['name']);
     packagesCSV = ",".join(list(uniquePackages))
     return packagesCSV;
 
@@ -1790,6 +1952,8 @@ def getPackagesCSVFromManagedList(slaveNodeDistro, mljson):
 @app.route('/uploadToRepo', methods=['GET','POST'])
 def uploadToRepo():
     postedFile = dict(request.files)
+    # sourceType input from combobox
+    sourceType = request.form["packageType"]
     try:
         file = postedFile['packageFile'][0]
     except KeyError:
@@ -1798,7 +1962,7 @@ def uploadToRepo():
 
     # Checking package extension before uploading
     if file and sharedData.allowedRepoPkgExtensions(file.filename):
-        status_msg = sharedData.uploadPackage(file)
+        status_msg = sharedData.uploadPackage(file, sourceType)
         if status_msg:
            return json.jsonify(status="failure",
                 error=status_msg), 400

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project>
+   <actions />
+   <description />
+   <keepDependencies>false</keepDependencies>
+   <properties>
+      <hudson.model.ParametersDefinitionProperty>
+         <parameterDefinitions>
+            <hudson.model.StringParameterDefinition>
+               <name>host</name>
+               <description />
+               <defaultValue />
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+               <name>chefAttributes</name>
+               <description />
+               <defaultValue />
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+               <name>run_list</name>
+               <description />
+               <defaultValue />
+            </hudson.model.StringParameterDefinition>
+         </parameterDefinitions>
+      </hudson.model.ParametersDefinitionProperty>
+      <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.21">
+         <autoRebuild>false</autoRebuild>
+      </com.sonyericsson.rebuild.RebuildSettings>
+   </properties>
+   <scm class="hudson.scm.NullSCM" />
+   <assignedNode>master</assignedNode>
+   <canRoam>false</canRoam>
+   <disabled>false</disabled>
+   <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+   <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+   <triggers />
+   <concurrentBuild>false</concurrentBuild>
+   <builders>
+      <hudson.tasks.Shell>
+         <command>#!/bin/bash
+
+role=buildServer_$(date +%Y%m%d_%H%M%S)_$(echo $host | cut -d"." -f1)
+
+cat &lt;&lt;EOF &gt; $role.json
+{
+  "name": "$role" ,
+  "json_class": "Chef::Role",
+  "override_attributes":$chefAttributes,
+  "chef_type": "role",
+  "run_list":$run_list
+}
+EOF
+
+knife role from file $role.json
+
+rm -rf $role.json
+
+# knife bootstrap takes care of:
+# Registering the node to chef server.
+# Installing chef client on the node if not already installed.
+# Running the chef scripts to install apropriate pacakges.
+
+
+knife bootstrap $host -N $host -x autochef -P autochef --sudo --use-sudo-password autochef -r role[$role]
+
+knife role delete $role -y
+         </command>
+      </hudson.tasks.Shell>
+   </builders>
+   <publishers />
+   <buildWrappers />
+</project>

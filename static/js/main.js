@@ -490,23 +490,23 @@ var detailState = {
         if (selection === "openjdk") {
             detailState.javaType = "OpenJDK";
             detailState.javaTypeOptions = "";
-    	}
-    	else if (selection === "ibm java") {
+        }
+        else if (selection === "ibm java") {
             detailState.javaType = "IBM Java";
             detailState.javaTypeOptions = "JAVA_HOME=/opt/ibm/java";
-    	}
+        }
     },
     // TODO - this is bad, this will be changed
     selectGenerateJavaType: function(ev) {
         var selection = $(ev.target).text().toLowerCase();
-    	if (selection === "openjdk") {
+        if (selection === "openjdk") {
             detailState.generateJavaType = "OpenJDK";
             detailState.generateJavaTypeOptions = "";
-    	}
-    	else if (selection === "ibm java") {
+        }
+        else if (selection === "ibm java") {
             detailState.generateJavaType = "IBM Java";
             detailState.generateJavaTypeOptions = "JAVA_HOME=/opt/ibm/java";
-    	}
+        }
     },
     changeBuildOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
@@ -605,6 +605,7 @@ var jenkinsState = {
     manageMultipleSlavePanel: false,
     manageManagePanelFilter: false,
     uploadPackagePanel: false,
+    showPackageTypeSelector: false,
     setJenkinsPanel: function(ev) {
         jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
     },
@@ -625,6 +626,13 @@ var jenkinsState = {
         jenkinsState.buildServer =  $("#singleJenkinsBuildServers").find(":selected").text();
         jenkinsState.singleSlavePackageTableReady = false; // hide the table if user changes the build server/slave selection
     },
+    onPackageFileSelected: function() {
+        if($('#packageFile').val().indexOf('.tar') != -1 || $('#packageFile').val().indexOf('.zip') != -1){
+            jenkinsState.showPackageTypeSelector = true;
+        }else{
+            jenkinsState.showPackageTypeSelector = false;
+        }
+    },
     loadingState: {
         packageListLoading: false,
         packageActionLoading: false,
@@ -635,6 +643,7 @@ var jenkinsState = {
     packageListSingleSlave: [],             // Package list retrieved for a Single Slave
     selectedSingleSlavePackage: {},         // Package selected by the user
     showUnselectPackageButton: false,       // True if a package is selected, false otherwise
+    showUnselectMultiPackageButton: false,  //  True if a package is selected, false otherwise (for Managed Panel)
     listPackageForSingleSlave: function(ev) {
         jenkinsState.singleSlavePackageTableReady = false;
         jenkinsState.loadingState.packageListLoading = true;
@@ -653,13 +662,17 @@ var jenkinsState = {
         jenkinsState.showUnselectPackageButton = false;
     },
     installPackageForSingleSlave: function(ev) {
-        var action = ""
+        var action = "", package_type = "", package_tagname = "";
 
         // If package is installed, update it else if package is not installed, install it
         if (jenkinsState.selectedSingleSlavePackage.packageInstalled == true)
             action = "update"
         else if (jenkinsState.selectedSingleSlavePackage.packageInstalled == false)
             action = "install"
+        if(jenkinsState.selectedSingleSlavePackage.packageType != undefined)
+            package_type = jenkinsState.selectedSingleSlavePackage.packageType;
+        if(jenkinsState.selectedSingleSlavePackage.package_tagname != undefined)
+            package_tagname = jenkinsState.selectedSingleSlavePackage.package_tagname;
 
         jenkinsState.loadingState.packageActionLoading = true;
         $.getJSON("/managePackageForSingleSlave",
@@ -667,17 +680,27 @@ var jenkinsState = {
             package_name: jenkinsState.selectedSingleSlavePackage.packageName,
             package_version: jenkinsState.selectedSingleSlavePackage.updateVersion,
             action: action,
+            type: package_type,
             buildServer: jenkinsState.buildServer
         },
         managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
     },
     removePackageForSingleSlave: function(ev) {
+        var package_type = "", package_tagname = "";
+
+        if(jenkinsState.selectedSingleSlavePackage.package_type != undefined)
+            package_type = jenkinsState.selectedSingleSlavePackage.package_type;
+        if(jenkinsState.selectedSingleSlavePackage.package_tagname != undefined)
+            package_tagname = jenkinsState.selectedSingleSlavePackage.package_tagname;
+
         jenkinsState.loadingState.packageActionLoading = true;
         $.getJSON("/managePackageForSingleSlave",
         {
             package_name: jenkinsState.selectedSingleSlavePackage.packageName,
             package_version: jenkinsState.selectedSingleSlavePackage.installedVersion,
             action: "remove",
+            type: package_type,
+            //tagname: package_tagname,
             buildServer: jenkinsState.buildServer
         },
         managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
@@ -685,16 +708,18 @@ var jenkinsState = {
     managedPackageTableReady: false,   // Draw managed package table if true
     managedPackageList: [],            // Managed Package list
 
-    selectedMultiSlavePackage: {},     // Managed Packages selected by the user
+    selectedMultiSlavePackage: [],     // Managed Packages selected by the user
+
     serverGroup: "",                   // Takes value All or UBUNTU or RHEL depending on the "List x" button clicked. Variable to be used during Synch operation.
     listManagedPackages: function(ev) {
         jenkinsState.managedPackageTableReady = false;
         jenkinsState.loadingState.managedPackageListLoading = true;
-
-	jenkinsState.selectedMultiSlavePackage = {};
+        jenkinsState.showUnselectMultiPackageButton = false;
+        jenkinsState.selectedMultiSlavePackage = [];
         var id = ev.target.id;
         jenkinsState.serverGroup = "All";
-
+        $("#addToManagedList").addClass("disabled");
+        $("#removeFromManagedList").addClass("disabled");
         if (id === "mlRHEL")
             jenkinsState.serverGroup = "RHEL";
         else if (id === "mlUbuntu")
@@ -703,37 +728,57 @@ var jenkinsState = {
         $.getJSON("/listManagedPackages", { distro: jenkinsState.serverGroup, package: $("#packageFilter_Multiple").val() },
             listManagedPackagesCallback).fail(listManagedPackagesCallback);
     },
+    getSelectedManagedPackageData: function(){
+        var selectedPackageList = $('#multiServerPackageListTable').bootstrapTable('getSelections');
+        var packageListObj = [];
+        for(var obj in selectedPackageList){
+            packageListObj.push({
+                'package_name': selectedPackageList[obj].packageName,
+                'package_version': selectedPackageList[obj].updateVersion,
+                'distro': selectedPackageList[obj].distro,
+                'arch': selectedPackageList[obj].arch,
+                'removable': selectedPackageList[obj].removablePackage,
+                'package_type': selectedPackageList[obj].packageType,
+                'installed_version': selectedPackageList[obj].installedVersion
+            });
+        }
+        return packageListObj;
+    },
     addToManagedList: function(ev, el) {
-        $.getJSON("/addToManagedList",
-        {
-            action: 'add',
-	    package_name: jenkinsState.selectedMultiSlavePackage.packageName,
-	    package_version: jenkinsState.selectedMultiSlavePackage.updateVersion,
-	    distro: jenkinsState.selectedMultiSlavePackage.distro,
-            arch: jenkinsState.selectedMultiSlavePackage.arch
-        },
-        editManagedListCallback).fail(editManagedListCallback);
+        var packageListObj = JSON.stringify(jenkinsState.getSelectedManagedPackageData());
+        $.post("/addToManagedList", { action: 'install', packageDataList: packageListObj}, editManagedListCallback, "json").fail(editManagedListCallback);
     },
     removeFromManagedList: function(ev, el) {
-        $.getJSON("/removeFromManagedList",
+        var packageListObj = JSON.stringify(jenkinsState.getSelectedManagedPackageData());
+        $.post("/removeFromManagedList",
         {
-            package_name: jenkinsState.selectedMultiSlavePackage.packageName,
-            distro: jenkinsState.selectedMultiSlavePackage.distro,
-	    action: 'remove',
-            arch: jenkinsState.selectedMultiSlavePackage.arch
-		
+            action: 'remove',
+            packageDataList: packageListObj
         },
         editManagedListCallback).fail(editManagedListCallback);
     },
+    unselectPackageForMultiSlave: function(ev) {
+        jenkinsState.showUnselectMultiPackageButton = false;
+        $("#addToManagedList").addClass("disabled");
+        $("#removeFromManagedList").addClass("disabled");
+        $("#multiServerPackageListTable").bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
+    },
     synchManagedPackageList: function() {
+        jenkinsState.loadingState.managedPackageActionLoading = true;
+        $("#syncManagedPackageButton").addClass("disabled");
         $.getJSON("/synchManagedPackageList", { serverGroup: jenkinsState.serverGroup }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
     },
     uploadPackage: function (ev) {
-        jenkinsState.loadingState.packageUploadLoading = true
         var file = $('#packageFile')[0].files[0];
-
+        var packageType = $("#packageTypeOnPackageUpload").find(":selected").text();
+        if(($('#packageFile').val().indexOf('.tar') != -1 || $('#packageFile').val().indexOf('.zip') !=-1) && packageType == ""){
+            alert("Please select Package Type");
+            return false;
+        }
+        jenkinsState.loadingState.packageUploadLoading = true
         var formData = new FormData();
         formData.append('packageFile', file);
+        formData.append('packageType',packageType);
 
                 $.ajax({
                  url: "/uploadToRepo",
@@ -1516,7 +1561,10 @@ function uploadBatchFileCallback(data) {
 }
 
 function uploadPackageCallback(data) {
-    jenkinsState.loadingState.packageUploadLoading = false
+    jenkinsState.loadingState.packageUploadLoading = false;
+    $("#uploadPackageName").val('');
+    jenkinsState.showPackageTypeSelector = false;
+    $("#packageTypeOnPackageUpload option").multiselect("clearSelection");
     console.log("In uploadPackageCallback");
     if (data.status !== "ok") {
         showAlert("", data);
@@ -1710,7 +1758,7 @@ function listManagedPackagesCallback(data) {
     if (data.status === "ok") {
         jenkinsState.managedPackageList = data.packages;
         jenkinsState.managedPackageTableReady = true;
- 	$('#multiServerPackageListTable').bootstrapTable('load', jenkinsState.managedPackageList);
+        $('#multiServerPackageListTable').bootstrapTable('load', jenkinsState.managedPackageList);
     } else {
         showAlert("Error!", data);
     }
@@ -1719,15 +1767,21 @@ function listManagedPackagesCallback(data) {
 function editManagedListCallback(data) {
     if (data.status === "ok") {
         showAlert("Success!");
+        $("#multiServerPackageListTable").bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
+        $("#addToManagedList").addClass("disabled");
+        $("#removeFromManagedList").addClass("disabled");
+        jenkinsState.showUnselectMultiPackageButton = false;
     }
 }
 
 function synchManagedPackageListCallback(data) {
     if (data.status === "ok") {
-        showAlert("Success!");
+        showAlert(data.message);
     } else {
         showAlert("Error!", data);
     }
+    jenkinsState.loadingState.managedPackageActionLoading = false;
+    $("#syncManagedPackageButton").removeClass("disabled");
 }
 
 $(document).ready(function() {
@@ -1778,6 +1832,12 @@ $(document).ready(function() {
             return "Build server";
         }
     });
+    $('#packageTypeOnPackageUpload').multiselect({
+        buttonClass: "btn btn-primary",
+        buttonText: function(options, select) {
+            return "Package Type";
+        }
+    });
     // Initializes an empty bach reports table
     $('#batchReportsTable').bootstrapTable({
         data: []
@@ -1804,14 +1864,22 @@ $(document).ready(function() {
         // On a page change, Bootstrap addon unchecks the package checked by the user. In order to show the package it as selected once the user goes back to the earlier page, do the following:
         $("#singleServerPackageListTable").bootstrapTable("checkBy", {field:"packageName", values:[jenkinsState.selectedSingleSlavePackage.packageName]})
     });
-
+    // Initializes an empty package list table on the Managed Slave panel
     $('#multiServerPackageListTable').bootstrapTable({
         data: []
     });
     $('#multiServerPackageListTable').on('check.bs.table', function (e, row) {
-        jenkinsState.selectedMultiSlavePackage = row;
-
-        //jenkinsState.showUnselectPackageButton = true;
+        jenkinsState.showUnselectMultiPackageButton = true;
+        $("#addToManagedList").removeClass("disabled");
+        $("#removeFromManagedList").removeClass("disabled");
+    });
+    $('#multiServerPackageListTable').on('uncheck.bs.table', function (e, row) {
+       var selectedPackages = $('#multiServerPackageListTable').bootstrapTable('getSelections');
+        if(selectedPackages.length === 0) {
+            $("#addToManagedList").addClass("disabled");
+            $("#removeFromManagedList").addClass("disabled");
+            jenkinsState.showUnselectMultiPackageButton = false;
+        }
     });
     $('#multiServerPackageListTable').on('page-change.bs.table', function (e, row) {
         // On a page change, Bootstrap addon unchecks the package checked by the user. In order to show the package it as selected once the user goes back to the earlier page, do the following:
