@@ -24,8 +24,6 @@ $('#file2').change(function () {
 
 $('#text1').on("change keyup paste", function () {
     var empty = true;
-    alter($('#text1').val().length);
-    alter($('#text2').val().length);
     if ($('#text1').val().length > 0 && $('#text2').val().length > 0) {
         empty = false;
     }
@@ -100,7 +98,6 @@ function textcompfunc(){
 }
 
 function processCompareResults(data) {
-    alert("start process compare results");
     if (data.status != "ok") {
         showAlert("Error:", data);
     } else {
