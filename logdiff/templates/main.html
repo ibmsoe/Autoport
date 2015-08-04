@@ -83,15 +83,20 @@
 
             <div class="tab-pane fade" id="textcomp">
                 <div class="container-fluid">
+                    <div class="panel panel-default">
+                        <div class="panel-footer">
+                            Instructions: Copy and paste the text you want to compare into the two boxes and click the "Compare" button to see the results.                       </div>
+                    </div>
+
                     <form class="form-horizontal" method="post" enctype="multipart/form-data">
                         <div class="row">
                             <div class="col-sm-6">
-                                <textarea name="text1" id="text1" style="height: 540px; border: 1px solid; overflow:scroll;"
+                                <textarea name="text1" id="text1" style="height: 500px; border: 1px solid; overflow:scroll;"
                                 onscroll="document.getElementById('text2').scrollTop = this.scrollTop; document.getElementById('text2').scrollLeft = this.scrollLeft;">
                                 </textarea>
                             </div>
                             <div class="col-sm-6">
-                                <textarea name="text2" id="text2" style="height: 540px; border: 1px solid; overflow:scroll;"
+                                <textarea name="text2" id="text2" style="height: 500px; border: 1px solid; overflow:scroll;"
                                 onscroll="document.getElementById('text1').scrollTop = this.scrollTop; document.getElementById('text1').scrollLeft = this.scrollLeft;">
                                 </textarea>
                             </div>

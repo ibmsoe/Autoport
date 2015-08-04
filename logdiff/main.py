@@ -13,7 +13,7 @@ app = Flask(__name__)
 # This is the path to the upload directory
 UPLOAD_FOLDER = 'compfiles'
 # These are the extension that we are accepting to be uploaded
-app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'log', 'cfg','arti'])
+app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'log', 'cfg','arti, out'])
 
 # For a given file, return whether it's an allowed type or not
 def allowed_file(filename):
@@ -42,7 +42,7 @@ def getFileDiffResults():
         file1.save(os.path.join(path1, fname1))
     else:
         return json.jsonify(status="failure",
-                error="Allowed file extensions are.txt, .log, .cfg, .arti"), 400
+                error="Allowed file extensions are txt, log, cfg, arti, out"), 400
 
     path2 = os.path.dirname(os.path.abspath(__file__)) + "/uploads/file2"
     if not os.path.exists(path2):
@@ -52,7 +52,7 @@ def getFileDiffResults():
         file2.save(os.path.join(path2, fname2))
     else:
         return json.jsonify(status="failure",
-                error="Allowed file extensions are.txt, .log, .cfg, .arti"), 400
+                error="Allowed file extensions are txt, log, cfg, arti,out"), 400
 
 
     leftf = codecs.open(path1+'/'+fname1,encoding='utf-8',mode='rb')
