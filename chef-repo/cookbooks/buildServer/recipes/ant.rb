@@ -7,16 +7,20 @@
 
 include_recipe 'buildServer::java'
 
-src_install = node['buildServer']['ant']['source_install']
+src_install = node['buildServer']['apache-ant']['source_install']
 
 if src_install == 'true'
   include_recipe 'buildServer::ant_source'
 else
+
+  opt = ''
+  opt = '--force-yes' if node['platform'] == 'ubuntu'
+
   ant_basedir = '/usr/share/ant'
 
   package 'ant' do
-    action :install
-    options '--force-yes'
+    action :upgrade
+    options opt
   end
 
   template '/etc/profile.d/ant.sh' do

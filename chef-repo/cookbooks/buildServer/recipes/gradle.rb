@@ -9,14 +9,17 @@ include_recipe 'buildServer::java'
 distro = node['platform']
 src_install = node['buildServer']['gradle']['source_install']
 
-if distro == 'rhel' || src_install == 'true'
+if distro == 'redhat' || src_install == 'true'
   include_recipe 'buildServer::gradle_source'
 else
+  opt = ''
+  opt = '--force-yes' if distro == 'ubuntu'
+
   gradle_basedir = '/usr/share/gradle'
 
   package 'gradle' do
-    action :install
-    options '--force-yes'
+    action :upgrade
+    options opt
   end
 
   template '/etc/profile.d/gradle.sh' do

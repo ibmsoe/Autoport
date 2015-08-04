@@ -11,7 +11,7 @@ action :install do
   repo_url         = new_resource.repo_url
   extract_location = new_resource.extract_location
 
-  directory archive_location do
+  directory extract_location do
     mode '0755'
     owner 'root'
     group 'root'
@@ -19,7 +19,7 @@ action :install do
   end
 
   remote_file "#{archive_location}/#{archive_name}" do
-    source "#{repo_url}/#{archive_name}"
+    source "#{repo_url}/archives/#{archive_name}"
     owner 'root'
     group 'root'
     mode '0775'

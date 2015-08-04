@@ -5,13 +5,15 @@
 include_recipe 'buildServer::java'
 arch  = node['kernel']['machine']
 distro = node['platform']
-src_install = node['scala']['source_install']
+src_install = node['buildServer']['scala']['source_install']
+opt = ''
+opt = '--force-yes' if distro == 'ubuntu'
 
-if (arch == 'ppc64le' && distro == 'rhel') || src_install == 'true'
+if (arch == 'ppc64le' && distro == 'redhat') || src_install == 'true'
   include_recipe 'buildServer::scala_source'
 else
   package 'scala' do
-    action :install
-    options '--force-yes'
+    action :upgrade
+    options opt
   end
 end

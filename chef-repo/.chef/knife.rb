@@ -12,3 +12,8 @@ validation_client_name   "autoport-ibm-validator"
 validation_key           "#{current_dir}/autoport-ibm-validator.pem"
 chef_server_url          "https://#{chef_server}/organizations/autoport-ibm"
 cookbook_path            ["#{current_dir}/../cookbooks"]
+
+# Specifying path for template file to be used by default, so that it need
+# not be specified explicitly on commandline during execution of knife bootstrap.
+
+knife[:template_file]="#{current_dir}/bootstrap/autoport_template.erb"

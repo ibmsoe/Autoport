@@ -1,7 +1,7 @@
 # This recipe is used to configure custom apt/yum repository over the
 # respective ubuntu/rhel build slaves or the target nodes of autoport tool.
 
-repo_name = node['buildServer']['repo_name']
+repo_name = node['repo_name']
 repo_url  = node['buildServer']['repo_url']
 
 case node[:platform]

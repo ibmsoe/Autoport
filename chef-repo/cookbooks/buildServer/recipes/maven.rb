@@ -9,16 +9,18 @@
 include_recipe 'buildServer::java'
 arch  = node['kernel']['machine']
 distro = node['platform']
-src_install = node['buildServer']['maven']['source_install']
+src_install = node['buildServer']['apache-maven']['source_install']
+opt = ''
+opt = '--force-yes' if distro == 'ubuntu'
 
-if (arch == 'x86_64' && distro == 'rhel') || src_install == 'true'
+if (arch == 'x86_64' && distro == 'redhat') || src_install == 'true'
   include_recipe 'buildServer::maven_source'
 else
   maven_basedir = '/usr/share/maven'
 
   package 'maven' do
-    action :install
-    options '--force-yes'
+    action :upgrade
+    options opt
   end
 
   template '/etc/profile.d/maven.sh' do
