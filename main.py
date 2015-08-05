@@ -1891,6 +1891,7 @@ def getTestHistory():
             "name": projectName[0]+" - "+projectName[1],
             "results": prjOut
         })
+    catalog.cleanTmp()
     return json.jsonify(status = "ok", results = out)
 
 @app.route("/getTestDetail", methods=["POST"])
@@ -1911,6 +1912,7 @@ def getTestDetail():
         meta = json.load(f)
         f.close()
         out.append({ "results": res, "project": meta, "repository": repo })
+    catalog.cleanTmp()
     return json.jsonify(status = "ok", results = out)
 
 @app.route("/archiveBatchFile", methods=["POST"])

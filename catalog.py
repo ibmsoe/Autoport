@@ -79,96 +79,99 @@ class Catalog:
             localPath = self.__localPath + build + "/"
             putdir = tempfile.mkdtemp(prefix="autoport_")
 
-            metaFile = localPath + "meta.arti"
-            buildArtifactFile = localPath + "build_result.arti"
-            testArtifactFile = localPath + "test_result.arti"
-
-            if(os.path.isfile(metaFile)):
-                shutil.copyfile(metaFile, putdir+"/meta.arti")
-            if(os.path.isfile(buildArtifactFile)):
-                shutil.copyfile(buildArtifactFile, putdir+"/build_result.arti")
-            if(os.path.isfile(testArtifactFile)):
-                shutil.copyfile(testArtifactFile, putdir+"/test_result.arti")
+            # Copy as many files as possible.  Reports use different files
+            files = os.listdir(localPath)
+            for file in files:
+                try:
+                    shutil.copyfile(localPath+file, putdir + "/" + file)
+                except IOError:
+                    pass
             self.__tmpdirs.append(putdir)
             return putdir
         except IOError as e:
-            print "Exception:",str(e)
+            print "Exception: ", str(e)
             return None
 
     def getGSAResults(self, build):
-        putdir = tempfile.mkdtemp(prefix="autoport_")
-        self.__archiveFtpClient.chdir(self.__copyPath+build)
-        
         try:
-            self.__archiveFtpClient.get("meta.arti", putdir+"/meta.arti")
-        except IOError:
-            pass
-        try:
-            self.__archiveFtpClient.get("build_result.arti", putdir+"/build_result.arti")
-        except IOError:
-            pass
-        try:
-            self.__archiveFtpClient.get("test_result.arti", putdir+"/test_result.arti")
-        except IOError:
-            pass
-        
-        self.__tmpdirs.append(putdir)
-        return putdir
+            putdir = tempfile.mkdtemp(prefix="autoport_")
+            self.__archiveFtpClient.chdir(self.__copyPath + build)
+
+            # Copy as many files as possible.  Reports use different files
+            files = self.__archiveFtpClient.listdir()
+            for file in files:
+                try:
+                    self.__archiveFtpClient.get(file, putdir + "/" + file)
+                except IOError:
+                    pass
+            self.__tmpdirs.append(putdir)
+            return putdir
+        except IOError as e:
+            print "Exception: ", str(e)
+            return None
 
     def archiveResults(self, builds):
         errors = []
         alreadyThere = []
+        copied = []
         for build in builds:
+            remoteBuildPath = self.__copyPath + build
+            localBuildPath = self.__localPath + build
             try:
-                self.__archiveFtpClient.stat(self.__copyPath+build)
+                self.__archiveFtpClient.stat(remoteBuildPath)
                 alreadyThere.append(build)
+                copied.append(build)
                 continue
-            except IOError as e:
+            except IOError:
                 pass # Directory's not there, try to add it
             try:
                 tmpDir = self.getLocalResults(build)
                 if tmpDir == None:
-                    print "Can't fetch jenkins copy of",build
+                    print "Can't fetch jenkins copy of ", build
                     errors.append(build)
                     continue
-                self.__archiveFtpClient.mkdir(self.__copyPath+build)
-                self.__archiveFtpClient.put(tmpDir+"/meta.arti",
-                                     self.__copyPath+build+"/meta.arti")
-                self.__archiveFtpClient.put(tmpDir+"/build_result.arti",
-                                     self.__copyPath+build+"/build_result.arti")
-                self.__archiveFtpClient.put(tmpDir+"/test_result.arti",
-                                     self.__copyPath+build+"/test_result.arti")
-            except IOError as e:
-                print "Can't push ",build,": exception=",str(e)
-                errors.append(build)
-            # remove the 'local' copy
+                try:
+                    self.__archiveFtpClient.mkdir(remoteBuildPath)
+                    files = os.listdir(tmpDir)
+                    for file in files:
+                        self.__archiveFtpClient.put(tmpDir + "/" + file,
+                                     remoteBuildPath + "/" + file)
+                    copied.append(build)
+                except IOError as e:
+                    print "Can't push ", build, ": exception=", str(e)
+                    errors.append(build)
+            except IOError:
+                print "Can't fetch jenkins copy of ", build
+            shutil.rmtree(tmpDir, ignore_errors=True)
+
+        # If copy to gsa was successful, then remove the 'local' copy
+        for build in copied:
+            localBuildPath = self.__localPath + build
+            shutil.rmtree(localBuildPath, ignore_errors=True)
+
+        # Remove partial copies to gsa.  Try again later
+        for build in errors:
+            remoteBuildPath = self.__copyPath + build
             try:
-                self.__jenkinsFtpClient.remove(self.__localPath+build+"/meta.arti")
-                self.__jenkinsFtpClient.remove(self.__localPath+build+"/build_result.arti")
-                self.__jenkinsFtpClient.remove(self.__localPath+build+"/test_result.arti")
-                self.__jenkinsFtpClient.rmdir(self.__localPath+build)
-            except IOError as e:
-                print "Can't remove local copy of",build,": exception=",str(e)
-        for directory in errors:
-            try:
-                self.__archiveFtpClient.stat(self.__copyPath+directory)
+                self.__archiveFtpClient.stat(remoteBuildPath)
             except IOError as e:
                 if 'No such file' in str(e):
                     continue
             try:
                 files = self.__archiveFtpClient.listdir()
-                for f in files:
-                    self.__archiveFtpClient.unlink(self.__copyPath+directory+'/'+f)
-                self.__archiveFtpClient.rmdir(self.__copyPath+directory)
+                for file in files:
+                    self.__archiveFtpClient.unlink(remoteBuildPath + '/' + file)
+                self.__archiveFtpClient.rmdir(remoteBuildPath)
             except IOError as e:
-                print "Can't remove directory",self.__copyPath+directory,":",str(e)
+                print "Can't remove directory", remoteBuildPath,": ", str(e)
+
         return errors, alreadyThere
 
     def cleanTmp(self):
         for tmpdir in self.__tmpdirs:
             if os.path.exists(tmpdir):
-                shutil.rmtree(tmpdir)
-        tmpdir = []
+                shutil.rmtree(tmpdir, ignore_errors=True)
+        self.__tmpdirs = []
 
     def close(self):
         self.__archiveFtpClient.close()
