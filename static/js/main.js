@@ -627,9 +627,9 @@ var jenkinsState = {
         jenkinsState.singleSlavePackageTableReady = false; // hide the table if user changes the build server/slave selection
     },
     onPackageFileSelected: function() {
-        if($('#packageFile').val().indexOf('.tar') != -1 || $('#packageFile').val().indexOf('.zip') != -1){
+        if ($('#packageFile').val().indexOf('.tar') != -1 || $('#packageFile').val().indexOf('.zip') != -1) {
             jenkinsState.showPackageTypeSelector = true;
-        }else{
+        } else {
             jenkinsState.showPackageTypeSelector = false;
         }
     },

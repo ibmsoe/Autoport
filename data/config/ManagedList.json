@@ -311,8 +311,7 @@
                 },
                 {
                     "name": "pytest",
-                    "version": "2.6.4",
-                    "tag": "pytest"
+                    "version": "2.6.4"
                 }
             ],
             "userPackages": []

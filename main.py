@@ -1324,7 +1324,7 @@ def managePackageForSingleSlave():
     packageType = request.args.get("type", "")
     host = ''
 
-    # If there is a pacakgeType available , it indicates that this is a source install
+    # If there is a packageType available , it indicates that this is a source install
     # and chef job needs to be created for it.
     if packageType:
        for node in globals.nodeDetails:
@@ -1407,7 +1407,6 @@ def managePackageForSingleSlave():
 
             # Poll until job stops building
             while building:
-                sleep(10)
                 try:
                     buildInfo = json.loads(requests.get(checkBuildUrl).text)
                     building = buildInfo['building']
@@ -1439,7 +1438,7 @@ def managePackageForSingleSlave():
             if buildStatus == "SUCCESS":
                 return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)
             else:
-                return json.jsonify(status="failure", error="Could not perform the action specified"), 400
+                return json.jsonify(status="failure", error="Failed to run Jenkins job. Job Status: " + buildStatus), 400
 
         if r.status_code == 400:
             return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job to perform the action requested"), 400
@@ -1584,7 +1583,7 @@ def synchManagedPackageList():
     jobs = createSynchJobParameters(serverGroup)
 
     return json.jsonify(status="ok",
-           message= str(len(jobs)) + " installation jobs are initiated in the backgroud.")
+           message= str(len(jobs)) + " installation jobs are initiated in the background.")
 
 def createSynchJobParameters(serverGroup):
     # dict to hold job names of all the chef jobs to be monitored
@@ -1631,7 +1630,7 @@ def createSynchJobParameters(serverGroup):
         for rel in distroDetails[serverGroup]:
             for host in distroDetails[serverGroup][rel]['hosts']:
                 job = createChefJob(host, distroDetails[serverGroup][rel]['chefAttr'],
-                               distroDetails[serverGroup][rel]['runList'], "managed-pacakge")
+                               distroDetails[serverGroup][rel]['runList'], "managed-package")
                 try:
                    if job['status'] == "success":
                       jobs.append(job['jobName'])
@@ -1643,7 +1642,7 @@ def createSynchJobParameters(serverGroup):
         for distro in distroDetails.values():
             for rel in distro.values():
                 for host in rel['hosts']:
-                    job = createChefJob(host, rel['chefAttr'], rel['runList'], "managed-pacakge")
+                    job = createChefJob(host, rel['chefAttr'], rel['runList'], "managed-package")
                     try:
                        if job['status'] == "success":
                            jobs.append(job['jobName'])
@@ -1656,7 +1655,7 @@ def createSynchJobParameters(serverGroup):
 
     return jobs
 
-def createChefJob(host, chefAttr, runList, jobType="single-pacakge"):
+def createChefJob(host, chefAttr, runList, jobType="single-package"):
     tree = ET.parse("./config_template_knife_bootstrap.xml")
     root = tree.getroot()
 
@@ -1709,7 +1708,6 @@ def monitorChefJobs(jobName, sync=False):
     building = True
     checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
     while building:
-        sleep(10)
         try:
             buildInfo = json.loads(requests.get(checkBuildUrl).text)
             building = buildInfo['building']
@@ -1739,7 +1737,7 @@ def monitorChefJobs(jobName, sync=False):
     logfile.close()
 
     if jobStatus == 'SUCCESS':
-        print "TODO: Delete the build"
+        # TODO: Delete the build
         if sync == True:
             return "SUCCESS"
     else:

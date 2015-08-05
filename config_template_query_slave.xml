@@ -92,6 +92,16 @@ else
     echo "No command artifacts produced!"
 fi
 
+# Adding a user autochef to the node.
+if ! id -u autochef &gt; /dev/null 2&gt;&amp;1; then
+  sudo useradd -p $(openssl passwd -1 autochef) autochef -s /bin/bash -m -d /home/autochef
+fi
+
+# Adding user autochef to sudoers list.
+if ! sudo grep "autochef ALL=(ALL) NOPASSWD:ALL" /etc/sudoers &gt; /dev/null 2&gt;&amp;1; then
+  echo "autochef ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers &gt; /dev/null 2&gt;&amp;1;
+fi
+
 exit 0
 </command>
     </hudson.tasks.Shell>

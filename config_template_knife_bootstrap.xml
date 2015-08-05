@@ -58,7 +58,7 @@ rm -rf $role.json
 # knife bootstrap takes care of:
 # Registering the node to chef server.
 # Installing chef client on the node if not already installed.
-# Running the chef scripts to install apropriate pacakges.
+# Running the chef scripts to install appropriate pacakges.
 
 
 knife bootstrap $host -N $host -x autochef -P autochef --sudo --use-sudo-password autochef -r role[$role]
