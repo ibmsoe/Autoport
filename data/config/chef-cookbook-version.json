@@ -1,0 +1,6 @@
+{
+    "comment": "This is autoport data.  IMPORTANT READ sharedData.py before updating",
+    "version": "1",
+    "sequence": "1",
+    "name": "chef-cookbook-version.json"
+}

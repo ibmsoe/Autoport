@@ -37,6 +37,7 @@ import paramiko
 import tarfile
 import zipfile
 import re
+import shutil
 from flask import json
 from collections import OrderedDict
 from contextlib import closing
@@ -88,36 +89,53 @@ class SharedData:
             assert(False)
         return localPath
 
-    def getSharedData(self, name):
+    def getSharedData(self, name, path):
         localPath = self.__localDataDir + "getShared" + name
-        dataStr = ""
+        data = {}
         try:
-            self.__jenkinsFtpClient.chdir(self.__sharedDataDir)
+            self.__jenkinsFtpClient.chdir(self.__sharedDataDir + path)
             self.__jenkinsFtpClient.get(name, localPath)
             f = open(localPath)
-            dataStr = json.load(f)
+            data = json.load(f)
             f.close()
         except IOError as e:
             pass
-        return dataStr
+        return data
 
-    def putSharedData(self, data, oldData):
-        sharedPath = self.__sharedDataDir + data['name']
+    def putSharedData(self, data, oldData, path):
+
+        # path is an optional extension to sharedDataDir.  Enables
+        # the caller to place a file anywhere below the base directory.
+        # /user/hostname  --> /var/opt/autoport/user/hostname
+
+        sharedPath = self.__sharedDataDir + path + data['name']
 
         # Data is manipulated in memory, written to local, and then ftp'd
         localPath = self.putLocalData(data, "putShared")
 
+        # If autoport directory doesn't exist, create it
         try:
-            self.__jenkinsFtpClient.chdir(self.__sharedDataDir)
+            previousDirectory = self.__sharedDataDir
+            self.__jenkinsFtpClient.chdir(previousDirectory)
         except IOError as e:
-            self.__jenkinsFtpClient.mkdir(self.__sharedDataDir)
+            self.__jenkinsFtpClient.mkdir(previousDirectory)
+
+        # Create the optional directories provided via path
+        directories = path.split("/")
+        for directory in directories:
+            try:
+                previousDirectory = previousDirectory + directory + "/"
+                self.__jenkinsFtpClient.chdir(previousDirectory)
+            except IOError as e:
+                self.__jenkinsFtpClient.mkdir(previousDirectory)
 
         try:
             # Return an error if shared data was written by another
             # instance of autoport after we read it.  Calling code
             # should start over
-            nowData = self.getSharedData(data['name'])
-            if (nowData and not oldData) or (nowData and nowData['sequence'] != oldData['sequence']):
+            nowData = self.getSharedData(data['name'], path)
+            if (nowData and not oldData) or \
+               (nowData and nowData['sequence'] != oldData['sequence']):
                 return ""
 
             # Write "putShared" local data to shared location
@@ -125,7 +143,7 @@ class SharedData:
 
             # Read to see if our write was the last one, else return
             # an error for calling code to retry
-            afterData = self.getSharedData(data['name'])
+            afterData = self.getSharedData(data['name'], path)
             if afterData and afterData['sequence'] != data['sequence']:
                 return ""
 
@@ -182,17 +200,17 @@ class SharedData:
             # Extracting source file version
             sourceVersion = re.findall("(?:)[\d.]+",filename)[0]
 
-            # If source file doesn't have version associated then regex returns a dot(.)
+            # If source file doesn't have version associated, regex returns a dot(.)
             if sourceVersion == ".":
                 sourceVersion = ""
             elif sourceVersion[len(sourceVersion)-1] == "." :
                 sourceVersion = sourceVersion[:sourceVersion.rfind('.')]
 
-            # Command which writes the source filename, version and sourceType CSV into archive.log
-            # Command also avoids duplicate entries
+            # Command which writes the source filename, version and
+            # sourceType CSV into archive.log. Command also avoids duplicate entries
             logEntry = sourceName + "," + sourceVersion +"," + sourceType + "," + sourceName
-            command = "touch " + archiveLogPath + "; grep -q -F \"" + logEntry + "\" "+ archiveLogPath + " || echo \"" + logEntry + "\" >> " + archiveLogPath
-
+            command = "touch " + archiveLogPath + "; grep -q -F \"" + logEntry + \
+               "\" "+ archiveLogPath + " || echo \"" + logEntry + "\" >> " + archiveLogPath
         return repoPath, command
 
     def putRemoteFile(self, localPath, remotePath, filename):
@@ -264,46 +282,52 @@ class SharedData:
         # This routine is responsible for uploading chef-data to Jenkins Master
         # and also uploading the latest cookbook to chef-server.
 
-        # Initial version in Managed List is 0.1.0
-        localCookbookVersion = "0.0.0"
-        sharedCookbookVersion = "0.0.0"
+        # Fetching cookbook_version from this autoport instance
+        localData = self.getLocalData("chef-cookbook-version.json")
+        localSequence = localData['sequence']
+        localVersion = localData['version']
 
-        filename = "chef-repo.tar.gz"
-        localPath = self.__localDataDir + filename
-        remotePath = self.__sharedDataDir
-
-        # Building tar file of the chef-repo and placing in local config dir
-        self.buildTarFile(localPath, "chef-repo")
-
-        # Fetching cookbook_version from ManagedList.json on autoport instance
-        localData = self.getLocalData("ManagedList.json")
-
-        # Fetching cookbook_version from ManagedList.json on jenkins Master
-        sharedData = self.getSharedData("ManagedList.json")
-
+        # Fetching cookbook_version from jenkins Master
+        sharedData = self.getSharedData("chef-cookbook-version.json", "")
         try:
-            if localData:
-                localCookbookVersion = localData['cookbook_version']
-            if sharedData:
-                sharedCookbookVersion = sharedData['cookbook_version']
+            sharedSequence = sharedData['sequence']
+            sharedVersion = sharedData['version']
         except KeyError:
-            pass
+            sharedSequence = "0"
+            sharedVersion = "0"
 
-        # Chef-data is uploaded to Jenkins Master
-        # if the cookbook_version in ManagedList.json of jenkins Master is less than
-        # cookbook_version in ManagedList.json of autoport host
+        # Upload local copy.  It is more recent
+        if localVersion > sharedVersion or \
+           (localVersion == sharedVersion and localSequence > sharedSequence):
 
-        if StrictVersion(localCookbookVersion) > StrictVersion(sharedCookbookVersion):
+            # Upload local chef-cookbook-version.json
+            self.putSharedData(localData, sharedData, "")
+
+            # For debugging / validation purposes, let's copy the control file
+            # into the Chef data as this is a 2 step update.  Also identify
+            # which node made the update.
+
+            try:
+                localData['hostname'] = self.__localHostName
+                localPath = self.putLocalData(localData, "")
+                shutil.copyfile(localPath, "chef-repo/autoport-chef-cookbook-version.json")
+            except IOError:
+                pass
+
+            filename = "chef-repo.tar.gz"
+            localPath = self.__localDataDir + filename
+            remotePath = self.__sharedDataDir
+
+            # Building tar file of the chef-repo and placing in local config dir
+            self.buildTarFile(localPath, "chef-repo")
+
             # Transfer the chef tar file to the shared location on Jenkins Master
             self.putRemoteFile(localPath, remotePath, filename)
 
-            command = "cd "+ remotePath + "&&tar -xvf " + filename + "&&cd chef-repo&&knife ssl fetch&&knife upload /"
+            command = "cd "+ remotePath + "&&tar -xvf " + filename + \
+                      "&&cd chef-repo&&knife ssl fetch&&knife upload /"
             exit_status, stderr = self.executeRemoteCommand(command)
 
-            # Transfer ManagedList to the shared location on Jenkins Master
-            # only if cookbook upload operation is successful
-            if exit_status == 0:
-                self.putSharedData(localData, sharedData)
             return stderr
 
     def getDistro(self, buildServer):
@@ -321,12 +345,12 @@ class SharedData:
 
     def getManagedList(self):
         localData = self.getLocalData("ManagedList.json")
-        sharedData = self.getSharedData("ManagedList.json")
+        sharedData = self.getSharedData("ManagedList.json", "/user/" + self.__localHostName + "/")
 
         saveShared = sharedData
 
         if not sharedData:
-            path = self.putSharedData(localData, saveShared)
+            path = self.putSharedData(localData, saveShared, "/user/" + self.__localHostName + "/")
             if not path:
                 return ""
             return localData
@@ -347,7 +371,7 @@ class SharedData:
                     localRuntime['userPackages'] = sharedRuntime['userPackages']
                     update = True
             if update:
-                path = self.putSharedData(localData, saveShared)
+                path = self.putSharedData(localData, saveShared, "/user/" + self.__localHostName + "/")
                 if not path:
                     return ""
             data = localData
@@ -363,9 +387,12 @@ class SharedData:
         distroName, distroRel, distroVersion = self.getDistro(node)
 
         # The version becomes managed version if it satisfies the below cases
-        # case 1: If the jenkins returned package arch matches with arch of ManagedList and version available in ManagedList then the version from ManagedList becomes the Managed Version
-        # case 2: If the jenkins returned package has the arch but not in ManagedList and version available in ManagedList then the version from ManagedList becomes the Managed Version
-        # case 3: If in the above two cases the ManagedList doesn't contain version for given package then installedVersion becomes the managed version
+        # case 1: If the jenkins returned package arch matches with arch of ManagedList and version
+        #         available in ManagedList then the version from ManagedList becomes the Managed Version
+        # case 2: If the jenkins returned package has the arch but not in ManagedList and version
+        #         available in ManagedList then the version from ManagedList becomes the Managed Version
+        # case 3: If in the above two cases the ManagedList doesn't contain version for given package
+        #         then installedVersion becomes the managed version
         packageName = pkg["packageName"]
         pkgVersion = ""
         userAddedVersion = "No"
@@ -375,7 +402,8 @@ class SharedData:
             if runtime['distroVersion'] != distroRel and runtime['distroVersion'] != distroVersion:
                 continue
             for package in runtime['autoportChefPackages']:
-                if package['name'] == pkg['packageName'] or ("tagName" in package and package["tagName"] == pkg['packageName']):
+                if package['name'] == pkg['packageName'] or \
+                   ("tagName" in package and package["tagName"] == pkg['packageName']):
                     if "arch" in package and package['arch'] == pkg['arch']:
                         if "version" in package:
                             pkgVersion = package['version']
@@ -404,7 +432,9 @@ class SharedData:
                     if pkgVersion:
                         break
             for package in runtime['userPackages']:
-                if package['name'] == packageName and package['owner'] == self.__localHostName and "arch" in package and package['arch'] == pkg['arch']:
+                if package['name'] == packageName and \
+                   package['owner'] == self.__localHostName and \
+                   "arch" in package and package['arch'] == pkg['arch']:
                     try:
                         userAddedVersion = package['version']
                     except KeyError:
@@ -431,14 +461,18 @@ class SharedData:
                 if sharedRuntime['distro'] == distro:
                     addFlag = True
                     for package in sharedRuntime['userPackages']:
-                        if package['name'] == packageName and  package['arch'] == arch and package['owner'] == self.__localHostName:
-                        # If package is already present for the current user, check its version and update the version if they are different
+                        if package['name'] == packageName and \
+                           package['arch'] == arch and \
+                           package['owner'] == self.__localHostName:
+                            # If package is already present for the current user,
+                            # check its version and update the version if they are different
                             if package['version'] != packageVersion:
                                 package['version'] = packageVersion
                             addFlag = False
                             break
                     if addFlag == True:
-                        sharedRuntime['userPackages'].append({"owner":self.__localHostName, "name":packageName, "version":packageVersion, "arch":arch, "action":action, "type": packageType})
+                        sharedRuntime['userPackages'].append({"owner":self.__localHostName, "name":packageName,
+                                  "version":packageVersion, "arch":arch, "action":action, "type": packageType})
                         break
         # Write back to the local managed list file
         localPath = self.putLocalData(localManagedListFileData, "")
@@ -458,7 +492,9 @@ class SharedData:
                   continue
                 if sharedRuntime['distro'] == distro:
                     for package in sharedRuntime['userPackages']:
-                        if package['name'] == packageName and  package['arch'] == arch and package['owner'] == self.__localHostName:
+                        if package['name'] == packageName and \
+                           package['arch'] == arch and \
+                           package['owner'] == self.__localHostName:
                             # If package is present for the current user, update action
                             if "installed_version" in pkgData and pkgData["installed_version"]!="N/A":
                                 package['action'] = action
@@ -472,18 +508,19 @@ class SharedData:
     # Synchronize and commit the managed list in shared location with the changes done in local list
     def synchManagedPackageList(self):
         localData = self.getLocalData("ManagedList.json")
-        sharedData = self.getSharedData("ManagedList.json")
+        sharedData = self.getSharedData("ManagedList.json", "/user/" + self.__localHostName + "/")
 
         if not sharedData:
             data = localData
         else:
             data = self.mergeManagedLists(localData, sharedData)
 
-        path = self.putSharedData(localData, sharedData)
+        path = self.putSharedData(localData, sharedData, "/user/" + self.__localHostName + "/")
 
         return path
 
-    # Merges the local and shared Managed Lists, taking the static data from shared and merging the userPackages from both locations
+    # Merges the local and shared Managed Lists, taking the static data from
+    # shared and merging the userPackages from both locations
     def mergeManagedLists(self, localData, sharedData):
         mergedData = sharedData
 
@@ -491,25 +528,32 @@ class SharedData:
             for sharedRuntime in mergedData['managedRuntime']:
                 if localRuntime['distro'] == sharedRuntime['distro']:
                     if localRuntime['distroVersion'] == sharedRuntime['distroVersion']:
-                        # For each userPackage in localData belonging to the current user, iterate over the shared userPackages and if no match is found append it. In case a match is found with difference in versions, use the version from localData
+                        # For each userPackage in localData belonging to the current user, iterate over
+                        # the shared userPackages and if no match is found append it. In case a match
+                        # is found with difference in versions, use the version from localData
                         for localPackage in localRuntime['userPackages']:
                             if localPackage['owner'] == self.__localHostName:
                                 addLocalPackage = True
                                 for sharedPackage in sharedRuntime['userPackages']:
-                                    if localPackage['name'] == sharedPackage['name'] and localPackage['owner'] == sharedPackage['owner']:
+                                    if localPackage['name'] == sharedPackage['name'] and \
+                                       localPackage['owner'] == sharedPackage['owner']:
                                         if localPackage['version'] != sharedPackage['version']:
                                             sharedPackage['version'] = localPackage['version']
                                         addLocalPackage = False
                                         break
                                 if addLocalPackage == True:
                                     sharedRuntime['userPackages'].append(localPackage)
-                        # For each userPackage in sharedData belonging to the current user, iterate over the local userPackages and remove the ones present in shared but not in localData.
-                        # This is the case when user has removed a previously added and synched package from the UI but not done a re-synch.
+                        # For each userPackage in sharedData belonging to the current user, iterate over
+                        # the local userPackages and remove the ones present in shared but not in localData.
+                        # This is the case when user has removed a previously added and synched package
+                        # from the UI but not done a re-synch.
                         for sharedPackage in sharedRuntime['userPackages']:
                             if sharedPackage['owner'] == self.__localHostName:
                                 removePackage = True
                                 for localPackage in localRuntime['userPackages']:
-                                    if sharedPackage['owner'] == localPackage['owner'] and sharedPackage['name'] == localPackage['name'] and sharedPackage['version'] == localPackage['version']:
+                                    if sharedPackage['owner'] == localPackage['owner'] and \
+                                       sharedPackage['name'] == localPackage['name'] and \
+                                       sharedPackage['version'] == localPackage['version']:
                                         removePackage = False
                                         break
                                 if removePackage == True:

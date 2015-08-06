@@ -1,8 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "7",
-    "cookbook_version": "0.1.1",
+    "sequence": "1",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
