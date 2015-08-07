@@ -1,19 +1,60 @@
+#
+# This file manages two types of data:
+#
+# 1) Data that is shared across all users.  e.g. Chef data.
+# 2) User data that needs to persist across autoport sessions.  e.g. Managed List
+#
+# The data above pertains to the state of build servers and is placed in
+# /var/opt/autoport on Jenkins master which makes it persistent.  When autoport
+# connects with the Jenkins master it refreshes itself by pulling down the data
+# that it needs and it uploads new versions of this data as it is produced by
+# the development team via code drops to autoport.
+#
+# Chef provide package configuration for autoport build slaves.  There is no end
+# user component to Chef.  We support two build slave deployment models: user
+# dedicated build slaves and user shared build slaves.  This latter case requires
+# that Chef data be placed in a fixed central location.
+#
+# Chef data is located in /var/opt/autoport/chef-repo
+#
+# The Managed List refers to a list of packages constituting the minimum runtime
+# environment.  User's can install and remove packages beyond this set.  The
+# list is defined as :
+#
+# Managed List = <base O/S runtime> + <autoport required pkgs> + <optional user pkgs>
+#
+# The managed list is located at:
+#
+#    /var/opt/autoport/user/<username>/  if autoport is invoked as "python main.py -b"
+#    /var/opt/autoport/                  if autoport is invoked as "python main.py"
+#
+#    where <username> comes from config.ini
+#
+# The autoport command argument -b tells autoport to dynamically allocate Jenkins
+# Build Servers on behalf of the user.  This is a cloud feature.
+#
+# This file provides low level services that may be used to create additional
+# shared data files in the future.  The mechanism is based on a json control file,
+# which must have the following fields:
+#
+#    version      defines the format of the data
+#    sequence     used to serialize updates at the data set level
+#    name         the name of the control file
+#
+# Note additional fields may be added to the control file.  e.g. chef-cookbook-version
+#
 # The managed list is divided into two types of lists: static and dynamic.
 #
-# 1) static lists are 'autoport[Chef]packages'
+# 1) static lists are 'autoportPackages and autoportChefPackages'
 # 2) dynamic list is 'userPackages'
 #
-# Static lists are updated by dropping code changes to autoport.  The user can add
-# new packages and remove them through via the tool in the Build Servers tab.  These
-# packages are added and removed from the 'userPackages' list.  The user can update
-# the version of a static package.  It would go into the 'userPackage' with the
-# new version and it would also be included in the static list with the original
-# version.   For example, python 2.7 static and python 3.3 dynamic.  The user interface
-# code needs to make a special case for this as both cannot be in the master list.
-# the static lists as that would break the tool. The user cannot remove packages from
-# the static lists as these are needed for the correct operation of the tool.
+# Static lists are updated by dropping code changes to autoport.
 #
-# The get operation is invoked at the start of all build server related tasks.  It
+# Users are not allowed to remove packages from the static lists as that would
+# potentially break the tool.  They can only add and remove packages in the
+# userPackage list.
+#
+# The get ML operation is invoked at the start of all build server related tasks.  It
 # returns the combination of the latest static data and shared user data.  The shared
 # file is updated if it doesn't exist or if it contains downlevel static lists wrt the
 # autoport instance performing the get.
@@ -21,15 +62,22 @@
 # IMPORTANT: CODE DROP REQUIREMENT
 #
 #      if you update the managedList.json file, you need to increment the
-#      the sequence number in your code drop.
+#      sequence number in your code drop.
+#
+#      if you update the chef-repo-version.json file, you need to increment the
+#      fields sequence number and cookbook-version in the json control file as
+#      well as the version field in the chef-repo/cookbooks/buildServer/metadata.rb file
 #
 # The sequence number is chronological in nature.  The larger the number the later
 # edition of the static list.  If sequence number x > sequence number y, the static
 # lists associated with x are used.
 #
 # A sync operation is a commit.  In general, the flow is get the managed list into memory,
-# operate on it in memory, adding and removing packaces from UserPackages, then sync it.
-# The memory copy is written to the local file, and then to the shared file.
+# operate on it in memory, adding and removing packaces from UserPackages, then act on
+# the list which is called a sync operation as the list is being applied to build servers
+# which involves install operations.  When the list has been applied as a whole, the
+# list is said to be in sync with the state of the target server(s).
+#
 
 import os
 import globals
@@ -41,7 +89,6 @@ import shutil
 from flask import json
 from collections import OrderedDict
 from contextlib import closing
-from distutils.version import StrictVersion
 
 class SharedData:
     def __init__(self, jenkinsHost,
@@ -57,6 +104,7 @@ class SharedData:
         self.__localDataDir = globals.localPathForConfig
         self.__localPackageDir = globals.localPathForPackages
         self.__localHostName = globals.localHostName
+        self.__userName = globals.configUsername
         try:
             self.__jenkinsSshClient = paramiko.SSHClient()
             self.__jenkinsSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -106,7 +154,7 @@ class SharedData:
 
         # path is an optional extension to sharedDataDir.  Enables
         # the caller to place a file anywhere below the base directory.
-        # /user/hostname  --> /var/opt/autoport/user/hostname
+        # /user/username  --> /var/opt/autoport/user/username
 
         sharedPath = self.__sharedDataDir + path + data['name']
 
@@ -163,6 +211,36 @@ class SharedData:
             assert(False)
         return localPath
 
+    def putSharedFile(self, localPath, remotePath, filename):
+        # Transfer the file to remote path on Jenkins master that is
+        # shared by all autoport instances
+        try:
+            self.__jenkinsFtpClient.chdir(remotePath)
+        except IOError as e:
+            self.__jenkinsFtpClient.mkdir(remotePath)
+        try:
+            remotePath = os.path.join(remotePath, filename)
+            self.__jenkinsFtpClient.put(localPath, remotePath)
+
+        except IOError as e:
+            print str(e)
+            assert(False)
+
+    def executeSharedCommand(self, command):
+        # Execute remote commands on Jenkins Master to manipulate shared data
+        transport = self.__jenkinsTransportSession
+        try:
+            channel = transport.open_channel(kind = "session")
+            channel.exec_command(command)
+            exit_status = channel.recv_exit_status()
+            if exit_status != 0:
+                stderr = channel.makefile_stderr('rb', -1).readlines()
+                print stderr
+                assert(False)
+        except IOError as e:
+            print str(e)
+            assert(False)
+
     def allowedRepoPkgExtensions(self, filename):
         # Check the valid file types to be uploaded to repository
         # based on the extensions.
@@ -213,33 +291,6 @@ class SharedData:
                "\" "+ archiveLogPath + " || echo \"" + logEntry + "\" >> " + archiveLogPath
         return repoPath, command
 
-    def putRemoteFile(self, localPath, remotePath, filename):
-        # Transfer the file to remote location.
-        try:
-            self.__jenkinsFtpClient.chdir(remotePath)
-        except IOError as e:
-            self.__jenkinsFtpClient.mkdir(remotePath)
-        try:
-            remotePath = os.path.join(remotePath, filename)
-            self.__jenkinsFtpClient.put(localPath, remotePath)
-
-        except IOError as e:
-            print str(e)
-            assert(False)
-
-    def executeRemoteCommand(self, command):
-        # Execute remote commands on Jenkins Master
-        stderr = ""
-        exit_status = 0
-        if command:
-            transport = self.__jenkinsTransportSession
-            channel = transport.open_channel(kind = "session")
-            channel.exec_command(command)
-            exit_status = channel.recv_exit_status()
-            if exit_status != 0:
-                stderr = channel.makefile_stderr('rb', -1).readlines()
-        return exit_status, stderr
-
     def buildTarFile(self, output_filename, source_dir):
         # Routine to create tar file
         with closing(tarfile.open(output_filename, "w:gz")) as tar:
@@ -261,7 +312,7 @@ class SharedData:
             return "Inappropriate or Invalid file-type"
 
         # Saving the file to remote path on the custom repository
-        self.putRemoteFile(localPath, remotePath, file.filename)
+        self.putSharedFile(localPath, remotePath, file.filename)
 
         # After the file is sucessfully saved to the remote location, deleting
         # the file from local path on autoport host.
@@ -269,38 +320,31 @@ class SharedData:
 
         # Executing the command on the custom repository to add the file to
         # existing repository.
-        exit_status, stderr = self.executeRemoteCommand(command)
-
-        if exit_status != 0:
-            # In case there is a failure in adding packages to repository,
-            # clean up action would run to remove the uploaded package.
-            cleanup_command = "rm -rf %s/%s" % (remotePath, file.filename)
-            self.executeRemoteCommand(cleanup_command)
-            return stderr
+        self.executeSharedCommand(command)
 
     def uploadChefData(self):
         # This routine is responsible for uploading chef-data to Jenkins Master
         # and also uploading the latest cookbook to chef-server.
 
-        # Fetching cookbook_version from this autoport instance
-        localData = self.getLocalData("chef-cookbook-version.json")
-        localSequence = localData['sequence']
-        localVersion = localData['version']
+        # Fetching version from this autoport instance
+        localData = self.getLocalData("chef-repo-version.json")
+        localSequence = int(localData['sequence'])
+        localVersion = int(localData['version'])
 
-        # Fetching cookbook_version from jenkins Master
-        sharedData = self.getSharedData("chef-cookbook-version.json", "")
+        # Fetching version from jenkins Master
+        sharedData = self.getSharedData("chef-repo-version.json", "")
         try:
-            sharedSequence = sharedData['sequence']
-            sharedVersion = sharedData['version']
+            sharedSequence = int(sharedData['sequence'])
+            sharedVersion = int(sharedData['version'])
         except KeyError:
-            sharedSequence = "0"
-            sharedVersion = "0"
+            sharedSequence = 0
+            sharedVersion = 0
 
-        # Upload local copy.  It is more recent
+        # Upload local copy if it is more recent
         if localVersion > sharedVersion or \
            (localVersion == sharedVersion and localSequence > sharedSequence):
 
-            # Upload local chef-cookbook-version.json
+            # Upload local chef-repo-version.json
             self.putSharedData(localData, sharedData, "")
 
             # For debugging / validation purposes, let's copy the control file
@@ -308,9 +352,10 @@ class SharedData:
             # which node made the update.
 
             try:
+                localData['username'] = self.__userName
                 localData['hostname'] = self.__localHostName
                 localPath = self.putLocalData(localData, "")
-                shutil.copyfile(localPath, "chef-repo/autoport-chef-cookbook-version.json")
+                shutil.copyfile(localPath, "chef-repo/autoport-chef-repo-version.json")
             except IOError:
                 pass
 
@@ -322,13 +367,48 @@ class SharedData:
             self.buildTarFile(localPath, "chef-repo")
 
             # Transfer the chef tar file to the shared location on Jenkins Master
-            self.putRemoteFile(localPath, remotePath, filename)
+            self.putSharedFile(localPath, remotePath, filename)
 
-            command = "cd "+ remotePath + "&&tar -xvf " + filename + \
-                      "&&cd chef-repo&&knife ssl fetch&&knife upload /"
-            exit_status, stderr = self.executeRemoteCommand(command)
+            command = "cd " + remotePath + " && tar -xvf " + filename + \
+                      " && cd chef-repo && knife ssl fetch && knife upload /"
+            self.executeSharedCommand(command)
 
-            return stderr
+            print "chef upload 1"
+            print "Before local data=", localData
+            print "Before shared data=", sharedData
+
+            # Read the shared control data again and validate that we are still latest
+            sharedData = self.getSharedData("chef-repo-version.json", "")
+            try:
+                sharedSequence = int(sharedData['sequence'])
+                sharedVersion = int(sharedData['version'])
+            except KeyError:
+                sharedSequence = 0
+                sharedVersion = 0
+
+            print "After shared data=", sharedData
+
+            # Somebody else has updated the repository
+            if sharedSequence != localSequence and sharedVersion != localVersion:
+                return
+
+            # Validate that the chef-repo data contains the expected version or a newer one
+            newSharedData = self.getSharedData("autoport-chef-repo-version.json", "/chef-repo")
+
+            print "chef-repo data=", newSharedData
+
+            try:
+                newSharedSequence = int(newSharedData['sequence'])
+                newSharedVersion = int(newSharedData['version'])
+            except KeyError:
+                newSharedSequence = 0
+                newSharedVersion = 0
+
+            # Try it again once
+            if localVersion > newSharedVersion or \
+               (localVersion == newSharedVersion and localSequence > newSharedSequence):
+                print "Updating chef-repo data again"
+                self.executeSharedCommand(command)
 
     def getDistro(self, buildServer):
         distroName = ""
@@ -345,22 +425,32 @@ class SharedData:
 
     def getManagedList(self):
         localData = self.getLocalData("ManagedList.json")
-        sharedData = self.getSharedData("ManagedList.json", "/user/" + self.__localHostName + "/")
+
+        print "allocBuildServers=", globals.allocBuildServers
+        if globals.allocBuildServers:
+            sharedPath = "/user/" + self.__userName + "/"
+        else:
+            sharedPath = ""
+
+        sharedData = self.getSharedData("ManagedList.json", sharedPath)
 
         saveShared = sharedData
 
         if not sharedData:
-            path = self.putSharedData(localData, saveShared, "/user/" + self.__localHostName + "/")
+            path = self.putSharedData(localData, saveShared, sharedPath)
             if not path:
                 return ""
             return localData
 
         localSequence = int(localData['sequence'])
-        sharedSequence = int(sharedData['sequence'])
+        localVersion = int(localData['version'])
 
-        if localSequence <= sharedSequence:
-            data = self.mergeManagedLists(localData, sharedData)
-        else:
+        sharedSequence = int(sharedData['sequence'])
+        sharedVersion = int(sharedData['version'])
+
+        # Upload local copy if it is more recent after merging user data from shared
+        if localVersion > sharedVersion or \
+           (localVersion == sharedVersion and localSequence > sharedSequence):
             update = False
             for sharedRuntime in sharedData['managedRuntime']:
                 for localRuntime in localData['managedRuntime']:
@@ -371,10 +461,12 @@ class SharedData:
                     localRuntime['userPackages'] = sharedRuntime['userPackages']
                     update = True
             if update:
-                path = self.putSharedData(localData, saveShared, "/user/" + self.__localHostName + "/")
+                path = self.putSharedData(localData, saveShared, sharedPath)
                 if not path:
                     return ""
             data = localData
+        else:
+            data = self.mergeManagedLists(localData, sharedData)
 
         return data
 
@@ -433,7 +525,7 @@ class SharedData:
                         break
             for package in runtime['userPackages']:
                 if package['name'] == packageName and \
-                   package['owner'] == self.__localHostName and \
+                   package['owner'] == self.__userName and \
                    "arch" in package and package['arch'] == pkg['arch']:
                     try:
                         userAddedVersion = package['version']
@@ -450,9 +542,9 @@ class SharedData:
         # Perform additions to memory list
         for pkgData in packageDataList:
             packageName = pkgData['package_name']
-            packageVersion =  pkgData['package_version']
+            packageVersion = pkgData['package_version']
             distro = pkgData['distro']
-            arch =  pkgData['arch']
+            arch = pkgData['arch']
             packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
 
             for sharedRuntime in localManagedListFileData['managedRuntime']:
@@ -463,7 +555,7 @@ class SharedData:
                     for package in sharedRuntime['userPackages']:
                         if package['name'] == packageName and \
                            package['arch'] == arch and \
-                           package['owner'] == self.__localHostName:
+                           package['owner'] == self.__userName:
                             # If package is already present for the current user,
                             # check its version and update the version if they are different
                             if package['version'] != packageVersion:
@@ -471,7 +563,7 @@ class SharedData:
                             addFlag = False
                             break
                     if addFlag == True:
-                        sharedRuntime['userPackages'].append({"owner":self.__localHostName, "name":packageName,
+                        sharedRuntime['userPackages'].append({"owner":self.__userName, "name":packageName,
                                   "version":packageVersion, "arch":arch, "action":action, "type": packageType})
                         break
         # Write back to the local managed list file
@@ -494,7 +586,7 @@ class SharedData:
                     for package in sharedRuntime['userPackages']:
                         if package['name'] == packageName and \
                            package['arch'] == arch and \
-                           package['owner'] == self.__localHostName:
+                           package['owner'] == self.__userName:
                             # If package is present for the current user, update action
                             if "installed_version" in pkgData and pkgData["installed_version"]!="N/A":
                                 package['action'] = action
@@ -507,15 +599,20 @@ class SharedData:
 
     # Synchronize and commit the managed list in shared location with the changes done in local list
     def synchManagedPackageList(self):
+        if globals.allocBuildServers:
+            sharedPath = "/user/" + self.__userName + "/"
+        else:
+            sharedPath = ""
+
         localData = self.getLocalData("ManagedList.json")
-        sharedData = self.getSharedData("ManagedList.json", "/user/" + self.__localHostName + "/")
+        sharedData = self.getSharedData("ManagedList.json", sharedPath)
 
         if not sharedData:
             data = localData
         else:
             data = self.mergeManagedLists(localData, sharedData)
 
-        path = self.putSharedData(localData, sharedData, "/user/" + self.__localHostName + "/")
+        path = self.putSharedData(localData, sharedData, sharedPath)
 
         return path
 
@@ -532,7 +629,7 @@ class SharedData:
                         # the shared userPackages and if no match is found append it. In case a match
                         # is found with difference in versions, use the version from localData
                         for localPackage in localRuntime['userPackages']:
-                            if localPackage['owner'] == self.__localHostName:
+                            if localPackage['owner'] == self.__userName:
                                 addLocalPackage = True
                                 for sharedPackage in sharedRuntime['userPackages']:
                                     if localPackage['name'] == sharedPackage['name'] and \
@@ -548,7 +645,7 @@ class SharedData:
                         # This is the case when user has removed a previously added and synched package
                         # from the UI but not done a re-synch.
                         for sharedPackage in sharedRuntime['userPackages']:
-                            if sharedPackage['owner'] == self.__localHostName:
+                            if sharedPackage['owner'] == self.__userName:
                                 removePackage = True
                                 for localPackage in localRuntime['userPackages']:
                                     if sharedPackage['owner'] == localPackage['owner'] and \

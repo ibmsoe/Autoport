@@ -1973,18 +1973,11 @@ def uploadToRepo():
                 error="Inappropriate file-type"), 400
 
 def autoportInitialisation():
-    # This is the method which would be called in main , even before
-    # starting the flask application. This would be responsibe for doing
-    # intial setup which is required for autoport application.
-
-    # Uploading chef data to chef-server as part of intial setup.
-
-    console_out = sharedData.uploadChefData()
-    if console_out:
-        # Even if chef-data upload fails we allow the application to start up
-        # but reason of failure is displayed on the stdout.
-        print "Applcation intialisation failed.\n"
-        print "Failure Reason: %s" %console_out
+    # This is called before starting the flask application.  It is responsible
+    # for performing initial setup of the Jenkins master.  Only required items
+    # should be performed here.  On error, messages are printed to the console
+    # and assert(False) is invoked to provide the debug context.
+    sharedData.uploadChefData()
 
 if __name__ == "__main__":
 
@@ -1996,10 +1989,15 @@ if __name__ == "__main__":
                    defaults to only listening on private localhost")
     p.add_argument("-u", "--jenkinsURL", help="specifies the URL for the Jenkins server,\
                    defaults to '" + globals.jenkinsUrl + "'")
+    p.add_argument("-b", "--allocBuildServers", action="store_true",
+                   help="Build Servers are dynamically allocated per user")
     args = p.parse_args()
 
     if args.jenkinsURL:
         globals.jenkinsUrl = args.jenkinsURL
+
+    if args.allocBuildServers:
+        globals.allocBuildServers = args.allocBuildServers
 
     if args.public:
         app.run(debug = True, host='0.0.0.0')
