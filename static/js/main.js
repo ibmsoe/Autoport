@@ -644,11 +644,16 @@ var jenkinsState = {
     selectedSingleSlavePackage: {},         // Package selected by the user
     showUnselectPackageButton: false,       // True if a package is selected, false otherwise
     showUnselectMultiPackageButton: false,  //  True if a package is selected, false otherwise (for Managed Panel)
+    pkgInstallRemoveResponseCounter: 0,
+    totalSelectedSingleSlavePkg: 0,
+    pkgInstallRemoveStatusSingleSlave: [],
     listPackageForSingleSlave: function(ev) {
         jenkinsState.singleSlavePackageTableReady = false;
         jenkinsState.loadingState.packageListLoading = true;
         jenkinsState.selectedSingleSlavePackage = [];
         jenkinsState.showUnselectPackageButton = false;
+        $("#singlePanelInstallBtn").addClass("disabled");
+        $("#singlePanelRemoveBtn").addClass("disabled");
         $.getJSON("/listPackageForSingleSlave",
         {
             packageFilter: $("#packageFilter_Single").val(),
@@ -657,53 +662,61 @@ var jenkinsState = {
         listPackageForSingleSlaveCallback).fail(listPackageForSingleSlaveCallback);
     },
     unselectPackageForSingleSlave: function(ev) {
-        $("#singleServerPackageListTable").bootstrapTable("uncheckBy", {field:"packageName", values:[jenkinsState.selectedSingleSlavePackage.packageName]})
         jenkinsState.selectedSingleSlavePackage = [];
         jenkinsState.showUnselectPackageButton = false;
+        $("#singleServerPackageListTable").bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
+    },
+    // performActionOnSingleSlave Function performs install / remove action
+    // on the packages selected in single panel
+    // Argument:
+    //    clickAction: takes values 'install/remove'
+    performActionOnSingleSlave: function(clickAction) {
+        var selectedPackageList = $('#singleServerPackageListTable').bootstrapTable('getSelections');
+        jenkinsState.pkgInstallRemoveResponseCounter = 0;
+        jenkinsState.totalSelectedSingleSlavePkg = selectedPackageList.length;
+        jenkinsState.pkgInstallRemoveStatusSingleSlave = [];
+        var messageText = "Package cannot be installed or Removed";
+        for (var selectedPkg in selectedPackageList ) {
+            var  package_type = "", package_tagname = "";
+            // Exlude packages not eligible for installation
+            if (selectedPackageList[selectedPkg].updateAvailable == false && clickAction == 'install') {
+                jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':selectedPackageList [selectedPkg].packageName, 'packageAction':'install', 'status': 'Package  cannot be installed!'});
+                jenkinsState.totalSelectedSingleSlavePkg -= 1;
+                messageText = "Package cannot be installed!";
+                continue;
+            }
+            // Exlude packages not eligible for removal
+            if (selectedPackageList[selectedPkg].packageInstalled == false && clickAction == 'remove') {
+                jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':selectedPackageList [selectedPkg].packageName, 'packageAction':'remove', 'status': 'Package cannot be removed!'});
+                jenkinsState.totalSelectedSingleSlavePkg -= 1;
+                messageText = "Package cannot be removed!";
+                continue;
+            }
+            if (selectedPackageList [selectedPkg].packageType != undefined)
+                package_type = selectedPackageList [selectedPkg].packageType;
+            if (selectedPackageList [selectedPkg].package_tagname != undefined)
+                package_tagname = selectedPackageList [selectedPkg].package_tagname;
+            jenkinsState.loadingState.packageActionLoading = true;
+            $.getJSON("/managePackageForSingleSlave",
+            {
+                package_name: selectedPackageList [selectedPkg].packageName,
+                package_version: selectedPackageList [selectedPkg].updateVersion,
+                action: clickAction,
+                type: package_type,
+                buildServer: jenkinsState.buildServer
+            },
+            managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
+        }
+        // If no packages are eligible for intall / remove display the message
+        if (jenkinsState.totalSelectedSingleSlavePkg == 0) {
+            showAlert(messageText);
+        }
     },
     installPackageForSingleSlave: function(ev) {
-        var action = "", package_type = "", package_tagname = "";
-
-        // If package is installed, update it else if package is not installed, install it
-        if (jenkinsState.selectedSingleSlavePackage.packageInstalled == true)
-            action = "update"
-        else if (jenkinsState.selectedSingleSlavePackage.packageInstalled == false)
-            action = "install"
-        if(jenkinsState.selectedSingleSlavePackage.packageType != undefined)
-            package_type = jenkinsState.selectedSingleSlavePackage.packageType;
-        if(jenkinsState.selectedSingleSlavePackage.package_tagname != undefined)
-            package_tagname = jenkinsState.selectedSingleSlavePackage.package_tagname;
-
-        jenkinsState.loadingState.packageActionLoading = true;
-        $.getJSON("/managePackageForSingleSlave",
-        {
-            package_name: jenkinsState.selectedSingleSlavePackage.packageName,
-            package_version: jenkinsState.selectedSingleSlavePackage.updateVersion,
-            action: action,
-            type: package_type,
-            buildServer: jenkinsState.buildServer
-        },
-        managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
+        jenkinsState.performActionOnSingleSlave('install');
     },
     removePackageForSingleSlave: function(ev) {
-        var package_type = "", package_tagname = "";
-
-        if(jenkinsState.selectedSingleSlavePackage.package_type != undefined)
-            package_type = jenkinsState.selectedSingleSlavePackage.package_type;
-        if(jenkinsState.selectedSingleSlavePackage.package_tagname != undefined)
-            package_tagname = jenkinsState.selectedSingleSlavePackage.package_tagname;
-
-        jenkinsState.loadingState.packageActionLoading = true;
-        $.getJSON("/managePackageForSingleSlave",
-        {
-            package_name: jenkinsState.selectedSingleSlavePackage.packageName,
-            package_version: jenkinsState.selectedSingleSlavePackage.installedVersion,
-            action: "remove",
-            type: package_type,
-            //tagname: package_tagname,
-            buildServer: jenkinsState.buildServer
-        },
-        managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
+         jenkinsState.performActionOnSingleSlave('remove');
     },
     managedPackageTableReady: false,   // Draw managed package table if true
     managedPackageList: [],            // Managed Package list
@@ -1742,19 +1755,43 @@ function listPackageForSingleSlaveCallback(data) {
 }
 
 function managePackageForSingleSlaveCallback(data) {
-    jenkinsState.loadingState.packageActionLoading = false;
-
+    jenkinsState.pkgInstallRemoveResponseCounter++;
     if (data.status === "ok") {
         jenkinsState.singleSlavePackageTableReady = false;
-        alert ("The " + data.packageAction + " was " + data.buildStatus)
+        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':data.packageName, 'packageAction':data.packageAction, 'status': data.buildStatus});
     } else {
-        showAlert("Error!", data);
+        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':data.packageName, 'packageAction':data.packageAction, 'status': data.error});
+    }
+    if ( jenkinsState.pkgInstallRemoveResponseCounter == jenkinsState.totalSelectedSingleSlavePkg ) {
+        jenkinsState.loadingState.packageActionLoading = false;
+        var text = '<table class="table table-condensed">';
+        text += '<tr class="active"><td>Package Name</td><td>Action</td><td>Status</td></tr>';
+        if (jenkinsState.pkgInstallRemoveStatusSingleSlave.length>0) {
+            var activeclass = "active";
+            for(var i in jenkinsState.pkgInstallRemoveStatusSingleSlave) {
+                if (jenkinsState.pkgInstallRemoveStatusSingleSlave[i].status == 'SUCCESS') {
+                    activeclass = "success";
+                }
+                else if (jenkinsState.pkgInstallRemoveStatusSingleSlave[i].status == 'FAILURE') {
+                    activeclass = "warning";
+                }
+                else if (jenkinsState.pkgInstallRemoveStatusSingleSlave[i].status != '') {
+                    activeclass = "info";
+                }
+                text += '<tr class="' + activeclass + '">';
+                text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].packageName + '</td>';
+                text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].packageAction + '</td>';
+                text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].status + '</td>';
+                text += '</tr>';
+            }
+        }
+        text += '</table>';
+        showAlert(text);
     }
 }
 
 function listManagedPackagesCallback(data) {
     jenkinsState.loadingState.managedPackageListLoading = false;
-
     if (data.status === "ok") {
         jenkinsState.managedPackageList = data.packages;
         jenkinsState.managedPackageTableReady = true;
@@ -1859,6 +1896,17 @@ $(document).ready(function() {
     $('#singleServerPackageListTable').on('check.bs.table', function (e, row) {
         jenkinsState.selectedSingleSlavePackage = row;
         jenkinsState.showUnselectPackageButton = true;
+        var selectedPackages = $('#singleServerPackageListTable').bootstrapTable('getSelections');
+        if(selectedPackages.length === 0) {
+            $("#singlePanelInstallBtn").addClass("disabled");
+            $("#singlePanelRemoveBtn").addClass("disabled");
+            jenkinsState.showUnselectPackageButton = false;
+            jenkinsState.selectedSingleSlavePackage = [];
+        }
+        else {
+            $("#singlePanelInstallBtn").removeClass("disabled");
+            $("#singlePanelRemoveBtn").removeClass("disabled");
+        }
     });
     $('#singleServerPackageListTable').on('page-change.bs.table', function (e, row) {
         // On a page change, Bootstrap addon unchecks the package checked by the user. In order to show the package it as selected once the user goes back to the earlier page, do the following:
