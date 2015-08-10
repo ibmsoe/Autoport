@@ -1343,7 +1343,8 @@ def managePackageForSingleSlave():
            return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction,
                                buildStatus=buildStatus)
        else:
-           return json.jsonify(status="failure", error="Could not perform the action specified"), 400
+           return json.jsonify(status="failure", error="Could not perform the action specified", packageName=packageName, packageAction=packageAction,
+                               buildStatus="FAILURE"), 400
     else:
         # Read template XML file
         tree = ET.parse("./config_template_package_actions_single_slave.xml")
