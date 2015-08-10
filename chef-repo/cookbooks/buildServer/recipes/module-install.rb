@@ -1,3 +1,6 @@
+# Installs perl module "file-remove" and "module-install" using source and build method.
+# source to be built is hosted at autoport_repo in tar.gz archive format.
+
 include_recipe 'buildServer::perl'
 
 {
@@ -14,45 +17,28 @@ include_recipe 'buildServer::perl'
    end
 end
 
-log_location = node['log_location']
-path = log_location
-
-dirpaths = []
-while path != '/' do
-  dirname = File.dirname(path)
-  dirpaths.push(dirname)
-  path = dirname
+case node['platform']
+  when 'ubuntu'
+    tag = {
+           'File-Remove' => 'libfile-remove-perl',
+           'Module-Install' => 'libmodule-install-perl'
+          }
+  when 'redhat'
+     tag = {
+           'File-Remove' => 'perl-file-remove',
+           'Module-Install' => 'perl-module-install'
+          }
 end
 
-dirs = dirpaths.reverse
-dirs.shift
-
-dirs.reverse.each do |dir|
-  directory log_location do
-    owner  'root'
-    group  'root'
-    action :create
-  end
-end
-
-file "#{log_location}/archive.log" do
-  owner  'root'
-  group  'root'
-  mode   '644'
-  action :create_if_missing
-end
-
-[
- "File-Remove,#{node['buildServer']['File-Remove']['version']},perl_modules," ,
- "Module-Install,#{node['buildServer']['Module-Install']['version']},perl_modules,"
-].each do |log_record|
-  ruby_block 'Creating source install log entry' do
-    block do
-      regex_string  = Regexp.new(Regexp.quote(log_record))
-      file = Chef::Util::FileEdit.new("#{log_location}/archive.log")
-      file.insert_line_if_no_match(regex_string, log_record)
-      file.write_file
-    end
-    not_if "grep '#{log_record}' #{log_location}/archive.log"
+{
+ 'File-Remove' => "File-Remove,#{node['buildServer']['File-Remove']['version']},perl_modules,#{tag['File-Remove']}" ,
+ 'Module-Install' => "Module-Install,#{node['buildServer']['Module-Install']['version']},perl_modules,#{tag['Module-Install']}"
+}.each do |name, log_record|
+  puts log_record
+  buildServer_log name do
+    name         name
+    log_location node['log_location']
+    log_record   log_record
+    action       :add
   end
 end

@@ -1,4 +1,4 @@
-# Installs scala using source/build method on ppc64le rhel node.
+# Installs scala using binary source on ppc64le rhel node.
 # On rest of the nodes it is installed using package manager.
 # scala deb and rpm are hosted over autoport_repo.
 

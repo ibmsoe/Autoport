@@ -1,4 +1,4 @@
-# This recipe is used to install maven package , either via source or via package manager.
+# This recipe is used to install maven package , either via binary source or via package manager.
 # It also sets maven_home using maven.sh in profile.d.
 # The pre-requiste to install maven is to configure java environment.
 # By default node attribute 'source_install' is to false.

@@ -25,7 +25,7 @@ if protobuf_pkgs.any?
   protobuf_pkgs.each do |pkg|
     package pkg do
       action :install
-      options '--force-yes'
+      options opt
     end
   end
 end

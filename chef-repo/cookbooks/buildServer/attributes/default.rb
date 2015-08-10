@@ -9,7 +9,7 @@ default['buildServer']['repo_url'] = "http://#{node['repo_hostname']}/#{node['re
 default['buildServer']['download_location'] =  Chef::Config[:file_cache_path]
 
 # Attributes for protobuf
-default['buildServer']['protobuf']['version'] = ''
+default['buildServer']['protobuf']['version'] = '2.6.1'
 default['buildServer']['protobuf']['install_prefix'] = '/usr/local'
 default['buildServer']['protobuf']['source_dir'] = '/opt'
 

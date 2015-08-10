@@ -1,3 +1,6 @@
+# Installs python module "pytest" using source and build method.
+# source to be built is hosted at autoport_repo in tar.gz archive format.
+
 {
   'pytest'    => node['buildServer']['pytest']['version']
 }.each do |pkg, version|
@@ -10,41 +13,11 @@
   end
 end
 
-log_record = "pytest,#{node['buildServer']['pytest']['version']},python_modules,"
-log_location = node['log_location']
-path = log_location
+log_record = "pytest,#{node['buildServer']['pytest']['version']},python_modules,python-pytest"
 
-dirpaths = []
-while path != '/' do
-  dirname = File.dirname(path)
-  dirpaths.push(dirname)
-  path = dirname
-end
-
-dirs = dirpaths.reverse
-dirs.shift
-
-dirs.reverse.each do |dir|
-  directory log_location do
-    owner  'root'
-    group  'root'
-    action :create
-  end
-end
-
-file "#{log_location}/archive.log" do
-  owner  'root'
-  group  'root'
-  mode   '644'
-  action :create_if_missing
-end
-
-ruby_block 'Creating source install log entry' do
-  block do
-    regex_string  = Regexp.new(Regexp.quote(log_record))
-    file = Chef::Util::FileEdit.new("#{log_location}/archive.log")
-    file.insert_line_if_no_match(regex_string, log_record)
-    file.write_file
-  end
-  not_if "grep '#{log_record}' #{log_location}/archive.log"
+buildServer_log "pytest" do
+  name         "pytest"
+  log_location node['log_location']
+  log_record   log_record
+  action       :add
 end

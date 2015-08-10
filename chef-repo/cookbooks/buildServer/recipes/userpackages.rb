@@ -1,6 +1,5 @@
-# This recipe is to install packages in the userPackages section of managedlist.json.
-# userpackages would be passed as a json string to the recipe and would be
-# fetched as dictionary key-value pairs.
+# The recipe would install packages in the userPackages section of managedlist.json.
+# userpackages would be passed as a json string.
 
 case node['platform']
 when 'ubuntu'

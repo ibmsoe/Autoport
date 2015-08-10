@@ -1,4 +1,4 @@
-# This recipe is used to install ant package , either via source or via package manager.
+# This recipe is used to install ant package , either via binary source or via package manager.
 # It also sets ant_home using ant.sh in profile.d
 # The pre-requiste to install ant is to configure java environment.
 # By default node attribute 'source_install' is to false.

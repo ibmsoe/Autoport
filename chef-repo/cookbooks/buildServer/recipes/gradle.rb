@@ -1,4 +1,4 @@
-# This recipe is used to install gradle package , either via source or via package manager.
+# This recipe is used to install gradle package , either via binary source or via package manager.
 # It also sets gradle_home using gradle.sh in profile.d.
 # The pre-requiste to install gradle is to configure java environment.
 # By default node attribute 'source_install' is to false.
