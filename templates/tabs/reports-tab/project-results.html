@@ -103,8 +103,14 @@
         <button type="button"
             class="btn btn-primary disabled"
             rv-on-click="projectReportState.compareLogs"
-            id="compareLogsBtn">
-        Log Compare (2)
+            id="compareBuildLogsBtn">
+        Build Log Compare (2)
+        </button>
+        <button type="button"
+            class="btn btn-primary disabled"
+            rv-on-click="projectReportState.compareLogs"
+            id="compareTestLogsBtn">
+        Test Log Compare (2)
         </button>
         <button type="button"
             class="btn btn-primary disabled"
@@ -120,16 +126,15 @@
   <div rv-show = "projectReportState.prjCompareReady">
     <!--Project results table-->
       <table class="table panel panel-default" id="testCompareSelectPanel"
-        data-pagnation="true" data-click-to-select="true"
+        data-pagination="true" data-click-to-select="true"
         data-toolbar="#projectListToolbar" data-checkbox-header="false">
         <thead>
           <tr>
             <th data-field="state" data-checkbox="true"></th>
-            <th data-field="name" data-align="center"data-sortable="true">Project Name</th>
+            <th data-field="name" data-align="center" data-sortable="true">Project</th>
             <th data-field="version" data-align="center" data-sortable="true">Version</th>
-            <th data-field="env" data-align="center" data-sortable="true">Environment</th>
-            <!--TODO: OS-->
             <th data-field="os" data-align="center" data-sortable="true">Operating System</th>
+            <th data-field="server" data-align="center" data-sortable="true">Build Server</th>
             <th data-field="repository" data-align="center" data-sortable="true">Repository</th>
             <th data-field="completed" data-align="center" data-sortable="true">Date Completed</th>
           </tr>
@@ -142,7 +147,7 @@
         class="table panel panel-default"
         rv-show="projectReportState.prjTableReady">
       <span class="panel panel-primary">
-        <div class="panel-heading">Test results <span id="prjHeader"></span></div>
+        <div class="panel-heading">Test results for Jenkins job(s):<span id="prjHeader"></span></div>
         <div class="table-container">
           <table id="testResultsTable">
             <tr id="testResultsTableHeader">

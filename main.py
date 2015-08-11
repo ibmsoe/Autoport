@@ -104,6 +104,8 @@ def getJenkinsNodeDetails():
     del globals.nodeDetails[:]
     del globals.nodeUbuntu[:]
     del globals.nodeRHEL[:]
+    del globals.nodeOSes[:]
+    del globals.nodeHosts[:]
 
     for node in globals.nodeLabels:
         results = queryNode(node, action)
@@ -113,13 +115,19 @@ def getJenkinsNodeDetails():
             nodeLabel = detail['nodelabel']
             if detail['distro'] == "UBUNTU":
                 globals.nodeUbuntu.append(nodeLabel)
+                osName = "Ubuntu"
             elif detail['distro'] == "RHEL":
                 globals.nodeRHEL.append(nodeLabel)
+                osName = "RHEL"
+            globals.nodeOSes.append(osName + ' ' + detail['version'] + ' ' + detail['arch'].upper())
+            globals.nodeHosts.append(detail['hostname'])
         except KeyError:
             print "No O/S information for node " + node
             pass
 
     print "All nodes: ", globals.nodeLabels
+    print "All OSes: ", globals.nodeOSes
+    print "All hostnames: ", globals.nodeHosts
     print "Ubuntu nodes: ", globals.nodeUbuntu
     print "RHEL nodes: ", globals.nodeRHEL
 
@@ -1480,6 +1488,7 @@ def listManagedPackages():
         nodes = globals.nodeRHEL
     else:
         nodes = globals.nodeLabels
+
     # If no packages in query string parameters then retrieving the packages CSV from ManagedList.json
     if package == "":
         distroType = distro if distro=="UBUNTU" or distro=="RHEL" else 'All'
@@ -1758,16 +1767,26 @@ def getTestResults():
     rightdir = catalog.getResults(rightbuild, rightrepo)
 
     if (leftdir == None or rightdir == None):
-        return json.jsonify(status="failure", error="result not found"), 404
-
-    leftname = resultPattern.match(leftbuild).group(2)
-    rightname = resultPattern.match(rightbuild).group(2)
+        return json.jsonify(status="failure", error="Result not found"), 401
 
     try:
-        res = resParser.ResBuildCompare(leftname, leftdir,
-                                          rightname, rightdir)
+        rightname = resultPattern.match(rightbuild).group(2)
+    except AttributeError:
+        return json.jsonify(status="failure", error="Invalid test result name" + rightbuild), 402
+
+    try:
+        leftname = resultPattern.match(leftbuild).group(2)
+    except AttributeError:
+        return json.jsonify(status="failure", error="Invalid test result name" + leftbuild), 403
+
+    try:
+        res = resParser.ResBuildCompare(leftname, leftdir, rightname, rightdir)
     except BaseException as e:
         return json.jsonify(status="failure", error=str(e)), 500
+
+    # We may be able to do without meta.arti as most of the data can be derived from
+    # the project name itself, but it may provide an indication that a build was successful
+    # as this file is produced by Jenkins as opposed to the buildAnalyzer
 
     lf = open(leftdir+"/meta.arti")
     rf = open(rightdir+"/meta.arti")
@@ -1787,88 +1806,131 @@ def getTestResults():
 # Get diff log output
 @app.route("/getDiffLogResults")
 def getDiffLogResults():
-    leftbuild  = request.args.get("leftbuild", "")
-    rightbuild = request.args.get("rightbuild", "")
-    leftrepo = request.args.get("leftrepository", "local")
-    rightrepo = request.args.get("rightrepository", "local")
+    logFile  = request.args.get("logfile", "")
+    leftBuild  = request.args.get("leftbuild", "")
+    rightBuild = request.args.get("rightbuild", "")
+    leftRepo = request.args.get("leftrepository", "local")
+    rightRepo = request.args.get("rightrepository", "local")
 
-    if (leftbuild == "" or rightbuild == ""):
-        return json.jsonify(status="failure", error="invalid argument"), 400
+    if (leftBuild == "" or rightBuild == ""):
+        return json.jsonify(status="failure", error="Invalid argument"), 400
 
-    leftdir = catalog.getResults(leftbuild, leftrepo)
-    rightdir = catalog.getResults(rightbuild, rightrepo)
+    leftDir = catalog.getResults(leftBuild, leftRepo)
+    rightDir = catalog.getResults(rightBuild, rightRepo)
 
-    if (leftdir == None or rightdir == None):
-        return json.jsonify(status="failure", error="result not found"), 404
-
-    leftname = resultPattern.match(leftbuild).group(2)
-    rightname = resultPattern.match(rightbuild).group(2)
+    if (leftDir == None or rightDir == None):
+        return json.jsonify(status="failure", error="Result not found"), 401
 
     try:
-        res = resParser.ResLogCompare(leftname, leftdir,
-                                          rightname, rightdir)
+        leftName = resultPattern.match(leftBuild).group(4)
+    except AttributeError:
+        return json.jsonify(status="failure", error="Invalid log name" + leftbuild), 402
+
+    try:
+        rightName = resultPattern.match(rightBuild).group(4)
+    except AttributeError:
+        return json.jsonify(status="failure", error="Invalid log name" + rightbuild), 403
+
+    try:
+        res = resParser.ResLogCompare(logFile, leftName, leftDir, rightName, rightDir)
     except BaseException as e:
         return json.jsonify(status="failure", error=str(e)), 500
 
-    lf = open(leftdir+"/meta.arti")
-    rf = open(rightdir+"/meta.arti")
-    leftmeta = json.load(lf)
-    rightmeta = json.load(rf)
-    lf.close()
-    rf.close()
-
     catalog.cleanTmp()
+
+    rightNode = resultPattern.match(rightBuild).group(3)
+    leftNode = resultPattern.match(leftBuild).group(3)
+
+    try:
+        leftCol = {}
+        leftCol['log'] = logFile
+        leftCol['job'] = leftBuild
+        leftCol['repo'] = leftRepo
+        leftCol['pkgname'] = leftName
+        leftCol['pkgver'] = resultPattern.match(leftBuild).group(5)
+        try:
+            i = globals.nodeLabels.index(leftNode)
+            leftCol['distro'] = globals.nodeOSes[i]
+        except ValueError:
+            leftCol['distro'] = leftNode
+        leftCol['date'] = resultPattern.match(leftBuild).group(6)
+    except AttributeError:
+        return json.jsonify(status="failure", error="Invalid log name" + leftbuild), 404
+
+    try:
+        rightCol = {}
+        rightCol['log'] = logFile
+        rightCol['job'] = rightBuild
+        rightCol['repo'] = rightRepo
+        rightCol['pkgname'] = rightName
+        rightCol['pkgver'] = resultPattern.match(rightBuild).group(5)
+        try:
+            i = globals.nodeLabels.index(rightNode)
+            rightCol['distro'] = globals.nodeOSes[i]
+        except ValueError:
+            rightCol['distro'] = rightNode
+        rightCol['date'] = resultPattern.match(rightBuild).group(6)
+    except AttributeError:
+        return json.jsonify(status="failure", error="Invalid log name" + rightbuild), 405
+
     return json.jsonify(status = "ok",
-                        leftCol = leftname,
-                        rightCol = rightname,
-                        leftProject = leftmeta,
-                        rightProject = rightmeta,
+                        leftCol = leftCol,
+                        rightCol = rightCol,
                         results = res)
 
 @app.route("/getTestHistory", methods=["POST"])
 def getTestHistory():
     projects = request.json['projects']
+
+    # projects = { <job 1> : <job 1's repo>, <job 2> : <job 2's repo>, ... }
+    # The key name is always a project.  The value of the key is "gsa" or "local"
+
     out = []
     repoType = ""
     projectNames = []
     for name in projects.keys():
-        if repoType == "":
+        p = resultPattern.match(name)
+        try:
+            pkg = p.group(4)                         # ie. junit
+            ver = p.group(5)                         # ie. current
+        except AttributeError:
+            continue
+        if not [pkg, ver] in projectNames:
             repoType = projects[name]
-        elif repoType == "all":
-            pass
-        elif repoType != projects[name]:
+            projectNames.append([pkg, ver])
+        elif projects[name] != repoType:
             repoType = "all"
-        # remove time and platform from the project name
-        pres = resultPattern.match(name)
-        if not [pres.group(1),pres.group(3)] in projectNames:
-            projectNames.append([pres.group(1),pres.group(3)])
 
     jobRes = catalog.listJobResults(repoType, "")
     for projectName in projectNames:
         prjOut = []
         for prj in jobRes:
-            if projectName[0] in prj[0] and projectName[1] in prj[0]:
-                resultDir = catalog.getResults(prj[0], prj[1])
+            if projectName[0] == prj['name'] and projectName[1] == prj['version']:
+                resultDir = catalog.getResults(prj['fullName'], prj['repository'])
                 try:
-                    if(os.path.isfile(resultDir+"/test_result.arti")):
-                        prjRes = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+                    if (os.path.isfile(resultDir + "/test_result.arti")):
+                        prjRes = resParser.MavenBuildSummary(resultDir + "/test_result.arti")
                     else:
-                        return json.jsonify(status="failure", error="build failed, no test results"), 500
+                        continue
                 except BaseException as e:
-                    return json.jsonify(status="failure", error=str(e)), 500
-                f = open(resultDir+"/meta.arti")
+                    continue
+                f = open(resultDir + "/meta.arti")
                 meta = json.load(f)
                 f.close()
                 prjOut.append({
-                    "name": prj[0],
-                    "repository": prj[1],
+                    "name": prj['fullName'],
+                    "repository": prj['repository'],
                     "project": meta,
                     "results": prjRes})
         out.append({
-            "name": projectName[0]+" - "+projectName[1],
+            "name": "Test results for project " + projectName[0] + "-" + projectName[1],
             "results": prjOut
         })
     catalog.cleanTmp()
+
+    if not out:
+        return json.jsonify(status="failure", error="build failed, no test results"), 500
+
     return json.jsonify(status = "ok", results = out)
 
 @app.route("/getTestDetail", methods=["POST"])
@@ -1885,10 +1947,24 @@ def getTestDetail():
                 return json.jsonify(status="failure", error="build failed, no test results"), 500
         except BaseException as e:
             return json.jsonify(status="failure", error=str(e)), 500
+
+        # We may be able to do without meta.arti as most of the data can be derived from
+        # the project name itself, but it may provide an indication that a build was successful
+        # as this file is produced by Jenkins as opposed to the buildAnalyzer
         f = open(resultDir+"/meta.arti")
         meta = json.load(f)
         f.close()
-        out.append({ "results": res, "project": meta, "repository": repo })
+
+        # Validate that the directory looks like a test result
+        p = resultPattern.match(projectName)
+        try:
+            pkg = p.group(4)                         # ie. N-junit
+            ver = p.group(5)                         # ie. current
+        except AttributeError:
+            continue
+
+        out.append({ "job": projectName, "pkg" : pkg, "ver": ver,
+                     "results": res, "project": meta, "repository": repo })
     catalog.cleanTmp()
     return json.jsonify(status = "ok", results = out)
 

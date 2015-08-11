@@ -2,8 +2,11 @@ import paramiko
 import tempfile
 import shutil
 import os
+import re
 import shutil
 import globals
+
+resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
 class Catalog:
     def __init__(self, archiveHost, jenkinsHost,
@@ -38,18 +41,52 @@ class Catalog:
             assert(False)
 
     def listJobResults(self, repoType, filt):
-        res = []
+        results = []
+
+        jobs = []
         if repoType == "gsa" or repoType == "all":
-            res = self.listGSAJobResults(filt)
+            jobs = self.listGSAJobResults(filt)
+
         if repoType == "local" or repoType == "all":
-            res = res + self.listLocalJobResults(filt)
-        return res
+            jobs = jobs + self.listLocalJobResults(filt)
+
+        for jobDesc in jobs:
+             job = jobDesc[0]
+             repo = jobDesc[1]
+
+             # Validate that the directory looks like a test result
+             try:
+                 nodeLabel = resultPattern.match(job).group(3)
+                 pkgName = resultPattern.match(job).group(4)
+                 pkgVer = resultPattern.match(job).group(5)
+                 date = resultPattern.match(job).group(6)
+             except AttributeError:
+                 continue
+
+             # The node may not be known to this autoport instance.  Jobs
+             # are aggregated in gsa.  Jenkin build nodes may be retired
+             if nodeLabel in globals.nodeLabels:
+                 i = globals.nodeLabels.index(nodeLabel)
+                 distro = globals.nodeOSes[i]
+             else:
+                 distro = nodeLabel
+
+             results.append({'fullName': job,
+                             'name': pkgName,
+                             'version': pkgVer,
+                             'os': distro,
+                             'repository': repo,
+                             'completed': date,
+                             'server': nodeLabel})
+        return results
 
     def listLocalJobResults(self, filt):
         filteredList = []
         try:
             fullList = os.listdir(self.__localPath)
             for item in fullList:
+                if item == ".gitignore":
+                    continue
                 if filt in item.lower() or filt == "":
                     filteredList.append([item, "local"])
         except IOError:

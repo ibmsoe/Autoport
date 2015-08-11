@@ -275,12 +275,12 @@ class ResultParser:
         res['results']  = {}
         return res
 
-    def ResLogCompare(self, leftName, left, rightName, right, only_diff = True):
-        leftf = codecs.open(left+'/test_result.arti',encoding='utf-8',mode='rb')
+    def ResLogCompare(self, logName, leftName, left, rightName, right, only_diff = True):
+        leftf = codecs.open(left+'/'+logName, encoding='utf-8', mode='rb')
         leftlog = leftf.readlines()
         leftf.close()
 
-        rightf = codecs.open(right+'/test_result.arti',encoding='utf-8',mode='rb')
+        rightf = codecs.open(right+'/'+logName, encoding='utf-8', mode='rb')
         rightlog = rightf.readlines()
         rightf.close()
 

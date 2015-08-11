@@ -942,7 +942,11 @@ var projectReportState = {
             $('#resultCompareSelectionAlert').modal();
         }
     },
-    compareLogs: function() {
+    compareLogs: function(ev) {
+        var logFile = "test_result.arti"
+        var buttonID = $(ev.target).attr('id');
+        if (buttonID === "compareBuildLogsBtn")
+            logFile = "build_result.arti"
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
         var sel = [];
         for (var i = 0; i < selectedProjects.length; i++){
@@ -958,14 +962,17 @@ var projectReportState = {
             projectReportState.prjTableReady = false;
             $.getJSON("/getDiffLogResults",
                       {
+                        logfile: logFile,
                         leftbuild: leftProject,
                         rightbuild: rightProject,
                         leftrepository: leftRepo,
                         rightrepository: rightRepo
                       },
                       processLogCompareResults).fail(processLogCompareResults);
-        } else {
-            $('#resultCompareSelectionAlert').modal();        }
+        }
+        else {
+            $('#resultCompareSelectionAlert').modal();
+        }
     },
     archive: function() {
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
@@ -1018,7 +1025,7 @@ function doSearch(autoselect) {
             sort: searchState.single.sorting,
             auto: autoselect,
            panel: "single"
-           }, processSearchResults).fail(processSearchResults);
+        }, processSearchResults).fail(processSearchResults);
     }
 }
 
@@ -1145,34 +1152,8 @@ function processResultList(data) {
     if (data === undefined || data.status != "ok") {
         showAlert("Error:", data);
     } else {
-        var prjRegex = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-.\d\d-.\d\d-.\d\d)/;
-        var filterRegex = new RegExp(reportState.projectFilter.toLowerCase());
-        for (var project in data.results) {
-            if (project !== undefined) {
-                prjObject = prjRegex.exec(data.results[project][0]);
-                if (prjObject === null) {
-                    continue;
-                }
-                if (filterRegex.exec(data.results[project][0].toLowerCase()) === null) {
-                    continue;
-                }
-                var prjId = data.results[project][0];
-                // HTML element's 'id' attribute can't have spaces
-                prjId = CryptoJS.MD5(prjId);
-                projectReportState.projects.push({
-                     fullName: prjObject[0],
-                           id: prjId+data.results[project][1],
-                     hostname: prjObject[1],
-                          uid: prjObject[2],
-                         name: prjObject[4],
-                          env: prjObject[3],
-                           os: "", // TODO
-                      version: prjObject[5],
-                    completed: prjObject[6],
-                   repository: data.results[project][1],
-                });
-            }
-        }
+        projectReportState.projects = data.results;
+        console.log("In processResultList, project list=", projectReportState.projects)
         detailState.autoSelected = false;
         projectReportState.prjCompareReady = true;
         $('#testCompareSelectPanel').bootstrapTable('load', projectReportState.projects);
@@ -1252,10 +1233,7 @@ function processBuildResults(data) {
             data.results["errors"][data.rightCol]+"</th><th class=\"testResult\">"+
             data.results["skipped"][data.rightCol]+"</th></tr>";
 
-        $("#prjHeader").html("for " + data.leftProject.Package + " version " +
-            data.leftProject.Version + " on " + data.leftProject.Architecture +
-            " / " + data.rightProject.Package + " version " +
-            data.rightProject.Version + " on " + data.rightProject.Architecture);
+        $("#prjHeader").html(" " + data.leftProject.Package + " and " + data.rightProject.Package);
 
     }
     $("#testResultsTable").html(tableContent);
@@ -1266,41 +1244,53 @@ function processLogCompareResults(data) {
     if (data.status != "ok") {
         showAlert("Error:", data);
     } else {
-        var leftHeader = "";
-        var rightHeader = "";
-        if (data.leftProject.Architecture !== data.rightProject.Architecture) {
-            leftHeader = data.leftProject.Architecture;
-            rightHeader = data.rightProject.Architecture;
-        } else if (data.leftProject.Version !== data.rightProject.Version) {
-            leftHeader = data.leftProject.Version;
-            rightHeader = data.rightProject.Version;
-        } else {
-            leftHeader = data.leftProject.Date;
-            rightHeader = data.rightProject.Date;
-        }
-        $("#leftdiff").html(data.results["diff"][data.leftCol]);
-        $("#rightdiff").html(data.results["diff"][data.rightCol]);
-        $("#logdiffHeader").html("for " + data.leftProject.Package + " version " +
-            data.leftProject.Version + " on " + data.leftProject.Architecture +
-            " / " + data.rightProject.Package + " version " +
-            data.rightProject.Version + " on " + data.rightProject.Architecture);
+        var left = data.leftCol;
+        var right = data.rightCol;
+        var headerContent = "<table id=\"logdiffHeader\" >" +
+                                 "<th style=\"border:none\">" +
+                                      left['log'] + "<br />" +
+                                      "[" + left['repo'] + "] " + left['job'] + "<br />" +
+                                      left['pkgname'] + "-" + left['pkgver'] + "<br />" +
+                                      left['distro'] +
+                                 "</th>" +
+                                 "<th style=\"border:none\">" +
+                                      right['log'] + "<br />" +
+                                      "[" + right['repo'] + "] " + right['job'] + "<br />" +
+                                      right['pkgname'] + "-" + right['pkgver'] + "<br />" +
+                                      right['distro'] +
+                                 "</th>" +
+                            "</table>";
+
+        $("#logdiffHeader").html(headerContent);
+        $("#leftdiff").html(data.results['diff'][left['pkgname']]);
+        $("#rightdiff").html(data.results['diff'][right['pkgname']]);
         $('#logdiffModal').modal('show');
     }
     projectReportState.prjCompareReady = true;
 }
 
 function processTestDetail(data) {
+    var headerContent = "";
+    var tableContent = "";
     if (data.status != "ok") {
         showAlert("Error:", data);
     } else {
         // based on the compare table
-        var tableContent = "";
+        var i = 0;
         for (project in data.results) {
+
+            // Header lists Jenkins Jobs.  Last character trimmed below
+            if (++i < 8) {
+                headerContent += " " + data.results[project].job + ",";
+            }
+            else if (i == 8) {
+                headerContent += " ....";
+            }
+
             tableContent += "<tr><th colspan=\"5\"><h3>"+
-                data.results[project].project["Package"]+" version "+
-                data.results[project].project["Version"]+" on "+
-                data.results[project].project["Architecture"]+" / repository: "+
-                data.results[project].repository+"</h3></th></tr>";
+                "Test results for " + data.results[project].pkg + "-" +
+                 data.results[project].ver +
+                "</h3></th></tr>";
             tableContent += "<tr><th>Test</th>";
             tableContent += "<th class=\"testResultArch\">T</th><th>F</th><th>E</th><th>S</th></tr>";
 
@@ -1333,16 +1323,20 @@ function processTestDetail(data) {
                 data.results[project].results["errors"]+"</th><th class=\"testResult\">"+
                 data.results[project].results["skipped"]+"</th></tr>";
         }
+        headerContent = headerContent.slice(0, -1);
     }
+    $("#prjHeader").html(headerContent);
     $("#testResultsTable").html(tableContent);
     projectReportState.prjTableReady = true;
 }
 
 function processTestHistory(data) {
     var tableContent = "";
+    var headerContent = "";
     if (data.status != "ok") {
         showAlert("Error:", data);
     } else {
+        var i = 0;
         for (var project in data.results) {
             var resultData = {
                 results: {},
@@ -1359,6 +1353,15 @@ function processTestHistory(data) {
             tableContent += "<tr><th>Platform</th><th>Date / repository</th></tr>";
 
             for (var dateRes in data.results[project].results) {
+
+                // Header lists Jenkins Jobs.   Last charactered trimmed below
+                if (++i < 8) {
+                    headerContent += " " + data.results[project].results[dateRes].name + ",";
+                }
+                else if (i == 8) {
+                    headerContent += " ....";
+                }
+
                 var testDate = data.results[project].results[dateRes].project.Date;
                 var testArch = data.results[project].results[dateRes].project.Architecture;
                 var testRepo = data.results[project].results[dateRes].repository;
@@ -1469,7 +1472,9 @@ function processTestHistory(data) {
             }
         }
         tableContent += "</table>";
+        headerContent = headerContent.slice(0, -1);
     }
+    $("#prjHeader").html(headerContent);
     $("#testResultsTable").html(tableContent);
     projectReportState.prjTableReady = true;
 }
@@ -1971,8 +1976,10 @@ $(document).ready(function() {
         }
     });
     $('#singleServerPackageListTable').on('page-change.bs.table', function (e, row) {
-        // On a page change, Bootstrap addon unchecks the package checked by the user. In order to show the package it as selected once the user goes back to the earlier page, do the following:
-        $("#singleServerPackageListTable").bootstrapTable("checkBy", {field:"packageName", values:[jenkinsState.selectedSingleSlavePackage.packageName]})
+        // On a page change, Bootstrap addon unchecks the package checked by the user.  To
+        // re-select the package once the user goes back to the earlier page, do the following:
+        $("#singleServerPackageListTable").bootstrapTable("checkBy",
+            {field:"packageName", values:[jenkinsState.selectedSingleSlavePackage.packageName]})
     });
     // Initializes an empty package list table on the Managed Slave panel
     $('#multiServerPackageListTable').bootstrapTable({
@@ -1985,15 +1992,17 @@ $(document).ready(function() {
     });
     $('#multiServerPackageListTable').on('uncheck.bs.table', function (e, row) {
        var selectedPackages = $('#multiServerPackageListTable').bootstrapTable('getSelections');
-        if(selectedPackages.length === 0) {
+        if (selectedPackages.length === 0) {
             $("#addToManagedList").addClass("disabled");
             $("#removeFromManagedList").addClass("disabled");
             jenkinsState.showUnselectMultiPackageButton = false;
         }
     });
     $('#multiServerPackageListTable').on('page-change.bs.table', function (e, row) {
-        // On a page change, Bootstrap addon unchecks the package checked by the user. In order to show the package it as selected once the user goes back to the earlier page, do the following:
-        $("#multiServerPackageListTable").bootstrapTable("checkBy", {field:"packageName", values:[jenkinsState.selectedMultiSlavePackage.packageName]})
+        // On a page change, Bootstrap addon unchecks the package checked by the user.  To
+        // re-select the package once the user goes back to the earlier page, do the following:
+        $("#multiServerPackageListTable").bootstrapTable("checkBy",
+            {field:"packageName", values:[jenkinsState.selectedMultiSlavePackage.packageName]})
     });
 
 
@@ -2005,31 +2014,26 @@ $(document).ready(function() {
         projectReportState.projects = row;
     });
 
-    //Unsselect function for project result list table
-    $('#unselectProjectBtn').click(function () {
-        $('#testCompareSelectPanel').bootstrapTable('uncheckAll');
-    });
-
     //Handles display of project list buttons
     $('#testCompareSelectPanel').change(function() {
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
         if (selectedProjects.length === 2) {
             $("#compareResultsBtn").removeClass("disabled");
-            $("#compareLogsBtn").removeClass("disabled");
+            $("#compareBuildLogsBtn").removeClass("disabled");
+            $("#compareTestLogsBtn").removeClass("disabled");
         } else {
             $("#compareResultsBtn").addClass("disabled");
-            $("#compareLogsBtn").addClass("disabled");
+            $("#compareBuildLogsBtn").addClass("disabled");
+            $("#compareTestLogsBtn").addClass("disabled");
         }
         if (selectedProjects.length === 0) {
             $("#testHistoryBtn").addClass("disabled");
             $("#testDetailBtn").addClass("disabled");
             $("#resultArchiveBtn").addClass("disabled");
-            $("#unselectProjectBtn").addClass("disabled");
         } else {
             $("#testHistoryBtn").removeClass("disabled");
             $("#testDetailBtn").removeClass("disabled");
             $("#resultArchiveBtn").removeClass("disabled");
-            $("#unselectProjectBtn").removeClass("disabled");
         }
     });
 });

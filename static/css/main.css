@@ -238,57 +238,61 @@ fieldset[disabled] .form-control {
 #testResultsTable td,th {
     border-bottom: 1px solid grey;
     border-left: 1px solid grey;
-    padding: 3px
+    padding: 3px;
 }
 
 #testResultsTable th.testSuite {
-    background-color: lightgrey
+    background-color: lightgrey;
 }
 
 #testResultsTable td.testClass {
 }
 
 #testResultsTable td.testResult {
-    text-align: right
+    text-align: right;
 }
 
 #testResultsTable td.testResultArch {
     text-align: right;
-    border-left: 1px solid black
+    border-left: 1px solid black;
 }
 
 #testResultsTable td.testErr {
     color: red;
-    font-weight: bold
+    font-weight: bold;
 }
 
 #testResultsTable {
     margin-left: auto;
     margin-right: auto;
-    border: 1px solid black
+    border: 1px solid black;
 }
 
 .table-container {
-    margin: 5px
+    margin: 5px;
 }
 
 /* for diff output display */
+#logdiffHeader {
+    border-style: none;
+    width: 100%;
+}
+
 .diffrow {
     width: 100%;
     height: calc(100% - 40px);
 }
 .diffcol {
-    width: calc(100% / 2 - 6px);
+    width: calc(100% / 2);
     height: 100%;
     float: left;
 }
 
-
 .no-text-glyphicon {
-    margin: 0px
+    margin: 0px;
 }
 
 .embedded-panel{
     margin: 10px 30px !important;
-    padding: 14px !important
+    padding: 14px !important;
 }

@@ -66,6 +66,8 @@ def init():
     global cache
     global nodeLabels
     global nodeNames
+    global nodeOSes
+    global nodeHosts
     global nodeDetails
     global nodeUbuntu
     global nodeRHEL
@@ -110,6 +112,9 @@ def init():
     nodeDetails = []
     nodeUbuntu = []
     nodeRHEL = []
+    nodeOSes = []
+    nodeHosts = []
+
     allocBuildServers = False
 
     # if substring length not greater than 4 means port is not part of URL
