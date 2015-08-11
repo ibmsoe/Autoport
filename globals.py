@@ -79,6 +79,7 @@ def init():
     global localPathForConfig
     global localPathForPackages
     global localPathForChefLogs
+    global allocBuildServers
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
@@ -106,3 +107,5 @@ def init():
     nodeDetails = []
     nodeUbuntu = []
     nodeRHEL = []
+
+    allocBuildServers = False
