@@ -488,6 +488,7 @@ class SharedData:
         packageName = pkg["packageName"]
         pkgVersion = ""
         userAddedVersion = "No"
+        removablePackage = "Yes"
         for runtime in managedList['managedRuntime']:
             if runtime['distro'] != distroName:
                 continue
@@ -496,6 +497,7 @@ class SharedData:
             for package in runtime['autoportChefPackages']:
                 if package['name'] == pkg['packageName'] or \
                    ("tagName" in package and package["tagName"] == pkg['packageName']):
+                    removablePackage = "No"
                     if "arch" in package and package['arch'] == pkg['arch']:
                         if "version" in package:
                             pkgVersion = package['version']
@@ -511,6 +513,7 @@ class SharedData:
             if not pkgVersion:
                 for package in runtime['autoportPackages']:
                     if package['name'] == pkg['packageName']:
+                        removablePackage = "No"
                         if "arch" in package and package['arch'] == pkg['arch']:
                             if "version" in package:
                                 pkgVersion = package['version']
@@ -528,12 +531,13 @@ class SharedData:
                    package['owner'] == self.__userName and \
                    "arch" in package and package['arch'] == pkg['arch']:
                     try:
+                        removablePackage = "Yes"
                         userAddedVersion = package['version']
                     except KeyError:
                         break
         if not pkgVersion:
             pkgVersion="N/A"
-        return packageName, pkgVersion, userAddedVersion
+        return packageName, pkgVersion, userAddedVersion, removablePackage
 
     def addToManagedList(self, packageDataList, action): # packageName, packageVersion, distro, arch, action):
         # Read the file in memory
@@ -580,9 +584,11 @@ class SharedData:
                 packageVersion =  pkgData['package_version']
                 distro = pkgData['distro']
                 arch =  pkgData['arch']
+                packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
                 if pkgData['removable'] == 'No':
                   continue
                 if sharedRuntime['distro'] == distro:
+                    addFlag = True
                     for package in sharedRuntime['userPackages']:
                         if package['name'] == packageName and \
                            package['arch'] == arch and \
@@ -590,9 +596,12 @@ class SharedData:
                             # If package is present for the current user, update action
                             if "installed_version" in pkgData and pkgData["installed_version"]!="N/A":
                                 package['action'] = action
-                            else:
-                                sharedRuntime['userPackages'].remove(package)
+                                addFlag = False
                             break
+                    if addFlag == True:
+                        sharedRuntime['userPackages'].append({"owner":self.__userName,
+                        "name":packageName, "version":packageVersion, "arch":arch,
+                        "action":action, "type": packageType})
 
         # Write back to the local managed list file
         localPath = self.putLocalData(localManagedListFileData, "")

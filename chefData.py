@@ -75,7 +75,7 @@ class ChefData:
                     # This would change when ManagedList.json will be mainatined
                     # per user.
                     for pkg in runtime['userPackages']:
-                        if pkg['owner'] == globals.localHostName:
+                        if pkg['owner'] == globals.configUsername:
                             if not pkg['type']:
                                 userPackage = {
                                                 pkg['name'] : [
@@ -91,20 +91,19 @@ class ChefData:
                                 # chef-attributes and extend default run_list with recipe mapped to
                                 # the particular user pacakge.
                                 chefAttrs, recipe = self.setChefDataForPackage(pkg['name'],
-                                                        pkg['version'], pkg['type'], chefAttrs)
+                                                        pkg['version'], pkg['type'], pkg['action'], chefAttrs)
                                 chefRecipes.extend(recipe)
             return chefAttrs, chefRecipes
         except KeyError as e:
             print str(e)
             assert(False)
 
-    def setChefDataForPackage(self, name, version, type, attributes = {}):
+    def setChefDataForPackage(self, name, version, type, action, attributes = {}):
         # This routine is responsible for setting up chef attributes that
         # and run list for a single specific package.
         # The version of the package is passed to this routine based
         # on user selection is not based on version in ManagedList.
         chefAttrs = attributes
-
         if not chefAttrs:
             chefAttrs['buildServer'] = {}
             chefAttrs['repo_hostname'] = self.__repo_hostname
@@ -121,5 +120,9 @@ class ChefData:
             attribute = name
             chefAttrs['buildServer'][attribute] = {'version': version}
 
-        chefRecipes = ["recipe[buildServer::" + type.lower() + "]"]
+        if action == 'remove' and type not in ['perl_modules', 'python_modules']:
+           type = type.lower() + "_remove"
+           chefRecipes = ["recipe[buildServer::" + type + "]"]
+        else:
+            chefRecipes = ["recipe[buildServer::" + type.lower() + "]"]
         return chefAttrs, chefRecipes

@@ -1339,7 +1339,8 @@ def managePackageForSingleSlave():
        for node in globals.nodeDetails:
           if node['nodelabel'] == selectedBuildServer:
               host = node['hostname']
-       chefAttr, runList = chefData.setChefDataForPackage(packageName, packageVersion, packageType)
+       chefAttr, runList = chefData.setChefDataForPackage(packageName, packageVersion, \
+                               packageType, packageAction)
        job = createChefJob(host, chefAttr, runList)
        buildStatus = ""
        try:
@@ -1479,7 +1480,6 @@ def listManagedPackages():
         nodes = globals.nodeRHEL
     else:
         nodes = globals.nodeLabels
-
     # If no packages in query string parameters then retrieving the packages CSV from ManagedList.json
     if package == "":
         distroType = distro if distro=="UBUNTU" or distro=="RHEL" else 'All'
@@ -1502,41 +1502,40 @@ def listManagedPackages():
                 pkg['osversion'] = globals.nodeDetails[i]['version']
                 pkg['arch'] = globals.nodeDetails[i]['arch']
                 pkg['os'] = pkg['distro']+"-"+pkg['osversion']
-                showAddButton = False
-                showRemoveButton = False
-                removablePackage = 'No'
-
-                managedP, managedV, userAddedVersion = sharedData.getManagedPackage(ml, pkg, node)
-                # User will be shown ADD button if "Managed Version" is less than "Latest Version" or "Installed Version"
-                # is less than the "Latest Version"
-                # User will be show Delete button if a installed version is available on the slave node
+                isAddable = False
+                isRemovable = False
+                enableCheckBox = False
+                managedP, managedV, userAddedVersion, removablePackage = sharedData.getManagedPackage(ml, pkg, node)
                 pkg['managedPackageVersion'] = managedV
                 if managedP:
-                    if "updateVersion" in pkg and pkg["updateVersion"] and pkg["updateVersion"]!="N/A":
-                        if managedV and managedV!="N/A":
-                            if LooseVersion(pkg["updateVersion"]) > LooseVersion(managedV):
-                                showAddButton = True
-                        if not showAddButton:
-                            if "installedVersion" in pkg and pkg["installedVersion"] and pkg["installedVersion"]!="N/A":
-                                if LooseVersion(pkg["updateVersion"]) > LooseVersion(pkg["installedVersion"]):
-                                    showAddButton = True
-                    pkg['userAddedVersion'] = userAddedVersion
-                    if userAddedVersion != "No":
-                        showRemoveButton = True
-                        removablePackage = 'Yes'
-                        if pkg['userAddedVersion'] == pkg['updateVersion']:
-                            showAddButton = False
-                    if managedV and managedV=="N/A" and "updateVersion" in  pkg and pkg["updateVersion"]!="N/A":
-                        removablePackage = 'Yes'
-                else:
-                    removablePackage = 'Yes'
-                    if pkg['updateVersion'] != "N/A":
-                        showAddButton = True
-                if not showAddButton and pkg['updateAvailable']:
-                    showAddButton = True
-                pkg['showAddButton'] = showAddButton
-                pkg['showRemoveButton'] = showRemoveButton
+                    if removablePackage == "Yes":
+                        # User will be allowed to add a package if the package is removable
+                        # and is not installed or the package is removable and is upgradable.
+                        # removable is synonymous with not on the managed list
+                        if "installedVersion" in pkg and \
+                            (not pkg["installedVersion"] or
+                              pkg["installedVersion"] == "N/A"):
+                            isAddable = True
+                        elif ("installedVersion" in pkg and
+                               pkg["installedVersion"] and
+                               pkg["installedVersion"] != "N/A") and \
+                               ("updateVersion" in pkg and
+                               pkg["updateVersion"] and pkg["updateVersion"]!="N/A"):
+                            if LooseVersion(pkg["updateVersion"] > pkg["installedVersion"]):
+                                isAddable = True
+
+                        # User will be allowed to remove a package if the package is removable and is installed
+                        if "installedVersion" in pkg and pkg["installedVersion"] and \
+                            pkg["installedVersion"] != "N/A":
+                            isRemovable = True
+
+                if isAddable or isRemovable:
+                    enableCheckBox = True
+
+                pkg['isAddable'] = isAddable
+                pkg['isRemovable'] = isRemovable
                 pkg['removablePackage'] = removablePackage
+                pkg['enableCheckBox'] = enableCheckBox
                 packageList.append(pkg)
         except KeyError:
             return json.jsonify(status="failure", error=results['error'] ), 404
@@ -1578,88 +1577,56 @@ def removeFromManagedList():
 @app.route("/synchManagedPackageList")
 def synchManagedPackageList():
     try:
-        serverGroup = request.args.get("serverGroup", "")
+        nodes = request.args.get("serverNodeCSV", "")
     except KeyError:
-        return json.jsonify(status="failure", error="missing serverGroup argument"), 400
+        return json.jsonify(status="failure", error="missing serverNodeCSV argument"), 400
 
-    if serverGroup == "":
-        return json.jsonify(status="failure", error="serverGroup not available"), 400
+    if nodes == "":
+        return json.jsonify(status="failure", error="No node selected"), 400
 
     path = sharedData.synchManagedPackageList()
 
     if not path:
         return json.jsonify(status="failure", error="Could not synch the managed list.  Try again." )
 
-    jobs = createSynchJobParameters(serverGroup)
+    jobs = createSynchJobs(nodes)
 
     return json.jsonify(status="ok",
-           message= str(len(jobs)) + " installation jobs are initiated in the background.")
+           message= str(len(jobs)) + " installation job(s) initiated in the background.")
 
-def createSynchJobParameters(serverGroup):
+def createSynchJobs(nodes):
+    '''
+    This routine is responsible to get appropriate chef-attributes
+    and list of recipes to be run on selected build slave.
+    args:
+       nodes variable holds the comma-seperated list of node-labels
+    return:
+       jobs: list of chef jobs created , i.e one job per node.
+    '''
+
     # dict to hold job names of all the chef jobs to be monitored
     jobs = []
-
-    # Dictionary to hold hosts,chefAttr,RunList per distro
-    # and release wise.
-    distroDetails = {}
-
     try:
-        # Creating a dictionary holding all the distro and their respective
-        # release versions
-        for entry in globals.nodeDetails:
-            distro = entry['distro']
-            if distro not in distroDetails:
-                distroDetails[distro] = {}
-            if entry['rel'] not in distroDetails[distro]:
-                distroDetails[distro].update({entry['rel']:{'hosts':[]}})
-
-        # Updating the above created dictionary with list of hosts belonging
-        # to a specific distro and release
-        for node in globals.nodeDetails:
-            for distro, releases in distroDetails.iteritems():
-                if node['distro'] == distro and node['rel'] in releases:
-                    rel = node['rel']
-                    distroDetails[distro][rel]['hosts'].append(node['hostname'])
-
-        # Getting chefAttributes and Chef runList per distro and release
-        # and updating above created dictionary.
-        for distro in distroDetails:
-            for rel in distroDetails[distro]:
-                chefAttr = {}
-                runList = {}
-                chefAttr, runList = chefData.setChefDataForSynch(distro, rel)
-                distroDetails[distro][rel]['chefAttr'] = chefAttr
-                distroDetails[distro][rel]['runList'] = runList
-    except KeyError as e:
-            print str(e)
-            assert(False)
-
-    # Invoking chef job creation with appropriate build parameters
-    # for each node under given serverGroup.
-    if serverGroup != 'All' and serverGroup in distroDetails:
-        for rel in distroDetails[serverGroup]:
-            for host in distroDetails[serverGroup][rel]['hosts']:
-                job = createChefJob(host, distroDetails[serverGroup][rel]['chefAttr'],
-                               distroDetails[serverGroup][rel]['runList'], "managed-package")
-                try:
-                   if job['status'] == "success":
-                      jobs.append(job['jobName'])
-                except KeyError as e:
-                   print str(e)
-                   assert(False)
-
-    elif serverGroup == 'All':
-        for distro in distroDetails.values():
-            for rel in distro.values():
-                for host in rel['hosts']:
-                    job = createChefJob(host, rel['chefAttr'], rel['runList'], "managed-package")
+        serverNodes = nodes.split(",")
+        for serverNode in serverNodes:
+            for node in globals.nodeDetails:
+                if node['nodelabel'] == serverNode:
+                    # Getting chef attributes and run_list for the node
+                    chefAttr, runList = chefData.setChefDataForSynch(node['distro'], node['rel'])
+                    # Creating chef job for the node.
+                    job = createChefJob(node['hostname'], chefAttr, runList, "managed-package")
                     try:
-                       if job['status'] == "success":
-                           jobs.append(job['jobName'])
+                        if job['status'] == "success":
+                            jobs.append(job['jobName'])
                     except KeyError as e:
                         print str(e)
                         assert(False)
+    except KeyError as e:
+        print str(e)
+        assert(False)
 
+    # Invoking the routine to monitor the chef jobs created above as
+    # a seperate thread running in the background.
     threadRequests = makeRequests(monitorChefJobs, jobs)
     [globals.threadPool.putRequest(req) for req in threadRequests]
 
