@@ -11,6 +11,16 @@
           <description>The Linux distribution of the build server.</description>
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>JENKINS_TAR_REPO_LOCATION</name>
+          <description>Location which contains uploaded tar information.</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>JENKINS_TAR_INSTALL_LOCATION</name>
+          <description>Location which contains installed tar information.</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
   </properties>
@@ -50,14 +60,16 @@ arch_packages=''
 
 case $DISTRIBUTION in
     "RHEL")
-        echo "#### Getting a list of all installed packages using command rpm -qa --queryformat '%{NAME}.%{ARCH}\t%{VERSION}-%{RELEASE}   %{SUMMARY}\n' | sed \"s/\"/'/g\"  "
-        rpm -qa --queryformat '%{NAME}.%{ARCH}\t%{VERSION}-%{RELEASE}   %{SUMMARY}\n' | sed "s/\"/'/g"  > InstalledPackagesInfo.txt  # get information about all installed packages
+        echo "#### Getting a list of all installed packages using command rpm -qa --queryformat '%{NAME}.%{ARCH}\t%{VERSION}-%{RELEASE}   %{SUMMARY}\n' | sed \"s/\"/'/g\" "
+        # get information about all installed packages
+        rpm -qa --queryformat '%{NAME}.%{ARCH}\t%{VERSION}-%{RELEASE}   %{SUMMARY}\n' | sed "s/\"/'/g"  > InstalledPackagesInfo.txt  
         # The last part of the command replaces all double quotes to single quotes in dpkg output.
 
         # Get information about updates for installed packages
         echo "#### Getting a list of updates available for the installed packages. The command is yum list updates"
         yum list updates > UpdatesForInstalledPackages.txt
-        lineNumber=$(cat -n UpdatesForInstalledPackages.txt | grep "Updated Packages" | awk '{print $1;}')  # get line number of the line where string "Updated Packages" is present. We want only those lines which come after this line.
+        # get line number of the line where string "Updated Packages" is present. We want only those lines which come after this line.
+        lineNumber=$(cat -n UpdatesForInstalledPackages.txt | grep "Updated Packages" | awk '{print $1;}')  
         if [ "$lineNumber" != "" ]; then
             sed -i "1,${lineNumber}d" UpdatesForInstalledPackages.txt  # remove the lines from 1 till the $lineNumber
         fi
@@ -91,7 +103,8 @@ case $DISTRIBUTION in
             then
                 prefix=""
             fi
-            printf '%s{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s","summary":"%s"}\n' "$prefix" "$packageName" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$summary" >>  packageListSingleSlave.json
+            printf '%s{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s","summary":"%s"
+                }\n' "$prefix" "$packageName" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$summary" >>  packageListSingleSlave.json
 
             packageNumber=$((packageNumber+1))
 
@@ -162,7 +175,8 @@ case $DISTRIBUTION in
                 then
                     prefix=""
                 fi
-                printf '%s{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s","summary":"%s"}\n' "$prefix" "$packageName" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$summary" >>  packageListSingleSlave.json
+                printf '%s{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s","summary":"%s"
+                    }\n' "$prefix" "$packageName" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$summary" >>  packageListSingleSlave.json
 
                 packageNumber=$((packageNumber+1))
 
@@ -182,37 +196,65 @@ case $DISTRIBUTION in
 esac
 
 # Get the list of all tar packages installed on the build slave.
-local_repo_file_name="/var/opt/autoport/archive.log"
+local_repo_file_name="$JENKINS_TAR_INSTALL_LOCATION"
 installed_package_json=''
-if [ -f "$local_repo_file_name" ]
-then
-counter=0
-echo "#### Fetching list of installed source packages!"
-# Next read line by line from the local repo file and prepare the list of tar files installed
-while IFS='' read -r line || [[ -n $line ]]; do
-    IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
-    echo "#### "${package_info[0]}" is installed. Version is "${package_info[1]}
-    package_json="{\"packageName\":\"${package_info[0]}\",\"summary\":\"${package_info[0]}\",\"installedVersion\":\"${package_info[1]}\",\"packageInstalled\":\"true\",\"updateVersion\":\"N/A\",\"updateAvailable\":\"false\",\"packageType\":\"${package_info[2]}\"}"
-    if [ $counter -gt 0 ]; then
-        installed_package_json=$(echo $installed_package_json,$package_json)
-    else
-        installed_package_json=$(echo $package_json)
-    fi
-    counter=$((counter + 1))
-done &lt; "$local_repo_file_name"
-echo "#### Done: Fetching list of installed source packages!"
+if [ -f "$local_repo_file_name" ];then
+    counter=0
+    echo "#### Fetching list of installed source packages!"
+    # Next read line by line from the local repo file and prepare the list of tar files installed
+    while IFS='' read -r line || [[ -n $line ]]; do
+        IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
+        echo "#### "${package_info[0]}" is installed. Version is "${package_info[1]}
+        package_json="{\"packageName\":\"${package_info[0]}\",
+           \"summary\":\"${package_info[0]}\",
+           \"installedVersion\":\"${package_info[1]}\",
+           \"packageInstalled\":\"true\",
+           \"updateVersion\":\"N/A\",
+           \"updateAvailable\":\"false\",
+           \"packageType\":\"${package_info[2]}\"}"
+        if [ $counter -gt 0 ]; then
+            installed_package_json=$(echo $installed_package_json,$package_json)
+        else
+            installed_package_json=$(echo $package_json)
+        fi
+        counter=$((counter + 1))
+    done &lt; "$local_repo_file_name"
+    echo "#### Done: Fetching list of installed source packages!"
+    tar_packages=$(echo "[$installed_package_json]")
+    echo "$tar_packages" > tarPackages.txt
+else
+    echo "Tar file not found"
+    echo "[]" > tarPackages.txt
 fi
-tar_packages=$(echo "[$installed_package_json]")
 
 # echo "arch"$arch_packages
 echo "$arch_packages" > archivePackages.txt
-echo "$tar_packages" > tarPackages.txt
 
-# echo "tar"$tar_packages
+############################### Python Script for All JSON packages starts:#########################
+python_script="#!/usr/bin/python
+import sys
+import json
 
-python -c "import sys;import json;archive_file=open('archivePackages.txt');arch_packages=json.load(archive_file);tar_file=open('tarPackages.txt');tar_packages=json.load(tar_file);arch_packages.extend(tar_packages);print json.dumps(arch_packages);"  > packageListSingleSlave.json
+# Read json data for archive packages from file.
+archive_file=open('archivePackages.txt')
+arch_packages=json.load(archive_file)
 
-rm -f archivePackages.txt  tarPackages.txt
+# Read json data for tar packages from file.
+tar_file=open('tarPackages.txt')
+tar_packages=json.load(tar_file)
+
+# Merge the yum/apt and tar package list for display
+arch_packages.extend(tar_packages)
+
+# Dump data for further processing
+print json.dumps(arch_packages)"
+echo "$python_script" > final_package_list.py
+############################### Python Script for All JSON packages ends:#########################
+
+python final_package_list.py > packageListSingleSlave.json
+
+# Remove temporary files
+rm -f archivePackages.txt tarPackages.txt final_package_list.py
       </command>
     </hudson.tasks.Shell>
   </builders>

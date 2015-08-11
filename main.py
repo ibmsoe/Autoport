@@ -1009,6 +1009,7 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
     # Add the values for the Jenkins Job parameters
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
     buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
+
     # add parameters information
     job_input_param_number = 1
     for param in xml_parameters:
@@ -1016,6 +1017,10 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
             param.text = buildServerDistribution
         elif job_input_param_number == 2:
             param.text = packageFilter
+        elif job_input_param_number == 3:
+            param.text = globals.jenkinsRepoUrl
+        elif job_input_param_number == 4:
+            param.text = globals.localTarRepoLocation
         job_input_param_number += 1
 
     # Set Job name
@@ -1176,13 +1181,17 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer):
     buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
 
     # add parameters information
-    i = 1
+    job_input_param_number = 1
     for param in xml_parameters:
-        if i == 1:
+        if job_input_param_number == 1:
             param.text = buildServerDistribution
-        elif i == 2:
+        elif job_input_param_number == 2:
             param.text = packageName
-        i += 1
+        elif job_input_param_number == 3:
+            param.text = globals.jenkinsRepoUrl
+        elif job_input_param_number == 4:
+            param.text = globals.localTarRepoLocation
+        job_input_param_number += 1
 
     # Set Job name
     uid = randint(globals.minRandom, globals.maxRandom)
@@ -1343,7 +1352,7 @@ def managePackageForSingleSlave():
            return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction,
                                buildStatus=buildStatus)
        else:
-           return json.jsonify(status="failure", error="Could not perform the action specified", packageName=packageName, packageAction=packageAction,
+           return json.jsonify(status="failure", error="Failed to run Jenkins job. Job Status: %s" % buildStatus, packageName=packageName, packageAction=packageAction,
                                buildStatus="FAILURE"), 400
     else:
         # Read template XML file

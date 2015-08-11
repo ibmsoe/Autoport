@@ -19,7 +19,12 @@
         <hudson.model.StringParameterDefinition>
           <name>JENKINS_TAR_REPO_LOCATION</name>
           <description>Location which contains uploaded tar information.</description>
-          <defaultValue>http://soe-test1.aus.stglabs.ibm.com:90/autoport_repo/archives</defaultValue>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>JENKINS_TAR_INSTALL_LOCATION</name>
+          <description>Location which contains installed tar information.</description>
+          <defaultValue/>
         </hudson.model.StringParameterDefinition>
        </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
@@ -56,6 +61,114 @@
 set +o noclobber # Allow overwrite of files just in case it is set to off
 
 arch_packages=''
+
+# Prepare Python script that will read JSON lists and prepares final list data of packages with update version and
+# install version so that its usable by application
+############################### Python Script for All JSON packages starts#########################
+python_architecute_package_script="#!/usr/bin/python
+import json;
+import sys;
+# Preparing variables for storing data.
+final_list=[];
+installed_list=[];
+updates_list=[];
+already_installed=[];
+# Check and proceed if given data is valid. If data is bad just return empty.
+try:
+    data=json.loads(sys.argv[1]);
+    # Adding all installed packages which have updates available;
+    final_list.extend([{'packageName': '%s.%s' % (str(i['packageName']),str(i['Arch'])),
+        'updateAvailable': bool(j['updateAvailable']),
+        'summary':str(i['Summary']),
+        'updateVersion':'%s-%s' % (str(j['updateVersion']),str(j['Release'])),
+        'packageInstalled':bool(i['packageInstalled']),
+        'installedVersion':'%s-%s' % (str(i['installedVersion']),str(i['Release']))
+    } for i in data['installed'] for j in data['updates']
+        if '%s.%s' % (str(i['packageName']),str(i['Arch'])) == '%s.%s' % (str(j['packageName']),str(j['Arch']))]);
+    # List of all installed packages with updates;
+    already_installed.extend([str(i['packageName']) for i in final_list ]);
+    # List of all installed packages;
+    installed_list.extend(['%s.%s' % (str(i['packageName']),str(i['Arch']))
+        for i in data['installed'] if '%s.%s' % (str(i['packageName']),str(i['Arch'])) not in already_installed ]);
+    # List of all packages which are not installed but available;
+    updates_list.extend(['%s.%s' % (str(i['packageName']),str(i['Arch'])) for i in data['updates']
+        if '%s.%s' % (str(i['packageName']),str(i['Arch'])) not in already_installed ]);
+
+    # Adding all packages which are not installed;
+    final_list.extend([{'packageName': '%s.%s' % (str(i['packageName']),str(i['Arch'])),
+         'updateAvailable': bool(i['updateAvailable']),
+         'summary': str(i['Summary']),
+         'updateVersion': '%s-%s' % (str(i['updateVersion']), str(i['Release'])),
+         'packageInstalled': bool(i['packageInstalled']),
+         'installedVersion': str(i['installedVersion'])} for i in data['updates']
+            if '%s.%s' % (str(i['packageName']),str(i['Arch'])) in updates_list ]);
+
+    # Finally adding list of all packages which are installed but no updates available;
+    final_list.extend([{'packageName': '%s.%s' % (str(i['packageName']),str(i['Arch'])),
+         'updateAvailable': bool(i['updateAvailable']),
+         'summary': str(i['Summary']),
+         'updateVersion': '%s-%s' % (str(i['installedVersion']),str(i['Release'])),
+         'packageInstalled': bool(i['packageInstalled']),
+         'installedVersion': '%s-%s' % (str(i['installedVersion']), str(i['Release']))} for i in data['installed']
+            if '%s.%s' % (str(i['packageName']),str(i['Arch'])) in installed_list ]);
+except Exception, ex:
+    print 'Error: ', str(ex)
+    final_list = []
+# Dump the list of packages;
+print json.dumps(final_list);"
+
+# Below python code generate the list of avialble and installed packages. It generates package list as below:
+# 1. Get the list of all installed packages which have updates.
+# 2. Update list from step 1 with packages, where updates are available but not installed.
+# 3. Finally add packages to above list with packages that are installed but no updates are available.
+# Finally the generated list of packages is dumped to a json file(AvailablePackages.json) which wil be archived.
+
+############################### Python Script for All JSON packages starts:#########################
+python_script_for_tar_listing="#!/usr/bin/python
+
+import sys
+import json
+
+# Preparing variables for storing data.
+final_list=[]
+already_added=[]
+package_list=json.loads(sys.argv[1])
+package_filter=str(sys.argv[2])
+
+# Get all tar packages installed and have updates available, that matches the given keyword.
+final_list.extend([{'packageName':str(i['packageName']),
+    'summary':str(i['summary']),
+    'installedVersion':str(i['installedVersion']),
+    'packageInstalled':bool(i['packageInstalled']),
+    'updateVersion':str(j['updateVersion']),
+    'updateAvailable':bool(j['updateAvailable']),
+    'packageType':str(i['packageType'])} for i in package_list['installed'] for j in package_list['updates'] 
+        if i['packageName'] == j['packageName'] and i['installedVersion'] == j['installedVersion'] and package_filter in i['packageName']])
+
+# List of packages already added to output string.
+already_added.extend([i['packageName'] for i in final_list])
+
+# Get all tar packages installed having no update version, that matches the given keyword.
+final_list.extend([{'packageName':str(i['packageName']),
+    'summary':str(i['summary']),
+    'installedVersion':str(i['installedVersion']),
+    'packageInstalled':True,'updateVersion':str(i['updateVersion']),
+    'updateAvailable':False,'packageType':str(i['packageType'])} for i in package_list['installed'] 
+        if i['packageName'] not in already_added and package_filter in i['packageName'] ])
+
+# Get all tar packages which are not installed, that matches the given keyword.
+final_list.extend([{'packageName':str(i['packageName']),
+    'summary':str(i['summary']),
+    'installedVersion':str(i['installedVersion']),
+    'packageInstalled':False,
+    'updateVersion':str(i['updateVersion']),
+    'updateAvailable':True,
+    'packageType':str(i['packageType'])} for i in package_list['updates'] 
+        if i['packageName'] not in already_added and package_filter in i['packageName'] ])
+
+# finally Dump all the package list for further processing.
+print json.dumps(final_list)"
+############################### Python Script for All JSON packages ends:#########################
 
 case $DISTRIBUTION in
     "UBUNTU")
@@ -113,7 +226,8 @@ case $DISTRIBUTION in
             else
                     prefix=","
             fi
-            printf '%s{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s","summary":"%s"}\n' "$prefix" "$packageName" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$summary" >> packageListSingleSlave.json
+            printf '%s{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s",
+                "summary":"%s"}\n' "$prefix" "$packageName" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$summary" >> packageListSingleSlave.json
 
             packageNumber=$((packageNumber+1))
 
@@ -260,8 +374,12 @@ case $DISTRIBUTION in
         read_file 'AllPackagesInfo.txt'
         echo "#### Iterating over the packages matching the filter and generating data for each."
         json_data=`echo "{\"installed\": [${installed_packages[@]}], \"updates\": [${updates_packages[@]}]}"`
-        # Below python scriplet reads json lists and prepares final list of packages with update version and install version so that its usable by application
-        arch_packages=$(python -c "import json;import sys; final_list=[];installed_list=[];updates_list=[];already_installed=[];data=json.loads(sys.argv[1]);final_list.extend([{'packageName': '%s.%s' % (str(i['packageName']),str(i['Arch'])),'updateAvailable': bool(j['updateAvailable']), 'summary': str(i['Summary']), 'updateVersion': '%s-%s' % (str(j['updateVersion']),str(j['Release'])), 'packageInstalled': bool(i['packageInstalled']), 'installedVersion': '%s-%s' % (str(i['installedVersion']), str(i['Release']))} for i in data['installed'] for j in data['updates'] if '%s.%s' % (str(i['packageName']),str(i['Arch'])) == '%s.%s' % (str(j['packageName']),str(j['Arch']))]);already_installed.extend([str(i['packageName']) for i in final_list ]);installed_list.extend(['%s.%s' % (str(i['packageName']),str(i['Arch'])) for i in data['installed'] if '%s.%s' % (str(i['packageName']),str(i['Arch'])) not in already_installed ]);updates_list.extend(['%s.%s' % (str(i['packageName']),str(i['Arch'])) for i in data['updates'] if '%s.%s' % (str(i['packageName']),str(i['Arch'])) not in already_installed ]);final_list.extend([{'packageName': '%s.%s' % (str(i['packageName']),str(i['Arch'])), 'updateAvailable': bool(i['updateAvailable']), 'summary': str(i['Summary']), 'updateVersion': '%s-%s' % (str(i['updateVersion']), str(i['Release'])), 'packageInstalled': bool(i['packageInstalled']), 'installedVersion': str(i['installedVersion'])} for i in data['updates'] if '%s.%s' % (str(i['packageName']),str(i['Arch'])) in updates_list ]);final_list.extend([{'packageName': '%s.%s' % (str(i['packageName']),str(i['Arch'])), 'updateAvailable': bool(i['updateAvailable']), 'summary': str(i['Summary']), 'updateVersion': '%s-%s' % (str(i['installedVersion']), str(i['Release'])), 'packageInstalled': bool(i['packageInstalled']), 'installedVersion': '%s-%s' % (str(i['installedVersion']), str(i['Release']))} for i in data['installed'] if '%s.%s' % (str(i['packageName']),str(i['Arch'])) in installed_list ]);print json.dumps(final_list)" "$json_data" )
+
+        ############################### Python Script for All JSON packages ends:#########################
+        # using echo statement instead of printf so that above formatting is retained.
+        echo "$python_architecute_package_script" > arch_packages.py
+        arch_packages=$( python arch_packages.py "$json_data" )
+        rm -f arch_packages.py
         echo "#### Completed fetching data for all packages."
         rm -f 'AllPackagesInfo.txt'
         ;;
@@ -269,59 +387,100 @@ esac
 
 jenkins_repo_file_name="archive.log"
 echo "#### Fetching list of available source packages"
-wget $(echo "$JENKINS_TAR_REPO_LOCATION/$jenkins_repo_file_name" )
-
 available_package_json=''
-counter=0
-# Now read line by line from the file from the jenkins repos and prepare the list of tar files available
-while IFS='' read -r line || [[ -n $line ]]; do
-    IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
-    echo "#### "${package_info[0]}" is available. Latest version is "${package_info[1]}
-    package_json="{\"packageName\":\"${package_info[0]}\",\"summary\":\"${package_info[0]}\",\"installedVersion\":\"N/A\",\"packageInstalled\":\"false\",\"updateVersion\":\"${package_info[1]}\",\"updateAvailable\":\"true\",\"packageType\":\"${package_info[2]}\"}"
-    if [ $counter -gt 0 ]; then
-        available_package_json=$(echo $available_package_json,$package_json)
-    else
-        available_package_json=$(echo $package_json)
-    fi
-    counter=$((counter + 1))
-done &lt; "$jenkins_repo_file_name"
-echo "#### Done: Fetching list of available source packages!"
+wget $(echo "$JENKINS_TAR_REPO_LOCATION/$jenkins_repo_file_name" )
+can_continue=$?
 
-local_repo_file_name="/var/opt/autoport/archive.log"
+if [ $can_continue -eq 0 -a -f "$local_repo_file_name" ]; then
+    counter=0
+    # Now read line by line from the file from the jenkins repos and prepare the list of tar files available
+    while IFS='' read -r line || [[ -n $line ]]; do
+        IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
+        echo "#### "${package_info[0]}" is available. Latest version is "${package_info[1]}
+        package_json="{\"packageName\":\"${package_info[0]}\",
+            \"summary\":\"${package_info[0]}\",
+            \"installedVersion\":\"N/A\",
+            \"packageInstalled\":\"false\",
+            \"updateVersion\":\"${package_info[1]}\",
+            \"updateAvailable\":\"true\",
+            \"packageType\":\"${package_info[2]}\"}"
+
+        if [ $counter -gt 0 ]; then
+            available_package_json=$(echo $available_package_json,$package_json)
+        else
+            available_package_json=$(echo $package_json)
+        fi
+        counter=$((counter + 1))
+    done &lt; "$jenkins_repo_file_name"
+    echo "#### Done: Fetching list of available source packages!"
+fi
+if [ $can_continue -ne 0 ]; then
+   echo "Error: Wget is not installed on this system, please install \"wget\"."
+fi
+
+local_repo_file_name="$JENKINS_TAR_INSTALL_LOCATION"
 installed_package_json=''
-if [ -f "$local_repo_file_name" ]
-then
-counter=0
-echo "#### Fetching list of installed source packages"
-# Next read line by line from the local repo file and prepare the list of tar files installed
-while IFS='' read -r line || [[ -n $line ]]; do
-    IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
-    echo "#### "${package_info[0]}" is installed. Version is "${package_info[1]}
-    package_json="{\"packageName\":\"${package_info[0]}\",\"summary\":\"${package_info[0]}\",\"installedVersion\":\"${package_info[1]}\",\"packageInstalled\":\"true\",\"updateVersion\":\"N/A\",\"updateAvailable\":\"false\",\"packageType\":\"${package_info[2]}\"}"
-    if [ $counter -gt 0 ]; then
-        installed_package_json=$(echo $installed_package_json,$package_json)
-    else
-        installed_package_json=$(echo $package_json)
-    fi
-    counter=$((counter + 1))
-done &lt; "$local_repo_file_name"
-echo "#### Done: Fetching list of installed source packages!"
+if [ -f "$local_repo_file_name" ];then
+    counter=0
+    echo "#### Fetching list of installed source packages"
+    # Next read line by line from the local repo file and prepare the list of tar files installed
+    while IFS='' read -r line || [[ -n $line ]]; do
+        IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
+        echo "#### "${package_info[0]}" is installed. Version is "${package_info[1]}
+        package_json="{\"packageName\":\"${package_info[0]}\",
+            \"summary\":\"${package_info[0]}\",
+            \"installedVersion\":\"${package_info[1]}\",
+            \"packageInstalled\":\"true\",
+            \"updateVersion\":\"N/A\",
+            \"updateAvailable\":\"false\",
+            \"packageType\":\"${package_info[2]}\"}"
+        if [ $counter -gt 0 ]; then
+            installed_package_json=$(echo $installed_package_json,$package_json)
+        else
+            installed_package_json=$(echo $package_json)
+        fi
+        counter=$((counter + 1))
+    done &lt; "$local_repo_file_name"
+    echo "#### Done: Fetching list of installed source packages!"
 fi
 package_list=$( echo "{\"installed\": [$installed_package_json], \"updates\": [$available_package_json]}" )
 
-# Below python code generate the list of avialble and installed packages. It generates package list as below:
-# 1. Get the list of all installed packages which have updates.
-# 2. Update list from step 1 with packages, where updates are available but not installed.
-# 3. Finally add packages to above list with packages that are installed but no updates are available.
-# Finally the generated list of packages is dumped to a json file(AvailablePackages.json) which wil be archived.
+# Dump to python script for execution.
+echo "$python_script_for_tar_listing" > tar_packages.py
+tar_packages=$( python tar_packages.py "$package_list" "$PACKAGE_NAME_FILTER" )
 
-tar_packages=$( python -c "import sys;import json; final_list=[];already_added=[];package_list=json.loads(sys.argv[1]);package_filter=str(sys.argv[2]);final_list.extend([{\"packageName\":str(i['packageName']),\"summary\":str(i['summary']),\"installedVersion\":str(i['installedVersion']),\"packageInstalled\":bool(i['packageInstalled']),\"updateVersion\":str(j['updateVersion']),\"updateAvailable\":bool(j['updateAvailable']),\"packageType\":str(i['packageType'])} for i in package_list['installed'] for j in package_list['updates'] if i['packageName'] == j['packageName'] and package_filter in i['packageName']]);already_added.extend([i['packageName'] for i in final_list]);final_list.extend([{\"packageName\":str(i['packageName']),\"summary\":str(i['summary']),\"installedVersion\":str(i['installedVersion']),\"packageInstalled\":True,\"updateVersion\":str(i['updateVersion']),\"updateAvailable\":False,\"packageType\":str(i['packageType'])} for i in package_list['installed'] if i['packageName'] not in already_added and package_filter in i['packageName'] ]);final_list.extend([{\"packageName\":str(i['packageName']),\"summary\":str(i['summary']),\"installedVersion\":str(i['installedVersion']),\"packageInstalled\":False,\"updateVersion\":str(i['updateVersion']),\"updateAvailable\":True,\"packageType\":str(i['packageType'])} for i in package_list['updates'] if i['packageName'] not in already_added and package_filter in i['packageName'] ]);print json.dumps(final_list);"  "$package_list" "$PACKAGE_NAME_FILTER")
+# Remove temporary file as its not needed any more.
+rm tar_packages.py
+   echo "$tar_packages" > tarPackages.txt
+
 # Finally merge output of yum/apt-get package listing with tar listing
 echo "$arch_packages" > archivePackages.txt
-echo "$tar_packages" > tarPackages.txt
-python -c "import sys;import json;archive_file=open('archivePackages.txt');arch_packages=json.load(archive_file);tar_file=open('tarPackages.txt');tar_packages=json.load(tar_file);arch_packages.extend(tar_packages);print json.dumps(arch_packages);"  > packageListSingleSlave.json
 
-rm -f archivePackages.txt tarPackages.txt
+############################### Python Script for All JSON packages starts:#########################
+python_script="#!/usr/bin/python
+import sys
+import json
+
+# Read json data for archive packages from file.
+archive_file=open('archivePackages.txt')
+arch_packages=json.load(archive_file)
+
+# Read json data for tar packages from file.
+tar_file=open('tarPackages.txt')
+tar_packages=json.load(tar_file)
+
+# Merge the yum/apt and tar package list for display
+arch_packages.extend(tar_packages)
+
+# Dump data for further processing
+print json.dumps(arch_packages)"
+echo "$python_script" > final_package_list.py
+############################### Python Script for All JSON packages ends:#########################
+
+python final_package_list.py > packageListSingleSlave.json
+
+# Remove temporary files
+rm -f archivePackages.txt tarPackages.txt final_package_list.py
      </command>
     </hudson.tasks.Shell>
   </builders>

@@ -80,6 +80,9 @@ def init():
     global localPathForPackages
     global localPathForChefLogs
     global allocBuildServers
+    global jenkinsRepoUrl
+    global localTarRepoLocation
+
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
@@ -107,5 +110,14 @@ def init():
     nodeDetails = []
     nodeUbuntu = []
     nodeRHEL = []
-
     allocBuildServers = False
+
+    # if substring length not greater than 4 means port is not part of URL
+    jenkinsUrlSubStringLength = jenkinsUrl.rfind(':')
+    if jenkinsUrlSubStringLength > 4:
+        jenkinsUrlNoPort = jenkinsUrl[:jenkinsUrl.rfind(':')]
+    else:
+        jenkinsUrlNoPort = jenkinsUrl
+
+    jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
+    localTarRepoLocation = '/var/opt/autoport/'

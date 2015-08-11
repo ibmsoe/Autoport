@@ -7,7 +7,7 @@ class ChefData:
         self.__repo_hostname = repoHost + ":90"
         self.__repo_name = 'autoport_repo'
         self.__localDataDir = globals.localPathForConfig
-        self.__logDir = '/var/opt/autoport/'
+        self.__logDir = globals.localTarRepoLocation
 
     def setChefDataForSynch(self, distro, distroVersion):
         # This routine in called during synch, to fill up
