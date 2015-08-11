@@ -678,18 +678,26 @@ var jenkinsState = {
         var messageText = "Package cannot be installed or Removed";
         for (var selectedPkg in selectedPackageList ) {
             var  package_type = "", package_tagname = "";
-            // Exlude packages not eligible for installation
+            // Exclude packages not eligible for installation
             if (selectedPackageList[selectedPkg].updateAvailable == false && clickAction == 'install') {
-                jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':selectedPackageList [selectedPkg].packageName, 'packageAction':'install', 'status': 'Package  cannot be installed!'});
+                jenkinsState.pkgInstallRemoveStatusSingleSlave.push({
+                    'packageName':selectedPackageList [selectedPkg].packageName, 
+                    'packageAction':'install', 
+                    'status': 'The package is already at the latest level!'
+                    });
                 jenkinsState.totalSelectedSingleSlavePkg -= 1;
-                messageText = "Package cannot be installed!";
+                messageText = "The selected packages are already at the latest level!";
                 continue;
             }
-            // Exlude packages not eligible for removal
+            // Exclude packages not eligible for removal
             if (selectedPackageList[selectedPkg].packageInstalled == false && clickAction == 'remove') {
-                jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':selectedPackageList [selectedPkg].packageName, 'packageAction':'remove', 'status': 'Package cannot be removed!'});
+                jenkinsState.pkgInstallRemoveStatusSingleSlave.push({
+                    'packageName':selectedPackageList [selectedPkg].packageName, 
+                    'packageAction':'remove', 
+                    'status': 'The package is not installed and therefore cannot be removed!'
+                    });
                 jenkinsState.totalSelectedSingleSlavePkg -= 1;
-                messageText = "Package cannot be removed!";
+                messageText = "The selected packages are not installed and therefore cannot be removed!";
                 continue;
             }
             if (selectedPackageList [selectedPkg].packageType != undefined)
