@@ -733,18 +733,40 @@ var jenkinsState = {
         jenkinsState.serverGroup = "All";
         $("#addToManagedList").addClass("disabled");
         $("#removeFromManagedList").addClass("disabled");
-        if (id === "mlRHEL")
+        buildServersToSync = [];
+        if (id === "mlRHEL") {
             jenkinsState.serverGroup = "RHEL";
-        else if (id === "mlUbuntu")
+            buildServersToSync = jenkinsState.nodeRHEL;
+        } else if (id === "mlUbuntu") {
             jenkinsState.serverGroup = "UBUNTU";
+            buildServersToSync = jenkinsState.nodeUbuntu;
+        } else {
+            buildServersToSync = jenkinsState.nodeLabels;
+        }
+        buildServerJsonObj = [];
+        for(var buildServObj of buildServersToSync){
+            item = {}
+            item ["value"] = buildServObj;
+            item ["label"] = buildServObj;
+            buildServerJsonObj.push(item);
+        }
+        $("#buildServersToSyncDropDown").multiselect('dataprovider', buildServerJsonObj);
         jenkinsState.manageManagePanelFilter = ($("#packageFilter_Multiple").val()!='')?true:false;
         $.getJSON("/listManagedPackages", { distro: jenkinsState.serverGroup, package: $("#packageFilter_Multiple").val() },
             listManagedPackagesCallback).fail(listManagedPackagesCallback);
     },
-    getSelectedManagedPackageData: function(){
+    getSelectedManagedPackageData: function(type){
         var selectedPackageList = $('#multiServerPackageListTable').bootstrapTable('getSelections');
         var packageListObj = [];
+        var message = ""
         for(var obj in selectedPackageList){
+            if((type=="Add" && selectedPackageList[obj].isAddable) || (type == "Remove" && selectedPackageList[obj].isRemovable)) {
+                if(message == "")
+                    message = "The below packages are eligible for "+type+"\n"
+                message = message + selectedPackageList[obj].packageName+"\n";
+            } else {
+                continue;
+            }
             packageListObj.push({
                 'package_name': selectedPackageList[obj].packageName,
                 'package_version': selectedPackageList[obj].updateVersion,
@@ -755,14 +777,28 @@ var jenkinsState = {
                 'installed_version': selectedPackageList[obj].installedVersion
             });
         }
+        if(message != "") {
+            var confRes = confirm(message);
+            if(!confRes){
+                return "[]";
+            }
+        }
         return packageListObj;
     },
     addToManagedList: function(ev, el) {
-        var packageListObj = JSON.stringify(jenkinsState.getSelectedManagedPackageData());
+        var packageListObj = JSON.stringify(jenkinsState.getSelectedManagedPackageData("Add"));
+        if(packageListObj == "[]") {
+            showAlert("No Package is eligible for Add");
+            return false;
+        }
         $.post("/addToManagedList", { action: 'install', packageDataList: packageListObj}, editManagedListCallback, "json").fail(editManagedListCallback);
     },
     removeFromManagedList: function(ev, el) {
-        var packageListObj = JSON.stringify(jenkinsState.getSelectedManagedPackageData());
+        var packageListObj = JSON.stringify(jenkinsState.getSelectedManagedPackageData("Remove"));
+        if(packageListObj == "[]") {
+            showAlert("No Package is eligible for Remove");
+            return false;
+        }
         $.post("/removeFromManagedList",
         {
             action: 'remove',
@@ -777,9 +813,14 @@ var jenkinsState = {
         $("#multiServerPackageListTable").bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
     },
     synchManagedPackageList: function() {
+        var selectedBuildServer = $('#buildServersToSyncDropDown :selected').val();
+        if (selectedBuildServer == undefined || selectedBuildServer == "") {
+            showAlert("Please select build server");
+            return false;
+        }
         jenkinsState.loadingState.managedPackageActionLoading = true;
         $("#syncManagedPackageButton").addClass("disabled");
-        $.getJSON("/synchManagedPackageList", { serverGroup: jenkinsState.serverGroup }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
+        $.getJSON("/synchManagedPackageList", { serverNodeCSV: selectedBuildServer }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
     },
     uploadPackage: function (ev) {
         var file = $('#packageFile')[0].files[0];
@@ -805,6 +846,14 @@ var jenkinsState = {
                  }).fail(uploadPackageCallback);
 
             return false;
+    },
+    stateFormatter(value, row, index){
+        var retVal=false;
+        if(!row.enableCheckBox)
+            retVal = true;
+        return {
+            disabled: retVal
+        };
     }
 };
 
@@ -961,8 +1010,8 @@ function doSearch(autoselect) {
             sort: searchState.single.sorting,
             auto: autoselect,
            panel: "single"
-		}, processSearchResults).fail(processSearchResults);
-	}
+           }, processSearchResults).fail(processSearchResults);
+    }
 }
 
 // When the query textbox is changed, do a search
@@ -1743,7 +1792,6 @@ function getJenkinsNodeDetailsCallback(data) {
 
 function listPackageForSingleSlaveCallback(data) {
     jenkinsState.loadingState.packageListLoading = false;
-
     if (data.status === "ok") {
         jenkinsState.packageListSingleSlave = data.packageData
         jenkinsState.singleSlavePackageTableReady = true;
@@ -1873,6 +1921,12 @@ $(document).ready(function() {
         buttonClass: "btn btn-primary",
         buttonText: function(options, select) {
             return "Package Type";
+        }
+    });
+    $('#buildServersToSyncDropDown').multiselect({
+        buttonClass: "btn btn-primary",
+        buttonText: function(options, select) {
+            return "Build server";
         }
     });
     // Initializes an empty bach reports table

@@ -126,6 +126,10 @@
             </div>
           <div class="alert alert-success">
             <a class="buttonRight">
+               <span>
+                    <select id="buildServersToSyncDropDown" size="2">
+                    </select>
+               </span>
               <button type="button" id="syncManagedPackageButton" class="btn btn-primary" rv-on-click="jenkinsState.synchManagedPackageList">
                 Synch
               </button>
@@ -158,7 +162,7 @@
           <table class="table panel panel-default" id="multiServerPackageListTable" data-sort-name="packageName" data-pagination="true" data-click-to-select="true" data-maintain-selected="true" data-toolbar="#multiServerPackageListToolbar">
             <thead>
               <tr>
-                <th data-field="state" data-checkbox="true"></th>
+                <th data-field="state" data-checkbox="true" data-formatter="jenkinsState.stateFormatter"></th>
                 <th data-field="packageName" data-sortable="true">Package</th>
                 <th data-field="managedPackageVersion" data-sortable="true">Managed Version</th>
                 <th data-field="installedVersion" data-sortable="true">Installed Version</th>
