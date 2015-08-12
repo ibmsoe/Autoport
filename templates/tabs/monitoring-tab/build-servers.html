@@ -134,8 +134,11 @@
                 Synch
               </button>
             </a>
-            <div>This tool defines a minimum set of packages that cannot be removed. You can upgrade or downgrade these packages, but not remove them. You can also search for new packages and add or remove them. The synchronize action applies the list to build servers and performs installs and un-installs.</div>
-
+            <div>This tool defines a minimum set of packages and package versions that cannot be removed. You can search for new packages 
+                 and <b>Add</b> them to the Managed List.  You can <b>Remove</b> any package that you added, but you cannot remove packages
+                 from the minimum set as they are required for proper function.  These packages cannot be selected --- gray selection box.
+                 Once the Managed List is correct, select a <b>Build server</b> and press <b>Sync</b> and install procedures will commence.
+            </div>
           </div>
           <br/>
           {% include "tabs/monitoring-tab/managed-packages-action-loading.html" %}
