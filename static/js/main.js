@@ -1262,8 +1262,8 @@ function processLogCompareResults(data) {
                             "</table>";
 
         $("#logdiffHeader").html(headerContent);
-        $("#leftdiff").html(data.results['diff'][left['pkgname']]);
-        $("#rightdiff").html(data.results['diff'][right['pkgname']]);
+        $("#leftdiff").html(data.results['diff'][left['diffName']]);
+        $("#rightdiff").html(data.results['diff'][right['diffName']]);
         $('#logdiffModal').modal('show');
     }
     projectReportState.prjCompareReady = true;

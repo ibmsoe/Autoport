@@ -1822,14 +1822,22 @@ def getDiffLogResults():
         return json.jsonify(status="failure", error="Result not found"), 401
 
     try:
-        leftName = resultPattern.match(leftBuild).group(4)
+        leftName = resultPattern.match(leftBuild).group(2)                     # uuid field
+        leftNode = resultPattern.match(leftBuild).group(3)                     # build server
+        leftPkg = resultPattern.match(leftBuild).group(4)                      # project name
+        leftPkgVer = resultPattern.match(leftBuild).group(5)                   # project version
+        leftDate = resultPattern.match(leftBuild).group(6)                     # build date
     except AttributeError:
-        return json.jsonify(status="failure", error="Invalid log name" + leftbuild), 402
+        return json.jsonify(status="failure", error="Invalid job name" + leftbuild), 402
 
     try:
-        rightName = resultPattern.match(rightBuild).group(4)
+        rightName = resultPattern.match(rightBuild).group(2)                   # uuid field
+        rightNode = resultPattern.match(rightBuild).group(3)                   # build server
+        rightPkg = resultPattern.match(rightBuild).group(4)                    # project name
+        rightPkgVer = resultPattern.match(rightBuild).group(5)                 # project version
+        rightDate = resultPattern.match(rightBuild).group(6)                   # build date
     except AttributeError:
-        return json.jsonify(status="failure", error="Invalid log name" + rightbuild), 403
+        return json.jsonify(status="failure", error="Invalid job name" + rightbuild), 403
 
     try:
         res = resParser.ResLogCompare(logFile, leftName, leftDir, rightName, rightDir)
@@ -1838,40 +1846,35 @@ def getDiffLogResults():
 
     catalog.cleanTmp()
 
-    rightNode = resultPattern.match(rightBuild).group(3)
-    leftNode = resultPattern.match(leftBuild).group(3)
-
+    leftCol = {}
+    leftCol['log'] = logFile
+    leftCol['job'] = leftBuild
+    leftCol['repo'] = leftRepo
+    leftCol['pkgname'] = leftPkg
+    leftCol['pkgver'] = leftPkgVer
     try:
-        leftCol = {}
-        leftCol['log'] = logFile
-        leftCol['job'] = leftBuild
-        leftCol['repo'] = leftRepo
-        leftCol['pkgname'] = leftName
-        leftCol['pkgver'] = resultPattern.match(leftBuild).group(5)
-        try:
-            i = globals.nodeLabels.index(leftNode)
-            leftCol['distro'] = globals.nodeOSes[i]
-        except ValueError:
-            leftCol['distro'] = leftNode
-        leftCol['date'] = resultPattern.match(leftBuild).group(6)
-    except AttributeError:
-        return json.jsonify(status="failure", error="Invalid log name" + leftbuild), 404
+        # Build server may be unknown to us
+        i = globals.nodeLabels.index(leftNode)
+        leftCol['distro'] = globals.nodeOSes[i]
+    except ValueError:
+        leftCol['distro'] = leftNode
+    leftCol['date'] = leftDate
+    leftCol['diffName'] = leftName
 
+    rightCol = {}
+    rightCol['log'] = logFile
+    rightCol['job'] = rightBuild
+    rightCol['repo'] = rightRepo
+    rightCol['pkgname'] = rightPkg
+    rightCol['pkgver'] = rightPkgVer
     try:
-        rightCol = {}
-        rightCol['log'] = logFile
-        rightCol['job'] = rightBuild
-        rightCol['repo'] = rightRepo
-        rightCol['pkgname'] = rightName
-        rightCol['pkgver'] = resultPattern.match(rightBuild).group(5)
-        try:
-            i = globals.nodeLabels.index(rightNode)
-            rightCol['distro'] = globals.nodeOSes[i]
-        except ValueError:
-            rightCol['distro'] = rightNode
-        rightCol['date'] = resultPattern.match(rightBuild).group(6)
-    except AttributeError:
-        return json.jsonify(status="failure", error="Invalid log name" + rightbuild), 405
+        # Build server may be unknown to us
+        i = globals.nodeLabels.index(rightNode)
+        rightCol['distro'] = globals.nodeOSes[i]
+    except ValueError:
+        rightCol['distro'] = rightNode
+    rightCol['date'] = rightDate
+    rightCol['diffName'] = rightName
 
     return json.jsonify(status = "ok",
                         leftCol = leftCol,
