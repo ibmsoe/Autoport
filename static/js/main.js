@@ -396,7 +396,7 @@ var batchState = {
                 node: undefined}, runBatchFileCallback, "json").fail(runBatchFileCallback);
         }
         else{
-            for (var i = 0; i < values.length; i++){
+            for (var i = 0; i < selectedServers.length; i++){
                 $.post("/runBatchFile", {batchName: batchState.selectedBatchFile.filename,
                     node: selectedServers[i]}, runBatchFileCallback, "json").fail(runBatchFileCallback);
             }

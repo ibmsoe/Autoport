@@ -197,7 +197,8 @@ done
 echo ']'>>packageListSingleSlave.json
 
 # Get the list of all tar packages installed on the build slave.
-local_repo_file_name="$JENKINS_TAR_INSTALL_LOCATION"
+jenkins_repo_file_name="archive.log"
+local_repo_file_name="$JENKINS_TAR_INSTALL_LOCATION/$jenkins_repo_file_name"
 installed_package_json=''
 if [ $packageCounter -ne $totalCsvPackages -a -f "$local_repo_file_name" ];then
     counter=0
