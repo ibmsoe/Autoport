@@ -41,6 +41,8 @@ sharedData = SharedData(urlparse(globals.jenkinsUrl).hostname)
 chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
 batch = Batch()
 
+
+
 # Be sure to update main.js also.
 #
 # job result sample "hostname.181259.x86-ubuntu-14.04.junit.current.2015-04-24-h12-m23-s15/"
@@ -64,7 +66,10 @@ def main():
 
 @app.route("/init", methods=['POST'])
 def init():
-    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, localPathForTestResults=globals.localPathForTestResults, pathForTestResults=globals.pathForTestResults, localPathForBatchFiles=globals.localPathForBatchFiles, pathForBatchFiles=globals.pathForBatchFiles, githubToken=globals.githubToken, configUsername=globals.configUsername, configPassword=globals.configPassword)
+    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, localPathForTestResults=globals.localPathForTestResults,
+                        pathForTestResults=globals.pathForTestResults, localPathForBatchFiles=globals.localPathForBatchFiles,
+                        pathForBatchFiles=globals.pathForBatchFiles, githubToken=globals.githubToken, configUsername=globals.configUsername,
+                        configPassword=globals.configPassword, useTextAnalytics=globals.useTextAnalytics)
 
 #TODO - add error checking
 @app.route("/getJenkinsNodes", methods=["POST"])
@@ -178,6 +183,12 @@ def settings():
         globals.configPassword = request.form["password"]
     except ValueError:
         return json.jsonify(status="failure", error="bad configuration password"), 400
+
+    try:
+        globals.useTextAnalytics = request.form["useTextAnalytics"] == 'false'
+        #print globals.useTextAnalytics
+    except ValueError:
+        return json.jsonify(status="failure", error="bad Value for useTextAnalytics"), 400
 
     return json.jsonify(status="ok")
 
@@ -325,6 +336,8 @@ def detail(id, repo=None):
     # Send
     return json.jsonify(status="ok", repo=repoData, type="detail", panel=panel)
 
+
+
 # This function recomputes the search criteria for multi-project search
 def changeQuery(q, key, newval):
     newq = []
@@ -342,6 +355,7 @@ def changeQuery(q, key, newval):
         newq.append(keylist)
     newq = ' '.join(newq)
     return newq
+
 
 # Search repositories - return JSON search results for the GitHub
 # /search/repositories API call. See the following for details:
@@ -704,6 +718,9 @@ def createJob(i_id = None,
     # Get build info
     try:
         selectedBuild = request.form["selectedBuild"]
+        if selectedBuild.strip().startswith('[TextAnalytics]'): #Remove the [TextAnalytics] tag from build command
+            selectedBuild = selectedBuild[15:]
+            
     except KeyError:
         if i_selectedBuild != None:
             selectedBuild = i_selectedBuild

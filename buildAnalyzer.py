@@ -1,12 +1,63 @@
 from github import GithubException
-# General strategy is to create a list of language definitions from which build and test
-# commands are generated.  Each successive definition that is added to the list provides
-# a better commnd line that is more specific to the project.  The last list definition
-# is returned. With a little luck, it is the preferred cmd line as provided by the readme
+import globals
+import utils
+
+# General strategy is to create a list of language definitions from which build
+# and test commands are generated.  Each successive definition that is added to
+# the list provides a better commnd line that is more specific to the project.
+# The last list definition is returned. With a little luck, it is the preferred
+# cmd line as provided by the readme.
+
+def text_analytics_build_commands(listing, repo):
+    """
+    :param listing: Directory Listing
+    :param repo: Repository to search build command in
+    :return: A build command :rtype str
+    """
+    proximity_threshold = 5 # We insist that the build command that we extract
+                             # be within 10 lines after encountering the word
+                             # 'build'
+    max_lines = 5 # Limit the number of lines (i.e. individual commands) we
+                  # allow in our output
+    max_words = 16 # Limit the number of words we allow per individual command
+    max_chars = 64 # Limit the number of characters per individual command
+
+    retval = []
+    for f in listing:
+        build_found = False
+        build_line_number = 0
+
+        commands = [' mvn ',' ant ', ' build ']
+        if f.name in ('README.md','BUILDING.md', 'BUILDING.txt','BUILDING',
+                      'README.maven', 'README.ant', 'README.textile'):
+            if f.type == 'file' and f.size != 0:
+                fstr = repo.get_file_contents(f.path).content.decode('base64',
+                                                                     'strict')
+                """ :type : str """
+                lines = 0
+                
+                for idx, line in enumerate(fstr.splitlines()):
+                    line = line.lower()
+                    if 'build' in line:
+                        build_found = True
+                        build_line_number = idx
+                    if build_found and (idx - build_line_number) < proximity_threshold:
+                        for command in commands:
+                            if command in line and 'install' not in line and\
+                            len(line) > 0 and len(line) <= max_chars and\
+                            len(line.split(' ')) <= max_words and\
+                            lines <= max_lines and\
+                            not line[len(line) - 1] == ':':
+                                retval.append(utils.clean(line))
+                                lines = lines + 1
+        if len(retval) > 0: # If you find a build command in one file, then
+                            # don't check other files
+            break
+    return ';'.join(retval)
 
 def inferBuildSteps(listing, repo):
 
-    # Gather all possible build, test, and environment options    
+    # Gather all possible build, test, and environment options
     # This is what gets returned
     build_info = {
         'buildSystem': "",
@@ -21,9 +72,10 @@ def inferBuildSteps(listing, repo):
         'artifacts': "*.arti"
     }
 
-    # This is added to the list first.  Additional list elements are added on top of it
-    # as we perform discovery.  In the end, if we can't figure out how to build the project,
-    # then this entry is used to convey the unknown primary language to the end user
+    # This is added to the list first.  Additional list elements are added on
+    # top of it as we perform discovery.  In the end, if we can't figure out
+    # how to build the project, then this entry is used to convey the unknown
+    # primary language to the end user.
     base_empty_def = {
         'build system': "",
         'primary lang': "",
@@ -38,9 +90,10 @@ def inferBuildSteps(listing, repo):
         'error': "primary language unknown",
         'success': False }
 
-    # These are the base lang definitions. They should cover the top two or three build
-    # systems to achieve 60% or better compilation success.  The command line is not project
-    # or build system specific.  Represents standard use of the build system, eg make all
+    # These are the base lang definitions. They should cover the top two or
+    # three build systems to achieve 60% or better compilation success.  The
+    # command line is not project or build system specific.  Represents
+    # standard use of the build system, eg make all.
     base_python_def = {
         'build system': "Python",
         'primary lang': "Python",
@@ -106,7 +159,7 @@ def inferBuildSteps(listing, repo):
          'build': "if [ -e Makefile.PL ]; then perl Makefile.PL > build_result.arti 2>&1; fi; make >> build_result.arti 2>&1; make install >> build_result.arti 2>&1",
          'test' : "make test > test_result.arti 2>&1",
          'env' : "",
-         'artifacts': "*.arti", 
+         'artifacts': "*.arti",
          'reason': "primary language",
          'error': "",
          'success': True }
@@ -315,7 +368,7 @@ def inferBuildSteps(listing, repo):
     makefile = None
     for f in listing:
         if f.name == 'pom.xml':
-            langlist.append(maven_def)         # If we find specific build files we can improve our commands by grepping readme's 
+            langlist.append(maven_def)         # If we find specific build files we can improve our commands by grepping readme's
         elif f.name == 'build.xml':
             langlist.append(ant_def)
         elif f.name == 'configure.ac':
@@ -359,11 +412,11 @@ def inferBuildSteps(listing, repo):
 
     # Add each template match to build info in the order they were found
     for lang in langlist:
-        if lang['build']: 
+        if lang['build']:
             build_info['buildOptions'].append(lang['build'])
-        if lang['test']: 
+        if lang['test']:
             build_info['testOptions'].append(lang['test'])
-        if lang['env']: 
+        if lang['env']:
             build_info['envOptions'].append(lang['env'])
         build_info['reason'] = lang['reason']
 
@@ -373,7 +426,7 @@ def inferBuildSteps(listing, repo):
         build_info['buildSystem'] = lang['build system']
         for readmeStr in grepstack:
             if readmeStr:
-                delim = ["`", "'", '"', "\n"]                   # delimeters used to denote end of cmd
+                delim = ["`", "'", '"', "\n"]                   # delimiters used to denote end of cmd
                 cmd = lang['grep test']
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
@@ -388,12 +441,22 @@ def inferBuildSteps(listing, repo):
                         build_info['buildOptions'].append(strFound)
                 env = lang['grep env']
                 if env:
-                    delim = [";", " ", "\n"]                    # delimeters used to denote end of environment variable
+                    delim = [";", " ", "\n"]                    # delimiters used to denote end of environment variable
                     strFound = buildFilesParser(readmeStr, env, delim)
                     if strFound:
                         build_info['envOptions'].append(strFound)
                 break
 
+    #Add commands extracted using text analytics
+    text_analytics_suffix = ' > build_result.arti 2>&1;'
+    build_command = text_analytics_build_commands(listing, repo)
+
+    if build_command:
+        if globals.useTextAnalytics:
+            build_info['buildOptions'].insert(len(build_info), '[TextAnalytics]'+build_command+text_analytics_suffix)
+        else:
+            #print 'Globals.useTextAnalytics:' +str(globals.useTextAnalytics)
+            build_info['buildOptions'].insert(0, '[TextAnalytics]'+build_command+text_analytics_suffix)
     # Make the build, test, and env options of the last added element the default options
     # as those are the most likely to be correct
     if build_info['buildOptions']:
@@ -447,3 +510,4 @@ def buildFilesParser(fileBuf, searchTerm, delimeter):
             return fileBuf[i:][:smallestIndex]
 
     return ""
+

@@ -43,6 +43,7 @@ def init():
     global localPathForBatchTestResults
     global artifactsPathPrefix
     global threadPoolSize
+    global useTextAnalytics
 
     # user configuration globals that are supported by the user interface
     jenkinsUrl = configOptions['jenkinsurl']
@@ -60,6 +61,7 @@ def init():
     localPathForBatchTestResults = configOptions['localpathforbatchtestresults']
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
+    useTextAnalytics = configOptions['usetextanalytics'] == 'True'
 
     # globals not based on config file
     global github
@@ -84,6 +86,7 @@ def init():
     global allocBuildServers
     global jenkinsRepoUrl
     global localTarRepoLocation
+
 
 
     # need to use the token to be able to perform more requests per hour

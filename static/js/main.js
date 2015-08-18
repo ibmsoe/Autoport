@@ -19,7 +19,7 @@ var globalState = {
     githubToken: "",
     configUsername: "",
     configPassword: "",
-
+    useTextAnalytics: false,
     isSearchTabActive: true,
     isBatchTabActive: false,
     isReportsTabActive: false,
@@ -58,6 +58,7 @@ var globalState = {
         document.getElementById('github').value = globalState.githubTokenInit;
         document.getElementById('username').value = globalState.configUsernameInit;
         document.getElementById('password').value = globalState.configPasswordInit;
+        document.getElementById('useTextAnalytics').value = globalState.useTextAnalytics;
     },
     updateParameters: function () {
         jenkinsUrl = document.getElementById('url').value;
@@ -68,10 +69,11 @@ var globalState = {
         githubToken = document.getElementById('github').value;
         configUsername = document.getElementById('username').value;
         configPassword = document.getElementById('password').value;
+        useTextAnalytics = globalState.useTextAnalytics
         $.post("/settings", {url: jenkinsUrl,
                ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
                lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles, github: githubToken,
-               username: configUsername, password: configPassword}, settingsCallback, "json").fail(settingsCallback);
+               username: configUsername, password: configPassword, useTextAnalytics:  useTextAnalytics}, settingsCallback, "json").fail(settingsCallback);
     }
 };
 
