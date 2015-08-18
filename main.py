@@ -1511,6 +1511,7 @@ def listManagedPackages():
                 pkg['osversion'] = globals.nodeDetails[i]['version']
                 pkg['arch'] = globals.nodeDetails[i]['arch']
                 pkg['os'] = pkg['distro']+"-"+pkg['osversion']
+                pkg['os_arch'] = pkg['os'] + "-" +  pkg['arch']
                 isAddable = False
                 isRemovable = False
                 enableCheckBox = False
