@@ -185,8 +185,8 @@ def settings():
         return json.jsonify(status="failure", error="bad configuration password"), 400
 
     try:
-        globals.useTextAnalytics = request.form["useTextAnalytics"] == 'false'
-        #print globals.useTextAnalytics
+        globals.useTextAnalytics = request.form["useTextAnalytics"] == 'true'
+        # print globals.useTextAnalytics
     except ValueError:
         return json.jsonify(status="failure", error="bad Value for useTextAnalytics"), 400
 
