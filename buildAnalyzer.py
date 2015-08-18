@@ -230,7 +230,7 @@ def inferBuildSteps(listing, repo):
         'primary lang': "Java",
         'grep build': "ant clean",
         'grep test' : "ant test",
-        'grep env': "ANT_OPTS",
+        'grep env': "ANT_OPTS=",
         'build': "ant clean > build_result.arti 2>&1; ant >> build_result.arti 2>&1",
         'test': "ant test > test_result.arti 2>&1",
         'env' : "",
@@ -244,7 +244,7 @@ def inferBuildSteps(listing, repo):
         'primary lang': "Java",
         'grep build': "",
         'grep test': "",
-        'grep env': "MAVEN_OPTS",
+        'grep env': "MAVEN_OPTS=",
         'build': "mvn dependency:list -DexcludeTransitive > build_result.arti 2>&1; mvn clean compile >> build_result.arti 2>&1",
         'test' : "mvn test -fn > test_result.arti 2>&1",
         'env' : "",
@@ -431,18 +431,26 @@ def inferBuildSteps(listing, repo):
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
                     if strFound:
-                        strFound = appendArtifact(strFound);
+                        strFound = appendArtifact(strFound)
                         build_info['testOptions'].append(strFound)
                 cmd = lang['grep build']
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
                     if strFound:
-                        strFound = appendArtifact(strFound);
+                        strFound = appendArtifact(strFound)
                         build_info['buildOptions'].append(strFound)
                 env = lang['grep env']
                 if env:
+                    # Look first for 'VAR='.  Form is VAR=7
                     delim = [";", " ", "\n"]                    # delimiters used to denote end of environment variable
                     strFound = buildFilesParser(readmeStr, env, delim)
+                    if strFound:
+                        # Look next for 'VAR="'.  Form is VAR="string"
+                        envStr = env + '"'
+                        delim = ['"']                           # delimiters used to denote end of environment variable
+                        strFound2 = buildFilesParser(readmeStr, envStr, delim)
+                        if strFound2:
+                            strFound = strFound2 + '"'
                     if strFound:
                         build_info['envOptions'].append(strFound)
                 break
@@ -481,7 +489,7 @@ def appendArtifact(cmd):
     return cmd;
 
 # Build Files Parser - Looks for string searchTerm in string fileBuf and then iterates over
-# list of delimeters and finds the one with the smallest index, returning the string found between the
+# list of delimiters and finds the one with the smallest index, returning the string found between the
 # two indices
 def buildFilesParser(fileBuf, searchTerm, delimeter):
     # Get the length of the file
@@ -494,13 +502,14 @@ def buildFilesParser(fileBuf, searchTerm, delimeter):
         return ""
 
     if i != -1:
+        startingIndex = len(searchTerm)
         smallestIndex = lenFileBuf # this is one bigger than the biggest index, acts as infinity
         # If searchTerm found find the smallest index delimeter
         for delim in delimeter:
             if smallestIndex < lenFileBuf:
-                j = fileBuf[i:].find(delim, 0, smallestIndex)
+                j = fileBuf[i:].find(delim, startingIndex, smallestIndex)
             else:
-                j = fileBuf[i:].find(delim)
+                j = fileBuf[i:].find(delim, startingIndex)
 
             if j != -1:
                 smallestIndex = j
