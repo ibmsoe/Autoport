@@ -59,3 +59,10 @@ template '/etc/profile.d/perl.sh' do
     perl_home: "#{prefix_dir}/bin"
   )
 end
+
+buildServer_log "perl-#{version}" do
+  name         "perl-#{version}"
+  log_location node['log_location']
+  log_record   "perl-#{version},#{version},perl_source,perl,#{perl_package}"
+  action       :add
+end

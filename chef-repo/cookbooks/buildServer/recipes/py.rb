@@ -1,8 +1,10 @@
 # Installs python module "py" using source and build method.
 # source to be built is hosted at autoport_repo in tar.gz archive format.
 
+py_version = node['buildServer']['py']['version']
+
 {
-  'py'    => node['buildServer']['py']['version']
+  'py'    => py_version
 }.each do |pkg, version|
    buildServer_pythonPackage "#{pkg}-#{version}" do
       archive_name "#{pkg}-#{version}.tar.gz"
@@ -13,7 +15,7 @@
    end
 end
 
-log_record = "py,#{node['buildServer']['py']['version']},python_modules,python-py"
+log_record = "py,#{py_version},python_modules,python-py,py-#{py_version}.tar.gz"
 
 buildServer_log "py" do
   name         "py"

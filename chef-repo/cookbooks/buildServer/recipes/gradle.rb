@@ -10,7 +10,7 @@ distro = node['platform']
 src_install = node['buildServer']['gradle']['source_install']
 
 if distro == 'redhat' || src_install == 'true'
-  include_recipe 'buildServer::gradle_source'
+  include_recipe 'buildServer::gradle_binary'
 else
   opt = ''
   opt = '--force-yes' if distro == 'ubuntu'

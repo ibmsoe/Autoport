@@ -1,14 +1,12 @@
-# This recipe is used to install nodejs package , either via source or via package manager.
-# Over ppc64le architecture (rhel/ubuntu) source/build install is used.
-# Over x86_64 (rhel/ubuntu) if source_install is true source/build install is used.
-# Over x86_64 (rhel/ubuntu) if source_install is not true installation takes place via shell script,
-# which manupilates the source-lists of package manager based on arch and distro and then package
-# is installed via package manager using package resource of chef.
+# This recipe is used to install nodejs package
+# Over ppc64le architecture (rhel/ubuntu) ibm-nodejs is installed via binary.
+# Over x86_64 (rhel/ubuntu) installation takes place via shell script,
+# which manupilates the source-lists of package manager and make nodejs
+# available via yum/apt.
 
 arch = node['kernel']['machine']
-source_install = node['buildServer']['nodejs']['source_install']
 if arch == 'ppc64le'
-  include_recipe 'buildServer::nodejs_source_ppc'
+  include_recipe 'buildServer::ibm-sdk-nodejs'
 else
   setup_file = ''
   case node[:platform]

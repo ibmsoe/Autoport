@@ -3,8 +3,10 @@
 
 include_recipe 'buildServer::perl'
 
+yt_version = node['buildServer']['YAML-Tiny']['version']
+
 {
-  'YAML-Tiny' => node['buildServer']['YAML-Tiny']['version']
+  'YAML-Tiny' => yt_version
 }.each do |pkg, version|
   buildServer_perlPackage "#{pkg}-#{version}" do
     archive_name "#{pkg}-#{version}.tar.gz"
@@ -18,9 +20,9 @@ end
 
 case node['platform']
   when 'ubuntu'
-    log_record = "YAML-Tiny,#{node['buildServer']['YAML-Tiny']['version']},perl_modules,libyaml-tiny-perl"
+    log_record = "YAML-Tiny,#{yt_version},perl_modules,libyaml-tiny-perl,YAML-Tiny-#{yt_version}.tar.gz"
   when 'redhat'
-    log_record = "YAML-Tiny,#{node['buildServer']['YAML-Tiny']['version']},perl_modules,perl-yaml-tiny"
+    log_record = "YAML-Tiny,#{yt_version},perl_modules,perl-yaml-tiny,YAML-Tiny-#{yt_version}.tar.gz"
 end
 
 buildServer_log 'YAML-Tiny' do

@@ -1,68 +1,76 @@
 buildServer Cookbook
 ====================
-TODO: Enter the cookbook description here.
+This cookbook is meant to pre-condition the build slaves of autoport tool with identified set of Managed Packages.
 
-e.g.
-This cookbook makes your favorite breakfast sandwich.
++----------------+---------------------+--------------------------+------------------------------------+----------------+
+|    Package     | Installation Recipe |     Uninstall Recipe     |        Supported Extensions        |  Install Type  |
++----------------+---------------------+--------------------------+------------------------------------+----------------+
+|      ant       |    ant_binary.rb    |   ant_binary_remove.rb   | .tar,.tar.gz,.tar.bz2,.tar.xz,.zip | Binary install |
+|     maven      |   maven_binary.rb   |  maven_binary_remove.rb  | .tar,.tar.gz,.tar.bz2,.tar.xz,.zip | Binary install |
+|     scala      |   scala_binary.rb   |  scala_binary_remove.rb  | .tar,.tar.gz,.tar.bz2,.tar.xz,.zip | Binary install |
+|     gradle     |   gradle_binary.rb  |     gradle_binary.rb     | .tar,.tar.gz,.tar.bz2,.tar.xz,.zip | Binary install |
+|    protobuf    | protobuf_source.rb  | gradle_source_remove.rb  | .tar,.tar.gz,.tar.bz2,.tar.xz,.zip | Source Install |
+|  ibm-java-sdk  |   ibm-java-sdk.rb   |  ibm-java-sdk_remove.rb  |                .bin                | Binary install |
+| ibm-sdk-nodejs |  ibm-sdk-nodejs.rb  | ibm-sdk-nodejs_remove.rb |                .bin                | Binary install |
+|      perl      |       perl.rb       |            NA            |              .tar.gz               | Source Install |
+|       py       |        py.rb        |            NA            |              .tar.gz               | Source Install |
+|     pytest     |      pytest.rb      |            NA            |              .tar.gz               | Source Install |
+|  strict-perl   |    strict-perl.rb   |            NA            |              .tar.gz               | Source Install |
+| module-install |  module-install.rb  |            NA            |              .tar.gz               | Source Install |
+|  test-strict   |     test-strict     |            NA            |              .tar.gz               | Source Install |
+|   yaml-tiny    |     test-strict     |            NA            |              .tar.gz               | Source Install |
++----------------+---------------------+--------------------------+------------------------------------+----------------+
+
+Wrapper Recipes:
++---------------------+-----------------------------------------------------------------------------------------------------------------------+
+|        Recipe       |                                                        Comments                                                       |
++---------------------+-----------------------------------------------------------------------------------------------------------------------+
+|        ant.rb       | Wrapper recipe to install ant via package Manager if available. Else installing via binary.                           |
+|       maven.rb      | Wrapper recipe to install maven via package Manager if available. Else installing via binary.                         |
+|       scala.rb      | Wrapper recipe to install scala via package Manager if available. Else installing via binary.                         |
+|      gradle.rb      | Wrapper recipe to install gradle via package Manager if available. Else installing via binary.                        |
+|     protobuf.rb     | Wrapper recipe to install protobuf via package Manager if available. Else installing via binary.                      |
+| autoportPackages.rb | To install all packages in autoportPackages section of ManagedList.json using underlying package Manager              |
+|   repo_settings.rb  | Configuring custom repository on nodes                                                                                |
+|    buildTools.rb    | Installing build-essentials / Development tools if available via package Manager                                      |
+|   userPackages.rb   | Installing packages in userPackages section of ManagedList.json using underlying package Manager                      |
+|      default.rb     | The outermost wrapper to call all the recipes part of cookbook , while synching up build-slaves                       |
+|                     |                                                                                                                       |
++---------------------+-----------------------------------------------------------------------------------------------------------------------+
+
+NOTE: Multiple Extension support and Uninstallation are only available for binary packages and not for source installations.
 
 Requirements
 ------------
-TODO: List your cookbook requirements. Be sure to include any requirements this cookbook has on platforms, libraries, other cookbooks, packages, operating systems, etc.
+This cookbook supports:
+1. Architecture: x86_64, ppc64le
+2. Distributions: RHEL, UBUNTU
 
-e.g.
-#### packages
-- `toaster` - buildServer needs toaster to brown your bagel.
 
 Attributes
 ----------
-TODO: List your cookbook attributes here.
-
-e.g.
-#### buildServer::default
-<table>
-  <tr>
-    <th>Key</th>
-    <th>Type</th>
-    <th>Description</th>
-    <th>Default</th>
-  </tr>
-  <tr>
-    <td><tt>['buildServer']['bacon']</tt></td>
-    <td>Boolean</td>
-    <td>whether to include bacon</td>
-    <td><tt>true</tt></td>
-  </tr>
-</table>
+Each package(archive) has an associated set of data values which are defined in
+terms of attributes.
+Following are common set of attributes defined for each package:
+NOTE: <pkg-identifier>: This string maps to package name in autoportChefPackages section of ManagedList.json.
+ 1. default['buildServer'][<pkg-identifier>]['version']
+    - This specifies the version of the package(archive).
+      There is a default value specified however, this gets overridden at runtime based on ManagedList.json
+      or based on user selection on the single panel.
+      Specifying default is not mandatory. Default values would allow recipes as standalone.
+      Also it ensures that there is a value always available to fallback in case of any errors during overriding.
+ 2. default['buildServer'][<pkg-identifier>]['install_dir']
+     - This specifies the path where the package(archive) is installed. By default all the packages
+       are installed in /opt or in subdirectories of /opt. This never gets overridden as there is no provision to change
+       default installation location via autoport tool at runtime.
+ 3. default['buildServer'][<pkg-identifier>]['extension']
+     - This specifies the archive extension. There is a default value specified.
+       This value gets overridden at runtime based on package(archive) selected during installation
+       by the user. The default value for the extension is mandatory, since during the synch operation
+       the package extension is not available either via ManagedList.json or via user selection.
 
 Usage
------
-#### buildServer::default
-TODO: Write usage instructions for each cookbook.
+----------
+To run all the recipes of the cookbook use
 
-e.g.
-Just include `buildServer` in your node's `run_list`:
-
-```json
-{
-  "name":"my_node",
-  "run_list": [
-    "recipe[buildServer]"
-  ]
-}
-```
-
-Contributing
-------------
-TODO: (optional) If this is a public cookbook, detail the process for contributing. If this is a private cookbook, remove this section.
-
-e.g.
-1. Fork the repository on Github
-2. Create a named feature branch (like `add_component_x`)
-3. Write your change
-4. Write tests for your change (if applicable)
-5. Run the tests, ensuring they all pass
-6. Submit a Pull Request using Github
-
-License and Authors
--------------------
-Authors: TODO: List authors
+buildServer::default

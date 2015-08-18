@@ -2,17 +2,20 @@
 # Pre-requiste is to install java.
 # This recipe also sets ant_home and sets default path variable for ant.
 
+Chef::Recipe.send(:include, CommandBuilder)
 include_recipe 'buildServer::java'
 
 version       = node['buildServer']['apache-ant']['version']
 install_dir   = node['buildServer']['apache-ant']['install_dir']
 ant_pkg       = "apache-ant-#{version}"
+extension     = node['buildServer']['apache-ant']['extension']
 archive_dir   = node['buildServer']['download_location']
 ant_home      = "#{install_dir}/#{ant_pkg}"
 repo_url      = node['buildServer']['repo_url']
 
-remote_file "#{archive_dir}/#{ant_pkg}-bin.tar.bz2" do
-  source "#{repo_url}/archives/#{ant_pkg}-bin.tar.bz2"
+
+remote_file "#{archive_dir}/#{ant_pkg}-bin#{extension}" do
+  source "#{repo_url}/archives/#{ant_pkg}-bin#{extension}"
   owner 'root'
   group 'root'
   action :create
@@ -23,7 +26,9 @@ execute "Extracting ant #{version}" do
   cwd install_dir
   user 'root'
   group 'root'
-  command "tar -jxf #{archive_dir}/#{ant_pkg}-bin.tar.bz2"
+  command <<-EOD
+    #{CommandBuilder.command(extension, run_context)} #{archive_dir}/#{ant_pkg}-bin#{extension}
+  EOD
   creates "#{install_dir}/#{ant_pkg}"
 end
 
@@ -40,6 +45,6 @@ end
 buildServer_log "apache-ant" do
   name         "apache-ant"
   log_location node['log_location']
-  log_record   "apache-ant,#{version},ant_source,ant"
+  log_record   "apache-ant,#{version},ant_binary,ant,#{ant_pkg}-bin#{extension}"
   action       :add
 end

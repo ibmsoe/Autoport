@@ -1,4 +1,4 @@
-# List of all recipes to be run, whenever build-servers are synched.
+# List of all recipes to be run, whenever a synch operation is done on a build-server.
 
 include_recipe 'buildServer::repo_settings'
 include_recipe 'buildServer::buildtools'
@@ -9,6 +9,7 @@ include_recipe 'buildServer::maven'
 include_recipe 'buildServer::protobuf_source'
 include_recipe 'buildServer::scala'
 include_recipe 'buildServer::gradle'
+include_recipe 'buildServer::ibm-java'
 include_recipe 'buildServer::nodejs'
 include_recipe 'buildServer::perl'
 include_recipe 'buildServer::strict-perl'

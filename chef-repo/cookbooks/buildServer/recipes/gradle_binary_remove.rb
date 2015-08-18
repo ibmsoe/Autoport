@@ -3,7 +3,8 @@
 version      = node['buildServer']['gradle']['version']
 install_dir  = node['buildServer']['gradle']['install_dir']
 install_path = "#{install_dir}/packages/gradle"
-gradle_pkg   = "gradle-#{version}-bin.zip"
+extension    = node['buildServer']['gradle']['extension']
+gradle_pkg   = "gradle-#{version}-bin#{extension}"
 archive_dir  = node['buildServer']['download_location']
 gradle_home  = "#{install_dir}/gradle"
 
@@ -33,6 +34,6 @@ end
 buildServer_log 'gradle' do
   name         'gradle'
   log_location node['log_location']
-  log_record   "gradle,#{version},gradle_source,gradle"
+  log_record   "gradle,#{version},gradle_binary,gradle,#{gradle_pkg}"
   action       :remove
 end

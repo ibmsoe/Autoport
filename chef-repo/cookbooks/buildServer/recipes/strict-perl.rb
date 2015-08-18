@@ -3,8 +3,9 @@
 
 include_recipe 'buildServer::perl'
 
+sp_version = node['buildServer']['Strict-Perl']['version']
 {
-  'Strict-Perl' => node['buildServer']['Strict-Perl']['version']
+  'Strict-Perl' => sp_version
 }.each do |pkg, version|
   buildServer_perlPackage "#{pkg}-#{version}" do
     archive_name "#{pkg}-#{version}.tar.gz"
@@ -16,7 +17,7 @@ include_recipe 'buildServer::perl'
   end
 end
 
-log_record = "Strict-Perl,#{node['buildServer']['Strict-Perl']['version']},perl_modules"
+log_record = "Strict-Perl,#{sp_version},perl_modules,Strict-Perl-#{sp_version}.tar.gz"
 
 buildServer_log 'Strict-Perl' do
   name         'Strict-Perl'

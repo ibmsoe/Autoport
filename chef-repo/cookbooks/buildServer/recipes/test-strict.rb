@@ -3,8 +3,10 @@
 
 include_recipe 'buildServer::perl'
 
+ts_version = node['buildServer']['Test-Strict']['version']
+
 {
-  'Test-Strict' => node['buildServer']['Test-Strict']['version']
+  'Test-Strict' => ts_version
 }.each do |pkg, version|
   buildServer_perlPackage "#{pkg}-#{version}" do
     archive_name "#{pkg}-#{version}.tar.gz"
@@ -18,9 +20,9 @@ end
 
 case node['platform']
   when 'ubuntu'
-    log_record = "Test-Strict,#{node['buildServer']['Test-Strict']['version']},perl_modules,libtest-strict-perl"
+    log_record = "Test-Strict,#{ts_version},perl_modules,libtest-strict-perl,Test-Strict-#{ts_version}.tar.gz"
   when 'redhat'
-    log_record = "Test-Strict,#{node['buildServer']['Test-Strict']['version']},perl_modules,perl-test-strict"
+    log_record = "Test-Strict,#{ts_version},perl_modules,perl-test-strict,Test-Strict-#{ts_version}.tar.gz"
 end
 
 
