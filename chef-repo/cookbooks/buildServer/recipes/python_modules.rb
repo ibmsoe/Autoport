@@ -16,7 +16,7 @@ if node['buildServer']['python_modules'].any?
     buildServer_log pkg do
       name         pkg
       log_location node['log_location']
-      log_record   log_record = "#{pkg},#{version},python_modules,#{pkg}"
+      log_record = "#{pkg},#{version},python_modules,#{pkg},#{pkg}-#{version}"
       action       :add
     end
   end

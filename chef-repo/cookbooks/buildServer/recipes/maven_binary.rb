@@ -3,16 +3,18 @@
 # This recipe also sets maven_home and sets default path variable for maven.
 
 include_recipe 'buildServer::java'
+Chef::Recipe.send(:include, CommandBuilder)
 
 version       = node['buildServer']['apache-maven']['version']
 install_dir   = node['buildServer']['apache-maven']['install_dir']
 maven_pkg     = "apache-maven-#{version}"
+extension     = node['buildServer']['apache-maven']['extension']
 archive_dir   = node['buildServer']['download_location']
 maven_home    = "#{install_dir}/#{maven_pkg}"
 repo_url      = node['buildServer']['repo_url']
 
-remote_file "#{archive_dir}/#{maven_pkg}-bin.tar.gz" do
-  source "#{repo_url}/archives/#{maven_pkg}-bin.tar.gz"
+remote_file "#{archive_dir}/#{maven_pkg}-bin#{extension}" do
+  source "#{repo_url}/archives/#{maven_pkg}-bin#{extension}"
   owner 'root'
   group 'root'
   action :create
@@ -23,7 +25,9 @@ execute "Extracting ant #{version}" do
   cwd install_dir
   user 'root'
   group 'root'
-  command "tar -xvf #{archive_dir}/#{maven_pkg}-bin.tar.gz"
+  command <<-EOD
+    #{CommandBuilder.command(extension, run_context)} #{archive_dir}/#{maven_pkg}-bin#{extension}
+  EOD
   creates "#{install_dir}/#{maven_pkg}"
 end
 
@@ -40,6 +44,6 @@ end
 buildServer_log "apache-maven" do
   name         "apache-maven"
   log_location node['log_location']
-  log_record   "apache-maven,#{version},maven_source,maven"
+  log_record   "apache-maven,#{version},maven_binary,maven,#{maven_pkg}-bin#{extension}"
   action       :add
 end

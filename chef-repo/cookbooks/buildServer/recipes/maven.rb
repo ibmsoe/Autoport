@@ -14,7 +14,7 @@ opt = ''
 opt = '--force-yes' if distro == 'ubuntu'
 
 if (arch == 'x86_64' && distro == 'redhat') || src_install == 'true'
-  include_recipe 'buildServer::maven_source'
+  include_recipe 'buildServer::maven_binary'
 else
   maven_basedir = '/usr/share/maven'
 

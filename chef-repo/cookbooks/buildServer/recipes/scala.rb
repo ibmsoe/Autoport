@@ -10,7 +10,7 @@ opt = ''
 opt = '--force-yes' if distro == 'ubuntu'
 
 if (arch == 'ppc64le' && distro == 'redhat') || src_install == 'true'
-  include_recipe 'buildServer::scala_source'
+  include_recipe 'buildServer::scala_binary'
 else
   package 'scala' do
     action :upgrade

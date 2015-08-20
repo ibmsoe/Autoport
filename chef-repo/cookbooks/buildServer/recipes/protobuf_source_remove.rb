@@ -4,9 +4,10 @@ version        = node['buildServer']['protobuf']['version']
 source_dir     = node['buildServer']['protobuf']['source_dir']
 install_prefix = node['buildServer']['protobuf']['install_prefix']
 protobuf_pkg   = "protobuf-#{version}"
+extension      = node['buildServer']['protobuf']['extension']
 archive_dir    = node['buildServer']['download_location']
 
-file "#{archive_dir}/#{protobuf_pkg}.tar.gz" do
+file "#{archive_dir}/#{protobuf_pkg}#{extension}" do
   action :delete
 end
 
@@ -22,6 +23,6 @@ end
 buildServer_log "protobuf" do
   name         "protobuf"
   log_location node['log_location']
-  log_record   "protobuf,#{version},protobuf_source,protobuf"
+  log_record   "protobuf,#{version},protobuf_source,protobuf,#{protobuf_pkg}#{extension}"
   action       :remove
 end

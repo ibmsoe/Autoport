@@ -1,8 +1,9 @@
 # Installs python module "pytest" using source and build method.
 # source to be built is hosted at autoport_repo in tar.gz archive format.
 
+pytest_ver = node['buildServer']['pytest']['version']
 {
-  'pytest'    => node['buildServer']['pytest']['version']
+  'pytest'    => pytest_ver
 }.each do |pkg, version|
   buildServer_pythonPackage "#{pkg}-#{version}" do
     archive_name "#{pkg}-#{version}.tar.gz"
@@ -13,7 +14,7 @@
   end
 end
 
-log_record = "pytest,#{node['buildServer']['pytest']['version']},python_modules,python-pytest"
+log_record = "pytest,#{pytest_ver},python_modules,python-pytest,pytest-#{pytest_ver}.tar.gz"
 
 buildServer_log "pytest" do
   name         "pytest"

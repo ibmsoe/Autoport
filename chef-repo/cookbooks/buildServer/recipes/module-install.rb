@@ -30,9 +30,12 @@ case node['platform']
           }
 end
 
+fr_version = node['buildServer']['File-Remove']['version']
+mi_version = node['buildServer']['Module-Install']['version']
+
 {
- 'File-Remove' => "File-Remove,#{node['buildServer']['File-Remove']['version']},perl_modules,#{tag['File-Remove']}" ,
- 'Module-Install' => "Module-Install,#{node['buildServer']['Module-Install']['version']},perl_modules,#{tag['Module-Install']}"
+ 'File-Remove' => "File-Remove,#{fr_version},perl_modules,#{tag['File-Remove']},File-Remove-#{fr_version}.tar.gz" ,
+ 'Module-Install' => "Module-Install,#{mi_version},perl_modules,#{tag['Module-Install']},Module-Install-#{mi_version}.tar.gz"
 }.each do |name, log_record|
   puts log_record
   buildServer_log name do

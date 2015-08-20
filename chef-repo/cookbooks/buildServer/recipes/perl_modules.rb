@@ -20,7 +20,7 @@ if node['buildServer']['perl_modules'].any?
     buildServer_log pkg do
       name         pkg
       log_location node['log_location']
-      log_record   "#{pkg},#{version},perl_modules,#{pkg}"
+      log_record   "#{pkg},#{version},perl_modules,#{pkg},#{pkg}-#{version}.tar.gz"
       action       :add
     end
   end

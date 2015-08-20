@@ -2,17 +2,18 @@
 # Pre-requiste is to install java.
 # This recipe also sets gradle_home and sets default path variable for gradle.
 
+Chef::Recipe.send(:include, CommandBuilder)
+
 version      = node['buildServer']['gradle']['version']
 install_dir  = node['buildServer']['gradle']['install_dir']
 install_path = "#{install_dir}/packages/gradle"
-gradle_pkg   = "gradle-#{version}-bin.zip"
+extension    = node['buildServer']['gradle']['extension']
+gradle_pkg   = "gradle-#{version}-bin#{extension}"
 archive_dir  = node['buildServer']['download_location']
 gradle_home  = "#{install_dir}/gradle"
 repo_url     = node['buildServer']['repo_url']
 
 include_recipe 'buildServer::java'
-
-package 'unzip'
 
 [
   "#{install_dir}/packages",
@@ -37,8 +38,8 @@ bash 'Extracting the archive' do
   user 'root'
   cwd install_path
   code <<-EOD
-    unzip #{archive_dir}/#{gradle_pkg}
-    EOD
+    #{CommandBuilder.command(extension, run_context)} #{archive_dir}/#{gradle_pkg}
+  EOD
   creates "#{install_path}/gradle-#{version}/bin/gradle"
 end
 
@@ -60,6 +61,6 @@ end
 buildServer_log 'gradle' do
   name         'gradle'
   log_location node['log_location']
-  log_record   "gradle,#{version},gradle_source,gradle"
+  log_record   "gradle,#{version},gradle_binary,gradle,#{gradle_pkg}"
   action       :add
 end

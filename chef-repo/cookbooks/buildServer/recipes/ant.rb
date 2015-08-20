@@ -10,7 +10,7 @@ include_recipe 'buildServer::java'
 src_install = node['buildServer']['apache-ant']['source_install']
 
 if src_install == 'true'
-  include_recipe 'buildServer::ant_source'
+  include_recipe 'buildServer::ant_binary'
 else
 
   opt = ''
