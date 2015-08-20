@@ -142,8 +142,8 @@ final_list.extend([{'packageName':str(i['packageName']),
     'packageInstalled':bool(i['packageInstalled']),
     'updateVersion':str(j['updateVersion']),
     'updateAvailable':bool(j['updateAvailable']),
-    'packageType':str(i['packageType'])} for i in package_list['installed'] for j in package_list['updates'] 
-        if i['packageName'] == j['packageName'] and i['installedVersion'] == j['installedVersion'] and package_filter in i['packageName']])
+    'packageType':str(i['packageType'])} for i in package_list['installed'] for j in package_list['updates']
+        if i['packageName'] == j['packageName'] and package_filter in i['packageName']])
 
 # List of packages already added to output string.
 already_added.extend([i['packageName'] for i in final_list])
@@ -153,7 +153,7 @@ final_list.extend([{'packageName':str(i['packageName']),
     'summary':str(i['summary']),
     'installedVersion':str(i['installedVersion']),
     'packageInstalled':True,'updateVersion':str(i['updateVersion']),
-    'updateAvailable':False,'packageType':str(i['packageType'])} for i in package_list['installed'] 
+    'updateAvailable':False,'packageType':str(i['packageType'])} for i in package_list['installed']
         if i['packageName'] not in already_added and package_filter in i['packageName'] ])
 
 # Get all tar packages which are not installed, that matches the given keyword.
@@ -163,7 +163,7 @@ final_list.extend([{'packageName':str(i['packageName']),
     'packageInstalled':False,
     'updateVersion':str(i['updateVersion']),
     'updateAvailable':True,
-    'packageType':str(i['packageType'])} for i in package_list['updates'] 
+    'packageType':str(i['packageType'])} for i in package_list['updates']
         if i['packageName'] not in already_added and package_filter in i['packageName'] ])
 
 # finally Dump all the package list for further processing.
@@ -175,6 +175,15 @@ case $DISTRIBUTION in
        echo "#### Getting a list of all packages matching the filter $PACKAGE_NAME_FILTER. We search for all packages - installed as well as available"
        echo "#### The command used is using command apt-cache search $PACKAGE_NAME_FILTER | grep $PACKAGE_NAME_FILTER | sed \"s/\"/'/g\" "
        apt-cache search $PACKAGE_NAME_FILTER | grep -i $PACKAGE_NAME_FILTER | sed "s/\"/'/g"  > AllPackagesInfo.txt # List of all packages matching the filter
+
+       # In case package is not found while searching update the repo list and retry searching again.
+       package_search_result=$( tail -n1 AllPackagesInfo.txt )
+       if [ -z "$package_search_result" -o "$package_search_result" = "0" ]; then
+            echo "Package Not found trying to update repo list."
+            sudo apt-get update
+            # List of all packages matching the filter after updating
+            apt-cache search $PACKAGE_NAME_FILTER | grep -i $PACKAGE_NAME_FILTER | sed "s/\"/'/g"  > AllPackagesInfo.txt
+       fi
 
         echo "#### Iterating over the packages matching the filter and generating data for each."
         echo '[' > packageListSingleSlave.json
@@ -241,6 +250,8 @@ case $DISTRIBUTION in
         # get search keyword and fetch all the packages matching given keyword, dump the result for later use.
         echo "#### Getting a list of all packages matching the filter $PACKAGE_NAME_FILTER. We search for all packages - installed as well as available"
         echo "#### The command used is using command yum info *$PACKAGE_NAME_FILTER* "
+        # When yum info is called the repo list gets updated before the search.
+        # Hence not firing yum update again for updating repo list.
         yum info "*$PACKAGE_NAME_FILTER*" > AllPackagesInfo.txt
 
         # initializing variables needed.
@@ -388,10 +399,27 @@ esac
 jenkins_repo_file_name="archive.log"
 echo "#### Fetching list of available source packages"
 available_package_json=''
-wget $(echo "$JENKINS_TAR_REPO_LOCATION/$jenkins_repo_file_name" )
+type wget
 can_continue=$?
 
-if [ $can_continue -eq 0 -a -f "$local_repo_file_name" ]; then
+if [ $can_continue -ne 0 ]; then
+    echo "Error: Wget is not installed on this system, installing \"wget\"."
+    # Installing wget from yum repository
+    case $DISTRIBUTION in
+        "UBUNTU")
+            sudo apt-get -y --force-yes install wget
+        ;;
+        "RHEL")
+            yum -y install wget
+        ;;
+    esac
+fi
+# Get the Tar repo file from server
+wget $(echo "$JENKINS_TAR_REPO_LOCATION/$jenkins_repo_file_name" )
+
+# Now since wget is installed we can proceed downloading file and continue the operation.
+if [ -f "$jenkins_repo_file_name" ]; then
+    # If repo file is found search the package in the repo.
     counter=0
     # Now read line by line from the file from the jenkins repos and prepare the list of tar files available
     while IFS='' read -r line || [[ -n $line ]]; do
@@ -413,12 +441,14 @@ if [ $can_continue -eq 0 -a -f "$local_repo_file_name" ]; then
         counter=$((counter + 1))
     done &lt; "$jenkins_repo_file_name"
     echo "#### Done: Fetching list of available source packages!"
-fi
-if [ $can_continue -ne 0 ]; then
-   echo "Error: Wget is not installed on this system, please install \"wget\"."
+else
+    # Tar repo file is not found, display the error message.
+    echo "Error: File archive.log not found."
 fi
 
-local_repo_file_name="$JENKINS_TAR_INSTALL_LOCATION"
+rm -f $jenkins_repo_file_name
+
+local_repo_file_name="$JENKINS_TAR_INSTALL_LOCATION/$jenkins_repo_file_name"
 installed_package_json=''
 if [ -f "$local_repo_file_name" ];then
     counter=0
