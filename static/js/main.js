@@ -644,8 +644,6 @@ var jenkinsState = {
     singleSlavePackageTableReady: false,    // Draw package table for single slave if true
     packageListSingleSlave: [],             // Package list retrieved for a Single Slave
     selectedSingleSlavePackage: {},         // Package selected by the user
-    showUnselectPackageButton: false,       // True if a package is selected, false otherwise
-    showUnselectMultiPackageButton: false,  //  True if a package is selected, false otherwise (for Managed Panel)
     pkgInstallRemoveResponseCounter: 0,
     totalSelectedSingleSlavePkg: 0,
     pkgInstallRemoveStatusSingleSlave: [],
@@ -653,7 +651,6 @@ var jenkinsState = {
         jenkinsState.singleSlavePackageTableReady = false;
         jenkinsState.loadingState.packageListLoading = true;
         jenkinsState.selectedSingleSlavePackage = [];
-        jenkinsState.showUnselectPackageButton = false;
         $("#singlePanelInstallBtn").addClass("disabled");
         $("#singlePanelRemoveBtn").addClass("disabled");
         $.getJSON("/listPackageForSingleSlave",
@@ -662,11 +659,6 @@ var jenkinsState = {
             buildServer: jenkinsState.buildServer
         },
         listPackageForSingleSlaveCallback).fail(listPackageForSingleSlaveCallback);
-    },
-    unselectPackageForSingleSlave: function(ev) {
-        jenkinsState.selectedSingleSlavePackage = [];
-        jenkinsState.showUnselectPackageButton = false;
-        $("#singleServerPackageListTable").bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
     },
     // performActionOnSingleSlave Function performs install / remove action
     // on the packages selected in single panel
@@ -683,8 +675,8 @@ var jenkinsState = {
             // Exclude packages not eligible for installation
             if (selectedPackageList[selectedPkg].updateAvailable == false && clickAction == 'install') {
                 jenkinsState.pkgInstallRemoveStatusSingleSlave.push({
-                    'packageName':selectedPackageList [selectedPkg].packageName, 
-                    'packageAction':'install', 
+                    'packageName':selectedPackageList [selectedPkg].packageName,
+                    'packageAction':'install',
                     'status': 'The package is already at the latest level!'
                     });
                 jenkinsState.totalSelectedSingleSlavePkg -= 1;
@@ -694,8 +686,8 @@ var jenkinsState = {
             // Exclude packages not eligible for removal
             if (selectedPackageList[selectedPkg].packageInstalled == false && clickAction == 'remove') {
                 jenkinsState.pkgInstallRemoveStatusSingleSlave.push({
-                    'packageName':selectedPackageList [selectedPkg].packageName, 
-                    'packageAction':'remove', 
+                    'packageName':selectedPackageList [selectedPkg].packageName,
+                    'packageAction':'remove',
                     'status': 'The package is not installed and therefore cannot be removed!'
                     });
                 jenkinsState.totalSelectedSingleSlavePkg -= 1;
@@ -737,7 +729,6 @@ var jenkinsState = {
     listManagedPackages: function(ev) {
         jenkinsState.managedPackageTableReady = false;
         jenkinsState.loadingState.managedPackageListLoading = true;
-        jenkinsState.showUnselectMultiPackageButton = false;
         jenkinsState.selectedMultiSlavePackage = [];
         var id = ev.target.id;
         jenkinsState.serverGroup = "All";
@@ -815,12 +806,6 @@ var jenkinsState = {
             packageDataList: packageListObj
         },
         editManagedListCallback).fail(editManagedListCallback);
-    },
-    unselectPackageForMultiSlave: function(ev) {
-        jenkinsState.showUnselectMultiPackageButton = false;
-        $("#addToManagedList").addClass("disabled");
-        $("#removeFromManagedList").addClass("disabled");
-        $("#multiServerPackageListTable").bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
     },
     synchManagedPackageList: function() {
         var selectedBuildServer = $('#buildServersToSyncDropDown :selected').val();
@@ -1870,7 +1855,6 @@ function editManagedListCallback(data) {
         $("#multiServerPackageListTable").bootstrapTable('togglePagination').bootstrapTable('uncheckAll').bootstrapTable('togglePagination');
         $("#addToManagedList").addClass("disabled");
         $("#removeFromManagedList").addClass("disabled");
-        jenkinsState.showUnselectMultiPackageButton = false;
     }
 }
 
@@ -1964,12 +1948,10 @@ $(document).ready(function() {
     });
     $('#singleServerPackageListTable').on('check.bs.table', function (e, row) {
         jenkinsState.selectedSingleSlavePackage = row;
-        jenkinsState.showUnselectPackageButton = true;
         var selectedPackages = $('#singleServerPackageListTable').bootstrapTable('getSelections');
         if(selectedPackages.length === 0) {
             $("#singlePanelInstallBtn").addClass("disabled");
             $("#singlePanelRemoveBtn").addClass("disabled");
-            jenkinsState.showUnselectPackageButton = false;
             jenkinsState.selectedSingleSlavePackage = [];
         }
         else {
@@ -1977,18 +1959,22 @@ $(document).ready(function() {
             $("#singlePanelRemoveBtn").removeClass("disabled");
         }
     });
-    $('#singleServerPackageListTable').on('page-change.bs.table', function (e, row) {
-        // On a page change, Bootstrap addon unchecks the package checked by the user.  To
-        // re-select the package once the user goes back to the earlier page, do the following:
-        $("#singleServerPackageListTable").bootstrapTable("checkBy",
-            {field:"packageName", values:[jenkinsState.selectedSingleSlavePackage.packageName]})
+    $('#singleServerPackageListTable').on('check-all.bs.table', function (e, row) {
+        $("#singlePanelInstallBtn").removeClass("disabled");
+        $("#singlePanelRemoveBtn").removeClass("disabled");
+    });
+    $('#singleServerPackageListTable').on('uncheck-all.bs.table', function (e, row) {
+       var selectedPackages = $('#singleServerPackageListTable').bootstrapTable('getSelections');
+        if(selectedPackages.length === 0) {
+            $("#singlePanelInstallBtn").addClass("disabled");
+            $("#singlePanelRemoveBtn").addClass("disabled");
+        }
     });
     // Initializes an empty package list table on the Managed Slave panel
     $('#multiServerPackageListTable').bootstrapTable({
         data: []
     });
     $('#multiServerPackageListTable').on('check.bs.table', function (e, row) {
-        jenkinsState.showUnselectMultiPackageButton = true;
         $("#addToManagedList").removeClass("disabled");
         $("#removeFromManagedList").removeClass("disabled");
     });
@@ -1997,14 +1983,18 @@ $(document).ready(function() {
         if (selectedPackages.length === 0) {
             $("#addToManagedList").addClass("disabled");
             $("#removeFromManagedList").addClass("disabled");
-            jenkinsState.showUnselectMultiPackageButton = false;
         }
     });
-    $('#multiServerPackageListTable').on('page-change.bs.table', function (e, row) {
-        // On a page change, Bootstrap addon unchecks the package checked by the user.  To
-        // re-select the package once the user goes back to the earlier page, do the following:
-        $("#multiServerPackageListTable").bootstrapTable("checkBy",
-            {field:"packageName", values:[jenkinsState.selectedMultiSlavePackage.packageName]})
+    $('#multiServerPackageListTable').on('check-all.bs.table', function (e, row) {
+        $("#addToManagedList").removeClass("disabled");
+        $("#removeFromManagedList").removeClass("disabled");
+    });
+    $('#multiServerPackageListTable').on('uncheck-all.bs.table', function (e, row) {
+       var selectedPackages = $('#multiServerPackageListTable').bootstrapTable('getSelections');
+        if(selectedPackages.length === 0) {
+            $("#addToManagedList").addClass("disabled");
+            $("#removeFromManagedList").addClass("disabled");
+        }
     });
 
 

@@ -54,15 +54,10 @@
                   Remove
                 </button>
               </a>
-              <a rv-show="jenkinsState.showUnselectPackageButton" rv-on-click="jenkinsState.unselectPackageForSingleSlave" >
-                <button type="button" class="btn btn-primary">
-                  Unselect
-                </button>
-              </a>
           </div>
 
           <!-- START SINGLE SERVER PACKAGE LIST TABLE -->
-          <table class="table panel panel-default" id="singleServerPackageListTable" data-pagination="true" data-click-to-select="true"data-toolbar="#singleServerPackageListToolbar">
+          <table class="table panel panel-default" id="singleServerPackageListTable" data-pagination="true" data-click-to-select="true" data-maintain-selected="true" data-toolbar="#singleServerPackageListToolbar">
             <thead>
               <tr>
                 <th data-field="state" data-checkbox="true"></th>
@@ -154,11 +149,6 @@
                   Remove
                 </button>
               </a>
-              <a rv-show="jenkinsState.showUnselectMultiPackageButton" rv-on-click="jenkinsState.unselectPackageForMultiSlave" >
-                <button type="button" class="btn btn-primary">
-                  Unselect
-                </button>
-              </a>
           </div>
 
           <!-- START MULTI SERVER PACKAGE LIST TABLE -->
@@ -171,8 +161,8 @@
                 <th data-field="installedVersion" data-sortable="true">Installed Version</th>
                 <th data-field="updateVersion" data-sortable="true">Latest Version</th>
                 <th data-field="removablePackage" data-sortable="true">Removable</th>
-                <th data-field="os" data-sortable="true">OS</th>
-                <th data-field="arch" data-sortable="true">Arch</th>
+                <th data-field="os_arch" data-sortable="true">OS</th>
+                <th data-field="nodeLabel" data-sortable="true">Node</th>
               </tr>
             </thead>
           </table>
