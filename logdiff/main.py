@@ -13,7 +13,7 @@ app = Flask(__name__)
 # This is the path to the upload directory
 UPLOAD_FOLDER = 'compfiles'
 # These are the extension that we are accepting to be uploaded
-app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'log', 'cfg','arti, out'])
+app.config['ALLOWED_EXTENSIONS'] = set(['txt', 'log', 'cfg','arti', 'out'])
 
 # For a given file, return whether it's an allowed type or not
 def allowed_file(filename):
