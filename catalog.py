@@ -10,6 +10,7 @@ resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-
 
 class Catalog:
     def __init__(self, archiveHost, jenkinsHost,
+            archivePort=globals.port,
             archiveUser=globals.configUsername,
             archivePassword=globals.configPassword,
             jenkinsUser=globals.configJenkinsUsername,
@@ -18,6 +19,7 @@ class Catalog:
             localPath=globals.localPathForTestResults):
         #assert(archiveHost != None and archiveUser != "" and archivePassword != "")
         self.__archiveHost = archiveHost
+        self.__archivePort = archivePort
         self.__archiveUser = archiveUser
         self.__archivePassword = archivePassword
         self.__jenkinsHost = jenkinsHost
@@ -29,7 +31,7 @@ class Catalog:
         try:
             self.__archiveSshClient = paramiko.SSHClient()
             self.__archiveSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.__archiveSshClient.connect(self.__archiveHost, username=self.__archiveUser, password=self.__archivePassword)
+            self.__archiveSshClient.connect(self.__archiveHost, username=self.__archiveUser, password=self.__archivePassword, port=self.__archivePort)
             self.__archiveFtpClient = self.__archiveSshClient.open_sftp()
 
             self.__jenkinsSshClient = paramiko.SSHClient()
@@ -215,6 +217,6 @@ class Catalog:
         self.__jenkinsFtpClient.close()
         self.cleanTmp()
 
-    def __del__(self):
-        self.close()
+    #def __del__(self):
+        #self.close()
 

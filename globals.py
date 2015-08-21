@@ -32,6 +32,7 @@ def init():
     global mavenPath
     global githubToken
     global hostname
+    global port
     global configUsername
     global configPassword
     global configJenkinsUsername
@@ -62,6 +63,11 @@ def init():
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
     useTextAnalytics = configOptions['usetextanalytics'] == 'True'
+
+    if 'port' not in options:
+        port = 22
+    else:
+        port = int(configOptions['port'])
 
     # globals not based on config file
     global github

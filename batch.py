@@ -14,7 +14,7 @@ class Batch:
             self.ssh_client = paramiko.SSHClient()
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.ssh_client.connect(globals.hostname, username=globals.configUsername, \
-                password=globals.configPassword)
+                password=globals.configPassword, port=globals.port)
             self.ftp_client = self.ssh_client.open_sftp()
         except IOError as e:
             print str(e)
