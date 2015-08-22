@@ -1472,12 +1472,15 @@ def managePackageForSingleSlave():
             buildStatus = buildInfo['result']
 
             if buildStatus == "SUCCESS":
-                return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)
+                return json.jsonify(status="ok",
+                    packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)
             else:
-                return json.jsonify(status="failure", error="Failed to run Jenkins job. Job Status: " + buildStatus), 400
+                return json.jsonify(status="failure",
+                    error="Failed to run Jenkins job. Job Status: " + buildStatus), 400
 
         if r.status_code == 400:
-            return json.jsonify(status="failure", error="Could not create/trigger the Jenkins job to perform the action requested"), 400
+            return json.jsonify(status="failure",
+                error="Could not create/trigger the Jenkins job to perform the action requested"), 400
 
 # List installed and available status of the package in packageName by creating and triggering a Jenkins job
 @app.route("/listManagedPackages", methods=["GET"])
@@ -1525,10 +1528,8 @@ def listManagedPackages():
             for pkg in results['packageData']:
                 pkg['nodeLabel'] = node
                 pkg['distro'] = globals.nodeDetails[i]['distro']
-                pkg['osversion'] = globals.nodeDetails[i]['version']
                 pkg['arch'] = globals.nodeDetails[i]['arch']
-                pkg['os'] = pkg['distro']+"-"+pkg['osversion']
-                pkg['os_arch'] = pkg['os'] + "-" +  pkg['arch']
+                pkg['os_arch'] = globals.nodeOSes[i]              # This is O/S Description for UI
                 isAddable = False
                 isRemovable = False
                 enableCheckBox = False
@@ -1539,21 +1540,21 @@ def listManagedPackages():
                         # User will be allowed to add a package if the package is removable
                         # and is not installed or the package is removable and is upgradable.
                         # removable is synonymous with not on the managed list
-                        if "installedVersion" in pkg and \
-                            (not pkg["installedVersion"] or
-                              pkg["installedVersion"] == "N/A"):
+                        if 'installedVersion' in pkg and \
+                            (not pkg['installedVersion'] or
+                              pkg['installedVersion'] == "N/A"):
                             isAddable = True
-                        elif ("installedVersion" in pkg and
-                               pkg["installedVersion"] and
-                               pkg["installedVersion"] != "N/A") and \
-                               ("updateVersion" in pkg and
-                               pkg["updateVersion"] and pkg["updateVersion"]!="N/A"):
-                            if LooseVersion(pkg["updateVersion"] > pkg["installedVersion"]):
+                        elif ('installedVersion' in pkg and
+                               pkg['installedVersion'] and
+                               pkg['installedVersion'] != "N/A") and \
+                               ('updateVersion' in pkg and
+                               pkg['updateVersion'] and pkg['updateVersion'] != "N/A"):
+                            if LooseVersion(pkg['updateVersion']) > LooseVersion(pkg['installedVersion']):
                                 isAddable = True
 
                         # User will be allowed to remove a package if the package is removable and is installed
-                        if "installedVersion" in pkg and pkg["installedVersion"] and \
-                            pkg["installedVersion"] != "N/A":
+                        if 'installedVersion' in pkg and pkg['installedVersion'] and \
+                            pkg['installedVersion'] != "N/A":
                             isRemovable = True
 
                 if isAddable or isRemovable:
