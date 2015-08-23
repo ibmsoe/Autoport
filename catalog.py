@@ -217,6 +217,6 @@ class Catalog:
         self.__jenkinsFtpClient.close()
         self.cleanTmp()
 
-    #def __del__(self):
-        #self.close()
+    def __del__(self):
+        self.close()
 
