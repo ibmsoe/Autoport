@@ -92,7 +92,7 @@ def init():
     global allocBuildServers
     global jenkinsRepoUrl
     global localTarRepoLocation
-
+    global gsaConnected
 
 
     # need to use the token to be able to perform more requests per hour
@@ -135,3 +135,4 @@ def init():
 
     jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
     localTarRepoLocation = '/var/opt/autoport/'
+    gsaConnected = False

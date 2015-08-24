@@ -30,16 +30,19 @@ from batch import Batch
 from random import randint
 from github import GithubException
 from distutils.version import LooseVersion
+from github import Github
+from cache import Cache
+from requests.exceptions import MissingSchema
 
 app = Flask(__name__)
 
 maxResults = 10
 resParser = ResultParser()
-
-catalog = Catalog(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
+# Initialize the Catalog and Batch object.
+catalog = Catalog()
+batch = Batch()
 sharedData = SharedData(urlparse(globals.jenkinsUrl).hostname)
 chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
-batch = Batch()
 
 
 
@@ -69,7 +72,7 @@ def init():
     return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, localPathForTestResults=globals.localPathForTestResults,
                         pathForTestResults=globals.pathForTestResults, localPathForBatchFiles=globals.localPathForBatchFiles,
                         pathForBatchFiles=globals.pathForBatchFiles, githubToken=globals.githubToken, configUsername=globals.configUsername,
-                        configPassword=globals.configPassword, useTextAnalytics=globals.useTextAnalytics)
+                        configPassword=globals.configPassword, useTextAnalytics=globals.useTextAnalytics, gsaConnected=globals.gsaConnected)
 
 #TODO - add error checking
 @app.route("/getJenkinsNodes", methods=["POST"])
@@ -141,6 +144,12 @@ def getJenkinsNodeDetails():
 # Settings function
 @app.route("/settings", methods=['POST'])
 def settings():
+
+    jenkinsUrl = globals.jenkinsUrl
+    hostname = globals.hostname
+    configUsername = globals.configUsername
+    configPassword = globals.configPassword
+
     try:
         globals.jenkinsUrl = request.form["url"]
     except ValueError:
@@ -167,10 +176,9 @@ def settings():
         return json.jsonify(status="failure", error="bad batch_files path"), 400
 
     try:
-        # change githubToken from default, doesn't actually work right now
         globals.githubToken = request.form["github"]
-        # globals.github = Github(githubToken)
-        # globals.cache = Cache(github)
+        globals.github = Github(globals.githubToken)
+        globals.cache = Cache(globals.github)
     except ValueError:
         return json.jsonify(status="failure", error="bad github token"), 400
 
@@ -186,16 +194,29 @@ def settings():
 
     try:
         globals.useTextAnalytics = request.form["useTextAnalytics"] == 'true'
-        # print globals.useTextAnalytics
     except ValueError:
         return json.jsonify(status="failure", error="bad Value for useTextAnalytics"), 400
 
-    return json.jsonify(status="ok")
+    try:
+        if(jenkinsUrl != globals.jenkinsUrl or hostname != globals.hostname or configUsername != globals.configUsername or\
+           configPassword != globals.configPassword):
+            catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname, globals.port, globals.configUsername,\
+                         globals.configPassword, globals.configJenkinsUsername, globals.configJenkinsKey,\
+                         globals.pathForTestResults, globals.localPathForTestResults)
+            batch.connect()
+    except Exception as e :
+        batch.disconnect()
+        return json.jsonify(status="failure", gsaConnected=globals.gsaConnected, error=str(e))
+
+    return json.jsonify(status="ok", gsaConnected=globals.gsaConnected)
 
 @app.route("/progress")
 def progress():
-    results = determineProgress()
-    return json.jsonify(status="ok", results=results)
+    try:
+        results = determineProgress()
+        return json.jsonify(status="ok", results=results)
+    except Exception as e:
+        return json.jsonify(status="failure", error=str(e)), 401
 
 # Search - return a JSON file with search results or the matched
 # repo if there's a solid candidate
@@ -237,12 +258,15 @@ def search():
 
     try:
         repos = globals.github.search_repositories(query, **searchArgs)
-    except IOError as e:
+    except Exception as e:
         return json.jsonify(status="failure", error="Could not contact github: " + str(e)), 503
 
-    if not repos or repos.totalCount == 0:
-        # TODO - return no results page
-        return json.jsonify(status="failure", error="no results"), 418
+    try:
+        if not repos or repos.totalCount == 0:
+            # TODO - return no results page
+            return json.jsonify(status="failure", error="no results"), 418
+    except Exception as e:
+        return json.jsonify(status="failure", error="Could not contact github!")
 
     if repos.totalCount <= maxResults:
         numResults = repos.totalCount
@@ -720,7 +744,6 @@ def createJob(i_id = None,
         selectedBuild = request.form["selectedBuild"]
         if selectedBuild.strip().startswith('[TextAnalytics]'): #Remove the [TextAnalytics] tag from build command
             selectedBuild = selectedBuild[15:]
-            
     except KeyError:
         if i_selectedBuild != None:
             selectedBuild = i_selectedBuild
@@ -992,10 +1015,14 @@ def removeBatchFile():
 # List available batch files
 @app.route("/listBatchFiles/<repositoryType>")
 def listBatchFiles(repositoryType):
-    filt = request.args.get("filter", "")
-    if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
-        return json.jsonify(status="failure", error="Invalid repository type"), 400
-    return json.jsonify(status="ok", results=batch.listBatchFiles(repositoryType, filt.lower()))
+    try:
+        filt = request.args.get("filter", "")
+        if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
+            return json.jsonify(status="failure", error="Invalid repository type"), 400
+        return json.jsonify(status="ok", results=batch.listBatchFiles(repositoryType, filt.lower()))
+    except Exception as e:
+        print e
+        return json.jsonify(status="failure", error=str(e)), 401
 
 # List information about packages on a build server by creating and triggering a Jenkins job on it
 @app.route("/listPackageForSingleSlave")
@@ -1014,7 +1041,11 @@ def listPackageForSingleSlave():
         configXmlFilePath = "./config_template_search_packages_single_slave.xml"
         jobNameSuffix = "listAllPackagesSingleSlave"
 
-    results = createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, configXmlFilePath, jobNameSuffix)
+    try:
+        results = createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, \
+                                                    configXmlFilePath, jobNameSuffix)
+    except Exception as e:
+        return json.jsonify(status="failure", error=str(e)), 401
 
     try :
         return json.jsonify(status="ok", packageData=results['packageData'])
@@ -1060,17 +1091,20 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
         'no': 'pass',
     }
 
-    r = requests.post(
-        globals.jenkinsUrl + "/createItem",
-        headers = {
-            'Content-Type': 'application/xml'
-        },
-        params = {
-            'name': jobName
-        },
-        data = configXml,
-        proxies = NO_PROXY
-    )
+    try:
+        r = requests.post(
+            globals.jenkinsUrl + "/createItem",
+            headers = {
+                'Content-Type': 'application/xml'
+            },
+            params = {
+                'name': jobName
+            },
+            data = configXml,
+            proxies = NO_PROXY
+        )
+    except MissingSchema as e:
+        assert(False), "Please provide valid jenkins url in settings menu!"
 
     if r.status_code == 200:
         # Success, send the jenkins job and start it right away.
@@ -1230,17 +1264,20 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer):
         'no': 'pass',
     }
 
-    r = requests.post(
-        globals.jenkinsUrl + "/createItem",
-        headers = {
-            'Content-Type': 'application/xml'
-        },
-        params = {
-            'name': jobName
-        },
-        data = configXml,
-        proxies = NO_PROXY
-    )
+    try:
+        r = requests.post(
+            globals.jenkinsUrl + "/createItem",
+            headers = {
+                'Content-Type': 'application/xml'
+            },
+            params = {
+                'name': jobName
+            },
+            data = configXml,
+            proxies = NO_PROXY
+        )
+    except MissingSchema as e:
+        assert(False), "Please provide valid jenkins url in settings menu!"
 
     if r.status_code == 200:
         # Success, send the jenkins job and start it right away.
@@ -1520,10 +1557,14 @@ def listManagedPackages():
     for node in nodes:
         i = globals.nodeLabels.index(node)
 
-        if  package == "":
-            results = listPackageForSingleSlave_common(packageNames, node)
-        else:
-            results = createJob_SingleSlavePanel_Common(node, package, configXmlFilePath, jobNameSuffix)
+        try:
+            if  package == "":
+                results = listPackageForSingleSlave_common(packageNames, node)
+            else:
+                results = createJob_SingleSlavePanel_Common(node, package, configXmlFilePath, jobNameSuffix)
+        except Exception as e:
+            return json.jsonify(status="failure", error=str(e) ), 401
+
         try:
             for pkg in results['packageData']:
                 pkg['nodeLabel'] = node
@@ -1765,10 +1806,13 @@ def parseBatchFile():
 #TODO - list builds as failed and disable test detail
 @app.route("/listTestResults/<repositoryType>")
 def listTestResults(repositoryType):
-    filt = request.args.get("filter", "")
-    if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
-        return json.jsonify(status="failure", error="Invalid repository type"), 400
-    return json.jsonify(status="ok", results=catalog.listJobResults(repositoryType, filt.lower()))
+    try:
+        filt = request.args.get("filter", "")
+        if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
+            return json.jsonify(status="failure", error="Invalid repository type"), 400
+        return json.jsonify(status="ok", results=catalog.listJobResults(repositoryType, filt.lower()))
+    except Exception as e:
+        return json.jsonify(status="failure", error=str(e)), 401
 
 # Get the jenkins build output
 # /getBuildResults?left=x&right=y
@@ -2053,6 +2097,9 @@ def autoportInitialisation():
     # should be performed here.  On error, messages are printed to the console
     # and assert(False) is invoked to provide the debug context.
     sharedData.uploadChefData()
+    if globals.hostname and globals.configUsername and globals.configPassword :
+        catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
+        batch.connect()
 
 if __name__ == "__main__":
 

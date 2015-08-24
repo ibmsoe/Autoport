@@ -9,7 +9,8 @@ from time import localtime, asctime
 from flask import json
 
 class Batch:
-    def __init__(self):
+    # Connecting to SSHClient using GSA credentials
+    def connect(self):
         try:
             self.ssh_client = paramiko.SSHClient()
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -22,10 +23,17 @@ class Batch:
 
     def listBatchFiles(self, repoType, filt):
         res = []
-        if repoType == "gsa" or repoType == "all":
-            res = self.listGSABatchFiles(filt)
+        try:
+            if repoType == "gsa" or repoType == "all":
+                res = self.listGSABatchFiles(filt)
+        except Exception as e:
+            if repoType == "gsa":
+               raise
         if repoType == "local" or repoType == "all":
             res = res + self.listLocalBatchFiles(filt)
+        #except Exception as e:
+        #    print "listbatchfiles", str(e)
+        #    assert(False), str(e)
         return res
 
     def listLocalBatchFiles(self, filt):
@@ -35,9 +43,10 @@ class Batch:
                 for filename in sorted(filenames):
                     if filt in filename.lower() or filt == "":
                         if filename != ".gitignore":
-                            filteredList.append(self.parseBatchFileList(globals.localPathForBatchFiles + filename, "local"))
+                            filteredList.append(self.parseBatchFileList(globals.localPathForBatchFiles \
+                                               + filename, "local"))
         except IOError:
-            pass
+            assert(False), "Please provide valid local batch files path in settings menu!"
         return filteredList
 
     def listGSABatchFiles(self, filt):
@@ -50,8 +59,10 @@ class Batch:
                     putdir = tempfile.mkdtemp(prefix="autoport_")
                     self.ftp_client.get(filename, putdir + "/" + filename)
                     filteredList.append(self.parseBatchFileList(putdir + "/" + filename, "gsa"))
-        except IOError:
-            pass
+        except IOError as e:
+            assert(False), "Please provide valid GSA credentials or check archive batch files path in setting menu!"
+        except AttributeError as e:
+            assert(False), "Please provide valid GSA credentials or check archive batch files path in setting menu!"
         return filteredList
 
     def removeBatchFile(self, filename, location):
@@ -207,3 +218,10 @@ class Batch:
                 package['build']['artifacts'] = ""
 
         return { "status":"ok", "fileBuf":fileBuf }
+
+    # Closing the SSHClient
+    def disconnect(self):
+        try:
+            self.ftp_client.close()
+        except Exception as e:
+            print str(e)
