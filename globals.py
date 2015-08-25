@@ -64,7 +64,7 @@ def init():
     threadPoolSize = int(configOptions['threadpoolsize'])
     useTextAnalytics = configOptions['usetextanalytics'] == 'True'
 
-    if 'port' not in options:
+    if not configOptions.has_key('port'):
         port = 22
     else:
         port = int(configOptions['port'])
