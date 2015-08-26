@@ -9,7 +9,7 @@ import globals
 resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
 class Catalog:
-    def __init__(self, archiveHost, jenkinsHost,
+    def connect(self, archiveHost, jenkinsHost,
             archivePort=globals.port,
             archiveUser=globals.configUsername,
             archivePassword=globals.configPassword,
@@ -31,26 +31,37 @@ class Catalog:
         try:
             self.__archiveSshClient = paramiko.SSHClient()
             self.__archiveSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.__archiveSshClient.connect(self.__archiveHost, username=self.__archiveUser, password=self.__archivePassword, port=self.__archivePort)
+            self.__archiveSshClient.connect(self.__archiveHost, username=self.__archiveUser,\
+                                            password=self.__archivePassword,port=self.__archivePort)
             self.__archiveFtpClient = self.__archiveSshClient.open_sftp()
 
             self.__jenkinsSshClient = paramiko.SSHClient()
             self.__jenkinsSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.__jenkinsSshClient.connect(self.__jenkinsHost, username=self.__jenkinsUser, key_filename=self.__jenkinsKey)
+            self.__jenkinsSshClient.connect(self.__jenkinsHost, username=self.__jenkinsUser, \
+                                            key_filename=self.__jenkinsKey)
             self.__jenkinsFtpClient = self.__jenkinsSshClient.open_sftp()
+        # Error handling
+        except paramiko.AuthenticationException as ae:
+            globals.gsaConnected = False
+            assert(False), "Please provide valid GSA credentials in settings menu!"
+        except paramiko.SSHException as se:
+            assert(False), "Please provide valid jenkins url in settings menu!"
         except IOError as e:
-            print str(e)
-            assert(False)
+            assert(False), e
+        globals.gsaConnected = True
 
     def listJobResults(self, repoType, filt):
         results = []
 
         jobs = []
-        if repoType == "gsa" or repoType == "all":
-            jobs = self.listGSAJobResults(filt)
+        try:
+            if repoType == "gsa" or repoType == "all":
+                jobs = self.listGSAJobResults(filt)
 
-        if repoType == "local" or repoType == "all":
-            jobs = jobs + self.listLocalJobResults(filt)
+            if repoType == "local" or repoType == "all":
+                jobs = jobs + self.listLocalJobResults(filt)
+        except Exception as e:
+            assert(False), e
 
         for jobDesc in jobs:
              job = jobDesc[0]
@@ -92,7 +103,9 @@ class Catalog:
                 if filt in item.lower() or filt == "":
                     filteredList.append([item, "local"])
         except IOError:
-            pass
+            assert(False), "Please provide valid local test results path in settings menu!"
+        except OSError as e:
+            assert(False), "Please provide valid local test results path in settings menu!"
         return filteredList
 
     def listGSAJobResults(self, filt):
@@ -103,8 +116,11 @@ class Catalog:
             for item in fullList:
                 if filt in item.lower() or filt == "":
                     filteredList.append([item, "gsa"])
-        except IOError:
-            pass
+        except IOError as e:
+            print str(e)
+            assert(False), "Please provide valid GSA credential or check archive test results path in settings menu!"
+        except AttributeError as e:
+            assert(False), "Please provide valid archive test results path in settings menu!"
         return filteredList
 
     def getResults(self, build, repository):

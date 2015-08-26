@@ -112,8 +112,9 @@ class SharedData:
             self.__jenkinsFtpClient = self.__jenkinsSshClient.open_sftp()
             self.__jenkinsTransportSession = self.__jenkinsSshClient.get_transport()
         except IOError as e:
-            print str(e)
-            assert(False)
+            print "Failed here ", str(e)
+            print "====================================================="
+            #assert(False)
 
     def getLocalData(self, name):
         localPath = self.__localDataDir + name

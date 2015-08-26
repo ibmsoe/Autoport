@@ -61,6 +61,7 @@ var globalState = {
         document.getElementById('useTextAnalytics').value = globalState.useTextAnalytics;
     },
     updateParameters: function () {
+        jenkinsState.loadingState.settingsLoading = true;
         jenkinsUrl = document.getElementById('url').value;
         localPathForTestResults = document.getElementById('ltest_results').value;
         pathForTestResults = document.getElementById('gtest_results').value;
@@ -640,6 +641,7 @@ var jenkinsState = {
         packageActionLoading: false,
         managedPackageListLoading: false,
         managedPackageActionLoading: false,
+        settingsLoading: false,
     },
     singleSlavePackageTableReady: false,    // Draw package table for single slave if true
     packageListSingleSlave: [],             // Package list retrieved for a Single Slave
@@ -1028,14 +1030,18 @@ $('#packageFile').change(function () {
 });
 
 function showAlert(message, data) {
-    var text = message;
+    var text = "";
+    $("#apErrorDialogText").hide();
     if (typeof data !== "undefined") {
         text += "<br/>" + (data.responseJSON !== undefined ?
                             (data.responseJSON.error !== undefined ?
                               data.responseJSON.error :
                               data.error) :
                             data.error);
+        $("#apErrorDialogText").show();
     }
+    $('#errorAlert').css("z-index","9999");
+    $('#errorAlert').find('.modal-header').html(message);
     $("#apErrorDialogText").html(text);
     $("#errorAlert").modal();
 }
@@ -1607,11 +1613,32 @@ function initCallback(data) {
     globalState.githubToken = data.githubToken;
     globalState.configUsername = data.configUsername;
     globalState.configPassword = data.configPassword;
+    if(data.gsaConnected !== undefined) {
+       if(data.gsaConnected) {
+           $('#gsaConnectionStatus').text("GSA connected");
+           $('#gsaConnectionStatus').css("color","green");
+       }else {
+           $('#gsaConnectionStatus').text("GSA not connected");
+           $('#gsaConnectionStatus').css("color","red");
+       }
+    }
 }
 
 function settingsCallback(data) {
+    jenkinsState.loadingState.settingsLoading = false;
     if (data.status != "ok") {
         showAlert("Bad response from /settings!", data);
+    }else {
+        showAlert("Updated successfully");
+    }
+    if(data.gsaConnected !== undefined) {
+       if(data.gsaConnected) {
+           $('#gsaConnectionStatus').text("GSA connected");
+           $('#gsaConnectionStatus').css("color","green");
+       }else {
+           $('#gsaConnectionStatus').text("GSA not connected");
+           $('#gsaConnectionStatus').css("color","red");
+       }
     }
 }
 

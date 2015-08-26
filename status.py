@@ -6,9 +6,10 @@ import globals
 # Progress Bar Report
 def determineProgress ():
     url = str(globals.jenkinsUrl)
-
-    xml_input_no_filter = ast.literal_eval(urllib.urlopen(url + "/api/python?depth=1&tree=jobs[displayName,lastBuild[result]]").read())
-
+    try:
+        xml_input_no_filter = ast.literal_eval(urllib.urlopen(url + "/api/python?depth=1&tree=jobs[displayName,lastBuild[result]]").read())
+    except IOError as e:
+        assert(False), "Please provide valid jenkins url"
     all_jobs = xml_input_no_filter['jobs']
 
     success = 0

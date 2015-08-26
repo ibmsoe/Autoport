@@ -12,7 +12,7 @@
           </div>
           <div>
             <label class="test_results">Local Test Results Path</label>
-            <span><input type="text" id="ltest_results" 
+            <span><input type="text" id="ltest_results"
               rv-value="globalState.localPathForTestResults"></span>
           </div>
           <div>
@@ -34,11 +34,11 @@
             <label class="github">Github Token</label>
             <span><input type="text" id="github" rv-value="globalState.githubToken"></span>
           </div>
-          <div> 
+          <div>
             <label class="github">GSA Username</label>
             <span><input type="text" id="username" rv-value="globalState.configUsername"></span>
           </div>
-          <div> 
+          <div>
             <label class="github">GSA Password</label>
             <span><input type="password" id="password" rv-value="globalState.configPassword"></span>
           </div>
@@ -49,12 +49,15 @@
 
         </div>
       </div>
+      {% include "header/settings-loading.html" %}
       <div class="modal-footer">
+        <span id="gsaConnectionStatus" class="pull-left">
+        </span>
         <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
         <button rv-on-click="globalState.reset" type="button"
           class="btn btn-primary">Reset to Default</button>
         <button rv-on-click="globalState.updateParameters" type="button"
-          class="btn btn-primary" data-dismiss="modal">Save Changes</button>
+          class="btn btn-primary">Save Changes</button>
       </div>
     </div>
   </div>
