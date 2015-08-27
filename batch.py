@@ -17,23 +17,24 @@ class Batch:
             self.ssh_client.connect(globals.hostname, username=globals.configUsername, \
                 password=globals.configPassword, port=globals.port)
             self.ftp_client = self.ssh_client.open_sftp()
+        except paramiko.AuthenticationException:
+            pass                  # error message already displayed in catalog.py
+        except paramiko.SSHException:
+            pass                  # error message already displayed in catalog.py
         except IOError as e:
             print str(e)
-            assert(False)
 
     def listBatchFiles(self, repoType, filt):
         res = []
         try:
+            if repoType == "local" or repoType == "all":
+                res = self.listLocalBatchFiles(filt)
+
             if repoType == "gsa" or repoType == "all":
-                res = self.listGSABatchFiles(filt)
+                res = res + self.listGSABatchFiles(filt)
         except Exception as e:
-            if repoType == "gsa":
-               raise
-        if repoType == "local" or repoType == "all":
-            res = res + self.listLocalBatchFiles(filt)
-        #except Exception as e:
-        #    print "listbatchfiles", str(e)
-        #    assert(False), str(e)
+            assert(False), str(e)
+
         return res
 
     def listLocalBatchFiles(self, filt):
@@ -60,9 +61,9 @@ class Batch:
                     self.ftp_client.get(filename, putdir + "/" + filename)
                     filteredList.append(self.parseBatchFileList(putdir + "/" + filename, "gsa"))
         except IOError as e:
-            assert(False), "Please provide valid GSA credentials or check archive batch files path in setting menu!"
-        except AttributeError as e:
-            assert(False), "Please provide valid GSA credentials or check archive batch files path in setting menu!"
+            assert(False), str(e)
+        except AttributeError:
+            assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         return filteredList
 
     def removeBatchFile(self, filename, location):
@@ -92,6 +93,8 @@ class Batch:
         try:
             self.ftp_client.chdir(globals.pathForBatchFiles)
             self.ftp_client.put(filename, ntpath.basename(filename))
+        except AttributeError as e:
+            return {"error": "Connection error to archive storage.  Use settings menu to configure!" }
         except:
             return {"error": "Could not archive batch file " + filename }
 

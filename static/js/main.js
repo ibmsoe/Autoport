@@ -1473,28 +1473,33 @@ function processTestHistory(data) {
 }
 
 function archiveCallback(data) {
-    var errors = data.errors;
-    var alreadyThere = data.alreadyThere;
-    var text = "The selected results have been archived.";
-    if (alreadyThere.length !== 0) {
-        text += "<br/>The following results were already found in the archive:<br/><ul>";
-        for (proj in alreadyThere) {
-            text += "<li>" + alreadyThere[proj] + "</li>";
+    if (data.status === "ok" ) {
+        var errors = data.error;
+        var alreadyThere = data.alreadyThere;
+        var text = "The selected results have been archived.";
+        if (alreadyThere.length !== 0) {
+            text += "<br/>The following results were already found in the archive:<br/><ul>";
+            for (proj in alreadyThere) {
+                text += "<li>" + alreadyThere[proj] + "</li>";
+            }
+            text += "</ul>";
         }
-        text += "</ul>";
-    }
-    if (errors.length !== 0) {
-        text = "The following projects could not be saved:<br/><ul>";
-        for (error in errors) {
-            text += "<li>" + errors[error] + "</li>";
+        if (errors.length !== 0) {
+            text = "The following projects could not be saved:<br/><ul>";
+            for (error in errors) {
+                text += "<li>" + errors[error] + "</li>";
+            }
+            text += "</ul>";
         }
-        text += "</ul>";
+        // refetch the list as previously checked
+        reportState.listLocalProjects();
+        handleProjectListBtns();
+        $("#archiveCallbackText").html(text);
+        $("#archiveCallbackAlert").modal();
     }
-    // refetch the list as previously checked
-    reportState.listLocalProjects();
-    handleProjectListBtns();
-    $("#archiveCallbackText").html(text);
-    $("#archiveCallbackAlert").modal();
+    else {
+        showAlert("Archive test results failed!", data);
+    }
 }
 
 function getSelectedValues(select) {

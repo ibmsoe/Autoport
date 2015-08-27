@@ -17,7 +17,6 @@ class Catalog:
             jenkinsKey=globals.configJenkinsKey,
             copyPath=globals.pathForTestResults,
             localPath=globals.localPathForTestResults):
-        #assert(archiveHost != None and archiveUser != "" and archivePassword != "")
         self.__archiveHost = archiveHost
         self.__archivePort = archivePort
         self.__archiveUser = archiveUser
@@ -28,13 +27,8 @@ class Catalog:
         self.__copyPath = copyPath
         self.__localPath = localPath
         self.__tmpdirs = []
-        try:
-            self.__archiveSshClient = paramiko.SSHClient()
-            self.__archiveSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.__archiveSshClient.connect(self.__archiveHost, username=self.__archiveUser,\
-                                            password=self.__archivePassword,port=self.__archivePort)
-            self.__archiveFtpClient = self.__archiveSshClient.open_sftp()
 
+        try:
             self.__jenkinsSshClient = paramiko.SSHClient()
             self.__jenkinsSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.__jenkinsSshClient.connect(self.__jenkinsHost, username=self.__jenkinsUser, \
@@ -42,26 +36,40 @@ class Catalog:
             self.__jenkinsFtpClient = self.__jenkinsSshClient.open_sftp()
         # Error handling
         except paramiko.AuthenticationException as ae:
-            globals.gsaConnected = False
-            assert(False), "Please provide valid GSA credentials in settings menu!"
+            assert(False), "Please provide valid Jenkins credentials in settings menu!"
         except paramiko.SSHException as se:
             assert(False), "Please provide valid jenkins url in settings menu!"
         except IOError as e:
-            assert(False), e
-        globals.gsaConnected = True
+            assert(False), str(e)
+
+        try:
+            globals.gsaConnected = False
+            self.__archiveSshClient = paramiko.SSHClient()
+            self.__archiveSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            self.__archiveSshClient.connect(self.__archiveHost, username=self.__archiveUser,\
+                                            password=self.__archivePassword,port=self.__archivePort)
+            self.__archiveFtpClient = self.__archiveSshClient.open_sftp()
+            globals.gsaConnected = True
+        # Error handling
+        except paramiko.AuthenticationException as ae:
+            print "Connection error to archive.  Use settings menu to specify your user credentials!"
+        except paramiko.SSHException as se:
+            print "Connection error to archive.  Use settings menu to specify the hostname!"
+        except IOError as e:
+            assert(False), str(e)
 
     def listJobResults(self, repoType, filt):
         results = []
 
         jobs = []
         try:
-            if repoType == "gsa" or repoType == "all":
-                jobs = self.listGSAJobResults(filt)
-
             if repoType == "local" or repoType == "all":
-                jobs = jobs + self.listLocalJobResults(filt)
+                jobs = self.listLocalJobResults(filt)
+
+            if repoType == "gsa" or repoType == "all":
+                jobs = jobs + self.listGSAJobResults(filt)
         except Exception as e:
-            assert(False), e
+            assert(False), str(e)
 
         for jobDesc in jobs:
              job = jobDesc[0]
@@ -118,9 +126,9 @@ class Catalog:
                     filteredList.append([item, "gsa"])
         except IOError as e:
             print str(e)
-            assert(False), "Please provide valid GSA credential or check archive test results path in settings menu!"
+            assert(False), str(e)
         except AttributeError as e:
-            assert(False), "Please provide valid archive test results path in settings menu!"
+            assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         return filteredList
 
     def getResults(self, build, repository):
@@ -161,11 +169,14 @@ class Catalog:
                     pass
             self.__tmpdirs.append(putdir)
             return putdir
+        except AttributeError:
+            assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         except IOError as e:
             print "Exception: ", str(e)
             return None
 
     def archiveResults(self, builds):
+        status = "ok"
         errors = []
         alreadyThere = []
         copied = []
@@ -177,8 +188,13 @@ class Catalog:
                 alreadyThere.append(build)
                 copied.append(build)
                 continue
+            except AttributeError:
+                status = "failure"
+                errors = "Connection error to archive storage.  Use settings menu to configure!"
+                return status, errors, alreadyThere
             except IOError:
                 pass # Directory's not there, try to add it
+
             try:
                 tmpDir = self.getLocalResults(build)
                 if tmpDir == None:
@@ -220,7 +236,7 @@ class Catalog:
             except IOError as e:
                 print "Can't remove directory", remoteBuildPath,": ", str(e)
 
-        return errors, alreadyThere
+        return status, errors, alreadyThere
 
     def cleanTmp(self):
         for tmpdir in self.__tmpdirs:
@@ -229,10 +245,12 @@ class Catalog:
         self.__tmpdirs = []
 
     def close(self):
-        self.__archiveFtpClient.close()
-        self.__jenkinsFtpClient.close()
-        self.cleanTmp()
+        try:
+            self.cleanTmp()
+            self.__archiveFtpClient.close()
+            self.__jenkinsFtpClient.close()
+        except AttributeError:
+            pass
 
     def __del__(self):
         self.close()
-

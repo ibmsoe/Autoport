@@ -111,10 +111,12 @@ class SharedData:
             self.__jenkinsSshClient.connect(self.__jenkinsHost, username=self.__jenkinsUser, key_filename=self.__jenkinsKey)
             self.__jenkinsFtpClient = self.__jenkinsSshClient.open_sftp()
             self.__jenkinsTransportSession = self.__jenkinsSshClient.get_transport()
+        except paramiko.AuthenticationException as ae:
+            assert(False), "Please provide valid Jenkins credentials in settings menu!"
+        except paramiko.SSHException as se:
+            assert(False), "Please provide valid jenkins url in settings menu!"
         except IOError as e:
-            print "Failed here ", str(e)
-            print "====================================================="
-            #assert(False)
+            assert(False), e
 
     def getLocalData(self, name):
         localPath = self.__localDataDir + name

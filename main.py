@@ -69,10 +69,16 @@ def main():
 
 @app.route("/init", methods=['POST'])
 def init():
-    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl, localPathForTestResults=globals.localPathForTestResults,
-                        pathForTestResults=globals.pathForTestResults, localPathForBatchFiles=globals.localPathForBatchFiles,
-                        pathForBatchFiles=globals.pathForBatchFiles, githubToken=globals.githubToken, configUsername=globals.configUsername,
-                        configPassword=globals.configPassword, useTextAnalytics=globals.useTextAnalytics, gsaConnected=globals.gsaConnected)
+    return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl,
+                        localPathForTestResults=globals.localPathForTestResults,
+                        pathForTestResults=globals.pathForTestResults,
+                        localPathForBatchFiles=globals.localPathForBatchFiles,
+                        pathForBatchFiles=globals.pathForBatchFiles,
+                        githubToken=globals.githubToken,
+                        configUsername=globals.configUsername,
+                        configPassword=globals.configPassword,
+                        useTextAnalytics=globals.useTextAnalytics,
+                        gsaConnected=globals.gsaConnected)
 
 #TODO - add error checking
 @app.route("/getJenkinsNodes", methods=["POST"])
@@ -145,6 +151,7 @@ def getJenkinsNodeDetails():
 @app.route("/settings", methods=['POST'])
 def settings():
 
+    githubToken = globals.githubToken
     jenkinsUrl = globals.jenkinsUrl
     hostname = globals.hostname
     configUsername = globals.configUsername
@@ -177,8 +184,9 @@ def settings():
 
     try:
         globals.githubToken = request.form["github"]
-        globals.github = Github(globals.githubToken)
-        globals.cache = Cache(globals.github)
+        if githubToken != globals.githubToken:
+            globals.github = Github(globals.githubToken)
+            globals.cache = Cache(globals.github)
     except ValueError:
         return json.jsonify(status="failure", error="bad github token"), 400
 
@@ -198,11 +206,12 @@ def settings():
         return json.jsonify(status="failure", error="bad Value for useTextAnalytics"), 400
 
     try:
-        if(jenkinsUrl != globals.jenkinsUrl or hostname != globals.hostname or configUsername != globals.configUsername or\
-           configPassword != globals.configPassword):
-            catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname, globals.port, globals.configUsername,\
-                         globals.configPassword, globals.configJenkinsUsername, globals.configJenkinsKey,\
-                         globals.pathForTestResults, globals.localPathForTestResults)
+        if (jenkinsUrl != globals.jenkinsUrl or hostname != globals.hostname or \
+            configUsername != globals.configUsername or configPassword != globals.configPassword):
+            catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname,
+                            globals.port, globals.configUsername, globals.configPassword,
+                            globals.configJenkinsUsername, globals.configJenkinsKey,
+                            globals.pathForTestResults, globals.localPathForTestResults)
             batch.connect()
     except Exception as e :
         batch.disconnect()
@@ -527,7 +536,7 @@ def uploadBatchFile():
     # We don't want to automatically be uploading to remote location, this code needs
     # to be moved into the batch table as an action for each individual batch file
     '''
-    # Copy batch file to a predetermined spot in the GSA
+    # Copy batch file to a predetermined spot in a shared file system or external object storage
     # This portion of code requires paramiko installed.
     port = 22
     localpath = os.getcwd() + "/data/batch_files/" + name
@@ -2048,8 +2057,8 @@ def archiveBatchFile():
 @app.route("/archiveProjects", methods=["POST"])
 def archiveProjects():
     projects = request.json['projects']
-    errors, alreadyThere = catalog.archiveResults(projects)
-    return json.jsonify(status="ok", errors=errors, alreadyThere=alreadyThere)
+    status, errors, alreadyThere = catalog.archiveResults(projects)
+    return json.jsonify(status=status, error=errors, alreadyThere=alreadyThere)
 
 # Returns a comma separated list of package names from the Managed List json file
 def getPackagesCSVFromManagedList(slaveNodeDistro, mljson):
