@@ -38,9 +38,10 @@ class Catalog:
         except paramiko.AuthenticationException as ae:
             assert(False), "Please provide valid Jenkins credentials in settings menu!"
         except paramiko.SSHException as se:
-            assert(False), "Please provide valid jenkins url in settings menu!"
+            assert(False), "SSH connection error to Jenkins.  You may need to authenticate.  Check networking!"
         except IOError as e:
-            assert(False), str(e)
+            msg = str(e) + ". Please ensure that the Jenkins URL is correct in the settings menu!"
+            assert(False), msg
 
         try:
             globals.gsaConnected = False
@@ -52,11 +53,12 @@ class Catalog:
             globals.gsaConnected = True
         # Error handling
         except paramiko.AuthenticationException as ae:
-            print "Connection error to archive.  Use settings menu to specify your user credentials!"
+            print "Connection error to archive storage.  Use settings menu to specify your user credentials!"
         except paramiko.SSHException as se:
-            print "Connection error to archive.  Use settings menu to specify the hostname!"
+            print "SSH connection error to archive storage.  You may need to authenticate.  Check networking!"
         except IOError as e:
-            assert(False), str(e)
+            msg = str(e) + ". Please ensure that the archive hostname is correct in the settings menu!"
+            assert(False), msg
 
     def listJobResults(self, repoType, filt):
         results = []

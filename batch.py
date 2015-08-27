@@ -10,12 +10,15 @@ from flask import json
 
 class Batch:
     # Connecting to SSHClient using GSA credentials
-    def connect(self):
+    def connect(self, archiveHost=globals.hostname,
+                archivePort=globals.port,
+                archiveUser=globals.configUsername,
+                archivePassword=globals.configPassword):
         try:
             self.ssh_client = paramiko.SSHClient()
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.ssh_client.connect(globals.hostname, username=globals.configUsername, \
-                password=globals.configPassword, port=globals.port)
+            self.ssh_client.connect(archiveHost, username=archiveUser, \
+                password=archivePassword, port=archivePort)
             self.ftp_client = self.ssh_client.open_sftp()
         except paramiko.AuthenticationException:
             pass                  # error message already displayed in catalog.py

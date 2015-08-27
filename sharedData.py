@@ -114,9 +114,10 @@ class SharedData:
         except paramiko.AuthenticationException as ae:
             assert(False), "Please provide valid Jenkins credentials in settings menu!"
         except paramiko.SSHException as se:
-            assert(False), "Please provide valid jenkins url in settings menu!"
+            assert(False), "SSH connection error to Jenkins.  You may need to authenticate.  Check networking!"
         except IOError as e:
-            assert(False), e
+            msg = str(e) + ". Please ensure that the Jenkins URL is correct!"
+            assert(False), msg
 
     def getLocalData(self, name):
         localPath = self.__localDataDir + name
