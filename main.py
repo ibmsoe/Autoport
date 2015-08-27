@@ -609,8 +609,6 @@ def createJob_common(time, uid, id, tag, node, javaType,
     # In addition to whatever other environmental variables I need to inject
     # I should add whether to pick IBM Java or Open JDK
     xml_env_command.text += javaType + "\n"
-    path_env = "PATH=" + globals.mavenPath + ":$PATH\n"
-    xml_env_command.text += path_env
     xml_artifacts.text = artifacts
 
     # Job metadata as passed to jenkins

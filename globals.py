@@ -29,7 +29,6 @@ def init():
 
     # globals based on config file
     global jenkinsUrl
-    global mavenPath
     global githubToken
     global hostname
     global port
@@ -48,7 +47,6 @@ def init():
 
     # user configuration globals that are supported by the user interface
     jenkinsUrl = configOptions['jenkinsurl']
-    mavenPath = configOptions['mavenpath']
     githubToken = configOptions['githubtoken']
     hostname = configOptions['hostname']
     configUsername = configOptions['username']
