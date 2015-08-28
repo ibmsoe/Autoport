@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "1",
+    "sequence": "2",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -9,13 +9,181 @@
             "distroVersion": "14.04",
             "autoportPackages": [
                 {
+                    "name": "ant"
+                },
+                {
+                    "name": "antlr"
+                },
+                {
+                    "name": "autoconf"
+                },
+                {
+                    "name": "autoconf-archive"
+                },
+                {
+                    "name": "automake"
+                },
+                {
+                    "name": "bison"
+                },
+                {
+                    "name": "build-essential"
+                },
+                {
+                    "name": "bundler"
+                },
+                {
+                    "name": "bzip2"
+                },
+                {
+                    "name": "clang-3.6"
+                },
+                {
+                    "name": "cmake"
+                },
+                {
+                    "name": "flex"
+                },
+                {
                     "name": "git"
+                },
+                {
+                    "name": "gradle"
+                },
+                {
+                    "name": "gyp"
                 },
                 {
                     "name": "g++"
                 },
                 {
+                    "name": "libantlr-dev"
+                },
+                {
+                    "name": "libatlas-base-dev"
+                },
+                {
+                    "name": "libblas-dev"
+                },
+                {
+                    "name": "libboost-all-dev"
+                },
+                {
+                    "name": "libcurl4-gnutls-dev"
+                },
+                {
+                    "name": "libdouble-conversion-dev"
+                },
+                {
+                    "name": "libcap-dev"
+                },
+                {
+                    "name": "libdb-dev"
+                },
+                {
+                    "name": "libdb-java-dev"
+                },
+                {
+                    "name": "libdb-sql-dev"
+                },
+                {
+                    "name": "libdb++-dev"
+                },
+                {
+                    "name": "libevent-dev"
+                },
+                {
+                    "name": "libfile-remove-perl"
+                },
+                {
+                    "name": "libgflags-dev"
+                },
+                {
+                    "name": "libgsl0-dev"
+                },
+                {
+                    "name": "libgtk2.0-dev"
+                },
+                {
+                    "name": "libiberty-dev"
+                },
+                {
+                    "name": "libjemalloc-dev"
+                },
+                {
+                    "name": "libjpeg-dev"
+                },
+                {
+                    "name": "liblz4-dev"
+                },
+                {
+                    "name": "liblzo2-dev"
+                },
+                {
+                    "name": "libmodule-install-perl"
+                },
+                {
+                    "name": "libncurses5-dev"
+                },
+                {
+                    "name": "libpath-tiny-perl"
+                },
+                {
+                    "name": "libpng-dev"
+                },
+                {
+                    "name": "libreadline-dev"
+                },
+                {
+                    "name": "libmruby-dev"
+                },
+                {
+                    "name": "libssl-dev"
+                },
+                {
+                    "name": "libsnappy-dev"
+                },
+                {
+                    "name": "libsqlite3-dev"
+                },
+                {
+                    "name": "libtest-strict-perl"
+                },
+                {
+                    "name": "libtool"
+                },
+                {
+                    "name": "libthrift-java"
+                },
+                {
+                    "name": "libuv-dev"
+                },
+                {
+                    "name": "libxi-dev"
+                },
+                {
+                    "name": "libxrandr-dev"
+                },
+                {
+                    "name": "libxxf86vm1"
+                },
+                {
+                    "name": "libxxf86vm-dev"
+                },
+                {
+                    "name": "libyaml-tiny-perl"
+                },
+                {
+                    "name": "lzop"
+                },
+                {
                     "name": "make"
+                },
+                {
+                    "name": "maven"
+                },
+                {
+                    "name": "mesa-common-dev"
                 },
                 {
                     "name": "openjdk-7-jdk"
@@ -24,53 +192,26 @@
                     "name": "openjdk-7-jre"
                 },
                 {
-                    "name": "ant"
+                    "name": "node-gyp"
                 },
                 {
-                    "name": "maven"
+                    "name": "perl"
                 },
                 {
-                    "name": "snappy"
-                },
-                {
-                    "name": "autoconf"
-                },
-                {
-                    "name": "zlibc"
-                },
-                {
-                    "name": "zlib1g"
-                },
-                {
-                    "name": "zlib1g-dev"
-                },
-                {
-                    "name": "liblzo2-2"
-                },
-                {
-                    "name": "liblzo2-dev"
-                },
-                {
-                    "name": "lzop"
-                },
-                {
-                    "name": "python-lzo"
-                },
-                {
-                    "name": "libtool"
-                },
-                {
-                    "name": "automake"
-                },
-                {
-                    "name": "tcl"
+                    "name": "pkg-config"
                 },
                 {
                     "name": "python",
                     "version": "2.7.5-5ubuntu3"
                 },
                 {
-                    "name": "python-setuptools"
+                    "name": "python-antlr"
+                },
+                {
+                    "name": "python-clang-3.6"
+                },
+                {
+                    "name": "python-lzo"
                 },
                 {
                     "name": "python-py"
@@ -79,43 +220,43 @@
                     "name": "python-pytest"
                 },
                 {
+                    "name": "python-setuptools"
+                },
+                {
+                    "name": "python-thrift"
+                },
+                {
+                    "name": "qt-sdk"
+                },
+                {
+                    "name": "rake"
+                },
+                {
                     "name": "ruby"
-                },
-                {
-                    "name": "bundler"
-                },
-                {
-                    "name": "cmake"
-                },
-                {
-                    "name": "scons"
                 },
                 {
                     "name": "sbt"
                 },
                 {
-                    "name": "perl"
-                },
-                {
-                    "name": "libpath-tiny-perl"
-                },
-                {
-                    "name": "libyaml-tiny-perl"
-                },
-                {
-                    "name": "libfile-remove-perl"
-                },
-                {
-                    "name": "libmodule-install-perl"
-                },
-                {
-                    "name": "libtest-strict-perl"
-                },
-                {
                     "name": "scala"
                 },
                 {
-                    "name": "gradle"
+                    "name": "scons"
+                },
+                {
+                    "name": "snappy"
+                },
+                {
+                    "name": "tcl"
+                },
+                {
+                    "name": "thrift-compiler"
+                },
+                {
+                    "name": "zlibc"
+                },
+                {
+                    "name": "zlib1g-dev"
                 }
             ],
             "autoportChefPackages": [
