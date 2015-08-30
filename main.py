@@ -967,7 +967,10 @@ def runBatchFile ():
                       package['build']['artifacts'])
             submittedJob = True
 
-            f.write(createJob_results['artifactFolder'] + "\n")
+            try:
+                f.write(createJob_results['artifactFolder'] + "\n")
+            except KeyError:
+                pass
         f.close()
     else:
         return json.jsonify(status="failure", error="could not find batch file"), 404
