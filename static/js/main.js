@@ -949,6 +949,7 @@ var projectReportState = {
             //TODO - add loading bar
             projectReportState.prjCompareReady = false;
             projectReportState.prjTableReady = false;
+            projectReportState.loadingState.diffLoading = true;
             $.getJSON("/getDiffLogResults",
                       {
                         logfile: logFile,
@@ -985,6 +986,9 @@ var projectReportState = {
     backToList: function(ev) {
         projectReportState.prjCompareReady = true;
         projectReportState.prjTableReady = false;
+    },
+    loadingState: {
+        diffLoading: false
     }
 };
 
@@ -1234,6 +1238,9 @@ function processBuildResults(data) {
 }
 
 function processLogCompareResults(data) {
+    if (projectReportState.loadingState.diffLoading) {
+        projectReportState.loadingState.diffLoading = false;
+    }
     if (data.status != "ok") {
         showAlert("Error:", data);
     } else {
@@ -1253,7 +1260,6 @@ function processLogCompareResults(data) {
                                       right['distro'] +
                                  "</th>" +
                             "</table>";
-
         $("#logdiffHeader").html(headerContent);
         $("#leftdiff").html(data.results['diff'][left['diffName']]);
         $("#rightdiff").html(data.results['diff'][right['diffName']]);
