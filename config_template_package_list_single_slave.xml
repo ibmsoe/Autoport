@@ -54,6 +54,46 @@
 #                                   'installedVersion'. If package is not installed, it takes a value of 'N/A'
 #
 
+############################### Python Script for All JSON packages starts:#########################
+python_script_for_tar_listing="#!/usr/bin/python
+
+import sys
+import json
+from distutils.version import LooseVersion
+
+# package_list['installed'] is the list of tar packages installed on the node
+# package_list['updates'] is the list of tar packages from jenkins master
+
+data_file = open('packageListSingleSlave.json','r+')
+managedPkgList = json.load(data_file)
+
+package_list=json.loads(sys.argv[1])
+for pkg in managedPkgList:
+    if  pkg['installedVersion'] != 'N/A':
+        continue
+    for installedPkg in package_list['installed']:
+        if pkg['packageName'] == installedPkg['packageName']:
+            if 'installedVersion' in installedPkg and installedPkg['installedVersion'] != 'N/A':
+                pkg['installedVersion'] = installedPkg['installedVersion']
+                pkg['packageInstalled'] = True
+                pkg['removableExt'] = installedPkg['packageExt']
+            pkg['packageType'] = installedPkg['packageType']
+            pkg['packageExt'] = installedPkg['packageExt']
+            pkg['archiveName'] = installedPkg['archiveName']
+            pkg['packageArch'] = installedPkg['packageArch']
+            pkg['updateVersion'] = pkg['installedVersion']
+
+    for updatePkg in package_list['updates']:
+        if pkg['packageName'] == updatePkg['packageName'] and pkg['updateVersion']!='N/A' and \
+           LooseVersion(pkg['updateVersion']) &lt; LooseVersion(updatePkg['updateVersion']) and \
+           (updatePkg['packageArch']=='ALL' or pkg['packageArch'] == updatePkg['packageArch']):
+            pkg['updateAvailable'] = True
+            pkg['updateVersion'] = updatePkg['updateVersion']
+            pkg['packageExt'] = updatePkg['packageExt']
+            pkg['installableExt'] = updatePkg['packageExt']
+
+data_file.seek(0)
+print json.dump(managedPkgList, data_file);"
 
 set +o noclobber # Allow overwrite of files just in case it is set to off
 
@@ -69,6 +109,7 @@ IFS=, read -a array &lt;&lt;&lt; "$PACKAGE_NAME" # split the csv of PACKAGE_NAME
 
 totalCsvPackages=${#array[@]}
 packageCounter=0
+packageFoundCounter=0
 
 echo "#### Iterating through the list of packages"
 for packageElement in "${array[@]}"
@@ -81,7 +122,7 @@ do
             installedVersion=$(rpm -q --queryformat '%{VERSION}:%{ARCH}\n' $PACKAGE_NAME | grep `uname -m`'\|noarch' |awk -F: '{print $1}' )
             if [ ! -z $installedVersion ]
             then
-                echo "#### $PACKAGE_NAME is installed. Version is $installedVersion"
+                echo "#### $PACKAGE_NAME is installed. Installed version is $installedVersion"
                 packageInstalled=true
             elif [ -z $installedVersion ]
             then
@@ -110,6 +151,7 @@ do
                     then
                         echo "#### $PACKAGE_NAME latest version is installed."
                         updateVersion=$installedVersion
+                        packageFoundCounter=$((packageFoundCounter+1))
                     fi
                     else # if package is not installed, check for available version
                         # strip the 1st line of the output of yum list
@@ -159,7 +201,7 @@ do
                     i=${i##*:}  #extract version number, occurs after the colon
                     if [ $i != "(none)" ]
                     then
-                        echo "#### $PACKAGE_NAME is installed. Version is $installedVersion"
+                        echo "#### $PACKAGE_NAME is installed. Installed version is $installedVersion"
                         packageInstalled=true
                         installedVersion=$i
                     fi
@@ -174,6 +216,7 @@ do
                         else
                             echo "#### $PACKAGE_NAME latest version is installed."
                             updateVersion=$installedVersion
+                            packageFoundCounter=$((packageFoundCounter+1))
                         fi
                     fi
                     lineNumber=$((lineNumber+1))
@@ -196,27 +239,83 @@ done
 
 echo ']'>>packageListSingleSlave.json
 
-# Get the list of all tar packages installed on the build slave.
+
 jenkins_repo_file_name="archive.log"
+echo "#### Fetching list of available source packages"
+available_package_json=''
+type wget
+can_continue=$?
+
+if [ $can_continue -ne 0 ]; then
+    echo "Error: Wget is not installed on this system, installing \"wget\"."
+    # Installing wget from yum repository
+    case $DISTRIBUTION in
+        "UBUNTU")
+            sudo apt-get -y --force-yes install wget
+        ;;
+        "RHEL")
+            yum -y install wget
+        ;;
+    esac
+fi
+# Get the Tar repo file from server
+wget $(echo "$JENKINS_TAR_REPO_LOCATION/$jenkins_repo_file_name" )
+
+# Now since wget is installed we can proceed downloading file and continue the operation.
+if [ -f "$jenkins_repo_file_name" ]; then
+    # If repo file is found search the package in the repo.
+    counter=0
+    # Now read line by line from the file from the jenkins repos and prepare the list of tar files available
+    while IFS='' read -r line || [[ -n $line ]]; do
+        IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
+        echo "#### "${package_info[0]}" is available. Available version is "${package_info[1]}
+        package_json="{\"packageName\":\"${package_info[0]}\",
+            \"summary\":\"${package_info[6]}\",
+            \"installedVersion\":\"N/A\",
+            \"packageInstalled\":\"false\",
+            \"updateVersion\":\"${package_info[1]}\",
+            \"updateAvailable\":\"true\",
+            \"packageType\":\"${package_info[2]}\",
+            \"packageArch\":\"${package_info[4]}\",
+            \"packageExt\":\"${package_info[5]}\",
+            \"archiveName\":\"${package_info[6]}\"}"
+
+
+
+        if [ $counter -gt 0 ]; then
+            available_package_json=$(echo $available_package_json,$package_json)
+        else
+            available_package_json=$(echo $package_json)
+        fi
+        counter=$((counter + 1))
+    done &lt; "$jenkins_repo_file_name"
+    echo "#### Done: Fetching list of available source packages!"
+else
+    # Tar repo file is not found, display the error message.
+    echo "Error: File archive.log not found."
+fi
+
+rm -f $jenkins_repo_file_name
+
 local_repo_file_name="$JENKINS_TAR_INSTALL_LOCATION/$jenkins_repo_file_name"
 installed_package_json=''
-if [ $packageCounter -ne $totalCsvPackages -a -f "$local_repo_file_name" ];then
+if [ -f "$local_repo_file_name" ];then
     counter=0
-    echo "#### Fetching list of installed tarball source packages..."
+    echo "#### Fetching list of installed source packages"
     # Next read line by line from the local repo file and prepare the list of tar files installed
     while IFS='' read -r line || [[ -n $line ]]; do
         IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
-        echo "#### "${package_info[0]}" is installed. Version is "${package_info[1]}
-        package_json="{
-            \"packageName\":\"${package_info[0]}\",
-            \"summary\":\"${package_info[0]}\",
+        echo "#### "${package_info[0]}" is installed. Installed version is "${package_info[1]}
+        package_json="{\"packageName\":\"${package_info[0]}\",
+            \"summary\":\"${package_info[6]}\",
             \"installedVersion\":\"${package_info[1]}\",
             \"packageInstalled\":\"true\",
             \"updateVersion\":\"N/A\",
             \"updateAvailable\":\"false\",
-            \"packageType\":\"${package_info[2]}\"
-        }"
-
+            \"packageType\":\"${package_info[2]}\",
+            \"packageArch\":\"${package_info[4]}\",
+            \"packageExt\":\"${package_info[5]}\",
+            \"archiveName\":\"${package_info[6]}\"}"
         if [ $counter -gt 0 ]; then
             installed_package_json=$(echo $installed_package_json,$package_json)
         else
@@ -225,42 +324,16 @@ if [ $packageCounter -ne $totalCsvPackages -a -f "$local_repo_file_name" ];then
         counter=$((counter + 1))
     done &lt; "$local_repo_file_name"
     echo "#### Done: Fetching list of installed source packages!"
-    tar_packages=$(echo "[$installed_package_json]")
-    echo "$tar_packages" > tarPackages.txt
-else
-    echo "Skipping Tar packages as all packages are found in OS install"
-    echo "[]"> tarPackages.txt
 fi
+package_list=$( echo "{\"installed\": [$installed_package_json], \"updates\": [$available_package_json]}" )
 
-arch_packages=$(cat packageListSingleSlave.json)
-echo "$arch_packages" > archivePackages.txt
+# Dump to python script for execution.
+echo "$python_script_for_tar_listing" > tar_packages.py
 
-############################### Python Script for All JSON packages starts:#########################
-python_script="#!/usr/bin/python
-import sys
-import json
 
-# Read json data for archive packages from file.
-archive_file=open('archivePackages.txt')
-arch_packages=json.load(archive_file)
-
-# Read json data for tar packages from file.
-tar_file=open('tarPackages.txt')
-tar_packages=json.load(tar_file)
-
-# Merge the yum/apt and tar package list for display
-arch_packages.extend(tar_packages)
-
-# Dump data for further processing
-print json.dumps(arch_packages)"
-echo "$python_script" > final_package_list.py
-############################### Python Script for All JSON packages ends:#########################
-
-python final_package_list.py > packageListSingleSlave.json
-
-# Remove temporary files
-rm -f archivePackages.txt tarPackages.txt final_package_list.py
-
+tar_packages=$( python tar_packages.py "$package_list")
+# Remove temporary file as its not needed any more.
+rm tar_packages.py
 echo "#### Completed fetching data for all packages."
 
 </command>

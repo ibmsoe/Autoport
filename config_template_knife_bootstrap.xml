@@ -12,12 +12,22 @@
                <defaultValue />
             </hudson.model.StringParameterDefinition>
             <hudson.model.StringParameterDefinition>
-               <name>chefAttributes</name>
+               <name>chefInstallAttr</name>
                <description />
                <defaultValue />
             </hudson.model.StringParameterDefinition>
             <hudson.model.StringParameterDefinition>
-               <name>run_list</name>
+               <name>chefInstallRecipes</name>
+               <description />
+               <defaultValue />
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+               <name>chefRemoveAttr</name>
+               <description />
+               <defaultValue />
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
+               <name>chefRemoveRecipes</name>
                <description />
                <defaultValue />
             </hudson.model.StringParameterDefinition>
@@ -39,18 +49,29 @@
       <hudson.tasks.Shell>
          <command>#!/bin/bash
 
-role=buildServer_$(date +%Y%m%d_%H%M%S)_$(echo $host | cut -d"." -f1)
+# There are two seperate bootstrap commands ,each for removal and installation of packages.
+# These actions are seperated out since in chef recipes there is only a single
+# version attribute maintained for each package.
+# If both the actions are carried out in a single bootstrap command the version value
+# gets overriden as per the last version entry in ManagedList.json , this leads to installation
+# and removal of same version of the package. To avoid this we carry out install and unistall
+# of packages seperately. 
+
+# Running chef recipes for removing packages
+if [ ! -z "$chefRemoveAttr" -a "$chefRemoveAttr" != " " ]; then
+
+role=buildServer_remove_packages_$(date +%Y%m%d_%H%M%S)_$(echo $host | cut -d"." -f1)
 
 cat &lt;&lt;EOF &gt; $role.json
 {
-  "name": "$role" ,
-  "json_class": "Chef::Role",
-  "override_attributes":$chefAttributes,
-  "chef_type": "role",
-  "run_list":$run_list
+ "name": "$role" ,
+ "json_class": "Chef::Role",
+ "override_attributes":$chefRemoveAttr,
+ "chef_type": "role",
+ "run_list":$chefRemoveRecipes
 }
 EOF
-
+echo "-------------------Creating chef role to remove packages---------------"
 knife role from file $role.json
 
 rm -rf $role.json
@@ -60,9 +81,35 @@ rm -rf $role.json
 # Installing chef client on the node if not already installed.
 # Running the chef scripts to install appropriate pacakges.
 
-
+echo "-------------------Running knife bootstrap to remove packages---------------"
 knife bootstrap $host -N $host -x autochef -P autochef --sudo --use-sudo-password autochef -r role[$role]
 
+echo "---------------------Deleting chef role created for installation of packages"
+knife role delete $role -y
+fi
+
+# Running chef recipes for installing packages
+role=buildServer_install_packages_$(date +%Y%m%d_%H%M%S)_$(echo $host | cut -d"." -f1)
+cat &lt;&lt;EOF &gt; $role.json
+{
+ "name": "$role" ,
+ "json_class": "Chef::Role",
+ "override_attributes":$chefInstallAttr,
+ "chef_type": "role",
+ "run_list":$chefInstallRecipes
+}
+EOF
+
+echo "-------------------Creating chef role to install packages--------------------------"
+
+knife role from file $role.json
+
+rm -rf $role.json
+
+echo "-------------------Running knife bootstrap to install packages---------------------"
+knife bootstrap $host -N $host -x autochef -P autochef --sudo --use-sudo-password autochef -r role[$role]
+
+echo "---------------------Deleting chef role created for installation of packages"
 knife role delete $role -y
          </command>
       </hudson.tasks.Shell>

@@ -9,25 +9,28 @@ class ChefData:
         self.__localDataDir = globals.localPathForConfig
         self.__logDir = globals.localTarRepoLocation
 
-    def setChefDataForSynch(self, distro, distroVersion):
+    def setChefDataForSynch(self, distro, distroVersion, arch):
         # This routine in called during synch, to fill up
         # the chef-attributes (package/versions) based on
         # ManagedList.json
 
         # DataStructure to hold chefRecipes and chefAttributes
         # as per ManagedList.json
-        chefRecipes = []
-        chefAttrs = {}
-        chefAttrs['buildServer'] = {}
+        chefInstallRecipes = []
+        chefRemoveRecipes = []
+        chefInstallAttrs = {}
+        chefRemoveAttrs = {}
+        chefInstallAttrs['buildServer'] = {}
 
         # These will hold os-install pacakages (autoportPackages).
-        chefAttrs['buildServer']['debs'] = {}
-        chefAttrs['buildServer']['rpms'] = {}
-        chefAttrs['buildServer']['userpackages'] = {}
+        chefInstallAttrs['buildServer']['debs'] = {}
+        chefInstallAttrs['buildServer']['rpms'] = {}
+        chefInstallAttrs['buildServer']['userpackages'] = {}
 
-        chefAttrs['repo_hostname'] = self.__repo_hostname
-        chefAttrs['repo_name'] = self.__repo_name
-        chefAttrs['log_location'] = self.__logDir
+        chefInstallAttrs['repo_hostname'] = self.__repo_hostname
+        chefInstallAttrs['repo_name'] = self.__repo_name
+        chefInstallAttrs['log_location'] = self.__logDir
+
         # Reading ManagedList.json
         try:
             localPath = self.__localDataDir + "ManagedList.json"
@@ -51,7 +54,7 @@ class ChefData:
                     # is the recipe name.
                     # 'default' is a wrapper recipe which calls rest of all recipes
                     # in the 'buildServer' cookbook
-                    chefRecipes = ["recipe[buildServer::default]"]
+                    chefInstallRecipes = ["recipe[buildServer::default]"]
 
                     # Filling in autoportPackages (os-installs) per distro.
                     for pkg in runtime['autoportPackages']:
@@ -61,22 +64,27 @@ class ChefData:
                             key = 'rpms'
                         pkgKey = pkg['name']
                         if 'version' in pkg:
-                            chefAttrs['buildServer'][key][pkgKey] = pkg['version']
+                            cheInstallfAttrs['buildServer'][key][pkgKey] = pkg['version']
                         else:
-                            chefAttrs['buildServer'][key][pkgKey] = ''
+                            chefInstallAttrs['buildServer'][key][pkgKey] = ''
                     # Filling in autoportChefPackages
                     for pkg in runtime['autoportChefPackages']:
                         if 'version' in pkg:
-                            pkgKey = pkg['name']
-                            chefAttrs['buildServer'][pkgKey] = {}
-                            chefAttrs['buildServer'][pkgKey]['version'] = pkg['version']
+                            if 'tag' in pkg and pkg['tag'] == "ibm-sdk-nodejs":
+                                pkgKey = 'ibm-sdk-nodejs'
+                                chefInstallAttrs['buildServer'][pkgKey] = {}
+                                chefInstallAttrs['buildServer'][pkgKey]['name'] = pkg['name']
+                            else:
+                                pkgKey = pkg['name']
+                                chefInstallAttrs['buildServer'][pkgKey] = {}
+                            chefInstallAttrs['buildServer'][pkgKey]['version'] = pkg['version']
 
                     # Filling in userpackages based on current owner
                     # This would change when ManagedList.json will be mainatined
                     # per user.
                     for pkg in runtime['userPackages']:
                         if pkg['owner'] == globals.configUsername:
-                            if not pkg['type']:
+                            if not pkg['type'] and pkg['arch'] == arch:
                                 userPackage = {
                                                 pkg['name'] : [
                                                                 pkg['arch'],
@@ -84,21 +92,34 @@ class ChefData:
                                                                 pkg['action']
                                                               ]
                                               }
-                                chefAttrs['buildServer']['userpackages'].update(userPackage)
+                                chefInstallAttrs['buildServer']['userpackages'].update(userPackage)
                             else:
                                 # If a userpackage has a type associated, it signifies
                                 # that it is a source install.We need to populate appropriate
                                 # chef-attributes and extend default run_list with recipe mapped to
                                 # the particular user pacakge.
-                                chefAttrs, recipe = self.setChefDataForPackage(pkg['name'],
-                                                        pkg['version'], pkg['type'], pkg['action'], chefAttrs)
-                                chefRecipes.extend(recipe)
-            return chefAttrs, chefRecipes
+                                if pkg['action'] == 'install' and pkg['arch'] == arch:
+                                    chefInstallAttrs, recipe = self.setChefDataForPackage(pkg['name'],
+                                                     pkg['version'], pkg['type'], \
+                                                     pkg['action'], pkg['extension'], \
+                                                     chefInstallAttrs)
+                                    chefInstallRecipes.extend(recipe)
+                                elif pkg['action'] == 'remove' and pkg['arch'] == arch:
+                                     chefRemoveAttrs, recipe = self.setChefDataForPackage(pkg['name'],
+                                                     pkg['version'], pkg['type'], \
+                                                     pkg['action'], pkg['extension'], \
+                                                     chefRemoveAttrs)
+                                     chefRemoveRecipes.extend(recipe)
+
+            chefAttr = [chefInstallAttrs, chefRemoveAttrs]
+            recipes  = [chefInstallRecipes, chefRemoveRecipes]
+
+            return chefAttr,recipes
         except KeyError as e:
             print str(e)
             assert(False)
 
-    def setChefDataForPackage(self, name, version, type, action, attributes = {}):
+    def setChefDataForPackage(self, name, version, type, action, ext, attributes = {}):
         # This routine is responsible for setting up chef attributes that
         # and run list for a single specific package.
         # The version of the package is passed to this routine based
@@ -116,9 +137,14 @@ class ChefData:
         if type in ['perl_modules', 'python_modules']:
             name = name
             chefAttrs['buildServer'][type].update({name: version})
+        elif type == 'ibm-sdk-nodejs':
+            name = 'ibm-sdk-nodejs'
+            chefAttrs['buildServer'][name].update({'version': version})
+            chefAttrs['buildServer'][attribute].update({'ext': ext})
         else:
             attribute = name
             chefAttrs['buildServer'][attribute] = {'version': version}
+            chefAttrs['buildServer'][attribute].update({'ext': ext})
 
         if action == 'remove' and type not in ['perl_modules', 'python_modules']:
            type = type.lower() + "_remove"

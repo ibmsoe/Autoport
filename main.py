@@ -1404,6 +1404,7 @@ def managePackageForSingleSlave():
     packageAction = request.args.get("action", "")
     selectedBuildServer = request.args.get("buildServer", "")
     packageType = request.args.get("type", "")
+    extension = request.args.get("extension", "")
     host = ''
 
     # If there is a packageType available , it indicates that this is a source install
@@ -1413,7 +1414,7 @@ def managePackageForSingleSlave():
           if node['nodelabel'] == selectedBuildServer:
               host = node['hostname']
        chefAttr, runList = chefData.setChefDataForPackage(packageName, packageVersion, \
-                               packageType, packageAction)
+                               packageType, packageAction, extension)
        job = createChefJob(host, chefAttr, runList)
        buildStatus = ""
        try:
@@ -1582,28 +1583,43 @@ def listManagedPackages():
                 pkg['distro'] = globals.nodeDetails[i]['distro']
                 pkg['arch'] = globals.nodeDetails[i]['arch']
                 pkg['os_arch'] = globals.nodeOSes[i]              # This is O/S Description for UI
+
+                # package_name is set to archive name to distinguish between multiple extensions,
+                # since summary column is not available in managed panel
+                pkg['pkg_name'] = pkg['archiveName'] if 'archiveName' in pkg and package else pkg['packageName']
                 isAddable = False
                 isRemovable = False
                 enableCheckBox = False
                 managedP, managedV, userAddedVersion, removablePackage = sharedData.getManagedPackage(ml, pkg, node)
+
+                # In case package is not managed is a user added package, then managedVersion is
+                # set to userAdded version instead of 'N/A'
+                if managedV == 'N/A' and userAddedVersion != 'N/A':
+                    managedV = userAddedVersion
                 pkg['managedPackageVersion'] = managedV
                 if managedP:
-                    if removablePackage == "Yes":
-                        # User will be allowed to add a package if the package is removable
-                        # and is not installed or the package is removable and is upgradable.
-                        # removable is synonymous with not on the managed list
-                        if 'installedVersion' in pkg and \
-                            (not pkg['installedVersion'] or
-                              pkg['installedVersion'] == "N/A"):
-                            isAddable = True
-                        elif ('installedVersion' in pkg and
-                               pkg['installedVersion'] and
-                               pkg['installedVersion'] != "N/A") and \
-                               ('updateVersion' in pkg and
-                               pkg['updateVersion'] and pkg['updateVersion'] != "N/A"):
-                            if LooseVersion(pkg['updateVersion']) > LooseVersion(pkg['installedVersion']):
-                                isAddable = True
+                    # We allow package to be added to ManagedList.json userPackages section.
+                    # 1. If package is installed , but update of a package is available (updateVersion > installedVersion)
+                    # 2. If package is not instlled, but updateVersion is greater than managedVersion.
+                    # 3. If package is not installed , but update is available.
 
+                    if ('installedVersion' in pkg and pkg['installedVersion'] and \
+                        pkg['installedVersion'] != "N/A") and \
+                        ('updateVersion' in pkg and pkg['updateVersion'] and \
+                        pkg['updateVersion'] != "N/A"):
+                        if LooseVersion(pkg['updateVersion']) > LooseVersion(pkg['installedVersion']):
+                            isAddable = True
+
+                    if managedV != "N/A" and ('updateVersion' in pkg and pkg['updateVersion'] and \
+                                              pkg['updateVersion'] != "N/A"):
+                        if LooseVersion(pkg['updateVersion']) > LooseVersion(managedV):
+                            isAddable = True
+
+                    if ('installedVersion' in pkg and pkg['installedVersion'] and pkg['installedVersion'] == "N/A") and \
+                       (managedV != "N/A" or pkg['updateVersion'] and pkg['updateVersion'] != "N/A") :
+                        isAddable = True
+
+                    if removablePackage == "Yes":
                         # User will be allowed to remove a package if the package is removable and is installed
                         if 'installedVersion' in pkg and pkg['installedVersion'] and \
                             pkg['installedVersion'] != "N/A":
@@ -1617,6 +1633,7 @@ def listManagedPackages():
                 pkg['removablePackage'] = removablePackage
                 pkg['enableCheckBox'] = enableCheckBox
                 packageList.append(pkg)
+
         except KeyError:
             return json.jsonify(status="failure", error=results['error'] ), 404
 
@@ -1692,7 +1709,7 @@ def createSynchJobs(nodes):
             for node in globals.nodeDetails:
                 if node['nodelabel'] == serverNode:
                     # Getting chef attributes and run_list for the node
-                    chefAttr, runList = chefData.setChefDataForSynch(node['distro'], node['rel'])
+                    chefAttr, runList = chefData.setChefDataForSynch(node['distro'], node['rel'], node['arch'])
                     # Creating chef job for the node.
                     job = createChefJob(node['hostname'], chefAttr, runList, "managed-package")
                     try:
@@ -1710,6 +1727,12 @@ def createSynchJobs(nodes):
     threadRequests = makeRequests(monitorChefJobs, jobs)
     [globals.threadPool.putRequest(req) for req in threadRequests]
 
+    # After the synch operation the ManagedList is cleanedup , to remove entries
+    # of packages which were meant to be uninstalled (action:'remove')
+    for serverNode in serverNodes:
+        for node in globals.nodeDetails:
+            sharedData.cleanUpManagedList(node['distro'], node['rel'], node['arch'])
+
     return jobs
 
 def createChefJob(host, chefAttr, runList, jobType="single-package"):
@@ -1722,15 +1745,34 @@ def createChefJob(host, chefAttr, runList, jobType="single-package"):
 
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
-    i = 1
-    for param in xml_parameters:
-        if i == 1:
-            param.text = host
-        elif i == 2:
-            param.text = json.dumps(chefAttr)
-        elif i == 3:
-            param.text = json.dumps(runList)
-        i += 1
+    i =1
+
+    # In case of sync operation we have to set four build parameters (chefInstallAttr,chefRemoveAttr
+    # ,chefInstallRecipes, chefRemoveRecipes) ,corresponding to remove and install operations that are taken care through
+    # seperate knife bootstrap commands.
+    # However, in case of installation/removal done via single panel requires only 2 build parameters to be set.
+    if isinstance(chefAttr, list) and isinstance(runList, list):
+       for param in xml_parameters:
+            if i == 1:
+                param.text = host
+            elif i == 2:
+                param.text = json.dumps(chefAttr[0])
+            elif i == 3:
+                param.text = json.dumps(runList[0])
+            elif i == 4:
+                param.text = json.dumps(chefAttr[1])
+            elif i == 5:
+                param.text = json.dumps(runList[1])
+            i += 1
+    else:
+        for param in xml_parameters:
+            if i == 1:
+                param.text = host
+            elif i == 2:
+                param.text = json.dumps(chefAttr)
+            elif i == 3:
+                param.text = json.dumps(runList)
+            i += 1
 
     uid = randint(globals.minRandom, globals.maxRandom)
     jobName = globals.localHostName + '.' + str(uid) + '.'+ host + '.' + "KnifeBootstrap-" + jobType + "-install"
@@ -2091,7 +2133,7 @@ def uploadToRepo():
                     error="No File selected for upload"), 400
 
     # Checking package extension before uploading
-    if file and sharedData.allowedRepoPkgExtensions(file.filename):
+    if file and sharedData.getPkgExtensions(file.filename):
         status_msg = sharedData.uploadPackage(file, sourceType)
         if status_msg:
            return json.jsonify(status="failure",

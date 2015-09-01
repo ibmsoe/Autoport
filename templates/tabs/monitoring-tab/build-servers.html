@@ -63,7 +63,7 @@
                 <th data-field="state" data-checkbox="true"></th>
                 <th data-field="packageName" data-sortable="true">Package</th>
                 <th data-field="installedVersion" data-sortable="true">Installed Version</th>
-                <th data-field="updateVersion" data-sortable="true">Latest Version</th>
+                <th data-field="updateVersion" data-sortable="true">Available Version</th>
                 <th data-field="updateAvailable" data-sortable="true" data-formatter="updatableFormatter">Updatable</th>
                 <th data-field="summary" data-sortable="true">Package Summary</th>
               </tr>
@@ -129,7 +129,7 @@
                 Synch
               </button>
             </a>
-            <div>This tool defines a minimum set of packages and package versions that cannot be removed. You can search for new packages 
+            <div>This tool defines a minimum set of packages and package versions that cannot be removed. You can search for new packages
                  and <b>Add</b> them to the Managed List.  You can <b>Remove</b> any package that you added, but you cannot remove packages
                  from the minimum set as they are required for proper function.  These packages cannot be selected --- gray selection box.
                  Once the Managed List is correct, select a <b>Build server</b> and press <b>Sync</b> and install procedures will commence.
@@ -156,7 +156,7 @@
             <thead>
               <tr>
                 <th data-field="state" data-checkbox="true" data-formatter="jenkinsState.stateFormatter"></th>
-                <th data-field="packageName" data-sortable="true">Package</th>
+                <th data-field="pkg_name" data-sortable="true">Package</th>
                 <th data-field="managedPackageVersion" data-sortable="true">Managed Version</th>
                 <th data-field="installedVersion" data-sortable="true">Installed Version</th>
                 <th data-field="updateVersion" data-sortable="true">Latest Version</th>
