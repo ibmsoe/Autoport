@@ -630,7 +630,9 @@ var jenkinsState = {
         jenkinsState.singleSlavePackageTableReady = false; // hide the table if user changes the build server/slave selection
     },
     onPackageFileSelected: function() {
-        if ($('#packageFile').val().indexOf('.tar') != -1 || $('#packageFile').val().indexOf('.zip') != -1) {
+        if ($('#packageFile').val().indexOf('.tar') != -1
+            || $('#packageFile').val().indexOf('.zip') != -1
+            || $('#packageFile').val().indexOf('.bin') != -1) {
             jenkinsState.showPackageTypeSelector = true;
         } else {
             jenkinsState.showPackageTypeSelector = false;
@@ -668,6 +670,37 @@ var jenkinsState = {
     //    clickAction: takes values 'install/remove'
     performActionOnSingleSlave: function(clickAction) {
         var selectedPackageList = $('#singleServerPackageListTable').bootstrapTable('getSelections');
+        if(selectedPackageList.length > 1 && clickAction == "install"){
+            var tempPackArray = [];
+            for(var obj of selectedPackageList){
+                if(!obj.updateAvailable){
+                    continue;
+                }
+                var isUpdatedToTemp = false;
+                for(var tempObj of tempPackArray){
+                    if((tempObj.packageName == obj.packageName) && compareVersion(tempObj.updateVersion, obj.updateVersion)){
+                        tempObj['updateVersion'] = tempObj['updateVersion'];
+                        isUpdatedToTemp = true;
+                    }
+                }
+                if(!isUpdatedToTemp){
+                    tempPackArray.push(obj);
+                }
+            }
+            if(tempPackArray.length > 0){
+                selectedPackageList = tempPackArray;
+            }
+            var message = "The below packages are eligible for Install/Update \n";
+            for(var o of selectedPackageList){
+               message = message+o.packageName + ", Version - "+o.updateVersion;
+            }
+            if(message != "") {
+               var confRes = confirm(message);
+               if(!confRes){
+                   return false;
+               }
+            }
+        }
         jenkinsState.pkgInstallRemoveResponseCounter = 0;
         jenkinsState.totalSelectedSingleSlavePkg = selectedPackageList.length;
         jenkinsState.pkgInstallRemoveStatusSingleSlave = [];
@@ -682,7 +715,7 @@ var jenkinsState = {
                     'status': 'The package is already at the latest level!'
                     });
                 jenkinsState.totalSelectedSingleSlavePkg -= 1;
-                messageText = "The selected packages are already at the latest level!";
+                messageText = "The selected package(s) is/are already installed";
                 continue;
             }
             // Exclude packages not eligible for removal
@@ -705,6 +738,7 @@ var jenkinsState = {
             {
                 package_name: selectedPackageList [selectedPkg].packageName,
                 package_version: selectedPackageList [selectedPkg].updateVersion,
+                extension: selectedPackageList [selectedPkg].packageExt,
                 action: clickAction,
                 type: package_type,
                 buildServer: jenkinsState.buildServer
@@ -760,24 +794,46 @@ var jenkinsState = {
     },
     getSelectedManagedPackageData: function(type){
         var selectedPackageList = $('#multiServerPackageListTable').bootstrapTable('getSelections');
+        if(selectedPackageList.length > 1 && type == "add"){
+            var tempPackArray = [];
+            for(var obj of selectedPackageList){
+                var isUpdatedToTemp = false;
+                for(var tempObj of tempPackArray){
+                    if((tempObj.packageName == obj.packageName) && compareVersion(tempObj.updateVersion, obj.updateVersion)){
+                            tempObj['updateVersion'] = tempObj['updateVersion'];
+                    }
+                }
+                if(!isUpdatedToTemp){
+                    tempPackArray.push(obj);
+                }
+            }
+            if(tempPackArray.length > 0){
+                selectedPackageList = tempPackArray;
+            }
+        }
         var packageListObj = [];
-        var message = ""
+        var message = "";
         for(var obj in selectedPackageList){
-            if((type=="Add" && selectedPackageList[obj].isAddable) || (type == "Remove" && selectedPackageList[obj].isRemovable)) {
-                if(message == "")
-                    message = "The below packages are eligible for "+type+"\n"
-                message = message + selectedPackageList[obj].packageName+"\n";
+            if(type=="Add" && selectedPackageList[obj].isAddable) {
+                if(message=="")  message = "The below packages are eligible for "+type+"\n"
+                message = message + selectedPackageList[obj].packageName+", version - "+selectedPackageList[obj].updateVersion+"\n";
+            } else if(type == "Remove" && selectedPackageList[obj].isRemovable){
+                if(message=="")  message = "The below packages are eligible for "+type+"\n"
+                message = message + selectedPackageList[obj].packageName+", version - "+selectedPackageList[obj].installedVersion+"\n";
             } else {
                 continue;
             }
             packageListObj.push({
                 'package_name': selectedPackageList[obj].packageName,
                 'package_version': selectedPackageList[obj].updateVersion,
+                'extension': selectedPackageList[obj].packageExt,
                 'distro': selectedPackageList[obj].distro,
                 'arch': selectedPackageList[obj].arch,
                 'removable': selectedPackageList[obj].removablePackage,
                 'package_type': selectedPackageList[obj].packageType,
-                'installed_version': selectedPackageList[obj].installedVersion
+                'installed_version': selectedPackageList[obj].installedVersion,
+                'installableExt': selectedPackageList[obj].installableExt,
+                'removableExt': selectedPackageList[obj].removableExt
             });
         }
         if(message != "") {
@@ -821,8 +877,11 @@ var jenkinsState = {
     },
     uploadPackage: function (ev) {
         var file = $('#packageFile')[0].files[0];
-        var packageType = $("#packageTypeOnPackageUpload").find(":selected").text();
-        if(($('#packageFile').val().indexOf('.tar') != -1 || $('#packageFile').val().indexOf('.zip') !=-1) && packageType == ""){
+        var packageType = $("#packageTypeOnPackageUpload").find(":selected").val();
+        if(($('#packageFile').val().indexOf('.tar') != -1
+            || $('#packageFile').val().indexOf('.zip') !=-1
+            ||  $('#packageFile').val().indexOf('.bin') !=-1) &&
+            (packageType == undefined || packageType == "")){
             alert("Please select Package Type");
             return false;
         }
@@ -1906,6 +1965,24 @@ function synchManagedPackageListCallback(data) {
     $("#syncManagedPackageButton").removeClass("disabled");
 }
 
+// Compares two versions
+function compareVersion(version1,version2){
+    var result=false;
+    if(typeof version1!=='object'){ version1=version1.toString().split('.'); }
+    if(typeof version2!=='object'){ version2=version2.toString().split('.'); }
+    for(var i=0;i<(Math.max(version1.length,version2.length));i++){
+        if(version1[i]==undefined){ version1[i]=0; }
+        if(version2[i]==undefined){ version2[i]=0; }
+        if(Number(version1[i])<Number(version2[i])){
+            result=true;
+            break;
+        }
+        if(version1[i]!=version2[i]){
+            break;
+        }
+    }
+    return(result);
+}
 $(document).ready(function() {
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers

@@ -128,43 +128,53 @@ python_script_for_tar_listing="#!/usr/bin/python
 
 import sys
 import json
+import platform
 
 # Preparing variables for storing data.
 final_list=[]
 already_added=[]
-package_list=json.loads(sys.argv[1])
+if sys.argv[1]:
+    package_list=json.loads(sys.argv[1])
 package_filter=str(sys.argv[2])
 
-# Get all tar packages installed and have updates available, that matches the given keyword.
+# If the archive's architecture matches current node's architecture
+# archive is eligible to be listed for installation.
+def isEligiblePkg(pkgArch):
+    node_arch = platform.machine()
+    if node_arch == pkgArch or pkgArch == 'ALL':
+        return True
+    else:
+        return False
+
+already_added = []
+
+# Get all tar packages installed that matches the given keyword.
 final_list.extend([{'packageName':str(i['packageName']),
     'summary':str(i['summary']),
-    'installedVersion':str(i['installedVersion']),
-    'packageInstalled':bool(i['packageInstalled']),
-    'updateVersion':str(j['updateVersion']),
-    'updateAvailable':bool(j['updateAvailable']),
-    'packageType':str(i['packageType'])} for i in package_list['installed'] for j in package_list['updates']
-        if i['packageName'] == j['packageName'] and package_filter in i['packageName']])
-
-# List of packages already added to output string.
-already_added.extend([i['packageName'] for i in final_list])
-
-# Get all tar packages installed having no update version, that matches the given keyword.
-final_list.extend([{'packageName':str(i['packageName']),
-    'summary':str(i['summary']),
+    'packageExt':str(i['packageExt']),
     'installedVersion':str(i['installedVersion']),
     'packageInstalled':True,'updateVersion':str(i['updateVersion']),
-    'updateAvailable':False,'packageType':str(i['packageType'])} for i in package_list['installed']
-        if i['packageName'] not in already_added and package_filter in i['packageName'] ])
+    'updateAvailable':False,
+    'updateVersion':str(i['installedVersion']),
+    'archiveName':str(i['archiveName']),
+    'packageType':str(i['packageType'])} for i in package_list['installed']
+        if i['archiveName'] not in already_added and package_filter in i['archiveName'] and \
+           isEligiblePkg(str(i['packageArch']))])
+
+already_added.extend([i['archiveName'] for i in final_list])
 
 # Get all tar packages which are not installed, that matches the given keyword.
 final_list.extend([{'packageName':str(i['packageName']),
     'summary':str(i['summary']),
+    'packageExt':str(i['packageExt']),
     'installedVersion':str(i['installedVersion']),
     'packageInstalled':False,
     'updateVersion':str(i['updateVersion']),
     'updateAvailable':True,
+    'archiveName':str(i['archiveName']),
     'packageType':str(i['packageType'])} for i in package_list['updates']
-        if i['packageName'] not in already_added and package_filter in i['packageName'] ])
+        if i['archiveName'] not in already_added and package_filter in i['archiveName'] and \
+        isEligiblePkg(str(i['packageArch']))])
 
 # finally Dump all the package list for further processing.
 print json.dumps(final_list)"
@@ -249,10 +259,16 @@ case $DISTRIBUTION in
     "RHEL")
         # get search keyword and fetch all the packages matching given keyword, dump the result for later use.
         echo "#### Getting a list of all packages matching the filter $PACKAGE_NAME_FILTER. We search for all packages - installed as well as available"
-        echo "#### The command used is using command yum info *$PACKAGE_NAME_FILTER* "
-        # When yum info is called the repo list gets updated before the search.
-        # Hence not firing yum update again for updating repo list.
-        yum info "*$PACKAGE_NAME_FILTER*" > AllPackagesInfo.txt
+        echo "#### Running yum info *$PACKAGE_NAME_FILTER* "
+        sudo yum info "*$PACKAGE_NAME_FILTER*" > AllPackagesInfo.txt
+        package_search_result=$( tail -n1 AllPackagesInfo.txt )
+        # If package not found, updating cache and retrying another time to get package info
+        if [ -z "$package_search_result" -o "$package_search_result" = "0" ]; then
+            echo "Package Not found trying to update repo list."
+            sudo yum clean expire-cache
+            # List of all packages matching the filter after updating
+            sudo yum info "*$PACKAGE_NAME_FILTER*" > AllPackagesInfo.txt
+        fi
 
         # initializing variables needed.
         installed_packages=()
@@ -426,12 +442,15 @@ if [ -f "$jenkins_repo_file_name" ]; then
         IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
         echo "#### "${package_info[0]}" is available. Latest version is "${package_info[1]}
         package_json="{\"packageName\":\"${package_info[0]}\",
-            \"summary\":\"${package_info[0]}\",
+            \"summary\":\"${package_info[6]}\",
             \"installedVersion\":\"N/A\",
             \"packageInstalled\":\"false\",
             \"updateVersion\":\"${package_info[1]}\",
             \"updateAvailable\":\"true\",
-            \"packageType\":\"${package_info[2]}\"}"
+            \"packageType\":\"${package_info[2]}\",
+            \"packageArch\":\"${package_info[4]}\",
+            \"packageExt\":\"${package_info[5]}\",
+            \"archiveName\":\"${package_info[6]}\"}"
 
         if [ $counter -gt 0 ]; then
             available_package_json=$(echo $available_package_json,$package_json)
@@ -458,12 +477,15 @@ if [ -f "$local_repo_file_name" ];then
         IFS=', ' read -a package_info &lt;&lt;&lt; "$line"
         echo "#### "${package_info[0]}" is installed. Version is "${package_info[1]}
         package_json="{\"packageName\":\"${package_info[0]}\",
-            \"summary\":\"${package_info[0]}\",
+            \"summary\":\"${package_info[6]}\",
             \"installedVersion\":\"${package_info[1]}\",
             \"packageInstalled\":\"true\",
             \"updateVersion\":\"N/A\",
             \"updateAvailable\":\"false\",
-            \"packageType\":\"${package_info[2]}\"}"
+            \"packageType\":\"${package_info[2]}\",
+            \"packageArch\":\"${package_info[4]}\",
+            \"packageExt\":\"${package_info[5]}\",
+            \"archiveName\":\"${package_info[6]}\"}"
         if [ $counter -gt 0 ]; then
             installed_package_json=$(echo $installed_package_json,$package_json)
         else

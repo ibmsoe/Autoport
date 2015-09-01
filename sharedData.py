@@ -245,23 +245,25 @@ class SharedData:
             print str(e)
             assert(False)
 
-    def allowedRepoPkgExtensions(self, filename):
+    def getPkgExtensions(self, filename):
         # Check the valid file types to be uploaded to repository
         # based on the extensions.
 
         # Add extra extensions to the list if required in future.
 
-        EXTENSIONS = ['.rpm', '.deb', '.zip', '.tar', '.tgz', '.tar.gz', '.tar.bz2']
-        return any([filename.endswith(x) for x in EXTENSIONS])
+        EXTENSIONS = ['.rpm', '.deb', '.zip', '.tar', '.tgz', '.tar.gz', '.tar.bz2', '.bin']
+        for ext in EXTENSIONS:
+            if filename.endswith(ext):
+                return ext
 
-    def getRepoDetails(self, localPath, filename, sourceType):
+    def getRepoDetails(self, localPath, filename, type):
         # Framing remotepath and command, to transfer the file
         # and update the custom repository
-        # based on type (rpm/deb/tar.gz)
+        # based on type (rpm/deb/tar.gz/bin)
         repoPath = ""
         command  = ""
         repo_base_dir = self.__repoPathPrefix
-        name, extension = os.path.splitext(localPath)
+        extension = self.getPkgExtensions(filename)
         if extension == '.rpm':
             repoPath = "%s/rpms" % (repo_base_dir)
             command = "createrepo --update -v %s" % (repoPath)
@@ -269,28 +271,44 @@ class SharedData:
             repoPath = "%s/debs/" % (repo_base_dir)
             command = "reprepro -V -b %s includedeb autoport_repo \
                        %s/%s" % (repoPath, repoPath, filename)
-        elif tarfile.is_tarfile(localPath) or zipfile.is_zipfile(localPath):
-            repoPath = "%s/archives/" % (repo_base_dir)
+        elif tarfile.is_tarfile(localPath) or zipfile.is_zipfile(localPath) or extension == '.bin':
             # archive.log holds tar filename, version and sourceType CSV
             archiveLogPath = "%s/archives/archive.log" % (repo_base_dir)
 
-            # Extracting source filename
-            sourceName = re.findall("(?:)[\(a-z),(A-Z),-]+",filename)[0]
-            if sourceName[len(sourceName)-1] == "-":
-                sourceName = sourceName[:sourceName.rfind('-')]
+            # Extracting version string
+            try:
+                pkgVersion = re.findall("(\d+[(\-\d+\.)(\.\d+\-)]+\d+)",filename)[-1]
+            except IndexError:
+                pkgVersion = None
 
-            # Extracting source file version
-            sourceVersion = re.findall("(?:)[\d.]+",filename)[0]
+            # Extracting architecture string if available in archive name
+            arch_strings = {
+                'x86_64' : ['x86_64', 'amd64', 'x64', 'x86-64'],
+                'ppc64le' : ['ppc64le', 'ppc64el', 'powerpc64le', 'ppcle64']
+               }
+            pkgArch = ''
+            for k,v in arch_strings.iteritems():
+                for architecture in v:
+                    match = filename.find(architecture)
+                    if match != -1:
+                        pkgArch = k
+                        break
+            if pkgArch == '':
+                pkgArch = 'ALL'
 
-            # If source file doesn't have version associated, regex returns a dot(.)
-            if sourceVersion == ".":
-                sourceVersion = ""
-            elif sourceVersion[len(sourceVersion)-1] == "." :
-                sourceVersion = sourceVersion[:sourceVersion.rfind('.')]
+            # Extracting package name
+            if pkgVersion:
+                pkgName = filename[:filename.find(pkgVersion)]
+                if pkgName[len(pkgName)-1] == "-":
+                    pkgName = pkgName[:pkgName.rfind('-')]
+            else:
+                return repoPath, command
 
-            # Command which writes the source filename, version and
-            # sourceType CSV into archive.log. Command also avoids duplicate entries
-            logEntry = sourceName + "," + sourceVersion +"," + sourceType + "," + sourceName
+            repoPath = "%s/archives/" % (repo_base_dir)
+
+            # Command which writes the filename, version and
+            # type CSV into archive.log. Command also avoids duplicate entries
+            logEntry = pkgName + "," + pkgVersion + "," + type + "," + pkgName + "," + pkgArch + "," + extension + "," + filename
             command = "touch " + archiveLogPath + "; grep -q -F \"" + logEntry + \
                "\" "+ archiveLogPath + " || echo \"" + logEntry + "\" >> " + archiveLogPath
         return repoPath, command
@@ -313,7 +331,7 @@ class SharedData:
         # hence deleting the package uploaded to temporary location
         if not remotePath:
             os.remove(localPath)
-            return "Inappropriate or Invalid file-type"
+            return "Inappropriate/Invalid file-type or name-format."
 
         # Saving the file to remote path on the custom repository
         self.putSharedFile(localPath, remotePath, file.filename)
@@ -491,7 +509,7 @@ class SharedData:
         #         then installedVersion becomes the managed version
         packageName = pkg["packageName"]
         pkgVersion = ""
-        userAddedVersion = "No"
+        userAddedVersion = "N/A"
         removablePackage = "Yes"
         for runtime in managedList['managedRuntime']:
             if runtime['distro'] != distroName:
@@ -546,32 +564,46 @@ class SharedData:
     def addToManagedList(self, packageDataList, action): # packageName, packageVersion, distro, arch, action):
         # Read the file in memory
         localManagedListFileData = self.getLocalData("ManagedList.json")
-
         # Perform additions to memory list
         for pkgData in packageDataList:
             packageName = pkgData['package_name']
             packageVersion = pkgData['package_version']
+            extension = ''
+            # Maintaing seperate extension variable for package which has an update,
+            # since the extension of current archive package could differ from
+            # the extension of updated version of the archive selected for installation.
+            if 'installableExt' in pkgData:
+                extension = pkgData['installableExt']
+            elif 'packageExt' in pkgData:
+                extension = pkgData['packageExt']
             distro = pkgData['distro']
             arch = pkgData['arch']
             packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
 
             for sharedRuntime in localManagedListFileData['managedRuntime']:
-                if pkgData['removable'] == 'No':
-                    continue
                 if sharedRuntime['distro'] == distro:
                     addFlag = True
                     for package in sharedRuntime['userPackages']:
                         if package['name'] == packageName and \
-                           package['arch'] == arch and \
-                           package['owner'] == self.__userName:
+                            package['arch'] == arch and \
+                            package['owner'] == self.__userName and \
+                            package['action'] == 'install':
                             # If package is already present for the current user,
                             # check its version and update the version if they are different
                             if package['version'] != packageVersion:
                                 package['version'] = packageVersion
+                            if 'extension' in package and package['extension'] != extension:
+                                package['extension'] = extension
                             addFlag = False
                             break
                     if addFlag == True:
-                        sharedRuntime['userPackages'].append({"owner":self.__userName, "name":packageName,
+                        # Adding extension field to userPackages in case of archive installations.
+                        if extension:
+                            sharedRuntime['userPackages'].append({"owner":self.__userName, "name":packageName,
+                                  "version":packageVersion, "arch":arch, "action":action, "type": packageType,
+                                  "extension":extension})
+                        else:
+                             sharedRuntime['userPackages'].append({"owner":self.__userName, "name":packageName,
                                   "version":packageVersion, "arch":arch, "action":action, "type": packageType})
                         break
         # Write back to the local managed list file
@@ -582,13 +614,19 @@ class SharedData:
         localManagedListFileData = self.getLocalData("ManagedList.json")
 
         # Perform deletion to memory list
+
         for pkgData in packageDataList:
             for sharedRuntime in localManagedListFileData['managedRuntime']:
                 packageName = pkgData['package_name']
-                packageVersion =  pkgData['package_version']
+                packageVersion =  pkgData['installed_version']
                 distro = pkgData['distro']
                 arch =  pkgData['arch']
                 packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
+                extension = ''
+                if 'removableExt' in pkgData:
+                    extension = pkgData['removableExt']
+                elif 'packageExt' in pkgData:
+                    extension = pkgData['packageExt']
                 if pkgData['removable'] == 'No':
                   continue
                 if sharedRuntime['distro'] == distro:
@@ -597,18 +635,42 @@ class SharedData:
                         if package['name'] == packageName and \
                            package['arch'] == arch and \
                            package['owner'] == self.__userName:
-                            # If package is present for the current user, update action
-                            if "installed_version" in pkgData and pkgData["installed_version"]!="N/A":
-                                package['action'] = action
-                                addFlag = False
-                            break
+                           if 'extension' in package and package['extension'] == extension:
+                               package['action'] = action
+                               package['version'] = packageVersion
+                               addFlag = False
+                               break
+                           elif not extension:
+                              package['action'] = action
+                              package['version'] = packageVersion
+                              addFlag = False
+                              break
                     if addFlag == True:
-                        sharedRuntime['userPackages'].append({"owner":self.__userName,
-                        "name":packageName, "version":packageVersion, "arch":arch,
-                        "action":action, "type": packageType})
+                        if extension:
+                            sharedRuntime['userPackages'].append({"owner":self.__userName,
+                            "name":packageName, "version":packageVersion, "arch":arch,
+                            "action":action, "type": packageType, "extension":extension})
+                        else:
+                           sharedRuntime['userPackages'].append({"owner":self.__userName,
+                           "name":packageName, "version":packageVersion, "arch":arch,
+                           "action":action, "type": packageType})
 
         # Write back to the local managed list file
         localPath = self.putLocalData(localManagedListFileData, "")
+
+    def cleanUpManagedList(self, distro, rel, arch):
+
+        # Routine to remove entries from userpackage section
+        # for the packages which were marked for
+        # removal, after the synch operation.
+        dataStr = self.getLocalData("ManagedList.json")
+        for runtime in dataStr['managedRuntime']:
+            if (runtime['distro'] == distro) and (runtime['distroVersion'] == rel):
+                for package in runtime['userPackages']:
+                    if package['action'] == 'remove':
+                        index = runtime['userPackages'].index(package)
+                        runtime['userPackages'].pop(index)
+        localPath = self.putLocalData(dataStr, "")
 
     # Synchronize and commit the managed list in shared location with the changes done in local list
     def synchManagedPackageList(self):
