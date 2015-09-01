@@ -92,6 +92,7 @@ for pkg in managedPkgList:
             pkg['packageExt'] = updatePkg['packageExt']
             pkg['installableExt'] = updatePkg['packageExt']
 
+data_file.truncate(0)
 data_file.seek(0)
 print json.dump(managedPkgList, data_file);"
 
@@ -239,7 +240,6 @@ done
 
 echo ']'>>packageListSingleSlave.json
 
-
 jenkins_repo_file_name="archive.log"
 echo "#### Fetching list of available source packages"
 available_package_json=''
@@ -325,6 +325,7 @@ if [ -f "$local_repo_file_name" ];then
     done &lt; "$local_repo_file_name"
     echo "#### Done: Fetching list of installed source packages!"
 fi
+
 package_list=$( echo "{\"installed\": [$installed_package_json], \"updates\": [$available_package_json]}" )
 
 # Dump to python script for execution.

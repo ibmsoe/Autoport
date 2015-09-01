@@ -65,6 +65,6 @@ end
 buildServer_log "perl_source" do
   name         "perl_source"
   log_location node['log_location']
-  log_record   "perl,#{version},perl_source,perl,#{arch}#{perl_package}"
+  log_record   "perl,#{version},perl_source,perl,#{arch},#{ext},#{perl_package}"
   action       :add
 end

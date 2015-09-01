@@ -58,13 +58,13 @@ class ChefData:
 
                     # Filling in autoportPackages (os-installs) per distro.
                     for pkg in runtime['autoportPackages']:
-                        if distro == 'UBUNTU':
+                        if distro in ('UBUNTU', 'Debian'):
                             key = 'debs'
-                        elif distro == 'RHEL':
+                        elif distro in ('RHEL', 'Fedora', 'openSUSE', 'AIX'):
                             key = 'rpms'
                         pkgKey = pkg['name']
                         if 'version' in pkg:
-                            cheInstallfAttrs['buildServer'][key][pkgKey] = pkg['version']
+                            chefInstallAttrs['buildServer'][key][pkgKey] = pkg['version']
                         else:
                             chefInstallAttrs['buildServer'][key][pkgKey] = ''
                     # Filling in autoportChefPackages
@@ -80,7 +80,7 @@ class ChefData:
                             chefInstallAttrs['buildServer'][pkgKey]['version'] = pkg['version']
 
                     # Filling in userpackages based on current owner
-                    # This would change when ManagedList.json will be mainatined
+                    # This would change when ManagedList.json will be maintained
                     # per user.
                     for pkg in runtime['userPackages']:
                         if pkg['owner'] == globals.configUsername:
@@ -97,7 +97,7 @@ class ChefData:
                                 # If a userpackage has a type associated, it signifies
                                 # that it is a source install.We need to populate appropriate
                                 # chef-attributes and extend default run_list with recipe mapped to
-                                # the particular user pacakge.
+                                # the particular user package.
                                 if pkg['action'] == 'install' and pkg['arch'] == arch:
                                     chefInstallAttrs, recipe = self.setChefDataForPackage(pkg['name'],
                                                      pkg['version'], pkg['type'], \
