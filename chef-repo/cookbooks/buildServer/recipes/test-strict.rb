@@ -3,6 +3,7 @@
 
 include_recipe 'buildServer::perl'
 
+arch = node['kernel']['machine']
 ts_version = node['buildServer']['Test-Strict']['version']
 
 {
@@ -20,16 +21,18 @@ end
 
 case node['platform']
   when 'ubuntu'
-    log_record = "Test-Strict,#{ts_version},perl_modules,libtest-strict-perl,Test-Strict-#{ts_version}.tar.gz"
+    record = "Test-Strict,#{ts_version},perl_modules,libtest-strict-perl,\
+#{arch},.tar.gz,Test-Strict-#{ts_version}.tar.gz"
   when 'redhat'
-    log_record = "Test-Strict,#{ts_version},perl_modules,perl-test-strict,Test-Strict-#{ts_version}.tar.gz"
+    record = "Test-Strict,#{ts_version},perl_modules,perl-test-strict,\
+#{arch},.tar.gz,Test-Strict-#{ts_version}.tar.gz"
 end
 
 
 buildServer_log 'Test-Strict' do
   name         'Test-Strict'
   log_location node['log_location']
-  log_record   log_record
+  log_record   record
   action       :add
 end
 

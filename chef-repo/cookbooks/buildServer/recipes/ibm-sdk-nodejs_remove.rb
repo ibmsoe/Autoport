@@ -3,12 +3,13 @@ version = node['buildServer']['ibm-sdk-nodejs']['version']
 arch = node['kernel']['machine']
 install_dir = node['buildServer']['ibm-sdk-nodejs']['install_dir']
 uninstall_dir = "#{install_dir}/#{package}-#{version}/_node_installation"
+arch = node['kernel']['machine']
 
 if node['kernel']['machine'] == 'ppc64le'
-  pkg_name = "#{package}-#{version}-linux-ppcle64"
+  pkg_name = "#{package}#{version}-linux-ppcle64"
 else
   arch = node['kernel']['machine']
-  pkg_name = "#{package}-#{version}-linux-#{arch}"
+  pkg_name = "#{package}#{version}-linux-#{arch}"
 end
 
 execute "Uninstalling ibm nodejs" do
@@ -18,20 +19,26 @@ execute "Uninstalling ibm nodejs" do
 end
 
 [
-  "#{install_dir}/#{pkg_name}.bin", 
+  "#{install_dir}/#{pkg_name}.bin",
   "#{install_dir}/ibm-nodejs-installer.properties",
   "#{install_dir}/ibm-nodejs-log",
-  '/etc/profile.d/ibm-nodejs.sh'
 ].each do |file|
   file file do
     action :delete
   end
 end
 
+file "/etc/profile.d/ibm-java.sh" do
+  action :delete
+  only_if "grep -w #{version} /etc/profile.d/ibm-nodejs.sh"
+end
+
 directory "#{install_dir}/#{package}-#{version}" do
   action     :delete
   recursive  true
 end
+
+record = "#{package},#{version},ibm-sdk-nodejs,ibm-sdk-nodejs,#{arch},.bin,#{pkg_name}"
 
 buildServer_log package do
   name         package

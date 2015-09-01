@@ -5,8 +5,8 @@
 case node['platform']
 when 'ubuntu'
   pkgs = node['buildServer']['debs']
-  opt = '--force-yes' 
-  check_expression = "apt-cache policy" 
+  opt = '--force-yes'
+  check_expression = "apt-cache policy"
 when 'redhat'
   pkgs = node['buildServer']['rpms']
   opt = ''
@@ -16,7 +16,8 @@ end
 if pkgs.any?
   pkgs.each do |pkg_name,version|
     if version
-      package pkg_name do
+      package "Installing managed #{pkg_name}" do
+        package_name   pkg_name
         action         :install
         options        opt
         version        version
@@ -25,7 +26,8 @@ if pkgs.any?
       end
 
     else
-      package pkg_name do
+      package "Installing managed #{pkg_name}" do
+        package_name   pkg_name
         action         :upgrade
         options        opt
         ignore_failure true

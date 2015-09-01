@@ -8,13 +8,14 @@ Chef::Recipe.send(:include, CommandBuilder)
 version       = node['buildServer']['apache-maven']['version']
 install_dir   = node['buildServer']['apache-maven']['install_dir']
 maven_pkg     = "apache-maven-#{version}"
-extension     = node['buildServer']['apache-maven']['extension']
+ext           = node['buildServer']['apache-maven']['ext']
 archive_dir   = node['buildServer']['download_location']
 maven_home    = "#{install_dir}/#{maven_pkg}"
 repo_url      = node['buildServer']['repo_url']
+arch          = node['kernel']['machine']
 
-remote_file "#{archive_dir}/#{maven_pkg}-bin#{extension}" do
-  source "#{repo_url}/archives/#{maven_pkg}-bin#{extension}"
+remote_file "#{archive_dir}/#{maven_pkg}-bin#{ext}" do
+  source "#{repo_url}/archives/#{maven_pkg}-bin#{ext}"
   owner 'root'
   group 'root'
   action :create
@@ -26,7 +27,7 @@ execute "Extracting ant #{version}" do
   user 'root'
   group 'root'
   command <<-EOD
-    #{CommandBuilder.command(extension, run_context)} #{archive_dir}/#{maven_pkg}-bin#{extension}
+    #{CommandBuilder.command(ext, run_context)} #{archive_dir}/#{maven_pkg}-bin#{ext}
   EOD
   creates "#{install_dir}/#{maven_pkg}"
 end
@@ -41,9 +42,11 @@ template '/etc/profile.d/maven.sh' do
   )
 end
 
+record = "apache-maven,#{version},maven_binary,maven,#{arch},#{ext},#{maven_pkg}-bin#{ext}"
+
 buildServer_log "apache-maven" do
   name         "apache-maven"
   log_location node['log_location']
-  log_record   "apache-maven,#{version},maven_binary,maven,#{maven_pkg}-bin#{extension}"
+  log_record   record
   action       :add
 end

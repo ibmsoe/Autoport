@@ -2,10 +2,12 @@
 
 version      = node['buildServer']['perl']['version']
 install_path = "#{node['buildServer']['perl']['prefix_dir']}/bin/perl#{version}"
-perl_package = "perl-#{version}.tar.gz"
+ext          = node['buildServer']['perl']['ext']
+perl_package = "perl-#{version}#{ext}"
 repo_url     = node['buildServer']['repo_url']
 download_loc = node['buildServer']['download_location']
 prefix_dir   = node['buildServer']['perl']['prefix_dir']
+arch         = node['kernel']['machine']
 
 directory prefix_dir do
   mode '0755'
@@ -60,9 +62,9 @@ template '/etc/profile.d/perl.sh' do
   )
 end
 
-buildServer_log "perl-#{version}" do
-  name         "perl-#{version}"
+buildServer_log "perl_source" do
+  name         "perl_source"
   log_location node['log_location']
-  log_record   "perl-#{version},#{version},perl_source,perl,#{perl_package}"
+  log_record   "perl,#{version},perl_source,perl,#{arch}#{perl_package}"
   action       :add
 end

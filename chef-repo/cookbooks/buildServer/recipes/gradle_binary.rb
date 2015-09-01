@@ -7,11 +7,11 @@ Chef::Recipe.send(:include, CommandBuilder)
 version      = node['buildServer']['gradle']['version']
 install_dir  = node['buildServer']['gradle']['install_dir']
 install_path = "#{install_dir}/packages/gradle"
-extension    = node['buildServer']['gradle']['extension']
-gradle_pkg   = "gradle-#{version}-bin#{extension}"
+ext          = node['buildServer']['gradle']['ext']
+gradle_pkg   = "gradle-#{version}-bin#{ext}"
 archive_dir  = node['buildServer']['download_location']
-gradle_home  = "#{install_dir}/gradle"
 repo_url     = node['buildServer']['repo_url']
+arch         = node['kernel']['machine']
 
 include_recipe 'buildServer::java'
 
@@ -38,14 +38,9 @@ bash 'Extracting the archive' do
   user 'root'
   cwd install_path
   code <<-EOD
-    #{CommandBuilder.command(extension, run_context)} #{archive_dir}/#{gradle_pkg}
+    #{CommandBuilder.command(ext, run_context)} #{archive_dir}/#{gradle_pkg}
   EOD
   creates "#{install_path}/gradle-#{version}/bin/gradle"
-end
-
-link gradle_home do
-  to "#{install_path}/gradle-#{version}"
-  action :create
 end
 
 template '/etc/profile.d/gradle.sh' do
@@ -54,13 +49,13 @@ template '/etc/profile.d/gradle.sh' do
   group 'root'
   mode '0644'
   variables(
-    gradle_home: gradle_home
+    gradle_home: "#{install_path}/gradle-#{version}"
   )
 end
 
 buildServer_log 'gradle' do
   name         'gradle'
   log_location node['log_location']
-  log_record   "gradle,#{version},gradle_binary,gradle,#{gradle_pkg}"
+  log_record   "gradle,#{version},gradle_binary,gradle,#{arch},#{ext},#{gradle_pkg}"
   action       :add
 end

@@ -3,6 +3,7 @@
 # expected in tar.gz format and would be installed via source/build method.
 
 include_recipe 'buildServer::perl'
+arch = node['kernel']['machine']
 
 if node['buildServer']['perl_modules'].any?
 
@@ -17,10 +18,11 @@ if node['buildServer']['perl_modules'].any?
       action :install
     end
 
+    record = "#{pkg},#{version},perl_modules,#{pkg},#{arch},.tar.gz,#{pkg}-#{version}.tar.gz"
     buildServer_log pkg do
       name         pkg
       log_location node['log_location']
-      log_record   "#{pkg},#{version},perl_modules,#{pkg},#{pkg}-#{version}.tar.gz"
+      log_record   record
       action       :add
     end
   end

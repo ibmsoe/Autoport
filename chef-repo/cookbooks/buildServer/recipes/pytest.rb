@@ -2,6 +2,8 @@
 # source to be built is hosted at autoport_repo in tar.gz archive format.
 
 pytest_ver = node['buildServer']['pytest']['version']
+arch       = node['kernel']['machine']
+
 {
   'pytest'    => pytest_ver
 }.each do |pkg, version|
@@ -14,11 +16,12 @@ pytest_ver = node['buildServer']['pytest']['version']
   end
 end
 
-log_record = "pytest,#{pytest_ver},python_modules,python-pytest,pytest-#{pytest_ver}.tar.gz"
+record = "pytest,#{pytest_ver},python_modules,python-pytest,#{arch},.tar.gz,\
+pytest-#{pytest_ver}.tar.gz"
 
 buildServer_log "pytest" do
   name         "pytest"
   log_location node['log_location']
-  log_record   log_record
+  log_record   record
   action       :add
 end

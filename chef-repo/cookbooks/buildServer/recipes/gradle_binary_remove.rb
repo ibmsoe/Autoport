@@ -3,19 +3,18 @@
 version      = node['buildServer']['gradle']['version']
 install_dir  = node['buildServer']['gradle']['install_dir']
 install_path = "#{install_dir}/packages/gradle"
-extension    = node['buildServer']['gradle']['extension']
-gradle_pkg   = "gradle-#{version}-bin#{extension}"
+ext          = node['buildServer']['gradle']['ext']
+gradle_pkg   = "gradle-#{version}-bin#{ext}"
 archive_dir  = node['buildServer']['download_location']
 gradle_home  = "#{install_dir}/gradle"
+arch         = node['kernel']['machine']
 
 link gradle_home do
   action :delete
 end
 
 [
-  "#{install_dir}/packages",
   "#{install_path}/gradle-#{version}",
-  install_path
 ].each do |pkg|
   directory pkg do
     action :delete
@@ -29,11 +28,13 @@ end
 
 file '/etc/profile.d/gradle.sh' do
   action :delete
+  only_if "grep -w #{version} /etc/profile.d/gradle.sh"
 end
 
+record = "gradle,#{version},gradle_binary,gradle,#{gradle_pkg}"
 buildServer_log 'gradle' do
   name         'gradle'
   log_location node['log_location']
-  log_record   "gradle,#{version},gradle_binary,gradle,#{gradle_pkg}"
+  log_record   "gradle,#{version},gradle_binary,gradle,#{arch},#{ext},#{gradle_pkg}"
   action       :remove
 end

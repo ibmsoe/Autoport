@@ -13,11 +13,11 @@
 #     - This specifies the path where the package(archive) is installed. By default all the packages
 #       are installed in /opt or in subdirectories of /opt. This never gets overridden as there is no provision to change
 #       default installation location via autoport tool at runtime.
-# 3. default['buildServer'][<pkg-identifier>]['extension']
-#     - This specifies the archive extension. There is a default value specified.
+# 3. default['buildServer'][<pkg-identifier>]['ext']
+#     - This specifies the archive ext. There is a default value specified.
 #       This value gets overridden at runtime based on package(archive) selected during installation
-#       by the user. The default value for the extension is mandatory, since during the synch operation
-#       the package extension is not available either via ManagedList.json or via user selection.
+#       by the user. The default value for the ext is mandatory, since during the synch operation
+#       the package ext is not available either via ManagedList.json or via user selection.
 
 
 # Attributes related to custom repository where rpms, debs and archive files
@@ -35,7 +35,7 @@ default['buildServer']['download_location'] =  Chef::Config[:file_cache_path]
 default['buildServer']['protobuf']['version'] = '2.6.1'
 default['buildServer']['protobuf']['install_prefix'] = '/usr/local'
 default['buildServer']['protobuf']['source_dir'] = '/opt'
-default['buildServer']['protobuf']['extension'] = '.tar.gz'
+default['buildServer']['protobuf']['ext'] = '.tar.gz'
 
 # Attributes for java
 default['buildServer']['java']['version'] = '7'
@@ -48,19 +48,19 @@ default['buildServer']['ibm-java-sdk']['install_dir'] = '/opt/ibm'
 default['buildServer']['apache-ant']['source_install'] = 'false'
 default['buildServer']['apache-ant']['version'] = '1.9.6'
 default['buildServer']['apache-ant']['install_dir'] = '/opt'
-default['buildServer']['apache-ant']['extension'] = '.tar.bz2'
+default['buildServer']['apache-ant']['ext'] = '.zip'
 
 # Attributes for apache-maven
 default['buildServer']['apache-maven']['source_install'] = 'false'
 default['buildServer']['apache-maven']['version'] = '3.0.5'
 default['buildServer']['apache-maven']['install_dir'] = '/opt'
-default['buildServer']['apache-maven']['extension'] = '.tar.gz'
+default['buildServer']['apache-maven']['ext'] = '.tar.gz'
 
 # Attributes for gradle
 default['buildServer']['gradle']['source_install'] = 'false'
 default['buildServer']['gradle']['version'] = '1.12'
 default['buildServer']['gradle']['install_dir'] = '/opt'
-default['buildServer']['gradle']['extension'] = '.zip'
+default['buildServer']['gradle']['ext'] = '.zip'
 
 # Attributes for ibm-nodejs
 default['buildServer']['ibm-sdk-nodejs']['version'] = '0.12.7'
@@ -71,10 +71,11 @@ default['buildServer']['ibm-sdk-nodejs']['install_dir'] = '/opt/ibm'
 default['buildServer']['scala']['source_install'] = 'false'
 default['buildServer']['scala']['version'] = '2.9.2'
 default['buildServer']['scala']['install_dir'] = '/opt'
-default['buildServer']['scala']['extension'] = '.tgz'
+default['buildServer']['scala']['ext'] = '.tgz'
 
 # Attributes for perl and perl modules
 default['buildServer']['perl']['version'] = '5.20.2'
+default['buildServer']['perl']['ext'] = '.tar.gz'
 default['buildServer']['perl']['extract_location'] = '/opt/perl_modules'
 default['buildServer']['perl']['prefix_dir'] = '/usr/local/perl'
 default['buildServer']['perl_modules']= {}

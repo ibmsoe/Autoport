@@ -3,6 +3,7 @@
 
 include_recipe 'buildServer::perl'
 
+arch = node['kernel']['machine']
 sp_version = node['buildServer']['Strict-Perl']['version']
 {
   'Strict-Perl' => sp_version
@@ -17,7 +18,8 @@ sp_version = node['buildServer']['Strict-Perl']['version']
   end
 end
 
-log_record = "Strict-Perl,#{sp_version},perl_modules,Strict-Perl-#{sp_version}.tar.gz"
+record = "Strict-Perl,#{sp_version},perl_modules,Strict_perl,\
+#{arch},.tar.gz,Strict-Perl-#{sp_version}.tar.gz"
 
 buildServer_log 'Strict-Perl' do
   name         'Strict-Perl'

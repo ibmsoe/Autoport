@@ -3,6 +3,8 @@
 
 include_recipe 'buildServer::perl'
 
+arch = node['kernel']['machine']
+
 {
   'File-Remove'    => node['buildServer']['File-Remove']['version'],
   'Module-Install' => node['buildServer']['Module-Install']['version']
@@ -25,8 +27,8 @@ case node['platform']
           }
   when 'redhat'
      tag = {
-           'File-Remove' => 'perl-file-remove',
-           'Module-Install' => 'perl-module-install'
+           'File-Remove' => 'perl-File-Remove',
+           'Module-Install' => 'perl-Module-Install'
           }
 end
 
@@ -34,10 +36,15 @@ fr_version = node['buildServer']['File-Remove']['version']
 mi_version = node['buildServer']['Module-Install']['version']
 
 {
- 'File-Remove' => "File-Remove,#{fr_version},perl_modules,#{tag['File-Remove']},File-Remove-#{fr_version}.tar.gz" ,
- 'Module-Install' => "Module-Install,#{mi_version},perl_modules,#{tag['Module-Install']},Module-Install-#{mi_version}.tar.gz"
+ 'File-Remove' => "File-Remove,#{fr_version},\
+perl_modules,#{tag['File-Remove']},\
+#{arch},.tar.gz,File-Remove-#{fr_version}.tar.gz" ,
+
+ 'Module-Install' => "Module-Install,#{mi_version},\
+perl_modules,#{tag['Module-Install']},\
+#{arch},.tar.gz,Module-Install-#{mi_version}.tar.gz"
+
 }.each do |name, log_record|
-  puts log_record
   buildServer_log name do
     name         name
     log_location node['log_location']

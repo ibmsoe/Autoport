@@ -2,6 +2,7 @@
 # uploaded via autoport application. Each perl module uploaded is
 # expected in tar.gz format and would be installed via source/build method.
 
+arch = node['kernel']['machine']
 if node['buildServer']['python_modules'].any?
   node['buildServer']['python_modules'].each do |pkg, version|
 
@@ -13,10 +14,12 @@ if node['buildServer']['python_modules'].any?
       action :install
     end
 
+    record = "#{pkg},#{version},python_modules,#{pkg},#{arch},.tar.gz,#{pkg}-#{version}.tar.gz"
+
     buildServer_log pkg do
       name         pkg
       log_location node['log_location']
-      log_record = "#{pkg},#{version},python_modules,#{pkg},#{pkg}-#{version}"
+      log_record   record
       action       :add
     end
   end

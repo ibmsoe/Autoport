@@ -3,8 +3,10 @@ arch          = node['kernel']['machine']
 java_package  = "ibm-java-sdk-#{version}"
 install_dir   = node['buildServer']['ibm-java-sdk']['install_dir']
 repo_url      = node['buildServer']['repo_url']
+arch          = node['kernel']['machine']
 
-directory install_dir do
+directory "Creating install directory for ibm-java" do
+  path   install_dir
   action :create
   owner 'root'
   group 'root'
@@ -51,9 +53,12 @@ template '/etc/profile.d/ibm-java.sh' do
   )
 end
 
+record = "ibm-java-sdk,#{version},ibm-java-sdk,\
+ibm-java-sdk,#{arch},.bin,#{java_package}-#{arch}-archive.bin"
+
 buildServer_log 'ibm-java-sdk' do
   name         'ibm-java-sdk'
   log_location node['log_location']
-  log_record   "ibm-java-sdk,#{version},ibm-java-sdk,IBM Java,#{java_package}-#{arch}-archive.bin"
+  log_record   record
   action       :add
 end

@@ -13,7 +13,7 @@ src_install = node['buildServer']['apache-maven']['source_install']
 opt = ''
 opt = '--force-yes' if distro == 'ubuntu'
 
-if (arch == 'x86_64' && distro == 'redhat') || src_install == 'true'
+if (distro == 'redhat') || src_install == 'true'
   include_recipe 'buildServer::maven_binary'
 else
   maven_basedir = '/usr/share/maven'

@@ -2,6 +2,7 @@
 # source to be built is hosted at autoport_repo in tar.gz archive format.
 
 py_version = node['buildServer']['py']['version']
+arch       = node['kernel']['machine']
 
 {
   'py'    => py_version
@@ -15,11 +16,11 @@ py_version = node['buildServer']['py']['version']
    end
 end
 
-log_record = "py,#{py_version},python_modules,python-py,py-#{py_version}.tar.gz"
+record = "py,#{py_version},python_modules,python-py,#{arch},.tar.gz,py-#{py_version}.tar.gz"
 
 buildServer_log "py" do
   name         "py"
   log_location node['log_location']
-  log_record   log_record
+  log_record   record
   action       :add
 end
