@@ -93,7 +93,7 @@ def inferBuildSteps(listing, repo):
     # These are the base lang definitions. They should cover the top two or
     # three build systems to achieve 60% or better compilation success.  The
     # command line is not project or build system specific.  Represents
-    # standard use of the build system, eg make all.
+    # standard use of the build system, eg make.
     base_python_def = {
         'build system': "Python",
         'primary lang': "Python",
@@ -154,7 +154,7 @@ def inferBuildSteps(listing, repo):
         'build system': "Perl",
          'primary lang': "Perl",
          'grep build': "",
-         'grep test': "",
+         'grep test': "make check",
          'grep env': "",
          'build': "if [ -e Makefile.PL ]; then perl Makefile.PL > build_result.arti 2>&1; fi; make >> build_result.arti 2>&1; make install >> build_result.arti 2>&1",
          'test' : "make test > test_result.arti 2>&1",
@@ -168,27 +168,29 @@ def inferBuildSteps(listing, repo):
         'build system': "make",
         'primary lang': "C",
         'grep build': "",
-        'grep test': "",
-        'grep env': "",
-        'build': "if [ -x configure ]; then ./configure > build_result.arti 2>&1; fi; make clean >> build_result.arti 2>&1; make all >> build_result.arti 2>&1",
+        'grep test': "make check",
+        'grep env': "CFLAGS=",
+        'build': "if [ -e configure.ac ]; then autoreconf -iv > build_result.arti 2>&1; fi; if [ -x configure ]; then ./configure >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1",
+        # 'build': "if [ -e configure.ac ]; then aclocal > build_result.arti 2>&1; fi; if [ -e Makefile.am ]; then automake --add-missing >> build_result.arti 2>&1; fi; if [ -e configure.ac ]; then autoconfig >> build_result.arti 2>&1; fi; if [ -x configure ]; then ./configure >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1",
         'test' : "make test > test_result.arti 2>&1",
         'env' : "",
-        'artifacts': "",                        # TODO: Need to specify a build artifact
-        'reason': "primary language",
+        'artifacts': "*.arti",
+        'reason': "Primary language",
         'error': "",
         'success': True }
 
     base_cxx_def = {
-        'build system': "C++",
+        'build system': "make",
         'primary lang': "C++",
         'grep build': "",
-        'grep test': "",
-        'grep env': "",
-        'build': "if [ -x configure ]; then ./configure > build_result.arti 2>&1; make clean all >> build_result.arti 2>&1; fi",
-        'test': "make test > test_result.arti 2>&1",
+        'grep test': "make check",
+        'grep env': "CXXFLAGS=",
+        'build': "if [ -e configure.ac ]; then autoreconf -iv > build_result.arti 2>&1; fi; if [ -x configure ]; then ./configure >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1",
+        # 'build': "if [ -e configure.ac ]; then aclocal > build_result.arti 2>&1; fi; if [ -e Makefile.am ]; then automake --add-missing >> build_result.arti 2>&1; fi; if [ -e configure.ac ]; then autoconfig >> build_result.arti 2>&1; fi; if [ -x configure ]; then ./configure >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1",
+        'test' : "make test > test_result.arti 2>&1",
         'env' : "",
-        'artifacts': "*.arti ",
-        'reason': "primary language",
+        'artifacts': "*.arti",
+        'reason': "Primary language",
         'error': "",
         'success': True }
 
@@ -201,7 +203,7 @@ def inferBuildSteps(listing, repo):
         'build': "if [ -e pom.xml ]; then mvn clean compile > build_result.arti 2>&1; elif [ -e build.xml ]; then ant > build_result.arti 2>&1; elif [ -e build.gradle ]; then gradle -q > build_result.arti 2>&1; fi",
         'test': "if [ -e pom.xml ]; then mvn test -fn > test_result.arti 2>&1; elif [ -e build.xml ]; then ant test > test_result.arti 2>&1; elif [ -e build.gradle ]; then gradle -q test > test_result.arti 2>&1; fi",
         'env' : "",
-        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'artifacts': "*.arti",
         'reason': "primary language",
         'error': "",
         'success': True }
@@ -234,7 +236,7 @@ def inferBuildSteps(listing, repo):
         'build': "ant clean > build_result.arti 2>&1; ant >> build_result.arti 2>&1",
         'test': "ant test > test_result.arti 2>&1",
         'env' : "",
-        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'artifacts': "*.arti",
         'reason': "build.xml",
         'error': "",
         'success': True }
@@ -253,27 +255,13 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    autotools_def = {
-        'build system': "C++_autotools",
-        'primary lang': "C++",
-        'grep build': "",
-        'grep test': "",
-        'grep env': "",
-        'build': "autoconf > build_result.arti 2>&1; ./configure >> build_result.arti 2>&1; make clean all >> build_result.arti 2>&1",
-        'test' : "make test > test_result.arti 2>&1",
-        'env' : "",
-        'artifacts': "*.arti",
-        'reason': "configure.ac ",
-        'error': "",
-        'success': True }
-
     cmake_def = {
         'build system': "C++_cmake",
         'primary lang': "C++",
         'grep build': "",
-        'grep test': "",
-        'grep env': "",
-        'build': "cmake . > build_result.arti 2>&1; ./configure >> build_result.arti 2>&1; make clean all >> build_result.arti 2>&1",
+        'grep test': "make check",
+        'grep env': "CXXFLAGS=",
+        'build': "cmake . > build_result.arti 2>&1; if [ -x configure ]; then ./configure >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1",
         'test' : "make test > test_result.arti 2>&1",
         'env' : "",
         'artifacts': "*.arti",
@@ -286,7 +274,7 @@ def inferBuildSteps(listing, repo):
         'primary lang': "C++",
         'grep build': "",
         'grep test': "",
-        'grep env': "",
+        'grep env': "CXXFLAGS=",
         'build': "scons all > build_result.arti 2>&1;",
         'test' : "scons test > test_result.arti 2>&1",
         'env' : "",
@@ -311,15 +299,29 @@ def inferBuildSteps(listing, repo):
 
     c_def = {
         'build system': "make",
-        'primary lang': "C",
+        'primary lang': "C/C++",
         'grep build': "",
-        'grep test': "make test",
-        'grep env': "",
-        'build': "if [ -x configure ]; then ./configure > build_result.arti 2>&1; fi; make clean >> build_result.arti 2>&1; make >> build_result.arti 2>&1",
+        'grep test': "make check",
+        'grep env': "CFLAGS=",
+        'build': "if [ -x configure ]; then ./configure > build_result.arti 2>&1; fi; make >> build_result.arti 2>&1",
         'test' : "make test > test_result.arti 2>&1",
         'env' : "",
-        'artifacts': "",                        # TODO: Need to specify a build artifact
+        'artifacts': "*.arti",
         'reason': "Makefile",
+        'error': "",
+        'success': True }
+
+    bootstrap_def = {
+        'build system': "make",
+        'primary lang': "C/C++",
+        'grep build': "",
+        'grep test': "make check",
+        'grep env': "CFLAGS=",
+        'build': "if [ -x bootstrap ]; then ./bootstrap.sh > build_result.arti 2>&1; elif [ -x autogen.sh ]; then ./autogen.sh > build_result.arti 2>&1; fi; if [ -x configure ]; then ./configure >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1",
+        'test' : "make test > test_result.arti 2>&1",
+        'env' : "",
+        'artifacts': "*.arti",
+        'reason': "bootstrap.sh",
         'error': "",
         'success': True }
 
@@ -328,12 +330,12 @@ def inferBuildSteps(listing, repo):
         'build system': "custom build script",
         'primary lang': "",
         'grep build': "build.sh",
-        'grep test': "build.sh test",
+        'grep test': "build.sh check",
         'grep env': "",
         'build': "./build.sh > build_result.arti 2>&1",
         'test' : "./build.sh test > test_result.arti 2>&1",
         'env' : "",
-        'artifacts': "",
+        'artifacts': "*.arti",
         'reason': "build.sh",
         'error': "",
         'success': True }
@@ -365,14 +367,13 @@ def inferBuildSteps(listing, repo):
     # TODO: This is just looking at files in the root directory.
 
     buildsh = None
+    bootstrap = None
     makefile = None
     for f in listing:
         if f.name == 'pom.xml':
             langlist.append(maven_def)         # If we find specific build files we can improve our commands by grepping readme's
         elif f.name == 'build.xml':
             langlist.append(ant_def)
-        elif f.name == 'configure.ac':
-            langlist.append(autotools_def)
         elif f.name == 'CMakeLists.txt':
             langlist.append(cmake_def)
         elif f.name == 'SConstruct':
@@ -383,6 +384,8 @@ def inferBuildSteps(listing, repo):
             langlist.append(base_js_def)      # Sometimes there is more CSS than JavaScript so base language is not recognized
         elif f.name == 'Makefile':
             makefile = f
+        elif f.name in ('bootstrap.sh', 'autogen.sh'):
+            bootstrap = f
         elif f.name in ('build.sh', 'run_build.sh'):
             buildsh = f
         elif f.name in ('BUILDING.md', 'BUILDING.txt', 'README.maven', 'README.ant'):
@@ -407,6 +410,8 @@ def inferBuildSteps(listing, repo):
 
     if buildsh != None:
         langlist.append(buildsh_def)
+    elif bootstrap != None:
+        langlist.append(bootstrap_def)
     elif makefile != None:
         langlist.append(c_def)
 
@@ -426,7 +431,7 @@ def inferBuildSteps(listing, repo):
         build_info['buildSystem'] = lang['build system']
         for readmeStr in grepstack:
             if readmeStr:
-                delim = ["`", "'", '"', "\n"]                   # delimiters used to denote end of cmd
+                delim = ["`", "'", '"', "#", "\n"]                   # delimiters used to denote end of cmd
                 cmd = lang['grep test']
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
@@ -442,7 +447,7 @@ def inferBuildSteps(listing, repo):
                 env = lang['grep env']
                 if env:
                     # Look first for 'VAR='.  Form is VAR=7
-                    delim = [";", " ", "\n"]                    # delimiters used to denote end of environment variable
+                    delim = [";", " ", "#", "\n"]                    # delimiters used to denote end of environment variable
                     strFound = buildFilesParser(readmeStr, env, delim)
                     if strFound:
                         # Look next for 'VAR="'.  Form is VAR="string"
