@@ -317,11 +317,11 @@ def inferBuildSteps(listing, repo):
         'grep build': "",
         'grep test': "make check",
         'grep env': "CFLAGS=",
-        'build': "if [ -x bootstrap ]; then ./bootstrap.sh > build_result.arti 2>&1; elif [ -x autogen.sh ]; then ./autogen.sh > build_result.arti 2>&1; fi; if [ -x configure ]; then ./configure >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1",
+        'build': "if [ -x bootstrap.sh ]; then ./bootstrap.sh > build_result.arti 2>&1; elif [ -x autogen.sh ]; then ./autogen.sh > build_result.arti 2>&1; fi; if [ -x configure ]; then ./configure >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1",
         'test' : "make test > test_result.arti 2>&1",
         'env' : "",
         'artifacts': "*.arti",
-        'reason': "bootstrap.sh",
+        'reason': "bootstrap.sh or autogen.sh",
         'error': "",
         'success': True }
 
