@@ -31,7 +31,6 @@ file '/etc/profile.d/gradle.sh' do
   only_if "grep -w #{version} /etc/profile.d/gradle.sh"
 end
 
-record = "gradle,#{version},gradle_binary,gradle,#{gradle_pkg}"
 buildServer_log 'gradle' do
   name         'gradle'
   log_location node['log_location']

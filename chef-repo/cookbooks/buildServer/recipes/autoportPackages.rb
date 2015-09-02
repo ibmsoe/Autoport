@@ -6,11 +6,9 @@ case node['platform']
 when 'ubuntu'
   pkgs = node['buildServer']['debs']
   opt = '--force-yes'
-  check_expression = "apt-cache policy"
 when 'redhat'
   pkgs = node['buildServer']['rpms']
   opt = ''
-  check_expression = "yum info"
 end
 
 if pkgs.any?
@@ -22,7 +20,6 @@ if pkgs.any?
         options        opt
         version        version
         ignore_failure true
-        only_if "#{check_expression} #{pkg_name}"
       end
 
     else
@@ -31,7 +28,6 @@ if pkgs.any?
         action         :upgrade
         options        opt
         ignore_failure true
-        only_if "#{check_expression} #{pkg_name}"
       end
     end
   end
