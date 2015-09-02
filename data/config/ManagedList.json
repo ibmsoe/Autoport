@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "2",
+    "sequence": "3",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -60,9 +60,6 @@
                     "name": "libantlr-dev"
                 },
                 {
-                    "name": "libatlas-base-dev"
-                },
-                {
                     "name": "libblas-dev"
                 },
                 {
@@ -99,6 +96,9 @@
                     "name": "libgflags-dev"
                 },
                 {
+                    "name": "libglu1-mesa-dev"
+                },
+                {
                     "name": "libgsl0-dev"
                 },
                 {
@@ -129,16 +129,10 @@
                     "name": "libpath-tiny-perl"
                 },
                 {
-                    "name": "libpng-dev"
-                },
-                {
                     "name": "libreadline-dev"
                 },
                 {
                     "name": "libmruby-dev"
-                },
-                {
-                    "name": "libssl-dev"
                 },
                 {
                     "name": "libsnappy-dev"
@@ -147,13 +141,16 @@
                     "name": "libsqlite3-dev"
                 },
                 {
+                    "name": "libssl-dev"
+                },
+                {
                     "name": "libtest-strict-perl"
                 },
                 {
-                    "name": "libtool"
+                    "name": "libthrift-java"
                 },
                 {
-                    "name": "libthrift-java"
+                    "name": "libtool"
                 },
                 {
                     "name": "libuv-dev"
@@ -214,6 +211,9 @@
                     "name": "python-lzo"
                 },
                 {
+                    "name": "python-protobuf"
+                },
+                {
                     "name": "python-py"
                 },
                 {
@@ -224,6 +224,9 @@
                 },
                 {
                     "name": "python-thrift"
+                },
+                {
+                    "name": "python-yaml"
                 },
                 {
                     "name": "qt-sdk"
