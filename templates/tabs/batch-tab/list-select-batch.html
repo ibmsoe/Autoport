@@ -29,11 +29,13 @@
     <!-- List batch files table -->
     <div rv-show="batchState.showListSelectTable">
       <div id="batchListSelectToolbar" class="btn-group">
-        <button type="button" class="btn btn-primary"
-         style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
-          <span class="glyphicon glyphicon-zoom-in"></span>
-            Details
-        </button>
+        <a rv-on-click="batchState.detail">
+            <button type="button" class="btn btn-primary"
+                style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+                <span class="glyphicon glyphicon-zoom-in"></span>
+                    Details
+            </button>
+        </a>
         <select id="batchBuildServers" multiple="multiple" style="margin-right: 10px; float: left">
           <option rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
         </select>

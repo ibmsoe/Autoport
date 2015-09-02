@@ -1,35 +1,159 @@
 <div class="jumbotron">
-  <div class="btn btn-default btn-block" rv-on-click="reportState.setTestResultsPanel" id="testResultsButton">
+    <div class="btn btn-default btn-block" rv-on-click="batchReportState.setTestResultsPanel" id="testResultsButton">
     <h2 class="text-center">Manage/Compare batch jobs results</h2>
   </div>
 
   <div id="testResultsPanel"
       class="jumbotron-button-content"
-      rv-show="reportState.testResultsPanel">
+      rv-show="batchReportState.testResultsPanel">
     <div class="row">
       <div class="col-lg-8">
         <input type="text"
             class="form-control"
             placeholder="(e.g. my-java-jobs)"
-            id="batchFilter"/>
+            id="batchReportFilter"/>
       </div>
       <div class="col-lg-4">
-        <a rv-on-click="reportState.listLocalBatch">
+        <a rv-on-click="batchReportState.listLocalBatch">
           <button type="button" class="btn btn-primary">
             List local
           </button>
         </a>
-        <a rv-on-click="reportState.listGSABatch">
+        <a rv-on-click="batchReportState.listGSABatch">
           <button type="button" class="btn btn-primary">
             List archived
           </button>
         </a>
-        <a rv-on-click="reportState.listAllBatch">
+        <a rv-on-click="batchReportState.listAllBatch">
           <button type="button" class="btn btn-primary">
             List all
           </button>
         </a>
       </div>
     </div>
+
+    <br />
+
+    <!-- List batch files table -->
+    <div rv-show="batchReportState.showListSelectTable">
+      <div id="batchReportListSelectToolbar" class="btn-group">
+        <button rv-on-click="batchReportState.detail" type="button" class="btn btn-primary" id="batch_report_detail"
+            style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+            <span class="glyphicon glyphicon-zoom-in"></span>
+            Details
+        </button>
+        <button rv-on-click="batchReportState.history" type="button" class="btn btn-primary" id="batch_report_history"
+            style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+            <span class="glyphicon glyphicon-time"></span>
+            Test History
+        </button>
+        <button rv-on-click="batchReportState.compare" type="button" class="btn btn-primary" id="batch_report_compare"
+            style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+            <span class="glyphicon glyphicon-bookmark"></span>
+            Test Compare
+        </button>
+      </div>
+      <table class="table panel panel-default" id="batchReportListSelectTable"
+        data-pagination="true" data-click-to-select="true"
+        data-toolbar="#batchReportListSelectToolbar">
+        <thead>
+          <tr>
+            <th data-field="state" data-checkbox="true"></th>
+            <th data-field="name" data-sortable="true">Name</th>
+            <th data-field="location" data-sortable="true">Location</th>
+            <th data-field="environment" data-sortable="true">Environment</th>
+            <th data-field="owner" data-sortable="true">Owner</th>
+            <th data-field="size" data-sortable="true">Size</th>
+            <th data-field="datemodified" data-sortable="true">Date Modified</th>
+          </tr>
+        </thead>
+      </table>
+    </div>
+
+    <!-- Show batch files reports table -->
+    <div rv-show="batchReportState.showBatchReportsTable">
+      <table class="table panel panel-default" id="batchReportsTable"
+        data-pagination="true" data-click-to-select="true"
+        data-toolbar="#batchReportsToolbar">
+        <thead>
+          <tr>
+            <th data-field="state"data-radio="true"></th>
+            <th data-field="name" data-sortable="true">Name</th>
+            <th data-field="status" data-sortable="true">Status</th>
+          </tr>
+        </thead>
+      </table>
+      <div class="row buttonLeft">
+        <a rv-on-click="batchState.backToBatchList">
+          <button class="btn btn-info" type="button">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            Back to list
+          </button>
+        </a>
+      </div>
+    </div>
+
+    {% include "tabs/batch-tab/loading.html" %}
+
+    <!-- List batch file content table -->
+    <div class="alert clearfix" rv-show="batchReportState.showBatchFile">
+      <span class="autoSelectedText">
+        <br />
+        <!-- List batch file config section -->
+        <table class="table panel panel-default" rv-show="batchReportState.showBatchFile">
+          <thead>
+            <tr>
+              <th>File name</th>
+              <th>Owner</th>
+              <th>Java</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="result-row">
+             <td>
+                { batchReportState.batchFile.config.name }
+              </td>
+              <td>
+                { batchReportState.batchFile.config.owner }
+              </td>
+              <td>
+                { batchReportState.batchFile.config.java }
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- List batch file package table -->
+        <table class="table panel panel-default" rv-show="batchReportState.showBatchFile">
+          <thead>
+            <tr>
+              <th>Project Name</th>
+              <th>Version</th>
+            </tr>
+          </thead>
+          <tbody rv-each-package="batchReportState.batchFile.packages">
+            <tr class="result-row">
+              <td>
+                { package.name }
+              </td>
+              <td>
+                { package.tag }
+              </td>
+            </tr>
+          </tbody>
+       </table>
+
+        <br/>
+        <div class="row buttonLeft">
+          <a rv-on-click="batchReportState.backToBatchList">
+            <button type="button" class="btn btn-primary">
+              <span class="glyphicon glyphicon-chevron-left"></span>
+              Back
+            </button>
+          </a>
+        </div>
+      </span>
+    </div>
+
   </div>
 </div>
