@@ -406,8 +406,15 @@ var batchState = {
     detail: function(ev, el) {
         batchState.loading = true;
         batchState.showBatchFile = false;
-        $.getJSON("/parseBatchFile", {batchName: batchState.selectedBatchFile.filename},
-            parseBatchFileCallback, "json").fail(parseBatchFileCallback);
+        $.getJSON("/parseBatchFile",
+            {
+                batchName: batchState.selectedBatchFile.filename
+            }, function(data){
+                parseBatchFileCallback(data, batchState);
+            }, "json").fail(function(data){
+                parseBatchFileCallback(data, batchState);
+            }
+        );
     },
     showReport: function(ev, el) {
         batchState.showListSelectTable = false;
@@ -452,6 +459,134 @@ var batchState = {
         return external;
     }
 };
+
+// Object for batch reporting
+var batchReportState = {
+    // member variables and methods
+    showListSelectTable: false, // Allow batch table display
+    fileList: [],               // Stores batch files found
+    selectedBatchFile: {},
+    testResultsPanel: false,
+    batchReportFilter: "",
+    showBatchReportsTable: false,
+    currentBatchJobs: [],
+    selectedBatchJob: {},
+    batchFile: {},                          // content of batch file.  All fields resolved
+    javaType: "",                           // Initial value in config section
+    loading: false,                         // parsing batch file.  Size is variable
+    showBatchFile: false,                   // draw batch file detail table
+    saveBatchFileName: "",                  // user input to save button for new batch file name
+    listLocalBatch: function(ev) {
+        // reset report state to initial state so that data reflected is correctly on fresh canvas.
+        batchReportState.reset();
+        batchReportState.showBatchReportsTable = false;
+        batchReportState.showListSelectTable = false;
+     // callback to render data to Batch Report table
+        $.getJSON("/listBatchFiles/local", { filter: $("#batchReportFilter").val() },
+            listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
+    },
+    listGSABatch: function(ev) {
+        // reset report state to initial state so that data reflected is correctly on fresh canvas.
+        batchReportState.reset();
+        batchReportState.showBatchReportsTable = false;
+        batchReportState.showListSelectTable = false;
+        // callback to render data to Batch Report table
+        $.getJSON("/listBatchFiles/gsa", { filter: $("#batchReportFilter").val() },
+            listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
+    },
+    listAllBatch: function(ev) {
+        // reset report state to initial state so that data reflected is correctly on fresh canvas.
+        batchReportState.reset();
+        batchReportState.showBatchReportsTable = false;
+        batchReportState.showListSelectTable = false;
+        // callback to render data to Batch Report table
+        $.getJSON("/listBatchFiles/all", { filter: $("#batchReportFilter").val() },
+            listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
+    },
+    setTestResultsPanel: function(ev) {
+        // Toggle show/hide batch report listing
+        batchReportState.testResultsPanel = ! batchReportState.testResultsPanel;
+    },
+    backToBatchList: function(ev) {
+        // For going back to displaying batch listing and hiding details.
+        batchReportState.showBatchFile = false;
+        batchReportState.showListSelectTable = true;
+        batchReportState.batchFile = {};
+    },
+    history: function(){
+        console.log("Batch History implementation is in progress");
+    },
+    compare: function(){
+        console.log("Test Compare implementation is in progress");
+    },
+    reset: function(){
+        // reset the Batch Report section to default values.
+        batchReportState.showBatchReportsTable = false;
+        batchReportState.showListSelectTable = false;
+        batchReportState.fileList = [];
+        batchReportState.selectedBatchFile = {};
+        batchReportState.batchReportFilter = "";
+        batchReportState.showBatchReportsTable = false;
+        batchReportState.currentBatchJobs = [];
+        batchReportState.selectedBatchJob = {};
+        batchReportState.batchFile = {};
+        batchReportState.javaType = "";
+        batchReportState.loading = false;
+        batchReportState.showBatchFile = false;
+        batchReportState.saveBatchFileName = "";
+    },
+    detail: function(ev, el) {
+        // fetch, render and display Report in table.
+        batchReportState.loading = true;
+        batchReportState.showBatchFile = false;
+        // parse the retrieved json file and render to table.
+        $.getJSON("/parseBatchFile",
+            {
+                batchName: batchReportState.selectedBatchFile.filename
+            }, function(data){
+                parseBatchFileCallback(data, batchReportState);
+            }, "json").fail(function(data){
+                parseBatchFileCallback(data, batchReportState);
+            }
+        );
+    },
+
+    remove: function(ev, el) {
+        // Will fire remove batch job test/build result.
+        $.post("/removeBatchFile", {filename: batchReportState.selectedBatchFile.filename,
+            location: batchReportState.selectedBatchFile.location},
+            removeBatchFileCallback, "json").fail(removeBatchFileCallback);
+        var index = batchReportState.fileList.indexOf(batchReportState.selectedBatchFile);
+        if(index > -1) {
+            batchReportState.fileList.splice(index, 1);
+        }
+        $('#batchReportListSelectTable').bootstrapTable('load', batchReportState.fileList);
+    },
+    convertToExternal: function(internal) {
+        var external = {};
+        external["config"] = $.extend(true, {}, internal["config"]);
+        external["packages"] = [];
+
+        internal["packages"].forEach(function(entry) {
+            var packagesElement = {};
+            packagesElement["id"] = entry["id"];
+            packagesElement["name"] = entry["owner"] + "/" + entry["name"];
+            packagesElement["tag"] = entry["useVersion"];
+            if (entry["build"])
+            {
+                packagesElement["build"] = {};
+                packagesElement["build"]["artifacts"] = entry["build"]["artifacts"];
+                packagesElement["build"]["selectedBuild"] = entry["build"]["selectedBuild"];
+                packagesElement["build"]["selectedTest"] = entry["build"]["selectedTest"];
+                packagesElement["build"]["selectedEnv"] = entry["build"]["selectedEnv"];
+            }
+            external["packages"].push(packagesElement);
+        });
+
+        return external;
+    }
+};
+// batchReportState object ends
 
 // Contains state of detail view
 var detailState = {
@@ -554,7 +689,6 @@ var reportState = {
         doGetResultList();
     },
     projectFilter: "",
-    batchFilter: "",
     listLocalProjects: function(ev) {
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
@@ -581,12 +715,6 @@ var reportState = {
         projectReportState.compareRepo = "all";
         $.getJSON("/listTestResults/all", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
-    },
-    listLocalBatch: function(ev) {
-    },
-    listGSABatch: function(ev) {
-    },
-    listAllBatch: function(ev) {
     },
     setJobManagePanel: function(ev) {
         reportState.jobManagePanel = (reportState.jobManagePanel) ? false : true;
@@ -1057,6 +1185,7 @@ rivets.bind($('#toolContainer'), {
     projectReportState: projectReportState,
     searchState: searchState,
     batchState: batchState,
+    batchReportState: batchReportState,
     detailState: detailState,
     jenkinsState: jenkinsState,
     percentageState: percentageState
@@ -1773,15 +1902,20 @@ function getBatchResultsCallback(data) {
     $('#batchReportsTable').bootstrapTable('load', batchState.currentBatchJobs);
 }
 
-function parseBatchFileCallback(data) {
-    console.log("In parseBatchFileCallback");
-    batchState.loading = false;
+/*
+ * This function parses the response from API call and prepares data for rendering onto UI
+*/
+function parseBatchFileCallback(data, batch_obj){
+    batch_obj.loading = false;
     if (data.status === "ok") {
-        batchState.showListSelectTable = false;
-        batchState.showBatchFile = true;
-        batchState.batchFile = data.results;
-        batchState.saveBatchFileName = data.results.config.name;
-        batchState.javaType = data.results.config.java;
+        // If data is retrieved successfuly continue preparations.
+        // Get data and update batchReportState attributes.
+        batch_obj.showListSelectTable = false;
+        batch_obj.showBatchFile = true;
+        batch_obj.batchFile = data.results;
+        batch_obj.saveBatchFileName = data.results.config.name;
+        batch_obj.javaType = data.results.config.java;
+        // Defined the behaviour for moving packages up/down/remove if batchState object
         data.results.packages.forEach(function(package) {
             package.down = function (ev) {
                 var i = data.results.packages.indexOf(package);
@@ -1789,7 +1923,7 @@ function parseBatchFileCallback(data) {
                     var ele1 = data.results.packages[i];
                     var ele2 = data.results.packages[i+1];
                     data.results.packages.splice(i, 2, ele2, ele1);
-                    batchState.batchFile.packages = data.results.packages;
+                    batch_obj.batchFile.packages = data.results.packages;
                 }
             };
             package.up = function (ev) {
@@ -1798,16 +1932,16 @@ function parseBatchFileCallback(data) {
                     var ele1 = data.results.packages[i-1];
                     var ele2 = data.results.packages[i];
                     data.results.packages.splice(i-1, 2, ele2, ele1);
-                    batchState.batchFile.packages = data.results.packages;
+                    batch_obj.batchFile.packages = data.results.packages;
                 }
             };
             package.remove = function (ev) {
                 var i = data.results.packages.indexOf(package);
                 var ele = data.results.packages.splice(i, 1);
-                batchState.batchFile.packages = data.results.packages;
+                batch_obj.batchFile.packages = data.results.packages;
                 if (data.results.packages.length === 0) {
-                    batchState.showBatchFile = false;
-                    batchState.showListSelectTable = true;
+                    batch_obj.showBatchFile = false;
+                    batch_obj.showListSelectTable = true;
                 }
             };
         });
@@ -1823,6 +1957,18 @@ function listBatchFilesCallback(data) {
         batchState.showListSelectTable = true;
 
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
+    } else {
+        showAlert("Error!", data);
+    }
+}
+
+function listBatchReportFilesCallback(data) {
+    if (data.status === "ok") {
+        console.log(data.results);
+        batchReportState.fileList = data.results;
+        batchReportState.showListSelectTable = true;
+
+        $('#batchReportListSelectTable').bootstrapTable('load', batchReportState.fileList);
     } else {
         showAlert("Error!", data);
     }
@@ -1983,6 +2129,24 @@ function compareVersion(version1,version2){
     }
     return(result);
 }
+
+function toggleBatchReportButtons(){
+    var selectedProjects = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+    if (selectedProjects.length === 2) {
+        $("#batch_report_compare").removeClass("disabled");
+    } else {
+        $("#batch_report_compare").addClass("disabled");
+    }
+
+    if (selectedProjects.length === 1) {
+        $("#batch_report_detail").removeClass("disabled");
+        $("#batch_report_history").removeClass("disabled");
+    } else {
+        $("#batch_report_detail").addClass("disabled");
+        $("#batch_report_history").addClass("disabled");
+    }
+}
+
 $(document).ready(function() {
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers
@@ -2056,6 +2220,13 @@ $(document).ready(function() {
     });
     $('#batchListSelectTable').on('check.bs.table', function (e, row) {
         batchState.selectedBatchFile = row;
+    });
+    // Initializes an empty batch Report list/select table
+    $('#batchReportListSelectTable').bootstrapTable({
+        data: []
+    });
+    $('#batchReportListSelectTable').on('check.bs.table', function (e, row) {
+        batchReportState.selectedBatchFile = row;
     });
     // Initializes an empty package list table on the single slave panel
     $('#singleServerPackageListTable').bootstrapTable({
@@ -2142,5 +2313,15 @@ $(document).ready(function() {
             $("#testDetailBtn").removeClass("disabled");
             $("#resultArchiveBtn").removeClass("disabled");
         }
+    });
+
+    //Handles display of Batch Report list buttons
+    $('#batchReportListSelectTable').change(function() {
+        toggleBatchReportButtons();
+    });
+
+    $('#batchReportListSelectTable').show(function() {
+        console.log("Showing reports");
+        toggleBatchReportButtons();
     });
 });
