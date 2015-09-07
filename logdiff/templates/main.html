@@ -6,17 +6,25 @@
         <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet"/>
         <link href="{{ url_for('static', filename='css/lib/bootstrap-multiselect.css') }}" rel="stylesheet"/>
         <link href="{{ url_for('static', filename='css/lib/bootstrap-table.min.css') }}" rel="stylesheet"/>
-        <link href="{{ url_for('static', filename='css/lib/bootstrap-table.min.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='css/lib/jquery-ui.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='css/lib/jquery-ui.min.css') }}" rel="stylesheet"/>
+        <link href="{{ url_for('static', filename='css/lib/jquery.qtip.min.css') }}" rel="stylesheet"/>
+        <link href="//code.jquery.com/ui/1.10.4/themes/smoothness/jquery-ui.css" rel="stylesheet"/>
+
         <script src="{{ url_for('static', filename='js/lib/bootstrap.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/lib/bootstrap-multiselect.js') }}"></script>
         <script src="{{ url_for('static', filename='js/lib/bootstrap-table.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/lib/bootstrap-table-en-US.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/lib/jquery-2.1.4.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='js/lib/jquery-ui-1.10.4.js') }}"></script>
         <script src="{{ url_for('static', filename='js/lib/rivets.min.js') }}"></script>
         <script src="{{ url_for('static', filename='js/binders.js') }}"></script>
 
         <script src="http://apps.bdimg.com/libs/jquery/2.0.0/jquery.min.js"></script>
         <script src="http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+        <script src="{{ url_for('static', filename='js/lib/jquery.qtip.min.js') }}"></script>
+        <script src="http://www.google.com/jsapi" type="text/javascript"></script>
+
     </head>
     <body>
         <header>
@@ -25,7 +33,6 @@
             </div>
         </header>
         {% include "error.html" %}
-
 
     <!-- Invalid number of selected projects error modal -->
         <div class="modal fade" id="resultCompareSelectionAlert" tabindex="-1">
@@ -106,10 +113,7 @@
                     </form>
                 </div>
             </div>
-
-
         </div>
-
     </body>
     {% include "includes/js-includes.html" %}
     <script src="{{ url_for('.static', filename='js/logdiffmain.js') }}"></script>
