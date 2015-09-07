@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "3",
+    "sequence": "4",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -264,29 +264,35 @@
             ],
             "autoportChefPackages": [
                 {
-                    "name": "openjdk-7-jdk",
-                    "version": "7"
-                },
-                {
                     "name": "ant"
-                },
-                {
-                    "name": "maven"
                 },
                 {
                     "name": "gradle"
                 },
                 {
+                    "name": "ibm-java-sdk",
+                    "version": "7.1-3.10"
+                },
+                {
+                    "name": "ibm-1.2.0.5-node-v",
+                    "version": "0.12.7",
+                    "tag": "ibm-sdk-nodejs",
+                    "arch": "ppc64le"
+                },
+                {
+                    "name": "maven"
+                },
+                {
                     "name": "nodejs",
-                    "version": "0.10.38"
+                    "arch": "x86_64"
+                },
+                {
+                    "name": "openjdk-7-jdk",
+                    "version": "7"
                 },
                 {
                     "name": "protobuf",
                     "version": "2.6.1"
-                },
-                {
-                    "name": "ibm-java",
-                    "version": "8"
                 },
                 {
                     "name": "perl",
@@ -304,13 +310,22 @@
             "distroVersion": "7.1",
             "autoportPackages": [
                 {
-                    "name": "git"
+                    "name": "ant"
+                },
+                {
+                    "name": "autoconf"
+                },
+                {
+                    "name": "automake"
+                },
+                {
+                    "name": "cmake"
                 },
                 {
                     "name": "gcc-c++"
                 },
                 {
-                    "name": "make"
+                    "name": "git"
                 },
                 {
                     "name": "java-1.7.0-openjdk"
@@ -319,34 +334,13 @@
                     "name": "java-1.7.0-openjdk-devel"
                 },
                 {
-                    "name": "ant"
-                },
-                {
-                    "name": "maven"
-                },
-                {
-                    "name": "snappy"
-                },
-                {
-                    "name": "autoconf"
-                },
-                {
                     "name": "libtool"
                 },
                 {
-                    "name": "automake"
-                },
-                {
-                    "name": "zlib"
-                },
-                {
-                    "name": "zlib-devel"
-                },
-                {
-                    "name": "tcl"
-                },
-                {
                     "name": "lzo"
+                },
+                {
+                    "name": "make"
                 },
                 {
                     "name": "perl"
@@ -355,17 +349,17 @@
                     "name": "perl-CPAN"
                 },
                 {
-                    "name": "perl-file-Remove"
+                    "name": "perl-File-Remove"
                 },
                 {
                     "name": "python",
                     "version": "2.7.5-16.el7"
                 },
                 {
-                    "name": "python-setuptools"
+                    "name": "python-py"
                 },
                 {
-                    "name": "python-py"
+                    "name": "python-setuptools"
                 },
                 {
                     "name": "ruby"
@@ -374,77 +368,73 @@
                     "name": "rubygem-bundler"
                 },
                 {
-                    "name": "cmake"
-                },
-                {
                     "name": "sbt"
                 },
                 {
                     "name": "scons"
+                },
+                {
+                    "name": "snappy"
+                },
+                {
+                    "name": "tcl"
+                },
+                {
+                    "name": "zlib"
+                },
+                {
+                    "name": "zlib-devel"
                 }
             ],
             "autoportChefPackages": [
-                {
-                    "name": "java-1.7.0-openjdk",
-                    "version": "7"
-                },
-                {
-                    "name": "protobuf",
-                    "version": "2.6.1"
-                },
-                {
-                    "name": "ibm-java",
-                    "version": "8"
-                },
                 {
                     "name": "ant"
                 },
                 {
                     "name": "apache-maven",
                     "version": "3.0.5",
-                    "arch": "x86_64",
                     "tag": "maven"
+                },
+                {
+                    "name": "File-Remove",
+                    "version": "1.52",
+                    "arch": "x86_64",
+                    "tag": "perl-File-Remove"
                 },
                 {
                     "name": "gradle",
                     "version": "1.4"
                 },
                 {
-                    "name": "scala",
-                    "version": "2.9.2"
+                    "name": "ibm-java-sdk",
+                    "version": "7.1-3.10"
+                },
+                {
+                    "name": "ibm-1.2.0.5-node-v",
+                    "version": "0.12.7",
+                    "tag": "ibm-sdk-nodejs",
+                    "arch": "ppc64le"
+                },
+                {
+                    "name": "java-1.7.0-openjdk",
+                    "version": "7"
+                },
+                {
+                    "name": "Module-Install",
+                    "version": "1.14",
+                    "tag": "perl-Module-Install"
                 },
                 {
                     "name": "nodejs",
-                    "version": "0.10.38",
-                    "arch": "ppc64le"
+                    "arch": "x86_64"
                 },
                 {
                     "name": "perl",
                     "version": "5.20.2"
                 },
                 {
-                    "name": "File-Remove",
-                    "version": "1.52",
-                    "arch": "x86_64",
-                    "tag": "perl-file-remove"
-                },
-                {
-                    "name": "Module-Install",
-                    "version": "1.14",
-                    "tag": "perl-module-install"
-                },
-                {
-                    "name": "YAML-Tiny",
-                    "version": "1.64",
-                    "tag": "perl-yaml-tiny"
-                },
-                {
-                    "name": "Test-Strict",
-                    "version": "0.26"
-                },
-                {
-                    "name": "Strict-Perl",
-                    "version": "2014.10"
+                    "name": "protobuf",
+                    "version": "2.6.1"
                 },
                 {
                     "name": "py",
@@ -455,6 +445,23 @@
                 {
                     "name": "pytest",
                     "version": "2.6.4"
+                },
+                {
+                    "name": "scala",
+                    "version": "2.9.2"
+                },
+                {
+                    "name": "Strict-Perl",
+                    "version": "2014.10"
+                },
+                {
+                    "name": "Test-Strict",
+                    "version": "0.26"
+                },
+                {
+                    "name": "YAML-Tiny",
+                    "version": "1.64",
+                    "tag": "perl-Yaml-Tiny"
                 }
             ],
             "userPackages": []
