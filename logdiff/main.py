@@ -142,14 +142,14 @@ def getTextDiffResults():
     for (flag, data) in diffs:
         text = data.replace("\n", "<br>")
         if flag == diff_obj.DIFF_DELETE:
-            left_content.append("""<span><font style=\"background:#ceceff;\">%s</font><span>""" % text)
+            left_content.append("""<font style=\"background:#ceceff;\">%s</font>""" % text)
             # left_content.append("""%s""" % text)
         elif flag == diff_obj.DIFF_INSERT:
-            right_content.append("""<span><font style=\"background:#e6ffe6;\">%s</font><span>""" % text)
+            right_content.append("""<font style=\"background:#e6ffe6;\">%s</font>""" % text)
             #right_content.append("""%s""" % text)
         elif flag == diff_obj.DIFF_EQUAL:
-            left_content.append("<span>%s</span>" % text)
-            right_content.append("<span>%s</span>" % text)
+            left_content.append(text)
+            right_content.append(text)
 
     return json.jsonify(status = "ok",
                     leftname = "text fragment1",
@@ -213,10 +213,6 @@ def getlogdiff():
             right_content.append("%s" % text)
 
     return render_template('output.html', leftname=file1, rightname=file2, left_content="".join(left_content), right_content="".join(right_content))
-    #return render_template('output.html', left_content="Hello", right_content="world")
-
-
-
 
 if __name__ == "__main__":
     app.run(

@@ -1,3 +1,5 @@
+google.load('search', '1');
+
 $('#file1').change(function () {
     var empty = true;
     if ($('#file1').val().length > 0 && $('#file2').val().length > 0) {
@@ -104,6 +106,41 @@ function processCompareResults(data) {
         $("#leftdiff").html(data.leftcontent);
         $("#rightdiff").html(data.rightcontent);
         $("#logdiffHeader").html("for " + data.leftname + " / " + data.rightname);
+        $('#logdiffModal').on('show.bs.modal', function() {
+            $('#leftdiff span, #rightdiff span').each(function(index) {
+                var elementID = "searchcontrol"+index;
+				var html = '<div id="' + elementID + '"></div>';
+				$('#logdiffModal').append(html);
+				$(this).qtip({
+					content: {
+						text: function(event, api) {
+							var searchControl = new google.search.SearchControl();
+							searchControl.addSearcher(new google.search.WebSearch());
+							searchControl.draw(document.getElementById(elementID));
+							var searchword = $(this).text();
+							if (searchword.length>40) {
+								searchword = searchword.substring(searchword.length-40);
+							}
+							searchControl.execute(searchword);
+							return $("#"+elementID);
+						},
+						title: 'From Google Search',
+						button: true
+					},
+					position: {
+						viewport: $(window)
+					},
+					hide: false
+				});
+			});
+		});
+        $('#logdiffModal').on('hidden.bs.modal', function () {
+            $('#leftdiff span, #rightdiff span').each(function(index) {
+				if( $(this).data('qtip')) {
+					$(this).qtip('destroy', true);
+				}
+		    });
+		});
         $('#logdiffModal').modal('show');
     }
 }
