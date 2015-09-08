@@ -612,8 +612,18 @@ def createJob_common(time, uid, id, tag, node, javaType,
     # Name of jenkins new Folder
     jobFolder = jobName + "." + timestr
 
-    xml_build_command.text = selectedBuild
-    xml_test_command.text = selectedTest
+    # This is the build shell script that is invoked on the build slave
+    buildCmds  = "echo autoport-env: \'" + selectedEnv + "\' > build_result.arti; "
+    buildCmds += "echo autoport-cmd: \'" + selectedBuild + "\' >> build_result.arti; "
+    buildCmds += selectedBuild
+
+    # This is the test shell script that is invoked on the build slave
+    testCmds  = "echo autoport-env = \'" + selectedEnv + "\' > test_result.arti; "
+    testCmds += "echo autoport-cmd = \'" + selectedTest + "\' >> test_result.arti; "
+    testCmds += selectedTest
+
+    xml_build_command.text = buildCmds
+    xml_test_command.text = testCmds
     xml_env_command.text = selectedEnv
 
     # In addition to whatever other environmental variables I need to inject
