@@ -34,7 +34,7 @@ from github import Github
 from cache import Cache
 from requests.exceptions import MissingSchema
 
-app = Flask(__name__)
+app = Flask(__name__,static_url_path='/autoport')
 
 maxResults = 10
 resParser = ResultParser()
@@ -63,11 +63,11 @@ chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
 resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
 # Main page - just serve up main.html
-@app.route("/")
+@app.route("/autoport/")
 def main():
     return render_template("main.html")
 
-@app.route("/init", methods=['POST'])
+@app.route("/autoport/init", methods=['POST'])
 def init():
     return json.jsonify(status="ok", jenkinsUrl=globals.jenkinsUrl,
                         localPathForTestResults=globals.localPathForTestResults,
@@ -81,7 +81,7 @@ def init():
                         gsaConnected=globals.gsaConnected)
 
 #TODO - add error checking
-@app.route("/getJenkinsNodes", methods=["POST"])
+@app.route("/autoport/getJenkinsNodes", methods=["POST"])
 def getJenkinsNodes():
     nodesUrl = globals.jenkinsUrl + "/computer/api/json?pretty=true"
 
@@ -110,7 +110,7 @@ def getJenkinsNodes():
 # Don't fail as a lot of func is still possible.  Nodes may go offline at any time.
 # TODO - Run with threads in parallel synchronously as caller requires data
 
-@app.route("/getJenkinsNodeDetails", methods=["POST"])
+@app.route("/autoport/getJenkinsNodeDetails", methods=["POST"])
 def getJenkinsNodeDetails():
     action = "query-os"
 
@@ -148,7 +148,7 @@ def getJenkinsNodeDetails():
     return json.jsonify(status="ok", details=globals.nodeDetails, ubuntu=globals.nodeUbuntu, rhel=globals.nodeRHEL)
 
 # Settings function
-@app.route("/settings", methods=['POST'])
+@app.route("/autoport/settings", methods=['POST'])
 def settings():
 
     githubToken = globals.githubToken
@@ -220,7 +220,7 @@ def settings():
 
     return json.jsonify(status="ok", gsaConnected=globals.gsaConnected)
 
-@app.route("/progress")
+@app.route("/autoport/progress")
 def progress():
     try:
         results = determineProgress()
@@ -230,7 +230,7 @@ def progress():
 
 # Search - return a JSON file with search results or the matched
 # repo if there's a solid candidate
-@app.route("/search")
+@app.route("/autoport/search")
 def search():
     # Get and validate arguments
     query = request.args.get("q", "")
@@ -307,7 +307,7 @@ def search():
     return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
 
 # Detail - returns a JSON file with detailed information about the repo
-@app.route("/detail/<int:id>")
+@app.route("/autoport/detail/<int:id>")
 def detail(id, repo=None):
     panel = request.args.get("panel", "")
 
@@ -394,7 +394,7 @@ def changeQuery(q, key, newval):
 # Search repositories - return JSON search results for the GitHub
 # /search/repositories API call. See the following for details:
 #   https://developer.github.com/v3/search/
-@app.route("/search/repositories")
+@app.route("/autoport/search/repositories")
 def search_repositories():
 
     # GitHub API parameters
@@ -506,7 +506,7 @@ def search_repositories():
             error="GithubException ({0}): {1}".format(e.status, e.data['message'])), 400
 
 # Upload Batch File - takes a file and uploads it to a permanent location (TBD)
-@app.route("/uploadBatchFile", methods=['GET', 'POST'])
+@app.route("/autoport/uploadBatchFile", methods=['GET', 'POST'])
 def uploadBatchFile():
     try:
         name = request.form["name"]
@@ -698,7 +698,7 @@ def createJob_common(time, uid, id, tag, node, javaType,
 # Opens a new tab with a new jenkins job URL on the client side on success,
 # while the current tab stays in the same place.
 # TODO - If job is started through batch file can't select options currently
-@app.route("/createJob", methods=['GET', 'POST'])
+@app.route("/autoport/createJob", methods=['GET', 'POST'])
 def createJob(i_id = None,
               i_tag = None,
               i_node = None,
@@ -921,7 +921,7 @@ def moveArtifacts(jobName, localBaseDir, time):
 
 # Run Batch File - takes a batch file name and runs it
 # TODO - fix to provide support for multiple build servers instead of just x86 vs ppcle
-@app.route("/runBatchFile", methods=["GET", "POST"])
+@app.route("/autoport/runBatchFile", methods=["GET", "POST"])
 def runBatchFile ():
     # Get the batch file name from POST
     try:
@@ -989,7 +989,7 @@ def runBatchFile ():
         return json.jsonify(status="ok")
     return json.jsonify(status="failure", error="batch file no project is buildable"), 404
 
-@app.route("/getBatchResults", methods=["GET", "POST"])
+@app.route("/autoport/getBatchResults", methods=["GET", "POST"])
 def getBatchResults():
     try:
         batchName = request.form["batchName"]
@@ -1015,7 +1015,7 @@ def getBatchResults():
     except IOError as e:
         return json.jsonify(status="ok", results=results)
 
-@app.route("/removeBatchFile", methods=["GET", "POST"])
+@app.route("/autoport/removeBatchFile", methods=["GET", "POST"])
 def removeBatchFile():
     try:
         filename = request.form["filename"]
@@ -1034,7 +1034,7 @@ def removeBatchFile():
     return json.jsonify(status="ok")
 
 # List available batch files
-@app.route("/listBatchFiles/<repositoryType>")
+@app.route("/autoport/listBatchFiles/<repositoryType>")
 def listBatchFiles(repositoryType):
     try:
         filt = request.args.get("filter", "")
@@ -1046,7 +1046,7 @@ def listBatchFiles(repositoryType):
         return json.jsonify(status="failure", error=str(e)), 401
 
 # List information about packages on a build server by creating and triggering a Jenkins job on it
-@app.route("/listPackageForSingleSlave")
+@app.route("/autoport/listPackageForSingleSlave")
 def listPackageForSingleSlave():
     packageFilter = request.args.get("packageFilter", "")
     selectedBuildServer = request.args.get("buildServer", "")
@@ -1407,7 +1407,7 @@ def queryNode(node, action):
     return { 'status': "failure", 'error': "Unknown failure"  }
 
 # Install/Delete/Update package on selected build server/slave via a Jenkins job
-@app.route("/managePackageForSingleSlave")
+@app.route("/autoport/managePackageForSingleSlave")
 def managePackageForSingleSlave():
     packageName = request.args.get("package_name", "")
     packageVersion = request.args.get("package_version", "")
@@ -1542,7 +1542,7 @@ def managePackageForSingleSlave():
                 error="Could not create/trigger the Jenkins job to perform the action requested"), 400
 
 # List installed and available status of the package in packageName by creating and triggering a Jenkins job
-@app.route("/listManagedPackages", methods=["GET"])
+@app.route("/autoport/listManagedPackages", methods=["GET"])
 def listManagedPackages():
     try:
         distro = request.args.get("distro", "")
@@ -1650,7 +1650,7 @@ def listManagedPackages():
     return json.jsonify(status="ok", packages=packageList)
 
 # Add package selected by user to the local Managed List
-@app.route("/addToManagedList", methods=["POST"])
+@app.route("/autoport/addToManagedList", methods=["POST"])
 def addToManagedList():
 
     try:
@@ -1668,7 +1668,7 @@ def addToManagedList():
     return json.jsonify(status="ok")
 
 # Remove package selected by user from the local Managed List
-@app.route("/removeFromManagedList", methods=["POST"])
+@app.route("/autoport/removeFromManagedList", methods=["POST"])
 def removeFromManagedList():
     try:
         requestData = request.form;
@@ -1681,7 +1681,7 @@ def removeFromManagedList():
     return json.jsonify(status="ok", details = {'action' : action})
 
 # Synch the local managed package file with the one on Jenkins master.
-@app.route("/synchManagedPackageList")
+@app.route("/autoport/synchManagedPackageList")
 def synchManagedPackageList():
     try:
         nodes = request.args.get("serverNodeCSV", "")
@@ -1854,7 +1854,7 @@ def monitorChefJobs(jobName, sync=False):
             return "FAILURE"
 
 # Read and sanitize the contents of the named batch file
-@app.route("/parseBatchFile")
+@app.route("/autoport/parseBatchFile")
 def parseBatchFile():
     batchName  = request.args.get("batchName", "")
     if batchName == "":
@@ -1867,7 +1867,7 @@ def parseBatchFile():
 
 # List all results available on catalog
 #TODO - list builds as failed and disable test detail
-@app.route("/listTestResults/<repositoryType>")
+@app.route("/autoport/listTestResults/<repositoryType>")
 def listTestResults(repositoryType):
     try:
         filt = request.args.get("filter", "")
@@ -1879,7 +1879,7 @@ def listTestResults(repositoryType):
 
 # Get the jenkins build output
 # /getBuildResults?left=x&right=y
-@app.route("/getTestResults")
+@app.route("/autoport/getTestResults")
 def getTestResults():
     leftbuild  = request.args.get("leftbuild", "")
     rightbuild = request.args.get("rightbuild", "")
@@ -1930,7 +1930,7 @@ def getTestResults():
                         results = res)
 
 # Get diff log output
-@app.route("/getDiffLogResults")
+@app.route("/autoport/getDiffLogResults")
 def getDiffLogResults():
     logFile  = request.args.get("logfile", "")
     leftBuild  = request.args.get("leftbuild", "")
@@ -2007,7 +2007,7 @@ def getDiffLogResults():
                         rightCol = rightCol,
                         results = res)
 
-@app.route("/getTestHistory", methods=["POST"])
+@app.route("/autoport/getTestHistory", methods=["POST"])
 def getTestHistory():
     projects = request.json['projects']
 
@@ -2062,7 +2062,7 @@ def getTestHistory():
 
     return json.jsonify(status = "ok", results = out)
 
-@app.route("/getTestDetail", methods=["POST"])
+@app.route("/autoport/getTestDetail", methods=["POST"])
 def getTestDetail():
     projects = request.json['projects']
     out = []
@@ -2097,7 +2097,7 @@ def getTestDetail():
     catalog.cleanTmp()
     return json.jsonify(status = "ok", results = out)
 
-@app.route("/archiveBatchFile", methods=["POST"])
+@app.route("/autoport/archiveBatchFile", methods=["POST"])
 def archiveBatchFile():
     try:
         filename = request.form["filename"]
@@ -2110,7 +2110,7 @@ def archiveBatchFile():
         return json.jsonify(status="failure", error=res['error'])
     return json.jsonify(status="ok")
 
-@app.route("/archiveProjects", methods=["POST"])
+@app.route("/autoport/archiveProjects", methods=["POST"])
 def archiveProjects():
     projects = request.json['projects']
     status, errors, alreadyThere = catalog.archiveResults(projects)
@@ -2131,7 +2131,7 @@ def getPackagesCSVFromManagedList(slaveNodeDistro, mljson):
     return packagesCSV;
 
 #Upload rpms debs and archives to custom repository
-@app.route('/uploadToRepo', methods=['GET','POST'])
+@app.route('/autoport/uploadToRepo', methods=['GET','POST'])
 def uploadToRepo():
     postedFile = dict(request.files)
     # sourceType input from combobox

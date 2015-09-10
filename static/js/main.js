@@ -71,7 +71,7 @@ var globalState = {
         configUsername = document.getElementById('username').value;
         configPassword = document.getElementById('password').value;
         useTextAnalytics = globalState.useTextAnalytics
-        $.post("/settings", {url: jenkinsUrl,
+        $.post("settings", {url: jenkinsUrl,
                ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
                lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles, github: githubToken,
                username: configUsername, password: configPassword, useTextAnalytics:  useTextAnalytics}, settingsCallback, "json").fail(settingsCallback);
@@ -79,7 +79,7 @@ var globalState = {
 };
 
 if (!globalState.hasInit) {
-    $.post("/init", {}, initCallback, "json").fail(initCallback);
+    $.post("init", {}, initCallback, "json").fail(initCallback);
 }
 
 var percentageState = {
@@ -95,7 +95,7 @@ var percentageState = {
     warningPercentage: "width: 0%;",
     successPercentage: "width: 0%;",
     updateProgressBar: function() {
-        $.getJSON("/progress", {}, processProgressBar).fail(processProgressBar);
+        $.getJSON("progress", {}, processProgressBar).fail(processProgressBar);
     }
 };
 
@@ -146,7 +146,7 @@ var searchState = {
                 var file = JSON.stringify(batchState.convertToExternal(searchState.single.batchFile),
                     undefined, 2);
 
-                $.post("/uploadBatchFile", {name: name, file: file},
+                $.post("uploadBatchFile", {name: name, file: file},
                     singleSaveCallback, "json").fail(uploadBatchFileCallback);
             },
             setSearchBox: function (ev) {
@@ -208,7 +208,7 @@ var searchState = {
                   var name = searchState.multiple.batchFile.config.name;
                   var file = JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
                       undefined, 2);
-                  $.post("/uploadBatchFile", {name: name, file: file},
+                  $.post("uploadBatchFile", {name: name, file: file},
                       multipleSaveCallback, "json").fail(uploadBatchFileCallback);
               },
               setSearchBox: function (ev) {
@@ -240,7 +240,7 @@ var searchState = {
                       console.log(data);
                       searchState.multiple.ready = false;
                       searchState.multiple.loadingState.loading = true;
-                      $.getJSON("/search/repositories", data, processSearchResults).fail(processSearchResults);
+                      $.getJSON("search/repositories", data, processSearchResults).fail(processSearchResults);
                   }
               },
               loadingState: {
@@ -289,7 +289,7 @@ var batchState = {
             reader.onload = function(e) {
                 var batchFile = JSON.parse(e.target.result);
                 name = batchFile.config.name;
-                $.post("/uploadBatchFile", {name: name, file: e.target.result},
+                $.post("uploadBatchFile", {name: name, file: e.target.result},
                     uploadBatchFileCallback, "json").fail(uploadBatchFileCallback);
             };
         }
@@ -302,19 +302,19 @@ var batchState = {
     listLocalBatchFiles: function(ev) {
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
-        $.getJSON("/listBatchFiles/local", { filter: $("#batchFileFilter").val() },
+        $.getJSON("listBatchFiles/local", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
     listArchivedBatchFiles: function(ev) {
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
-        $.getJSON("/listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
+        $.getJSON("listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
     listAllBatchFiles: function(ev) {
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
-        $.getJSON("/listBatchFiles/all", { filter: $("#batchFileFilter").val() },
+        $.getJSON("listBatchFiles/all", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
 
@@ -338,7 +338,7 @@ var batchState = {
         batchState.saveBatchFileName = $("#saveBatchFileFilter").val();
         batchState.batchFile.config.name = batchState.saveBatchFileName;
         var file = JSON.stringify(batchState.batchFile, undefined, 2);
-        $.post("/uploadBatchFile", {name: batchState.saveBatchFileName, file: file},
+        $.post("uploadBatchFile", {name: batchState.saveBatchFileName, file: file},
                batchSaveCallback, "json").fail(uploadBatchFileCallback);
     },
     buildAndTestDetail: function(ev, el) {
@@ -360,7 +360,7 @@ var batchState = {
                 if (build.selectedBuild === "")
                     continue;
 
-                $.post("/createJob", {id: package.id, tag: packages.tag, javaType: javaType,
+                $.post("createJob", {id: package.id, tag: packages.tag, javaType: javaType,
                        node: buildServers[i], selectedBuild: build.selectedBuild,
                        selectedTest: build.selectedTest, selectedEnv: build.selectedEnv,
                        artifacts: build.artifacts, buildSystem: build.buildSystem}, addToJenkinsCallback,
@@ -393,12 +393,12 @@ var batchState = {
                 if (options[i].selected) selectedServers.push(options[i].value)
             }
         if (selectedServers.length == 0){
-            $.post("/runBatchFile", {batchName: batchState.selectedBatchFile.filename,
+            $.post("runBatchFile", {batchName: batchState.selectedBatchFile.filename,
                 node: undefined}, runBatchFileCallback, "json").fail(runBatchFileCallback);
         }
         else{
             for (var i = 0; i < selectedServers.length; i++){
-                $.post("/runBatchFile", {batchName: batchState.selectedBatchFile.filename,
+                $.post("runBatchFile", {batchName: batchState.selectedBatchFile.filename,
                     node: selectedServers[i]}, runBatchFileCallback, "json").fail(runBatchFileCallback);
             }
         }
@@ -406,7 +406,7 @@ var batchState = {
     detail: function(ev, el) {
         batchState.loading = true;
         batchState.showBatchFile = false;
-        $.getJSON("/parseBatchFile",
+        $.getJSON("parseBatchFile",
             {
                 batchName: batchState.selectedBatchFile.filename
             }, function(data){
@@ -418,11 +418,11 @@ var batchState = {
     },
     showReport: function(ev, el) {
         batchState.showListSelectTable = false;
-        $.post("/getBatchResults", {batchName: batchState.selectedBatchFile.filename},
+        $.post("getBatchResults", {batchName: batchState.selectedBatchFile.filename},
             getBatchResultsCallback, "json").fail(getBatchResultsCallback);
     },
     remove: function(ev, el) {
-        $.post("/removeBatchFile", {filename: batchState.selectedBatchFile.filename,
+        $.post("removeBatchFile", {filename: batchState.selectedBatchFile.filename,
             location: batchState.selectedBatchFile.location},
             removeBatchFileCallback, "json").fail(removeBatchFileCallback);
         var index = batchState.fileList.indexOf(batchState.selectedBatchFile);
@@ -432,7 +432,7 @@ var batchState = {
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
     },
     archive: function(ev, el) {
-        $.post("/archiveBatchFile", {filename: batchState.selectedBatchFile.filename},
+        $.post("archiveBatchFile", {filename: batchState.selectedBatchFile.filename},
             archiveBatchFileCallback, "json").fail(archiveBatchFileCallback);
     },
     convertToExternal: function(internal) {
@@ -482,7 +482,7 @@ var batchReportState = {
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
      // callback to render data to Batch Report table
-        $.getJSON("/listBatchFiles/local", { filter: $("#batchReportFilter").val() },
+        $.getJSON("listBatchFiles/local", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
     },
     listGSABatch: function(ev) {
@@ -491,7 +491,7 @@ var batchReportState = {
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
         // callback to render data to Batch Report table
-        $.getJSON("/listBatchFiles/gsa", { filter: $("#batchReportFilter").val() },
+        $.getJSON("listBatchFiles/gsa", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
     },
     listAllBatch: function(ev) {
@@ -500,7 +500,7 @@ var batchReportState = {
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
         // callback to render data to Batch Report table
-        $.getJSON("/listBatchFiles/all", { filter: $("#batchReportFilter").val() },
+        $.getJSON("listBatchFiles/all", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
     },
     setTestResultsPanel: function(ev) {
@@ -540,7 +540,7 @@ var batchReportState = {
         batchReportState.loading = true;
         batchReportState.showBatchFile = false;
         // parse the retrieved json file and render to table.
-        $.getJSON("/parseBatchFile",
+        $.getJSON("parseBatchFile",
             {
                 batchName: batchReportState.selectedBatchFile.filename
             }, function(data){
@@ -553,7 +553,7 @@ var batchReportState = {
 
     remove: function(ev, el) {
         // Will fire remove batch job test/build result.
-        $.post("/removeBatchFile", {filename: batchReportState.selectedBatchFile.filename,
+        $.post("removeBatchFile", {filename: batchReportState.selectedBatchFile.filename,
             location: batchReportState.selectedBatchFile.location},
             removeBatchFileCallback, "json").fail(removeBatchFileCallback);
         var index = batchReportState.fileList.indexOf(batchReportState.selectedBatchFile);
@@ -695,7 +695,7 @@ var reportState = {
 
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "local";
-        $.getJSON("/listTestResults/local", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
+        $.getJSON("listTestResults/local", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").show();
     },
     listGSAProjects: function(ev) {
@@ -704,7 +704,7 @@ var reportState = {
 
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "archived";
-        $.getJSON("/listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
+        $.getJSON("listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
     },
     listAllProjects: function(ev) {
@@ -713,7 +713,7 @@ var reportState = {
 
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "all";
-        $.getJSON("/listTestResults/all", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
+        $.getJSON("listTestResults/all", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
     },
     setJobManagePanel: function(ev) {
@@ -785,7 +785,7 @@ var jenkinsState = {
         jenkinsState.selectedSingleSlavePackage = [];
         $("#singlePanelInstallBtn").addClass("disabled");
         $("#singlePanelRemoveBtn").addClass("disabled");
-        $.getJSON("/listPackageForSingleSlave",
+        $.getJSON("listPackageForSingleSlave",
         {
             packageFilter: $("#packageFilter_Single").val(),
             buildServer: jenkinsState.buildServer
@@ -862,7 +862,7 @@ var jenkinsState = {
             if (selectedPackageList [selectedPkg].package_tagname != undefined)
                 package_tagname = selectedPackageList [selectedPkg].package_tagname;
             jenkinsState.loadingState.packageActionLoading = true;
-            $.getJSON("/managePackageForSingleSlave",
+            $.getJSON("managePackageForSingleSlave",
             {
                 package_name: selectedPackageList [selectedPkg].packageName,
                 package_version: selectedPackageList [selectedPkg].updateVersion,
@@ -917,7 +917,7 @@ var jenkinsState = {
         }
         $("#buildServersToSyncDropDown").multiselect('dataprovider', buildServerJsonObj);
         jenkinsState.manageManagePanelFilter = ($("#packageFilter_Multiple").val()!='')?true:false;
-        $.getJSON("/listManagedPackages", { distro: jenkinsState.serverGroup, package: $("#packageFilter_Multiple").val() },
+        $.getJSON("listManagedPackages", { distro: jenkinsState.serverGroup, package: $("#packageFilter_Multiple").val() },
             listManagedPackagesCallback).fail(listManagedPackagesCallback);
     },
     getSelectedManagedPackageData: function(type){
@@ -978,7 +978,7 @@ var jenkinsState = {
             showAlert("No Package is eligible for Add");
             return false;
         }
-        $.post("/addToManagedList", { action: 'install', packageDataList: packageListObj}, editManagedListCallback, "json").fail(editManagedListCallback);
+        $.post("addToManagedList", { action: 'install', packageDataList: packageListObj}, editManagedListCallback, "json").fail(editManagedListCallback);
     },
     removeFromManagedList: function(ev, el) {
         var packageListObj = JSON.stringify(jenkinsState.getSelectedManagedPackageData("Remove"));
@@ -986,7 +986,7 @@ var jenkinsState = {
             showAlert("No Package is eligible for Remove");
             return false;
         }
-        $.post("/removeFromManagedList",
+        $.post("removeFromManagedList",
         {
             action: 'remove',
             packageDataList: packageListObj
@@ -1001,7 +1001,7 @@ var jenkinsState = {
         }
         jenkinsState.loadingState.managedPackageActionLoading = true;
         $("#syncManagedPackageButton").addClass("disabled");
-        $.getJSON("/synchManagedPackageList", { serverNodeCSV: selectedBuildServer }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
+        $.getJSON("synchManagedPackageList", { serverNodeCSV: selectedBuildServer }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
     },
     uploadPackage: function (ev) {
         var file = $('#packageFile')[0].files[0];
@@ -1019,7 +1019,7 @@ var jenkinsState = {
         formData.append('packageType',packageType);
 
                 $.ajax({
-                 url: "/uploadToRepo",
+                 url: "uploadToRepo",
                  type: 'POST',
                  data: formData,
                         async: true,
@@ -1062,7 +1062,7 @@ var projectReportState = {
         $.ajax({
                 type: "POST",
          contentType: "application/json; charset=utf-8",
-                 url: "/getTestHistory",
+                 url: "getTestHistory",
                 data: JSON.stringify({
                         projects: query
                       }),
@@ -1084,7 +1084,7 @@ var projectReportState = {
         $.ajax({
                 type: "POST",
          contentType: "application/json; charset=utf-8",
-                 url: "/getTestDetail",
+                 url: "getTestDetail",
                 data: JSON.stringify({
                         projects: query
                       }),
@@ -1106,7 +1106,7 @@ var projectReportState = {
             //TODO - add loading bar
             projectReportState.prjCompareReady = false;
             projectReportState.prjTableReady = false;
-            $.getJSON("/getTestResults",
+            $.getJSON("getTestResults",
                       {
                         leftbuild: leftProject,
                         rightbuild: rightProject,
@@ -1137,7 +1137,7 @@ var projectReportState = {
             projectReportState.prjCompareReady = false;
             projectReportState.prjTableReady = false;
             projectReportState.loadingState.diffLoading = true;
-            $.getJSON("/getDiffLogResults",
+            $.getJSON("getDiffLogResults",
                       {
                         logfile: logFile,
                         leftbuild: leftProject,
@@ -1162,7 +1162,7 @@ var projectReportState = {
         $.ajax({
                 type: "POST",
          contentType: "application/json; charset=utf-8",
-                 url: "/archiveProjects",
+                 url: "archiveProjects",
                 data: JSON.stringify({
                         projects: query
                       }),
@@ -1201,7 +1201,7 @@ function doSearch(autoselect) {
     if (searchState.single.query.length > 0) {
         searchState.single.ready = false;
         searchState.single.loadingState.loading = true;
-        $.getJSON("/search", {
+        $.getJSON("search", {
                q: searchState.single.query,
             sort: searchState.single.sorting,
             auto: autoselect,
@@ -1254,12 +1254,12 @@ function processSearchResults(data) {
             result.select = function (ev) {
                 var className = $(ev.target).attr('class');
                 if (className === "generateDetailButton btn btn-primary") {
-                    $.getJSON("/detail/" + result.id, {panel: "generate"}, showDetail).fail(showDetail);
+                    $.getJSON("detail/" + result.id, {panel: "generate"}, showDetail).fail(showDetail);
                     searchState.multiple.ready = false;
                     searchState.multiple.loadingState.loading = true;
                 }
                 else if (className === "singleDetailButton btn btn-primary") {
-                    $.getJSON("/detail/" + result.id, {panel: "single"}, showDetail).fail(showDetail);
+                    $.getJSON("detail/" + result.id, {panel: "single"}, showDetail).fail(showDetail);
                     searchState.single.ready = false;
                     searchState.single.loadingState.loading = true;
                 }
@@ -1324,7 +1324,7 @@ function doGetResultList() {
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
 
-        $.getJSON("/listTestResults", {}, processResultList).fail(processResultList);
+        $.getJSON("listTestResults", {}, processResultList).fail(processResultList);
         break;
       default:
         break;
@@ -1735,7 +1735,7 @@ function showDetail(data) {
 
                 for (var i=0; i < buildServers.length; i++) {
                     console.log(detailState.repo.useVersion + " version");
-                    $.post("/createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion, javaType: detailState.javaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, buildSystem: buildInfo.buildSystem}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                    $.post("createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion, javaType: detailState.javaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, buildSystem: buildInfo.buildSystem}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
             detailState.repo.updateVersion = function(e) {
@@ -1770,7 +1770,7 @@ function showDetail(data) {
                 var buildServers = getSelectedValues(el);
 
                 for(var i=0; i < buildServers.length; i++) {
-                    $.post("/createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion, javaType: detailState.generateJavaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, buildSystem: buildInfo.buildSystem}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                    $.post("createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion, javaType: detailState.generateJavaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, buildSystem: buildInfo.buildSystem}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
             detailState.generateRepo.updateVersion = function(e) {
@@ -2153,7 +2153,7 @@ $(document).ready(function() {
     // TODO: add selections for default (goes through jenkins master), linux distributions, specific build servers
     $.ajax({
         type: 'POST',
-        url: "/getJenkinsNodes",
+        url: "getJenkinsNodes",
         data: {},
         success: getJenkinsNodesCallback,
         dataType: "json",
@@ -2163,7 +2163,7 @@ $(document).ready(function() {
     //        for parallelism but with a synchronous return wrt thread to aggregate data for caller
     $.ajax({
         type: 'POST',
-        url: "/getJenkinsNodeDetails",
+        url: "getJenkinsNodeDetails",
         data: {},
         success: getJenkinsNodeDetailsCallback,
         dataType: "json",
