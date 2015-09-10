@@ -831,8 +831,10 @@ def moveArtifacts(jobName, localBaseDir, time):
     building = True
     while building:
         try:
-            buildInfo = json.loads(requests.get(checkBuildUrl).text)
-            building = buildInfo['building']
+            requestInfo = requests.get(checkBuildUrl)
+            if requestInfo.status_code == 200:
+                buildInfo = json.loads(requestInfo.text)
+                building = buildInfo['building']
             if building:
                 sleep(3)
         # check to make sure build isn't queued, if it is wait for it to dequeue
