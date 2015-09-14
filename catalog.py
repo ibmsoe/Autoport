@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import globals
+from stat import S_ISDIR
 
 resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
@@ -239,6 +240,41 @@ class Catalog:
                 print "Can't remove directory", remoteBuildPath,": ", str(e)
 
         return status, errors, alreadyThere
+
+    # Removing projects reports from the local and GSA directories
+    def removeProjectsData(self, projects):
+        for name in projects.keys():
+            try:
+                if projects[name] == "local":
+                    localPath = self.__localPath
+                    shutil.rmtree(localPath+name)
+                else:
+                    self.removeDirFromGSA(self.__copyPath+name)
+            except IOError as e:
+                print "Can't remove directory", remoteBuildPath,": ", str(e)
+
+    # Sub-Routine which deletes files and folders recursively from remote directory
+    # @Param - path, which represents the GSA folder
+    def removeDirFromGSA(self, path):
+        try:
+            files = self.__archiveFtpClient.listdir(path=path)
+            for file in files:
+                filepath = os.path.join(path, file)
+                if self.isDir(filepath):
+                    self.removeDirFromGSA(filepath)
+                else:
+                    self.__archiveFtpClient.remove(filepath)
+            self.__archiveFtpClient.rmdir(path)
+        except IOError as e:
+            print "Can't remove directory", remoteBuildPath,": ", str(e)
+
+    # Sub-Routine which lets whether the given path is a directory or not
+    # @Param - path, represents the file/directory
+    def isDir(self, path):
+        try:
+            return S_ISDIR(self.__archiveFtpClient.stat(path).st_mode)
+        except IOError:
+            return False
 
     def cleanTmp(self):
         for tmpdir in self.__tmpdirs:
