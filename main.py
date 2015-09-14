@@ -1888,6 +1888,16 @@ def listTestResults(repositoryType):
     except Exception as e:
         return json.jsonify(status="failure", error=str(e)), 401
 
+# Removes projects data from local or GSA
+@app.route("/autoport/removeProjects", methods=["POST"])
+def removeProjects():
+    try:
+        projects = request.json['projects']
+        catalog.removeProjectsData(projects)
+        return json.jsonify(status="ok"), 200
+    except Exception as e:
+        return json.jsonify(status="failure", error=str(e)), 401
+
 # Get the jenkins build output
 # /getBuildResults?left=x&right=y
 @app.route("/autoport/getTestResults")

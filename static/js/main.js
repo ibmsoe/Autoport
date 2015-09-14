@@ -716,6 +716,26 @@ var reportState = {
         $.getJSON("listTestResults/all", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
     },
+    removeProjects: function(ev) {
+        var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+        var query = {};
+        var sel = [];
+        if (confirm("Remove selected project(s)?") != true) {
+            return false;
+        }
+        for (var i = 0; i < selectedProjects.length; i ++) {
+            sel[i] = selectedProjects[i].fullName;
+            query[sel[i]] = selectedProjects[i].repository;
+        }
+        $.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            url: "removeProjects",
+            data: JSON.stringify({projects: query}),
+            success: removeProjectResp,
+            dataType:'json'
+        }).fail(removeProjectResp);
+    },
     setJobManagePanel: function(ev) {
         reportState.jobManagePanel = (reportState.jobManagePanel) ? false : true;
     },
@@ -1341,6 +1361,7 @@ function doGetResultList() {
 function processResultList(data) {
     projectReportState.selectedProjects = [];
     projectReportState.projects = [];
+    $("#resultRemoveBtn").addClass("disabled");
     if (data === undefined || data.status != "ok") {
         showAlert("Error:", data);
     } else {
@@ -1349,6 +1370,21 @@ function processResultList(data) {
         detailState.autoSelected = false;
         projectReportState.prjCompareReady = true;
         $('#testCompareSelectPanel').bootstrapTable('load', projectReportState.projects);
+    }
+}
+
+function removeProjectResp(data){
+    if (data.status != "ok") {
+        showAlert("Error:", data);
+    }else{
+        showAlert("Deleted Successfully !");
+        if(projectReportState.compareRepo == "local"){
+            reportState.listLocalProjects();
+        }else if(projectReportState.compareRepo == "archived"){
+            reportState.listGSAProjects();
+        }else {
+            reportState.listAllProjects();
+        }
     }
 }
 
@@ -2315,10 +2351,12 @@ $(document).ready(function() {
             $("#testHistoryBtn").addClass("disabled");
             $("#testDetailBtn").addClass("disabled");
             $("#resultArchiveBtn").addClass("disabled");
+            $("#resultRemoveBtn").addClass("disabled");
         } else {
             $("#testHistoryBtn").removeClass("disabled");
             $("#testDetailBtn").removeClass("disabled");
             $("#resultArchiveBtn").removeClass("disabled");
+            $("#resultRemoveBtn").removeClass("disabled");
         }
     });
 
