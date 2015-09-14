@@ -1,5 +1,6 @@
 import globals
 import os
+import re
 import paramiko
 import tempfile
 import ntpath
@@ -7,6 +8,9 @@ from buildAnalyzer import inferBuildSteps
 from stat import ST_SIZE, ST_MTIME
 from time import localtime, asctime
 from flask import json
+from project import Project
+
+projectResultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
 class Batch:
     # Connecting to SSHClient using GSA credentials
@@ -69,6 +73,50 @@ class Batch:
             assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         return filteredList
 
+    ########### Listing of Batch Results starts #######
+    def listBatchReports(self, repoType, filt):
+        reportData = []
+        try:
+            if repoType == "local" or repoType == "all":
+                reportData = self.listLocalBatchReports(filt)
+
+            if repoType == "gsa" or repoType == "all":
+                reportData = reportData.extend(self.listGSABatchReports(filt))
+        except Exception as e:
+            assert(False), str(e)
+
+        return reportData
+
+    def listLocalBatchReports(self, filt):
+        filteredList = []
+        try:
+            for dirname, dirnames, filenames in os.walk(globals.localPathForBatchTestResults):
+                for filename in sorted(filenames):
+                    absoluteFilePath = "%s/%s" % (dirname, filename)
+                    if filt in filename.lower() or filt == "":
+                        if filename != ".gitignore":
+                            filteredList.append(self.parseBatchReportList(absoluteFilePath, "local"))
+        except IOError:
+            assert(False), "Please provide valid local batch files path in settings menu!"
+        return filteredList
+
+    def listGSABatchReports(self, filt):
+        filteredList = []
+        try:
+            self.ftp_client.chdir(globals.pathForBatchFiles)
+            flist = self.ftp_client.listdir()
+            for filename in sorted(flist):
+                if filt in filename.lower() or filt == "":
+                    putdir = tempfile.mkdtemp(prefix="autoport_")
+                    self.ftp_client.get(filename, putdir + "/" + filename)
+                    filteredList.append(self.parseBatchReportList(putdir + "/" + filename, "gsa"))
+        except IOError as e:
+            assert(False), str(e)
+        except AttributeError:
+            assert(False), "Connection error to archive storage.  Use settings menu to configure!"
+        return filteredList
+    ########### Listing of Batch Results ends #######
+
     def removeBatchFile(self, filename, location):
         if location == "gsa":
             res = self.removeArchivedBatchFile(filename)
@@ -100,6 +148,44 @@ class Batch:
             return {"error": "Connection error to archive storage.  Use settings menu to configure!" }
         except:
             return {"error": "Could not archive batch file " + filename }
+
+    # Parses given batch file and returns data in JSON format.
+    def parseBatchReportList(self, filename, location):
+        batchFile = None
+        return_data = {
+            "batch_name": "INVALID BATCH FILE",
+            "build_server": "-",
+            "repo": "-",
+            "date_completed": "-",
+            "filename": "-",
+            "has_build_logs": 'Not Available',
+            "has_test_logs": 'Not Available'
+        }
+        try:
+            batchStats = os.stat(filename)
+            batchCreationTime = asctime(localtime(batchStats[ST_MTIME]))
+        except OSError:
+            batchCreationTime = "-"
+
+        try:
+            batchFile = open(filename)
+            batchName, batchUID, batchCompletionTime = ntpath.basename(filename).split('.')
+            firstJobName = batchFile.readline().strip()
+            buildServer = projectResultPattern.match(firstJobName).group(4)
+
+            return_data.update({
+                "batch_name": batchName,
+                "build_server": buildServer,
+                "repo": location,
+                "date_completed": batchCompletionTime,
+                "filename": filename
+            })
+        except Exception, ex:
+            print str(ex)
+        finally:
+            if isinstance(batchFile, file):
+                batchFile.close()
+        return return_data
 
     # Fast look up for listing of all Batch Files.  Upon user selection of batch build and test,
     # the full contents of file are checked.  See parseBatchFile below
@@ -148,7 +234,8 @@ class Batch:
         f = open(filename)
         try:
             fileBuf = json.load(f)
-        except ValueError:
+        except ValueError, ex:
+            print str(ex)
             f.close()
             return {"error": "Could not read file" + filename }
         f.close()
@@ -231,3 +318,32 @@ class Batch:
             self.ftp_client.close()
         except Exception as e:
             print str(e)
+
+    # @TODO Below code for getting Batch Test Details and other functionality is in progress. 
+    def getBatchTestDetails(self, batchList, catalog):
+        out = []
+        # Get the project Names and fetch test details from them.
+        projects = self.getLocalProjectForGivenBatch(batchList.get('local', []))
+        project = Project(catalog)
+        #raise ValueError, project.getTestDetails(projects, 'local')
+        raise ValueError, "Development in progress."
+        # @TODO add code for GSA/archived jobs too.
+        # Now from the projects associated with Batch Get the info and send to requesting call.
+
+    # Fetch all the info related to local projects for given batch job.
+    def getLocalProjectForGivenBatch(self, batchList):
+        # Strip batch name from given batch file path in the list batchList
+        batchNames = [str(ntpath.basename(i)) for i in batchList]
+        projects = []
+        # Walk through directories and search for the batch related projects to fetch info.
+        try:
+            for dirname, dirnames, filenames in os.walk(globals.localPathForBatchTestResults):
+                for filename in sorted(filenames):
+                    actualFilePath = "%s/%s" % (dirname, filename)
+                    if filename != ".gitignore" and filename in batchNames:
+                        batchFile = open(actualFilePath)
+                        projects.extend([i.strip() for i in batchFile.readlines()])
+                        batchFile.close()
+        except Exception, ex:
+            print str(ex)
+        return projects

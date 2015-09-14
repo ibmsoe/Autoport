@@ -363,8 +363,8 @@ var batchState = {
                 $.post("createJob", {id: package.id, tag: packages.tag, javaType: javaType,
                        node: buildServers[i], selectedBuild: build.selectedBuild,
                        selectedTest: build.selectedTest, selectedEnv: build.selectedEnv,
-                       artifacts: build.artifacts, buildSystem: build.buildSystem}, addToJenkinsCallback,
-                       "json").fail(addToJenkinsCallback);
+                       artifacts: build.artifacts, buildSystem: build.buildSystem, is_batch_job: true},
+                       addToJenkinsCallback, "json").fail(addToJenkinsCallback);
             }
         }
     },
@@ -481,8 +481,8 @@ var batchReportState = {
         batchReportState.reset();
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
-     // callback to render data to Batch Report table
-        $.getJSON("listBatchFiles/local", { filter: $("#batchReportFilter").val() },
+        // callback to render data to Batch Report table
+        $.getJSON("listBatchReports/local", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
     },
     listGSABatch: function(ev) {
@@ -491,7 +491,7 @@ var batchReportState = {
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
         // callback to render data to Batch Report table
-        $.getJSON("listBatchFiles/gsa", { filter: $("#batchReportFilter").val() },
+        $.getJSON("listBatchReports/gsa", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
     },
     listAllBatch: function(ev) {
@@ -500,7 +500,7 @@ var batchReportState = {
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
         // callback to render data to Batch Report table
-        $.getJSON("listBatchFiles/all", { filter: $("#batchReportFilter").val() },
+        $.getJSON("listBatchReports/all", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
     },
     setTestResultsPanel: function(ev) {
@@ -539,16 +539,33 @@ var batchReportState = {
         // fetch, render and display Report in table.
         batchReportState.loading = true;
         batchReportState.showBatchFile = false;
-        // parse the retrieved json file and render to table.
-        $.getJSON("parseBatchFile",
-            {
-                batchName: batchReportState.selectedBatchFile.filename
-            }, function(data){
-                parseBatchFileCallback(data, batchReportState);
-            }, "json").fail(function(data){
-                parseBatchFileCallback(data, batchReportState);
+
+        // Get list of all selected batch test runs for fetchinf details.
+        var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+        var query = {};
+        // Generate key-value pair with batch name and repository location, repository being the key of dictionary
+        for (var i = 0; i < selectedBatchJobs.length; i ++) {
+            if (query[selectedBatchJobs[i].repo] === undefined){
+                query[selectedBatchJobs[i].repo] = [];
             }
-        );
+            query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
+        }
+
+        // fetch the Batch details and handle it appropriately.
+        $.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            url: "getBatchTestDetails",
+            data: JSON.stringify({
+                batchList: query
+            }),
+            success: function(){
+                parseBatchFileCallback(data, batchReportState);
+            },
+            dataType:'json'
+        }).fail(function(data){
+                parseBatchFileCallback(data, batchReportState);
+        });
     },
 
     remove: function(ev, el) {
@@ -2179,14 +2196,6 @@ function toggleBatchReportButtons(){
         $("#batch_report_compare").removeClass("disabled");
     } else {
         $("#batch_report_compare").addClass("disabled");
-    }
-
-    if (selectedProjects.length === 1) {
-        $("#batch_report_detail").removeClass("disabled");
-        $("#batch_report_history").removeClass("disabled");
-    } else {
-        $("#batch_report_detail").addClass("disabled");
-        $("#batch_report_history").addClass("disabled");
     }
 }
 

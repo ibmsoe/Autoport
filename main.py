@@ -531,9 +531,32 @@ def uploadBatchFile():
     name = name + "." + time
     openPath = globals.localPathForBatchFiles + name
 
-    f = open(openPath, "wb")
-    f.write(fileStr)
-    f.close()
+    try:
+        f = open(openPath, 'wb')
+        f.write(fileStr)
+        f.close()
+    except Exception, ex:
+        print "Error: ", str(ex)
+
+    # Open Batch details file and update the owner to Logged in GSA user or Anonymous.
+    batch_data_file, batch_detail_file = None, None
+    try:
+        batch_data_file = open(openPath, 'r')
+        batch_info = json.load(batch_data_file)
+        # Update owner to GSA user id if available else Anonymous
+        if batch_info.has_key("config"):
+            batch_info['config']['owner'] = globals.configUsername or 'Anonymous'
+            batch_detail_file = open(openPath, 'w')
+            batch_detail_file.write(json.dumps(batch_info, indent=4, sort_keys=True))
+    except Exception, ex:
+        print "Error: ", str(ex)
+    finally:
+        # Close the files if the were opened in try block
+        if isinstance(batch_data_file, file):
+            batch_data_file.close()
+
+        if isinstance(batch_detail_file, file):
+            batch_detail_file.close()
 
     # We don't want to automatically be uploading to remote location, this code needs
     # to be moved into the batch table as an action for each individual batch file
@@ -708,7 +731,8 @@ def createJob(i_id = None,
               i_selectedTest = None,
               i_selectedEnv = None,
               i_artifacts = None,
-              i_buildSystem = None):
+              i_buildSystem = None,
+              i_isBatchJob = False):
 
     # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
     # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one
@@ -955,7 +979,25 @@ def runBatchFile ():
             javaType = "JAVA_HOME=/opt/ibm/java"
 
         # Create batch results template, stores list of job names associated with batch file
-        f = open(globals.localPathForBatchTestResults + ntpath.basename(batchName), 'a+')
+        # Create a folder of format  <batch_name>.<uuid>
+        try:
+            temp,batchNameOnly, createdTime = batchName.split('.')
+            batchDirName = "%s.%s" % (
+                globals.localPathForBatchTestResults + ntpath.basename(batchNameOnly),
+                uid
+            )
+            newBatchName = "%s/%s.%s.%s" %(
+                batchDirName,
+                ntpath.basename(batchNameOnly),
+                uid,
+                createdTime
+            )
+            if not os.path.exists(batchDirName):
+                os.makedirs(batchDirName)
+        except ValueError:
+            newBatchName = globals.localPathForBatchTestResults + ntpath.basename(batchName)
+
+        f = open(newBatchName, 'a+')
 
         # Parse package data
         submittedJob = False
@@ -1044,6 +1086,21 @@ def listBatchFiles(repositoryType):
         return json.jsonify(status="ok", results=batch.listBatchFiles(repositoryType, filt.lower()))
     except Exception as e:
         print e
+        return json.jsonify(status="failure", error=str(e)), 401
+
+# List available batch Results
+@app.route("/autoport/listBatchReports/<repositoryType>")
+def listBatchReports(repositoryType):
+    """
+    This function fetches and returns list of Batch test reports.
+    """
+    try:
+        filt = request.args.get("filter", "")
+        if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
+            return json.jsonify(status="failure", error="Invalid repository type"), 400
+        return json.jsonify(status="ok", results=batch.listBatchReports(repositoryType, filt.lower()))
+    except Exception as e:
+        print "Error: ", str(e)
         return json.jsonify(status="failure", error=str(e)), 401
 
 # List information about packages on a build server by creating and triggering a Jenkins job on it
@@ -2174,6 +2231,13 @@ def uploadToRepo():
     else:
         return json.jsonify(status="failure",
                 error="Inappropriate file-type"), 400
+
+# Will fetch and return batch test details for given Batch names.
+@app.route('/autoport/getBatchTestDetails', methods=['GET', 'POST'])
+def getBatchTestDetails():
+    batchList = request.json['batchList']
+    batch.getBatchTestDetails(batchList, catalog)
+    return json.jsonify(status="failure")
 
 def autoportInitialisation():
     # This is called before starting the flask application.  It is responsible
