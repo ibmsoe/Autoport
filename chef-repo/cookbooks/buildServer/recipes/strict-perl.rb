@@ -24,7 +24,7 @@ record = "Strict-Perl,#{sp_version},perl_modules,Strict_perl,\
 buildServer_log 'Strict-Perl' do
   name         'Strict-Perl'
   log_location node['log_location']
-  log_record   log_record
+  log_record   record
   action       :add
 end
 

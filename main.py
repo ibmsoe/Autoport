@@ -125,7 +125,8 @@ def getJenkinsNodeDetails():
         results = queryNode(node, action)
         try:
             detail = results['detail']
-            globals.nodeDetails.append(detail)
+            if detail:
+                globals.nodeDetails.append(detail)
             nodeLabel = detail['nodelabel']
             if detail['distro'] == "UBUNTU":
                 globals.nodeUbuntu.append(nodeLabel)
@@ -823,7 +824,6 @@ def createJob(i_id = None,
 # Polls the Jenkins master to see when a job has completed and moves artifacts over to local
 # storage once/if they are available
 def moveArtifacts(jobName, localBaseDir, time):
-
     outDir = ""
     checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
 
@@ -859,7 +859,6 @@ def moveArtifacts(jobName, localBaseDir, time):
 
     # grab the build artifacts through ftp if build was successful
     artifactsPath = globals.artifactsPathPrefix + jobName + "/builds/"
-
     try:
         # create an FTP connection to Jenkins
         sshClient = paramiko.SSHClient()
@@ -1154,13 +1153,15 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
             os.remove(localArtifactsFilePath)
             os.rmdir(outDir)
 
-            # In case we were not able to generate the package data due to absence of apt-show-versions package on Ubuntu server, the json file has contents: {"Failure_reason": "Could not generate the package data"}.
+            # In case we were not able to generate the package data due to absence
+            # of apt-show-versions package on Ubuntu server, the json file has contents:
+            # {"Failure_reason": "Could not generate the package data"}.
             key = "Failure_reason"
             if key in packageData:
                 failure_reason = packageData[key]
                 return { 'status': "failure", 'error': failure_reason }
             else:
-                return { 'status': "ok", 'packageData': packageData }
+                return { 'status': "ok", 'packageData': packageData, 'node': selectedBuildServer }
 
         return { 'status': "failure", 'error': "Did not transfer package file" }
 
@@ -1248,7 +1249,6 @@ def queryNode(node, action):
 
 def listPackageForSingleSlave_common(packageName, selectedBuildServer):
 
-
     # Read template XML file
     tree = ET.parse("./config_template_package_list_single_slave.xml")
     root = tree.getroot()
@@ -1305,7 +1305,6 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer):
     if r.status_code == 200:
         # Success, send the jenkins job and start it right away.
         startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
-
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
 
@@ -1323,7 +1322,7 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer):
             # Delete the json file and its containing folder
             os.remove(localArtifactsFilePath)
             os.rmdir(outDir)
-            return { 'status': "ok", 'packageData': packageData }
+            return { 'status': "ok", 'packageData': packageData, 'node':selectedBuildServer }
 
         return { 'status': "failure", 'error': "Did not transfer package file" }
 
@@ -1546,6 +1545,74 @@ def managePackageForSingleSlave():
 # List installed and available status of the package in packageName by creating and triggering a Jenkins job
 @app.route("/autoport/listManagedPackages", methods=["GET"])
 def listManagedPackages():
+
+    packageList = []
+
+    def listCallback(request, data):
+        '''
+        callback to handle return value of each thread
+        and manipulate it further.
+        '''
+        if data['status'] == 'ok':
+            try:
+                i = globals.nodeLabels.index(data['node'])
+                for pkg in data['packageData']:
+                    pkg['nodeLabel'] = data['node']
+                    pkg['distro'] = globals.nodeDetails[i]['distro']
+                    pkg['arch'] = globals.nodeDetails[i]['arch']
+                    pkg['os_arch'] = globals.nodeOSes[i]              # This is O/S Description for UI
+
+                    # package_name is set to archive name to distinguish between multiple extensions,
+                    # since summary column is not available in managed panel
+                    pkg['pkg_name'] = pkg['archiveName'] if 'archiveName' in pkg and package else pkg['packageName']
+                    isAddable = False
+                    isRemovable = False
+                    enableCheckBox = False
+                    managedP, managedV, userAddedVersion, removablePackage = sharedData.getManagedPackage(ml, pkg, node)
+
+                    # In case package is not managed and is a user added package, then managedVersion is
+                    # set to userAdded version instead of 'N/A'
+                    if managedV == 'N/A' and userAddedVersion != 'N/A':
+                        managedV = userAddedVersion
+                    pkg['managedPackageVersion'] = managedV
+                    if managedP:
+                        # We allow package to be added to ManagedList.json userPackages section:
+                        # 1. If package is installed , but update of a package is available
+                        # i.e. (updateVersion > installedVersion)
+                        # 2. If package is not installed, but updateVersion is greater than managedVersion.
+                        # 3. If package is not installed , but update is available.
+
+                        if ('installedVersion' in pkg and pkg['installedVersion'] and \
+                            pkg['installedVersion'] != "N/A") and \
+                            ('updateVersion' in pkg and pkg['updateVersion'] and \
+                            pkg['updateVersion'] != "N/A"):
+                            if LooseVersion(pkg['updateVersion']) > LooseVersion(pkg['installedVersion']):
+                                isAddable = True
+
+                        if managedV != "N/A" and ('updateVersion' in pkg and pkg['updateVersion'] and \
+                                              pkg['updateVersion'] != "N/A"):
+                            if LooseVersion(pkg['updateVersion']) > LooseVersion(managedV):
+                                isAddable = True
+
+                        if ('installedVersion' in pkg and pkg['installedVersion'] and pkg['installedVersion'] == "N/A") and \
+                           ( managedV != "N/A" or pkg['updateVersion'] and pkg['updateVersion'] != "N/A") :
+                            isAddable = True
+
+                        if removablePackage == "Yes":
+                           # User will be allowed to remove a package if the package is removable and is installed
+                            if 'installedVersion' in pkg and pkg['installedVersion'] and \
+                                pkg['installedVersion'] != "N/A":
+                                isRemovable = True
+
+                    if isAddable or isRemovable:
+                        enableCheckBox = True
+                    pkg['isAddable'] = isAddable
+                    pkg['isRemovable'] = isRemovable
+                    pkg['removablePackage'] = removablePackage
+                    pkg['enableCheckBox'] = enableCheckBox
+                    packageList.append(pkg)
+            except KeyError:
+                return json.jsonify(status="failure", error=results['error'] ), 404
     try:
         distro = request.args.get("distro", "")
     except KeyError:
@@ -1577,77 +1644,19 @@ def listManagedPackages():
     else:
         configXmlFilePath = "./config_template_search_packages_single_slave.xml"
         jobNameSuffix = "listAllManagePackageByFilter"
-    packageList = []
+
+    arg_list = []
     for node in nodes:
-        i = globals.nodeLabels.index(node)
+        if  package == "":
+            arg_list.append(([packageNames, node], {}))
+            methodName = listPackageForSingleSlave_common
+        else:
+            arg_list.append(([node, package, configXmlFilePath, jobNameSuffix],{}))
+            methodName = createJob_SingleSlavePanel_Common
 
-        try:
-            if  package == "":
-                results = listPackageForSingleSlave_common(packageNames, node)
-            else:
-                results = createJob_SingleSlavePanel_Common(node, package, configXmlFilePath, jobNameSuffix)
-        except Exception as e:
-            return json.jsonify(status="failure", error=str(e) ), 401
-
-        try:
-            for pkg in results['packageData']:
-                pkg['nodeLabel'] = node
-                pkg['distro'] = globals.nodeDetails[i]['distro']
-                pkg['arch'] = globals.nodeDetails[i]['arch']
-                pkg['os_arch'] = globals.nodeOSes[i]              # This is O/S Description for UI
-
-                # package_name is set to archive name to distinguish between multiple extensions,
-                # since summary column is not available in managed panel
-                pkg['pkg_name'] = pkg['archiveName'] if 'archiveName' in pkg and package else pkg['packageName']
-                isAddable = False
-                isRemovable = False
-                enableCheckBox = False
-                managedP, managedV, userAddedVersion, removablePackage = sharedData.getManagedPackage(ml, pkg, node)
-
-                # In case package is not managed is a user added package, then managedVersion is
-                # set to userAdded version instead of 'N/A'
-                if managedV == 'N/A' and userAddedVersion != 'N/A':
-                    managedV = userAddedVersion
-                pkg['managedPackageVersion'] = managedV
-                if managedP:
-                    # We allow package to be added to ManagedList.json userPackages section.
-                    # 1. If package is installed , but update of a package is available (updateVersion > installedVersion)
-                    # 2. If package is not instlled, but updateVersion is greater than managedVersion.
-                    # 3. If package is not installed , but update is available.
-
-                    if ('installedVersion' in pkg and pkg['installedVersion'] and \
-                        pkg['installedVersion'] != "N/A") and \
-                        ('updateVersion' in pkg and pkg['updateVersion'] and \
-                        pkg['updateVersion'] != "N/A"):
-                        if LooseVersion(pkg['updateVersion']) > LooseVersion(pkg['installedVersion']):
-                            isAddable = True
-
-                    if managedV != "N/A" and ('updateVersion' in pkg and pkg['updateVersion'] and \
-                                              pkg['updateVersion'] != "N/A"):
-                        if LooseVersion(pkg['updateVersion']) > LooseVersion(managedV):
-                            isAddable = True
-
-                    if ('installedVersion' in pkg and pkg['installedVersion'] and pkg['installedVersion'] == "N/A") and \
-                       (managedV != "N/A" or pkg['updateVersion'] and pkg['updateVersion'] != "N/A") :
-                        isAddable = True
-
-                    if removablePackage == "Yes":
-                        # User will be allowed to remove a package if the package is removable and is installed
-                        if 'installedVersion' in pkg and pkg['installedVersion'] and \
-                            pkg['installedVersion'] != "N/A":
-                            isRemovable = True
-
-                if isAddable or isRemovable:
-                    enableCheckBox = True
-
-                pkg['isAddable'] = isAddable
-                pkg['isRemovable'] = isRemovable
-                pkg['removablePackage'] = removablePackage
-                pkg['enableCheckBox'] = enableCheckBox
-                packageList.append(pkg)
-
-        except KeyError:
-            return json.jsonify(status="failure", error=results['error'] ), 404
+    threadRequests = makeRequests(methodName, arg_list, listCallback)
+    [globals.threadPool.putRequest(req) for req in threadRequests]
+    globals.threadPool.wait()
 
     return json.jsonify(status="ok", packages=packageList)
 

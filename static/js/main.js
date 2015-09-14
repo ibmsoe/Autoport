@@ -994,14 +994,21 @@ var jenkinsState = {
         editManagedListCallback).fail(editManagedListCallback);
     },
     synchManagedPackageList: function() {
-        var selectedBuildServer = $('#buildServersToSyncDropDown :selected').val();
-        if (selectedBuildServer == undefined || selectedBuildServer == "") {
+        var selectedBuildServer = $('#buildServersToSyncDropDown  option:selected');
+        var selectedBuildServerCsv = "";
+        $(selectedBuildServer).each(function(index, brand){
+            if (selectedBuildServerCsv == "")
+                selectedBuildServerCsv = $(this).val()
+            else
+                selectedBuildServerCsv =  selectedBuildServerCsv + ','  + $(this).val();
+        });
+        if (selectedBuildServerCsv == undefined || selectedBuildServerCsv == "") {
             showAlert("Please select build server");
             return false;
         }
         jenkinsState.loadingState.managedPackageActionLoading = true;
         $("#syncManagedPackageButton").addClass("disabled");
-        $.getJSON("synchManagedPackageList", { serverNodeCSV: selectedBuildServer }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
+        $.getJSON("synchManagedPackageList", { serverNodeCSV: selectedBuildServerCsv }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
     },
     uploadPackage: function (ev) {
         var file = $('#packageFile')[0].files[0];

@@ -59,6 +59,7 @@ python_script_for_tar_listing="#!/usr/bin/python
 
 import sys
 import json
+import platform
 from distutils.version import LooseVersion
 
 # package_list['installed'] is the list of tar packages installed on the node
@@ -68,9 +69,25 @@ data_file = open('packageListSingleSlave.json','r+')
 managedPkgList = json.load(data_file)
 
 package_list=json.loads(sys.argv[1])
+
+# If the archive's architecture matches current node's architecture
+# archive is eligible to be listed for installation.
+def isEligiblePkg(pkgArch):
+    node_arch = platform.machine()
+    if node_arch == pkgArch or pkgArch == 'ALL':
+        return True
+    else:
+        return False
+
 for pkg in managedPkgList:
-    if  pkg['installedVersion'] != 'N/A':
-        continue
+    # If package is found, updateVersion >= installedVersion , and we can skip the package
+    # to be searched in archive files.
+    # if updateVersion = 'N/A' , then only try to search it in archive files
+    if pkg['updateVersion'] != 'N/A':
+       continue
+    else:
+       # if updateVersion = 'N/A' then reset it to 0,for version comparison
+       pkg['updateVersion'] = '0'
     for installedPkg in package_list['installed']:
         if pkg['packageName'] == installedPkg['packageName']:
             if 'installedVersion' in installedPkg and installedPkg['installedVersion'] != 'N/A':
@@ -81,16 +98,17 @@ for pkg in managedPkgList:
             pkg['packageExt'] = installedPkg['packageExt']
             pkg['archiveName'] = installedPkg['archiveName']
             pkg['packageArch'] = installedPkg['packageArch']
-            pkg['updateVersion'] = pkg['installedVersion']
-
     for updatePkg in package_list['updates']:
-        if pkg['packageName'] == updatePkg['packageName'] and pkg['updateVersion']!='N/A' and \
+        if pkg['packageName'] == updatePkg['packageName'] and \
            LooseVersion(pkg['updateVersion']) &lt; LooseVersion(updatePkg['updateVersion']) and \
-           (updatePkg['packageArch']=='ALL' or pkg['packageArch'] == updatePkg['packageArch']):
+           isEligiblePkg(updatePkg['packageArch']):
             pkg['updateAvailable'] = True
             pkg['updateVersion'] = updatePkg['updateVersion']
             pkg['packageExt'] = updatePkg['packageExt']
             pkg['installableExt'] = updatePkg['packageExt']
+
+    if pkg['updateVersion'] == '0':
+        pkg['updateVersion'] = 'N/A'
 
 data_file.truncate(0)
 data_file.seek(0)
@@ -202,7 +220,7 @@ do
                     i=${i##*:}  #extract version number, occurs after the colon
                     if [ $i != "(none)" ]
                     then
-                        echo "#### $PACKAGE_NAME is installed. Installed version is $installedVersion"
+                        echo "#### $PACKAGE_NAME is installed. Installed version is $i"
                         packageInstalled=true
                         installedVersion=$i
                     fi
