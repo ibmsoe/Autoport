@@ -94,10 +94,12 @@ class SharedData:
     def __init__(self, jenkinsHost,
             jenkinsUser="root",
             jenkinsKey=globals.configJenkinsKey,
+            jenkinsHome="/home/jenkins",
             sharedDataDir="/var/opt/autoport/",
             repoPathPrefix="/var/www/autoport_repo"):
         self.__jenkinsHost = jenkinsHost
         self.__jenkinsUser = jenkinsUser
+        self.__jenkinsHome = jenkinsHome
         self.__jenkinsKey = jenkinsKey
         self.__sharedDataDir = sharedDataDir
         self.__repoPathPrefix = repoPathPrefix
@@ -391,8 +393,12 @@ class SharedData:
             # Transfer the chef tar file to the shared location on Jenkins Master
             self.putSharedFile(localPath, remotePath, filename)
 
+            # .chef folder is copied to jenkins_home directory as all bootstrap commands are executed
+            # by jenkins user from jenkins home. .chef folder contains certificates and template file required
+            # by the bootstrap command.
             command = "cd " + remotePath + " && tar -xvf " + filename + \
-                      " && cd chef-repo && knife ssl fetch && knife upload /"
+                      " && cd chef-repo && knife ssl fetch && knife upload / && " + \
+                      "cp -r .chef " +  self.__jenkinsHome + " && chown -R jenkins:jenkins " + self.__jenkinsHome
             self.executeSharedCommand(command)
 
             print "chef upload 1"
