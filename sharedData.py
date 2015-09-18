@@ -241,11 +241,11 @@ class SharedData:
             exit_status = channel.recv_exit_status()
             if exit_status != 0:
                 stderr = channel.makefile_stderr('rb', -1).readlines()
-                print stderr
-                assert(False)
+                if stderr:
+                    print stderr
         except IOError as e:
             print str(e)
-            assert(False)
+        return exit_status
 
     def getPkgExtensions(self, filename):
         # Check the valid file types to be uploaded to repository
@@ -344,7 +344,9 @@ class SharedData:
 
         # Executing the command on the custom repository to add the file to
         # existing repository.
-        self.executeSharedCommand(command)
+        exit_status = self.executeSharedCommand(command)
+        if exit_status:
+            assert(False)                 # TODO: return error to call.  remove assert
 
     def uploadChefData(self):
         # This routine is responsible for uploading chef-data to Jenkins Master
@@ -369,7 +371,10 @@ class SharedData:
            (localVersion == sharedVersion and localSequence > sharedSequence):
 
             # Upload local chef-repo-version.json
-            self.putSharedData(localData, sharedData, "")
+            sharedDataPath = self.putSharedData(localData, sharedData, "")
+            if not sharedDataPath:
+                print "Failed upload to jenkins master of file chef-repo-version.json"
+                assert(False)
 
             # For debugging / validation purposes, let's copy the control file
             # into the Chef data as this is a 2 step update.  Also identify
@@ -393,17 +398,20 @@ class SharedData:
             # Transfer the chef tar file to the shared location on Jenkins Master
             self.putSharedFile(localPath, remotePath, filename)
 
-            # .chef folder is copied to jenkins_home directory as all bootstrap commands are executed
-            # by jenkins user from jenkins home. .chef folder contains certificates and template file required
-            # by the bootstrap command.
-            command = "cd " + remotePath + " && tar -xvf " + filename + \
-                      " && cd chef-repo && knife ssl fetch && knife upload / && " + \
-                      "cp -r .chef " +  self.__jenkinsHome + " && chown -R jenkins:jenkins " + self.__jenkinsHome
-            self.executeSharedCommand(command)
+            # .chef folder is copied to jenkins_home directory as all bootstrap commands
+            # are executed by jenkins user from jenkins home. .chef folder contains
+            # certificates and template file required by the bootstrap command.
 
-            print "chef upload 1"
-            print "Before local data=", localData
-            print "Before shared data=", sharedData
+            cmd1 = "cd " + remotePath + " && tar -xvf " + filename
+            cmd2 = "cd chef-repo"
+            cmd3 = "knife ssl fetch > ../knife-ssl-fetch.out.$$ 2>&1"
+            cmd4 = "knife upload / > ../knife-upload.out.$$ 2>&1"
+            cmd5 = "cp -r .chef " +  self.__jenkinsHome + " && chown -R jenkins:jenkins " + self.__jenkinsHome
+
+            command = cmd1 + " && " + cmd2 + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
+            exit_status = self.executeSharedCommand(command)
+            if exit_status:
+                print "WARNING - Failed to upload autoport's chef cookback.  Continuing..."
 
             # Read the shared control data again and validate that we are still latest
             sharedData = self.getSharedData("chef-repo-version.json", "")
@@ -414,7 +422,8 @@ class SharedData:
                 sharedSequence = 0
                 sharedVersion = 0
 
-            print "After shared data=", sharedData
+            print "Local  chef version=%s sequence=%s" % (localVersion, localSequence)
+            print "Shared chef version=%s sequence=%s" % (sharedVersion, sharedSequence)
 
             # Somebody else has updated the repository
             if sharedSequence != localSequence and sharedVersion != localVersion:
@@ -423,20 +432,35 @@ class SharedData:
             # Validate that the chef-repo data contains the expected version or a newer one
             newSharedData = self.getSharedData("autoport-chef-repo-version.json", "/chef-repo")
 
-            print "chef-repo data=", newSharedData
-
             try:
                 newSharedSequence = int(newSharedData['sequence'])
                 newSharedVersion = int(newSharedData['version'])
             except KeyError:
+                # Fill out sharedData for error recovery below
+                if not newSharedData:
+                    newSharedData = localData
                 newSharedSequence = 0
                 newSharedVersion = 0
 
+            print "Verify chef version=%s sequence=%s" % (newSharedVersion, newSharedSequence)
+
             # Try it again once
-            if localVersion > newSharedVersion or \
-               (localVersion == newSharedVersion and localSequence > newSharedSequence):
+            if (localVersion > newSharedVersion) or \
+               (localVersion == newSharedVersion and localSequence > newSharedSequence) or \
+               (exit_status):
+
                 print "Updating chef-repo data again"
-                self.executeSharedCommand(command)
+                cmdR = "chef-server-ctl reconfigure > ../chef-server-reconfig.out.$$ 2>&1"
+                command = cmd1 + " && " + cmd2 + " && " + cmdR + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
+                exit_status = self.executeSharedCommand(command)
+                if exit_status:
+                    print "ERROR - Failed to upload autoport's chef cookback.  Continuing..."
+                    print "Setting shared chef sequence=0"
+                    newSharedData['sequence'] = "0"
+                    sharedDataPath = self.putSharedData(newSharedData, newSharedData, "")
+                    if not sharedDataPath:
+                         print "Failed to restore old data in error path"
+                         assert(False)
 
     def getDistro(self, buildServer):
         distroName = ""
