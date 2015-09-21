@@ -240,6 +240,11 @@ fieldset[disabled] .form-control {
     border-left: 1px solid grey;
     padding: 3px;
 }
+#testBatchResultsTable td,th {
+    border-bottom: 1px solid grey;
+    border-left: 1px solid grey;
+    padding: 3px;
+}
 
 #testResultsTable th.testSuite {
     background-color: lightgrey;

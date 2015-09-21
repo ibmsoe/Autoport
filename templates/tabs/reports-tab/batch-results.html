@@ -67,35 +67,33 @@
             <th data-field="batch_name" data-sortable="true">Batch</th>
             <th data-field="build_server" data-sortable="true">Build Server</th>
             <th data-field="repo" data-sortable="true">Repository</th>
-            <th data-field="has_build_logs" data-sortable="true">Build Logs</th>
-            <th data-field="has_test_logs" data-sortable="true">Test Logs</th>
-            <th data-field="date_completed" data-sortable="true">Date Completed</th>
+            <th data-field="project_count" data-sortable="true">Projects</th>
+            <th data-field="build_log_count" data-sortable="true">Build Logs</th>
+            <th data-field="test_log_count" data-sortable="true">Test Logs</th>
+            <th data-field="date_submitted" data-sortable="true">Date Submitted</th>
           </tr>
         </thead>
       </table>
     </div>
 
-    <!-- Show batch files reports table -->
-    <div rv-show="batchReportState.showBatchReportsTable">
-      <table class="table panel panel-default" id="batchReportsTable"
-        data-pagination="true" data-click-to-select="true"
-        data-toolbar="#batchReportsToolbar">
-        <thead>
-          <tr>
-            <th data-field="state"data-radio="true"></th>
-            <th data-field="name" data-sortable="true">Name</th>
-            <th data-field="status" data-sortable="true">Status</th>
-          </tr>
-        </thead>
-      </table>
-      <div class="row buttonLeft">
-        <a rv-on-click="batchState.backToBatchList">
-          <button class="btn btn-info" type="button">
-            <span class="glyphicon glyphicon-chevron-left"></span>
-            Back to list
-          </button>
-        </a>
+    <!-- Batch reports table for viewing history/detail/comparisons -->
+    <div id="testBatchCompareTablePanel"
+        class="table panel panel-default"
+        rv-show="batchReportState.batchReportTableReady">
+      <div class="panel panel-primary">
+        <div class="panel-heading">Test results for Batch job(s): <span id="batchHeader"></span></div>
+        <div class="table-container">
+          <table id="testBatchResultsTable">
+          </table>
+        </div>
       </div>
+      <a class="backToResults" rv-on-click="batchReportState.backToBatchList">
+        <button type="button" class="btn btn-info">
+        <span class="glyphicon glyphicon-chevron-left"></span>
+        Back to list
+        </button>
+      </a>
     </div>
+
   </div>
 </div>

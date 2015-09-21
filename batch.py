@@ -95,7 +95,10 @@ class Batch:
                     absoluteFilePath = "%s/%s" % (dirname, filename)
                     if filt in filename.lower() or filt == "":
                         if filename != ".gitignore":
-                            filteredList.append(self.parseBatchReportList(absoluteFilePath, "local"))
+                            filteredList.append(self.parseBatchReportList(
+                                absoluteFilePath,
+                                "local"
+                            ))
         except IOError:
             assert(False), "Please provide valid local batch files path in settings menu!"
         return filteredList
@@ -103,17 +106,18 @@ class Batch:
     def listGSABatchReports(self, filt):
         filteredList = []
         try:
-            self.ftp_client.chdir(globals.pathForBatchFiles)
+            self.ftp_client.chdir(globals.pathForBatchTestResults)
             flist = self.ftp_client.listdir()
             for filename in sorted(flist):
                 if filt in filename.lower() or filt == "":
-                    putdir = tempfile.mkdtemp(prefix="autoport_")
-                    self.ftp_client.get(filename, putdir + "/" + filename)
-                    filteredList.append(self.parseBatchReportList(putdir + "/" + filename, "gsa"))
-        except IOError as e:
-            assert(False), str(e)
-        except AttributeError:
-            assert(False), "Connection error to archive storage.  Use settings menu to configure!"
+                    try:
+                        putdir = tempfile.mkdtemp(prefix="autoport_")
+                        self.ftp_client.get(filename, putdir + "/" + filename)
+                        filteredList.append(self.parseBatchReportList(putdir + "/" + filename, "gsa"))
+                    except Exception, ex:
+                        print "Error: ", str(ex)
+        except Exception as e:
+            print "Error: ", str(e)
         return filteredList
     ########### Listing of Batch Results ends #######
 
@@ -156,10 +160,10 @@ class Batch:
             "batch_name": "INVALID BATCH FILE",
             "build_server": "-",
             "repo": "-",
-            "date_completed": "-",
+            "date_submitted": "-",
             "filename": "-",
-            "has_build_logs": 'Not Available',
-            "has_test_logs": 'Not Available'
+            "build_log_count": 'Not Available',
+            "test_log_count": 'Not Available'
         }
         try:
             batchStats = os.stat(filename)
@@ -169,23 +173,48 @@ class Batch:
 
         try:
             batchFile = open(filename)
-            batchName, batchUID, batchCompletionTime = ntpath.basename(filename).split('.')
-            firstJobName = batchFile.readline().strip()
-            buildServer = projectResultPattern.match(firstJobName).group(4)
+            batchName, batchUID, batchSubmissionTime = ntpath.basename(filename).split('.')
+            jobNames = batchFile.readlines()
+            buildAndTestLogs = self.getLocalBuildAndTestLogs(jobNames)
+            project_count = len(jobNames)
+            if len(jobNames):
+                # All the jobs will be for same build server, hence only checking for the first entry
+                buildServer = projectResultPattern.match(jobNames[0]).group(4)
 
             return_data.update({
                 "batch_name": batchName,
-                "build_server": buildServer,
+                "build_server": buildServer or '-',
+                "project_count": project_count,
                 "repo": location,
-                "date_completed": batchCompletionTime,
-                "filename": filename
+                "date_submitted": batchSubmissionTime,
+                "filename": filename,
+                "build_log_count": buildAndTestLogs['build_logs'] or 'Not Available',
+                "test_log_count": buildAndTestLogs['test_logs'] or 'Not Available'
             })
         except Exception, ex:
-            print str(ex)
+            print "Error: ", str(ex)
         finally:
             if isinstance(batchFile, file):
                 batchFile.close()
         return return_data
+
+    # Gets number of build logs and test logs for given batch,
+    # by traversing through the individual projects associated with the batch job
+    def getLocalBuildAndTestLogs(self, jobNames = [], repo = 'local'):
+        build_logs = 0
+        test_logs = 0
+        if repo == 'local':
+            project_path = globals.localPathForTestResults
+        else:
+            project_path = globals.pathForTestResults
+        for jobName in jobNames:
+            if os.path.exists('%s%s/%s' % (project_path, jobName.strip(), 'test_result.arti')):
+                test_logs += 1
+
+            if os.path.exists('%s%s/%s' % (project_path, jobName.strip(), 'build_result.arti')):
+                build_logs += 1
+
+        return {'build_logs': build_logs, 'test_logs': test_logs}
 
     # Fast look up for listing of all Batch Files.  Upon user selection of batch build and test,
     # the full contents of file are checked.  See parseBatchFile below
@@ -325,8 +354,7 @@ class Batch:
         # Get the project Names and fetch test details from them.
         projects = self.getLocalProjectForGivenBatch(batchList.get('local', []))
         project = Project(catalog)
-        #raise ValueError, project.getTestDetails(projects, 'local')
-        raise ValueError, "Development in progress."
+        return project.getTestDetails(projects, 'local')
         # @TODO add code for GSA/archived jobs too.
         # Now from the projects associated with Batch Get the info and send to requesting call.
 
