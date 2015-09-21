@@ -234,6 +234,7 @@ class SharedData:
 
     def executeSharedCommand(self, command):
         # Execute remote commands on Jenkins Master to manipulate shared data
+        stderr = ''
         transport = self.__jenkinsTransportSession
         try:
             channel = transport.open_channel(kind = "session")
@@ -245,7 +246,7 @@ class SharedData:
                     print stderr
         except IOError as e:
             print str(e)
-        return exit_status
+        return exit_status, stderr
 
     def getPkgExtensions(self, filename):
         # Check the valid file types to be uploaded to repository
@@ -344,9 +345,9 @@ class SharedData:
 
         # Executing the command on the custom repository to add the file to
         # existing repository.
-        exit_status = self.executeSharedCommand(command)
+        exit_status, stderr = self.executeSharedCommand(command)
         if exit_status:
-            assert(False)                 # TODO: return error to call.  remove assert
+            return stderr
 
     def uploadChefData(self):
         # This routine is responsible for uploading chef-data to Jenkins Master
@@ -409,7 +410,7 @@ class SharedData:
             cmd5 = "cp -r .chef " +  self.__jenkinsHome + " && chown -R jenkins:jenkins " + self.__jenkinsHome
 
             command = cmd1 + " && " + cmd2 + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
-            exit_status = self.executeSharedCommand(command)
+            exit_status, stderr = self.executeSharedCommand(command)
             if exit_status:
                 print "WARNING - Failed to upload autoport's chef cookback.  Continuing..."
 
@@ -452,9 +453,9 @@ class SharedData:
                 print "Updating chef-repo data again"
                 cmdR = "chef-server-ctl reconfigure > ../chef-server-reconfig.out.$$ 2>&1"
                 command = cmd1 + " && " + cmd2 + " && " + cmdR + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
-                exit_status = self.executeSharedCommand(command)
+                exit_status, stderr = self.executeSharedCommand(command)
                 if exit_status:
-                    print "ERROR - Failed to upload autoport's chef cookback.  Continuing..."
+                    print "ERROR - Failed to upload autoport's chef cookbook.  Continuing..."
                     print "Setting shared chef sequence=0"
                     newSharedData['sequence'] = "0"
                     sharedDataPath = self.putSharedData(newSharedData, newSharedData, "")
