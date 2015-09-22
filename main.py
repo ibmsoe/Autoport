@@ -2236,8 +2236,11 @@ def uploadToRepo():
 @app.route('/autoport/getBatchTestDetails', methods=['GET', 'POST'])
 def getBatchTestDetails():
     batchList = request.json['batchList']
-    batch.getBatchTestDetails(batchList, catalog)
-    return json.jsonify(status="failure")
+    batchDetails = batch.getBatchTestDetails(batchList, catalog)
+    if batchDetails.has_key('error'):
+        return json.jsonify(status=batchDetails['status'], error = batchDetails['error']), 400
+    else:
+        return json.jsonify(status=batchDetails['status'], results = batchDetails['results'])
 
 def autoportInitialisation():
     # This is called before starting the flask application.  It is responsible

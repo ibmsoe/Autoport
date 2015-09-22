@@ -44,12 +44,6 @@
             Build + Test
           </button>
         </a>
-        <a rv-on-click="batchState.showReport">
-          <button type="button" class="btn btn-primary"
-           style="float: left; margin-right: 10px">
-            Show Status
-          </button>
-        </a>
         <a rv-show="batchState.selectedBatchFile.location | isLocal"
           rv-on-click="batchState.archive">
           <button type="button" class="btn btn-primary"
@@ -122,7 +116,7 @@
               Save
             </button>
           </a>
-          <select id="batchBuildServers" multiple="multiple">
+          <select id="batchBuildServersFromDetails" multiple="multiple">
             <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
           </select>
           <a rv-on-click="batchState.buildAndTestDetail">

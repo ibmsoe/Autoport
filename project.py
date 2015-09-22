@@ -26,6 +26,7 @@ class Project:
             Dictionary with project detail.
         """
         res = {}
+        resultDir = None
         try:
             resultDir = self.catalog.getResults(projectName, repo)
             try:
@@ -86,4 +87,5 @@ class Project:
                 "status": "ok",
                 "results": project_test_result
             }
+
         return response_data

@@ -342,7 +342,7 @@ var batchState = {
                batchSaveCallback, "json").fail(uploadBatchFileCallback);
     },
     buildAndTestDetail: function(ev, el) {
-        var el = $("#batchBuildServers")[0];
+        var el = $("#batchBuildServersFromDetails")[0];
         var buildServers = getSelectedValues(el);
         var javaType = "";
 
@@ -471,6 +471,7 @@ var batchReportState = {
     showBatchReportsTable: false,
     currentBatchJobs: [],
     selectedBatchJob: {},
+    batchReportTableReady: false,
     batchFile: {},                          // content of batch file.  All fields resolved
     javaType: "",                           // Initial value in config section
     loading: false,                         // parsing batch file.  Size is variable
@@ -509,7 +510,7 @@ var batchReportState = {
     },
     backToBatchList: function(ev) {
         // For going back to displaying batch listing and hiding details.
-        batchReportState.showBatchFile = false;
+        batchReportState.batchReportTableReady = false;
         batchReportState.showListSelectTable = true;
         batchReportState.batchFile = {};
     },
@@ -542,32 +543,38 @@ var batchReportState = {
 
         // Get list of all selected batch test runs for fetchinf details.
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-        var query = {};
-        // Generate key-value pair with batch name and repository location, repository being the key of dictionary
-        for (var i = 0; i < selectedBatchJobs.length; i ++) {
-            if (query[selectedBatchJobs[i].repo] === undefined){
-                query[selectedBatchJobs[i].repo] = [];
+        if (selectedBatchJobs.length > 0){
+            var query = {};
+            // Generate key-value pair with batch name and repository location, repository being the key of dictionary
+            for (var i = 0; i < selectedBatchJobs.length; i ++) {
+                if (query[selectedBatchJobs[i].repo] === undefined){
+                    query[selectedBatchJobs[i].repo] = [];
+                }
+                query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
             }
-            query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
+
+            // fetch the Batch details and handle it appropriately.
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "getBatchTestDetails",
+                data: JSON.stringify({
+                    batchList: query
+                }),
+                success: function(data){
+                    processBatchDetails(data, batchReportState);
+                },
+                dataType:'json'
+            }).fail(function(data){
+                processBatchDetails(data, batchReportState);
+            });
+        }else{
+            showMessage("Error: ", "At Least one Batch job needs to be selected.");
         }
-
-        // fetch the Batch details and handle it appropriately.
-        $.ajax({
-            type: "POST",
-            contentType: "application/json; charset=utf-8",
-            url: "getBatchTestDetails",
-            data: JSON.stringify({
-                batchList: query
-            }),
-            success: function(){
-                parseBatchFileCallback(data, batchReportState);
-            },
-            dataType:'json'
-        }).fail(function(data){
-                parseBatchFileCallback(data, batchReportState);
-        });
     },
-
+    archive: function(ev, el){
+        console.log("Under development");
+    },
     remove: function(ev, el) {
         // Will fire remove batch job test/build result.
         $.post("removeBatchFile", {filename: batchReportState.selectedBatchFile.filename,
@@ -1282,6 +1289,19 @@ function showAlert(message, data) {
     $("#errorAlert").modal();
 }
 
+function showMessage(header, message) {
+    $("#apErrorDialogText").hide();
+    if (typeof header !== "undefined" && typeof message !== "undefined") {
+        header = '<span style="font-size: 22px; font-family: Caption; text-align: center;">' + header + '</span><br/>';
+        message = '<span style="font-size: 16px; font-family: Arial;">' + message + '</span><br/>';
+        $("#apErrorDialogText").show();
+    }
+    $('#errorAlert').css("z-index","9999");
+    $('#errorAlert').find('.modal-header').html(header);
+    $("#apErrorDialogText").html(message);
+    $("#errorAlert").modal();
+}
+
 // Callback for when we receive data from a search query request
 function processSearchResults(data) {
     if (data.status !== "ok") {
@@ -1575,6 +1595,95 @@ function processTestDetail(data) {
     $("#prjHeader").html(headerContent);
     $("#testResultsTable").html(tableContent);
     projectReportState.prjTableReady = true;
+}
+
+// Batch Details population logic
+function populate_batch_table_data(test_name, job_results){
+    if (!job_results){
+        console.log(job_results);
+        return null;
+    }
+    var tr = document.createElement('tr');
+    tr.setAttribute('class', 'testBatchResultsTableData');
+
+    var total = job_results["total"] || 0;
+    var errors = job_results["errors"] || 0;
+    var failures = job_results["failures"] || 0;
+    var skipped = job_results["skipped"] || 0;
+    var data_array = ['', test_name, total, errors, failures, skipped];
+
+    for (var i = 0; i < data_array.length; i++){
+        var table_header_elem = document.createElement('td');
+        var table_data_elem = document.createTextNode(data_array[i]);
+        table_header_elem.appendChild(table_data_elem);
+        tr.appendChild(table_header_elem);
+    }
+    return tr;
+}
+
+function populate_batch_table_headers(pkg_name, pkg_version){
+    var tr = document.createElement('tr');
+    tr.setAttribute('class', 'testBatchResultsTableHeader');
+    var header_array = [pkg_name + " " + pkg_version, "Test", 'T', 'E', 'F', 'S'];
+
+    for (var i = 0; i < header_array.length; i++){
+        var table_header_elem = document.createElement('th');
+        var table_data_elem = document.createTextNode(header_array[i]);
+        table_header_elem.appendChild(table_data_elem);
+        tr.appendChild(table_header_elem);
+    }
+
+    return tr;
+}
+
+/*
+ * This function will be called to render Batch job report data.
+*/
+function processBatchDetails(data) {
+    // If the response is not a success display error message and return.
+    if (data.status != "ok") {
+        showAlert("Error:", data);
+    } else {
+        // Hide listing of Batch jiobs before showing the batch details.
+        batchReportState.showListSelectTable = false;
+        // Initialize a new blank table holding Batch report data
+        var main_table = document.getElementById("testBatchResultsTable");
+        main_table.innerHTML = '';
+        var data_table = document.createElement('table');
+        data_table.setAttribute('border', '1');
+        var blank_row = document.createElement('tr');
+        var blank_cell = document.createElement('td');
+        blank_cell.setAttribute('colspan', '6');
+        var blank_text = document.createTextNode('');
+        blank_cell.appendChild(blank_text);
+        blank_row.appendChild(blank_cell);
+        main_table.appendChild(blank_row);
+        main_header_data = null;
+
+        // Populate Batch details in table.
+        for (var i in data.results) {
+            if(main_header_data !== null){
+                main_header_data += ', ' + data.results[i].job;
+            }else{
+                main_header_data = data.results[i].job;
+            }
+
+            data_table.appendChild(populate_batch_table_headers(data.results[i].pkg, data.results[i].ver));
+            data_table.appendChild(populate_batch_table_data(data.results[i].pkg, data.results[i].results));
+            var blank_text = document.createTextNode('');
+            blank_cell.appendChild(blank_text);
+            blank_row.appendChild(blank_cell);
+            data_table.appendChild(blank_row);
+        }
+
+        // finally append the Batch details table to the placeholder table on UI.
+        var tr = document.createElement('tr');
+        tr.appendChild(data_table);
+        main_table.appendChild(tr);
+
+        $("#batchHeader").html(main_header_data); // Add code to generate headers data similar to existing logic for projecrts
+        batchReportState.batchReportTableReady = true;
+    }
 }
 
 function processTestHistory(data) {
@@ -2236,6 +2345,12 @@ $(document).ready(function() {
         }
     });
     $('#batchBuildServers').multiselect({
+        buttonClass: "btn btn-primary",
+        buttonText: function(options, select) {
+            return "Build server";
+        }
+    });
+    $('#batchBuildServersFromDetails').multiselect({
         buttonClass: "btn btn-primary",
         buttonText: function(options, select) {
             return "Build server";
