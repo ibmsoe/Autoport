@@ -10,7 +10,7 @@ from time import localtime, asctime
 from flask import json
 from project import Project
 
-projectResultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
+projectResultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
 class Batch:
     # Connecting to SSHClient using GSA credentials
@@ -49,7 +49,7 @@ class Batch:
         try:
             for dirname, dirnames, filenames in os.walk(globals.localPathForBatchFiles):
                 for filename in sorted(filenames):
-                    if filt in filename.lower() or filt == "":
+                    if not filt or filt in filename.lower():
                         if filename != ".gitignore":
                             filteredList.append(self.parseBatchFileList(globals.localPathForBatchFiles \
                                                + filename, "local"))
@@ -63,7 +63,7 @@ class Batch:
             self.ftp_client.chdir(globals.pathForBatchFiles)
             flist = self.ftp_client.listdir()
             for filename in sorted(flist):
-                if filt in filename.lower() or filt == "":
+                if not filt or filt in filename.lower():
                     putdir = tempfile.mkdtemp(prefix="autoport_")
                     self.ftp_client.get(filename, putdir + "/" + filename)
                     filteredList.append(self.parseBatchFileList(putdir + "/" + filename, "gsa"))
@@ -93,7 +93,7 @@ class Batch:
             for dirname, dirnames, filenames in os.walk(globals.localPathForBatchTestResults):
                 for filename in sorted(filenames):
                     absoluteFilePath = "%s/%s" % (dirname, filename)
-                    if filt in filename.lower() or filt == "":
+                    if not filt or filt in filename.lower():
                         if filename != ".gitignore":
                             filteredList.append(self.parseBatchReportList(
                                 absoluteFilePath,
@@ -109,7 +109,7 @@ class Batch:
             self.ftp_client.chdir(globals.pathForBatchTestResults)
             flist = self.ftp_client.listdir()
             for filename in sorted(flist):
-                if filt in filename.lower() or filt == "":
+                if not filt or filt in filename.lower():
                     try:
                         putdir = tempfile.mkdtemp(prefix="autoport_")
                         self.ftp_client.get(filename, putdir + "/" + filename)
@@ -179,7 +179,7 @@ class Batch:
             project_count = len(jobNames)
             if len(jobNames):
                 # All the jobs will be for same build server, hence only checking for the first entry
-                buildServer = projectResultPattern.match(jobNames[0]).group(4)
+                buildServer = projectResultPattern.match(jobNames[0]).group(3)
 
             return_data.update({
                 "batch_name": batchName,
