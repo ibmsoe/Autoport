@@ -4,6 +4,7 @@ import re
 import paramiko
 import tempfile
 import ntpath
+from log import logger
 from buildAnalyzer import inferBuildSteps
 from stat import ST_SIZE, ST_MTIME
 from time import localtime, asctime
@@ -29,9 +30,10 @@ class Batch:
         except paramiko.SSHException:
             pass                  # error message already displayed in catalog.py
         except IOError as e:
-            print str(e)
+            logger.warning("batch connect exception=" + str(e))
 
     def listBatchFiles(self, repoType, filt):
+        logger.debug("In listBatchFiles: repoType=%s filt=%s" % (repoType, filt))
         res = []
         try:
             if repoType == "local" or repoType == "all":
@@ -41,7 +43,7 @@ class Batch:
                 res = res + self.listGSABatchFiles(filt)
         except Exception as e:
             assert(False), str(e)
-
+        logger.debug("Leaving listBatchFiles: res=" + str(res))
         return res
 
     def listLocalBatchFiles(self, filt):
@@ -74,7 +76,9 @@ class Batch:
         return filteredList
 
     ########### Listing of Batch Results starts #######
+
     def listBatchReports(self, repoType, filt):
+        logger.debug("In listBatchReports: repoType=%s filt=%s" % (repoType, filt))
         reportData = []
         try:
             if repoType == "local" or repoType == "all":
@@ -85,14 +89,17 @@ class Batch:
         except Exception as e:
             assert(False), str(e)
 
+        logger.debug("Leaving listBatchReports: reportData=" + str(reportData))
         return reportData
 
     def listLocalBatchReports(self, filt):
         filteredList = []
         try:
             for dirname, dirnames, filenames in os.walk(globals.localPathForBatchTestResults):
+                logger.debug("dirname=%s dirnames=%s filenames=%s" % (dirname, dirnames, filenames))
                 for filename in sorted(filenames):
                     absoluteFilePath = "%s/%s" % (dirname, filename)
+                    logger.debug("absoluteFilePath=" + absoluteFilePath)
                     if not filt or filt in filename.lower():
                         if filename != ".gitignore":
                             filteredList.append(self.parseBatchReportList(
@@ -115,10 +122,11 @@ class Batch:
                         self.ftp_client.get(filename, putdir + "/" + filename)
                         filteredList.append(self.parseBatchReportList(putdir + "/" + filename, "gsa"))
                     except Exception, ex:
-                        print "Error: ", str(ex)
+                        logger.warning("listGSABatchReports Error: " + str(ex))
         except Exception as e:
-            print "Error: ", str(e)
+            logger.warning("listGSABatchReports Error: " + str(e))
         return filteredList
+
     ########### Listing of Batch Results ends #######
 
     def removeBatchFile(self, filename, location):
@@ -155,6 +163,7 @@ class Batch:
 
     # Parses given batch file and returns data in JSON format.
     def parseBatchReportList(self, filename, location):
+        logger.debug("In parseBatchReportList, filename=%s location=%s" % (filename, location))
         batchFile = None
         return_data = {
             "batch_name": "INVALID BATCH FILE",
@@ -192,15 +201,17 @@ class Batch:
                 "test_log_count": buildAndTestLogs['test_logs'] or 'Not Available'
             })
         except Exception, ex:
-            print "Error: ", str(ex)
+            logger.warning("parseBatchReportList Error: " + str(ex))
         finally:
             if isinstance(batchFile, file):
                 batchFile.close()
+        logger.debug("Leaving parseBatchReportList, return_data=" + str(return_data))
         return return_data
 
     # Gets number of build logs and test logs for given batch,
     # by traversing through the individual projects associated with the batch job
     def getLocalBuildAndTestLogs(self, jobNames = [], repo = 'local'):
+        logger.debug("In getLocalBuildAndTestLogs, Count jobNames[]=%s repo=%s" % (len(jobNames), repo))
         build_logs = 0
         test_logs = 0
         if repo == 'local':
@@ -214,6 +225,7 @@ class Batch:
             if os.path.exists('%s%s/%s' % (project_path, jobName.strip(), 'build_result.arti')):
                 build_logs += 1
 
+        logger.debug("Leaving getLocalBuildAndTestLogs, build_logs=%s test_logs=%s" % (build_logs, test_logs))
         return {'build_logs': build_logs, 'test_logs': test_logs}
 
     # Fast look up for listing of all Batch Files.  Upon user selection of batch build and test,
@@ -264,7 +276,7 @@ class Batch:
         try:
             fileBuf = json.load(f)
         except ValueError, ex:
-            print str(ex)
+            logger.warning("parseBatchFile error: " + str(ex))
             f.close()
             return {"error": "Could not read file" + filename }
         f.close()
@@ -346,9 +358,9 @@ class Batch:
         try:
             self.ftp_client.close()
         except Exception as e:
-            print str(e)
+            logger.warning("disconnect error: " +  str(e))
 
-    # @TODO Below code for getting Batch Test Details and other functionality is in progress. 
+    # @TODO Below code for getting Batch Test Details and other functionality is in progress.
     def getBatchTestDetails(self, batchList, catalog):
         out = []
         # Get the project Names and fetch test details from them.
@@ -373,5 +385,5 @@ class Batch:
                         projects.extend([i.strip() for i in batchFile.readlines()])
                         batchFile.close()
         except Exception, ex:
-            print str(ex)
+            logger.warning("getLocalProjectForGivenBatch error: " +  str(ex))
         return projects

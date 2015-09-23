@@ -4,6 +4,10 @@
 import globals
 globals.init()
 
+# Next setting up logging
+import log
+logger = log.init()
+
 # Imports
 import xml.etree.ElementTree as ET
 import requests
@@ -34,7 +38,7 @@ from github import Github
 from cache import Cache
 from requests.exceptions import MissingSchema
 
-app = Flask(__name__,static_url_path='/autoport')
+app = Flask(__name__, static_url_path='/autoport')
 
 maxResults = 10
 resParser = ResultParser()
@@ -78,6 +82,7 @@ def init():
                         configUsername=globals.configUsername,
                         configPassword=globals.configPassword,
                         useTextAnalytics=globals.useTextAnalytics,
+                        logLevel=globals.logLevel,
                         gsaConnected=globals.gsaConnected)
 
 #TODO - add error checking
@@ -137,14 +142,14 @@ def getJenkinsNodeDetails():
             globals.nodeOSes.append(osName + ' ' + detail['version'] + ' ' + detail['arch'].upper())
             globals.nodeHosts.append(detail['hostname'])
         except KeyError:
-            print "No O/S information for node " + node
+            logger.warning("No O/S information for node " + node)
             pass
 
-    print "All nodes: ", globals.nodeLabels
-    print "All OSes: ", globals.nodeOSes
-    print "All hostnames: ", globals.nodeHosts
-    print "Ubuntu nodes: ", globals.nodeUbuntu
-    print "RHEL nodes: ", globals.nodeRHEL
+    logger.info("All nodes: " + str(globals.nodeLabels))
+    logger.info("All OSes: " + str(globals.nodeOSes))
+    logger.info("All hostnames: " + str(globals.nodeHosts))
+    logger.info("Ubuntu nodes: " + str(globals.nodeUbuntu))
+    logger.info("RHEL nodes: " + str(globals.nodeRHEL))
 
     return json.jsonify(status="ok", details=globals.nodeDetails, ubuntu=globals.nodeUbuntu, rhel=globals.nodeRHEL)
 
@@ -202,9 +207,14 @@ def settings():
         return json.jsonify(status="failure", error="bad configuration password"), 400
 
     try:
-        globals.useTextAnalytics = request.form["useTextAnalytics"] == 'true'
+        globals.useTextAnalytics = request.form["usetextanalytics"] == 'true'
     except ValueError:
-        return json.jsonify(status="failure", error="bad Value for useTextAnalytics"), 400
+        return json.jsonify(status="failure", error="bad value for useTextAnalytics"), 400
+
+    try:
+        log.chgLevel(request.form["loglevel"])
+    except ValueError:
+        return json.jsonify(status="failure", error="bad value for logLevel"), 400
 
     try:
         if (jenkinsUrl != globals.jenkinsUrl or hostname != globals.hostname or \
@@ -425,7 +435,7 @@ def search_repositories():
     try:
         while remaining:
             cnt = 0;
-            print q
+            logger.debug(q)
             repos = globals.github.search_repositories(q, sort=sort, order=order)[:githubLimit]
             for repo in repos:
                 globals.cache.cacheRepo(repo)
@@ -455,7 +465,7 @@ def search_repositories():
             if cnt < githubLimit or remaining <= 0:
                 break
 
-            print "queued = " + str(limit-remaining), "remaining = " + str(remaining)
+            logger.debug("queued = " + str(limit-remaining) + " remaining = " + str(remaining))
 
             # We are going to search again up to the fork or star count of the last
             # entry.  There may be more of these entries that we haven't discovered
@@ -465,7 +475,7 @@ def search_repositories():
             else:
                 trailingCnt = results[-1]['forks']
 
-            print "name =", results[-1]['name']
+            logger.debug("name =" + str(results[-1]['name']))
 
             while results:
                 if sort == "stars":
@@ -489,18 +499,18 @@ def search_repositories():
         # This rate limit applies to the core apis, not search according to the
         # github documentation, but I couldn't figure out how to get the search limit
         # data.  I don't think github has implemented it yet.
-        print "WARNING[rateLimit exceeded]"
+        logger.warning("Github search rateLimit exceeded")
         rateLimit = globals.github.get_rate_limit()
-        print "rateLimit.limit = ", rateLimit.rate.limit
-        print "rateLimit.remaining = ", rateLimit.rate.remaining
-        print "rateLimit.reset = ", rateLimit.rate.reset
+        logger.warning("rateLimit.limit = " + str(rateLimit.rate.limit))
+        logger.warning("rateLimit.remaining = " + str(rateLimit.rate.remaining))
+        logger.warning("rateLimit.reset = " + str(rateLimit.rate.reset))
 
     # Return search results if we have any.  The user specified Limit is a maximum.
     # There is no guarantee that there are that many entries.  Some data is better
     # than no data.  The user can always try again if he wants more.
     if results:
         cnt = limit - remaining
-        print "/search/repositories Requested = " + str(limit) + " Returned = " + str(cnt)
+        logger.debug("/search/repositories Requested = " + str(limit) + " Returned = " + str(cnt))
         return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
 
     return json.jsonify(status="failure",
@@ -2255,8 +2265,6 @@ def autoportInitialisation():
 
 if __name__ == "__main__":
 
-    autoportInitialisation()
-
     p = argparse.ArgumentParser()
     p.add_argument("-p", "--public", action="store_true",
                    help="specifies for the web server to listen over the public network,\
@@ -2265,6 +2273,8 @@ if __name__ == "__main__":
                    defaults to '" + globals.jenkinsUrl + "'")
     p.add_argument("-b", "--allocBuildServers", action="store_true",
                    help="Build Servers are dynamically allocated per user")
+    p.add_argument("-d", "--debug", action="store_true",
+                   help="Set debug mode")
     args = p.parse_args()
 
     if args.jenkinsURL:
@@ -2273,7 +2283,14 @@ if __name__ == "__main__":
     if args.allocBuildServers:
         globals.allocBuildServers = args.allocBuildServers
 
+    autoportInitialisation()
+
+    hostname = "127.0.0.1"
     if args.public:
-        app.run(debug = True, host='0.0.0.0')
+        hostname = globals.localHostName
+    print "You may use your browser now - http://%s:5000/autoport/" % (hostname)
+
+    if args.public:
+        app.run(debug = args.debug, host='0.0.0.0')
     else:
-        app.run(debug = True)
+        app.run(debug = args.debug)

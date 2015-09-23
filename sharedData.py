@@ -86,6 +86,7 @@ import tarfile
 import zipfile
 import re
 import shutil
+from log import logger
 from flask import json
 from collections import OrderedDict
 from contextlib import closing
@@ -99,14 +100,17 @@ class SharedData:
             repoPathPrefix="/var/www/autoport_repo"):
         self.__jenkinsHost = jenkinsHost
         self.__jenkinsUser = jenkinsUser
-        self.__jenkinsHome = jenkinsHome
         self.__jenkinsKey = jenkinsKey
+        self.__jenkinsHome = jenkinsHome
         self.__sharedDataDir = sharedDataDir
         self.__repoPathPrefix = repoPathPrefix
         self.__localDataDir = globals.localPathForConfig
         self.__localPackageDir = globals.localPathForPackages
         self.__localHostName = globals.localHostName
         self.__userName = globals.configUsername
+
+        logger.info("Connecting to jenkins master " + jenkinsHost)
+
         try:
             self.__jenkinsSshClient = paramiko.SSHClient()
             self.__jenkinsSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -114,11 +118,16 @@ class SharedData:
             self.__jenkinsFtpClient = self.__jenkinsSshClient.open_sftp()
             self.__jenkinsTransportSession = self.__jenkinsSshClient.get_transport()
         except paramiko.AuthenticationException as ae:
-            assert(False), "Please provide valid Jenkins credentials in settings menu!"
+            msg="Please provide valid Jenkins credentials in settings menu!"
+            logger.warning(msg)
+            assert(False), msg
         except paramiko.SSHException as se:
-            assert(False), "SSH connection error to Jenkins.  You may need to authenticate.  Check networking!"
+            msg="SSH connection error to Jenkins.  You may need to authenticate.  Check networking!"
+            logger.warning(msg)
+            assert(False), msg
         except IOError as e:
-            msg = str(e) + ". Please ensure that the Jenkins URL is correct!"
+            msg = str(e) + ". Please ensure that the host associated with the Jenkins URL is reachable!"
+            logger.error(msg)
             assert(False), msg
 
     def getLocalData(self, name):
@@ -128,8 +137,7 @@ class SharedData:
             dataStr = json.load(f, object_pairs_hook=OrderedDict) # Load the json data maintaining its original order.
             f.close();
         except IOError as e:
-            print str(e)
-            assert(False)
+            assert(False), str(e)
         return dataStr
 
     def putLocalData(self, data, prefix):
@@ -353,6 +361,9 @@ class SharedData:
         # This routine is responsible for uploading chef-data to Jenkins Master
         # and also uploading the latest cookbook to chef-server.
 
+        msg = "Initializing autoport chef data"
+        logger.info(msg)
+
         # Fetching version from this autoport instance
         localData = self.getLocalData("chef-repo-version.json")
         localSequence = int(localData['sequence'])
@@ -364,6 +375,7 @@ class SharedData:
             sharedSequence = int(sharedData['sequence'])
             sharedVersion = int(sharedData['version'])
         except KeyError:
+            logger.debug("No or invalid chef-repo control data on Jenkins master")
             sharedSequence = 0
             sharedVersion = 0
 
@@ -374,8 +386,9 @@ class SharedData:
             # Upload local chef-repo-version.json
             sharedDataPath = self.putSharedData(localData, sharedData, "")
             if not sharedDataPath:
-                print "Failed upload to jenkins master of file chef-repo-version.json"
-                assert(False)
+                msg = "Failed upload of chef-repo control data to jenkins master"
+                logger.error(msg)
+                assert(False), msg
 
             # For debugging / validation purposes, let's copy the control file
             # into the Chef data as this is a 2 step update.  Also identify
@@ -386,7 +399,9 @@ class SharedData:
                 localData['hostname'] = self.__localHostName
                 localPath = self.putLocalData(localData, "")
                 shutil.copyfile(localPath, "chef-repo/autoport-chef-repo-version.json")
-            except IOError:
+            except IOError as e:
+                msg = str(e) + ". Failed store of chef-repo debug to sub-dir, continuing"
+                logger.warning(msg)
                 pass
 
             filename = "chef-repo.tar.gz"
@@ -412,7 +427,7 @@ class SharedData:
             command = cmd1 + " && " + cmd2 + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
             exit_status, stderr = self.executeSharedCommand(command)
             if exit_status:
-                print "WARNING - Failed to upload autoport's chef cookback.  Continuing..."
+                logger.warning("Failed upload of new chef cookbook to jenkins master")
 
             # Read the shared control data again and validate that we are still latest
             sharedData = self.getSharedData("chef-repo-version.json", "")
@@ -423,8 +438,8 @@ class SharedData:
                 sharedSequence = 0
                 sharedVersion = 0
 
-            print "Local  chef version=%s sequence=%s" % (localVersion, localSequence)
-            print "Shared chef version=%s sequence=%s" % (sharedVersion, sharedSequence)
+            logger.debug("Local  chef version=%s sequence=%s" % (localVersion, localSequence))
+            logger.debug("Shared chef version=%s sequence=%s" % (sharedVersion, sharedSequence))
 
             # Somebody else has updated the repository
             if sharedSequence != localSequence and sharedVersion != localVersion:
@@ -443,25 +458,29 @@ class SharedData:
                 newSharedSequence = 0
                 newSharedVersion = 0
 
-            print "Verify chef version=%s sequence=%s" % (newSharedVersion, newSharedSequence)
+            logger.debug("Verify chef version=%s sequence=%s" % (newSharedVersion, newSharedSequence))
 
             # Try it again once
             if (localVersion > newSharedVersion) or \
                (localVersion == newSharedVersion and localSequence > newSharedSequence) or \
                (exit_status):
 
-                print "Updating chef-repo data again"
+                msg = "Re-try upload of chef cookbook"
+                logger.info(msg)
+                print msg
+
                 cmdR = "chef-server-ctl reconfigure > ../chef-server-reconfig.out.$$ 2>&1"
                 command = cmd1 + " && " + cmd2 + " && " + cmdR + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
                 exit_status, stderr = self.executeSharedCommand(command)
                 if exit_status:
-                    print "ERROR - Failed to upload autoport's chef cookbook.  Continuing..."
-                    print "Setting shared chef sequence=0"
+                    logger.warning("Failed re-try upload of chef cookbook.  Continuing...")
+                    logger.info("Setting chef-repo control sequence=0")
                     newSharedData['sequence'] = "0"
                     sharedDataPath = self.putSharedData(newSharedData, newSharedData, "")
                     if not sharedDataPath:
-                         print "Failed to restore old data in error path"
-                         assert(False)
+                        msg = "Failed to set chef-repo control sequence=0"
+                        logger.error(msg)
+                        assert(False), msg
 
     def getDistro(self, buildServer):
         distroName = ""

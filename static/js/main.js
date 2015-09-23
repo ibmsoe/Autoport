@@ -9,6 +9,8 @@ var globalState = {
     githubTokenInit: "",
     configUsernameInit: "",
     configPasswordInit: "",
+    useTextAnalyticsInit: false,
+    logLevelInit: "",
 
     jenkinsUrl: "",
     localPathForTestResults: "",
@@ -20,6 +22,8 @@ var globalState = {
     configUsername: "",
     configPassword: "",
     useTextAnalytics: false,
+    logLevel: "INFO",
+
     isSearchTabActive: true,
     isBatchTabActive: false,
     isReportsTabActive: false,
@@ -58,7 +62,8 @@ var globalState = {
         document.getElementById('github').value = globalState.githubTokenInit;
         document.getElementById('username').value = globalState.configUsernameInit;
         document.getElementById('password').value = globalState.configPasswordInit;
-        document.getElementById('useTextAnalytics').value = globalState.useTextAnalytics;
+        globalState.useTextAnalytics = globalState.useTextAnalyticsInit;
+        document.getElementById('loglevel').value = globalState.logLevelInit;
     },
     updateParameters: function () {
         jenkinsState.loadingState.settingsLoading = true;
@@ -71,10 +76,15 @@ var globalState = {
         configUsername = document.getElementById('username').value;
         configPassword = document.getElementById('password').value;
         useTextAnalytics = globalState.useTextAnalytics
-        $.post("settings", {url: jenkinsUrl,
-               ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
-               lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles, github: githubToken,
-               username: configUsername, password: configPassword, useTextAnalytics:  useTextAnalytics}, settingsCallback, "json").fail(settingsCallback);
+        logLevel = document.getElementById('loglevel').value;
+        $.post("settings",
+               { url: jenkinsUrl,
+                 ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
+                 lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles,
+                 github: githubToken, username: configUsername, password: configPassword,
+                 usetextanalytics: useTextAnalytics, loglevel: logLevel
+               },
+               settingsCallback, "json").fail(settingsCallback);
     }
 };
 
@@ -1972,6 +1982,8 @@ function initCallback(data) {
     globalState.githubTokenInit = data.githubToken;
     globalState.configUsernameInit = data.configUsername;
     globalState.configPasswordInit = data.configPassword;
+    globalState.useTextAnalyticsInit = data.useTextAnalytics;
+    globalState.logLevelInit = data.logLevel;
 
     globalState.jenkinsUrl = data.jenkinsUrl;
     globalState.localPathForTestResults = data.localPathForTestResults;
@@ -1981,11 +1993,14 @@ function initCallback(data) {
     globalState.githubToken = data.githubToken;
     globalState.configUsername = data.configUsername;
     globalState.configPassword = data.configPassword;
-    if(data.gsaConnected !== undefined) {
-       if(data.gsaConnected) {
+    globalState.useTextAnalytics = data.useTextAnalytics;
+    globalState.logLevel = data.logLevel;
+
+    if (data.gsaConnected !== undefined) {
+       if (data.gsaConnected) {
            $('#gsaConnectionStatus').text("GSA connected");
            $('#gsaConnectionStatus').css("color","green");
-       }else {
+       } else {
            $('#gsaConnectionStatus').text("GSA not connected");
            $('#gsaConnectionStatus').css("color","red");
        }
@@ -1993,17 +2008,18 @@ function initCallback(data) {
 }
 
 function settingsCallback(data) {
+    console.log("In uploadBatchFileCallback data=", data);
     jenkinsState.loadingState.settingsLoading = false;
     if (data.status != "ok") {
         showAlert("Bad response from /settings!", data);
-    }else {
+    } else {
         showAlert("Updated successfully");
     }
-    if(data.gsaConnected !== undefined) {
-       if(data.gsaConnected) {
+    if (data.gsaConnected !== undefined) {
+       if (data.gsaConnected) {
            $('#gsaConnectionStatus').text("GSA connected");
            $('#gsaConnectionStatus').css("color","green");
-       }else {
+       } else {
            $('#gsaConnectionStatus').text("GSA not connected");
            $('#gsaConnectionStatus').css("color","red");
        }

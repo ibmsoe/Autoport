@@ -2,6 +2,7 @@ import ConfigParser
 import os
 import paramiko
 import socket
+import logging
 from github import Github
 from cache import Cache
 from threadpool import ThreadPool
@@ -27,7 +28,14 @@ def init():
                 print("exception on %s!" % option)
                 configOptions[option] = None
 
-    # globals based on config file
+    # First initialize logging level
+    global logLevel
+    logLevel = configOptions['loglevel']
+    lvl = getattr(logging, logLevel.upper(), None)
+    if not isinstance(lvl, int):
+        logLevel = "INFO"
+
+    # Globals based on config file
     global jenkinsUrl
     global githubToken
     global hostname

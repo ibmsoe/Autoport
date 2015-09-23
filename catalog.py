@@ -6,6 +6,7 @@ import re
 import shutil
 import globals
 from stat import S_ISDIR
+from log import logger
 
 resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
@@ -37,11 +38,16 @@ class Catalog:
             self.__jenkinsFtpClient = self.__jenkinsSshClient.open_sftp()
         # Error handling
         except paramiko.AuthenticationException as ae:
-            assert(False), "Please provide valid Jenkins credentials in settings menu!"
+            msg = "Please provide valid Jenkins credentials in settings menu!"
+            logger.warning(msg)
+            assert(False), msg
         except paramiko.SSHException as se:
-            assert(False), "SSH connection error to Jenkins.  You may need to authenticate.  Check networking!"
+            msg = "SSH connection error to Jenkins.  You may need to authenticate.  Check networking!"
+            logger.warning(msg)
+            assert(False), msg
         except IOError as e:
             msg = str(e) + ". Please ensure that the Jenkins URL is correct in the settings menu!"
+            logger.warning(msg)
             assert(False), msg
 
         try:
@@ -54,12 +60,14 @@ class Catalog:
             globals.gsaConnected = True
         # Error handling
         except paramiko.AuthenticationException as ae:
-            print "Connection error to archive storage.  Use settings menu to specify your user credentials!"
+            logger.warning("Connection error to archive storage")
+            logger.warning("Use settings menu to specify your user credentials!")
         except paramiko.SSHException as se:
-            print "SSH connection error to archive storage.  You may need to authenticate.  Check networking!"
+            logger.warning("SSH connection error to archive storage")
+            logger.warning("You may need to authenticate.  Check networking!")
         except IOError as e:
-            msg = str(e) + ". Please ensure that the archive hostname is correct in the settings menu!"
-            assert(False), msg
+            logger.warning(str(e))
+            logger.warning("Please ensure that the archive hostname is correct in the settings menu!")
 
     def listJobResults(self, repoType, filt):
         results = []
@@ -72,6 +80,7 @@ class Catalog:
             if repoType == "gsa" or repoType == "all":
                 jobs = jobs + self.listGSAJobResults(filt)
         except Exception as e:
+            logger.warning(str(e))
             assert(False), str(e)
 
         for jobDesc in jobs:
@@ -114,9 +123,13 @@ class Catalog:
                 if filt in item.lower() or filt == "":
                     filteredList.append([item, "local"])
         except IOError:
-            assert(False), "Please provide valid local test results path in settings menu!"
+            msg = "Please provide valid local test results path in settings menu!"
+            log.warning(msg)
+            assert(False), msg
         except OSError as e:
-            assert(False), "Please provide valid local test results path in settings menu!"
+            msg = "Please provide valid local test results path in settings menu!"
+            log.warning(msg)
+            assert(False), msg
         return filteredList
 
     def listGSAJobResults(self, filt):
@@ -128,10 +141,12 @@ class Catalog:
                 if filt in item.lower() or filt == "":
                     filteredList.append([item, "gsa"])
         except IOError as e:
-            print str(e)
+            log.warning(str(e))
             assert(False), str(e)
         except AttributeError as e:
-            assert(False), "Connection error to archive storage.  Use settings menu to configure!"
+            msg = "Connection error to archive storage.  Use settings menu to configure!"
+            logger.warning(msg)
+            assert(False), msg
         return filteredList
 
     def getResults(self, build, repository):
@@ -155,7 +170,8 @@ class Catalog:
             self.__tmpdirs.append(putdir)
             return putdir
         except IOError as e:
-            print "Exception: ", str(e)
+            msg = "Exception: " + str(e)
+            logger.warning(msg)
             return None
 
     def getGSAResults(self, build):
@@ -173,9 +189,12 @@ class Catalog:
             self.__tmpdirs.append(putdir)
             return putdir
         except AttributeError:
-            assert(False), "Connection error to archive storage.  Use settings menu to configure!"
+            msg = "Connection error to archive storage.  Use settings menu to configure!"
+            logger.warning(msg)
+            assert(False), msg
         except IOError as e:
-            print "Exception: ", str(e)
+            msg = "Exception: " + str(e)
+            logger.warning(msg)
             return None
 
     def archiveResults(self, builds):
@@ -201,7 +220,7 @@ class Catalog:
             try:
                 tmpDir = self.getLocalResults(build)
                 if tmpDir == None:
-                    print "Can't fetch jenkins copy of ", build
+                    logger.warning("Can't fetch jenkins copy of " + build)
                     errors.append(build)
                     continue
                 try:
@@ -212,10 +231,10 @@ class Catalog:
                                      remoteBuildPath + "/" + file)
                     copied.append(build)
                 except IOError as e:
-                    print "Can't push ", build, ": exception=", str(e)
+                    logger.warning("Can't push " + build + " : exception=" + str(e))
                     errors.append(build)
             except IOError:
-                print "Can't fetch jenkins copy of ", build
+                logger.warning("Can't fetch jenkins copy of " + build)
             shutil.rmtree(tmpDir, ignore_errors=True)
 
         # If copy to gsa was successful, then remove the 'local' copy
@@ -237,7 +256,7 @@ class Catalog:
                     self.__archiveFtpClient.unlink(remoteBuildPath + '/' + file)
                 self.__archiveFtpClient.rmdir(remoteBuildPath)
             except IOError as e:
-                print "Can't remove directory", remoteBuildPath,": ", str(e)
+                logger.warning("Can't remove directory " + remoteBuildPath + " : " + str(e))
 
         return status, errors, alreadyThere
 
@@ -251,7 +270,7 @@ class Catalog:
                 else:
                     self.removeDirFromGSA(self.__copyPath+name)
             except IOError as e:
-                print "Can't remove directory", remoteBuildPath,": ", str(e)
+                logger.warning("Can't remove directory " + remoteBuildPath + " : " + str(e))
 
     # Sub-Routine which deletes files and folders recursively from remote directory
     # @Param - path, which represents the GSA folder
@@ -266,7 +285,7 @@ class Catalog:
                     self.__archiveFtpClient.remove(filepath)
             self.__archiveFtpClient.rmdir(path)
         except IOError as e:
-            print "Can't remove directory", remoteBuildPath,": ", str(e)
+            logger.warning("Can't remove directory " + remoteBuildPath + " : " + str(e))
 
     # Sub-Routine which lets whether the given path is a directory or not
     # @Param - path, represents the file/directory
