@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "4",
+    "sequence": "5",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -186,9 +186,6 @@
                     "name": "openjdk-7-jdk"
                 },
                 {
-                    "name": "openjdk-7-jre"
-                },
-                {
                     "name": "node-gyp"
                 },
                 {
@@ -198,8 +195,7 @@
                     "name": "pkg-config"
                 },
                 {
-                    "name": "python",
-                    "version": "2.7.5-5ubuntu3"
+                    "name": "python"
                 },
                 {
                     "name": "python-antlr"
@@ -250,7 +246,7 @@
                     "name": "snappy"
                 },
                 {
-                    "name": "tcl"
+                    "name": "tcl-dev"
                 },
                 {
                     "name": "thrift-compiler"
@@ -319,7 +315,22 @@
                     "name": "automake"
                 },
                 {
+                    "name": "bison"
+                },
+                {
+                    "name": "blas-devel"
+                },
+                {
+                    "name": "boost-devel"
+                },
+                {
+                    "name": "bzip2"
+                },
+                {
                     "name": "cmake"
+                },
+                {
+                    "name": "flex"
                 },
                 {
                     "name": "gcc-c++"
@@ -328,19 +339,67 @@
                     "name": "git"
                 },
                 {
-                    "name": "java-1.7.0-openjdk"
+                    "name": "gnutls-c++"
+                },
+                {
+                    "name": "gnutls-devel"
+                },
+                {
+                    "name": "gnutls-utils"
                 },
                 {
                     "name": "java-1.7.0-openjdk-devel"
                 },
                 {
+                    "name": "libcap-devel"
+                },
+                {
+                    "name": "libdb-cxx-devel"
+                },
+                {
+                    "name": "libdb-devel"
+                },
+                {
+                    "name": "libdb-java-devel"
+                },
+                {
+                    "name": "libdb-sql-devel"
+                },
+                {
+                    "name": "libevent-devel"
+                },
+                {
                     "name": "libtool"
                 },
                 {
-                    "name": "lzo"
+                    "name": "libyaml-devel"
+                },
+                {
+                    "name": "lzo-devel"
                 },
                 {
                     "name": "make"
+                },
+                {
+                    "name": "maven"
+                },
+                {
+                    "name": "mesa-libEGL-devel"
+                },
+                {
+                    "name": "mesa-libGL-devel"
+                },
+                {
+                    "name": "mesa-libGLU-devel"
+                },
+                {
+                    "name": "ncurses-devel"
+                },
+                {
+                    "name": "openjpeg-devel"
+                },
+                {
+                    "name": "openssl-devel"
                 },
                 {
                     "name": "perl"
@@ -352,8 +411,10 @@
                     "name": "perl-File-Remove"
                 },
                 {
-                    "name": "python",
-                    "version": "2.7.5-16.el7"
+                    "name": "pkgconfig"
+                },
+                {
+                    "name": "python"
                 },
                 {
                     "name": "python-py"
@@ -362,10 +423,16 @@
                     "name": "python-setuptools"
                 },
                 {
+                    "name": "qt-devel"
+                },
+                {
                     "name": "ruby"
                 },
                 {
                     "name": "rubygem-bundler"
+                },
+                {
+                    "name": "rubygem-rake"
                 },
                 {
                     "name": "sbt"
@@ -374,13 +441,13 @@
                     "name": "scons"
                 },
                 {
-                    "name": "snappy"
+                    "name": "snappy-devel"
                 },
                 {
-                    "name": "tcl"
+                    "name": "sqlite-devel"
                 },
                 {
-                    "name": "zlib"
+                    "name": "tcl-devel"
                 },
                 {
                     "name": "zlib-devel"
