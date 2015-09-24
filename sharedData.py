@@ -383,6 +383,9 @@ class SharedData:
         if localVersion > sharedVersion or \
            (localVersion == sharedVersion and localSequence > sharedSequence):
 
+            logger.info("Uploading new chef cookbook")
+            logger.debug("Replacing shared version=%s sequence=%s" % (sharedVersion, sharedSequence))
+
             # Upload local chef-repo-version.json
             sharedDataPath = self.putSharedData(localData, sharedData, "")
             if not sharedDataPath:
@@ -400,8 +403,8 @@ class SharedData:
                 localPath = self.putLocalData(localData, "")
                 shutil.copyfile(localPath, "chef-repo/autoport-chef-repo-version.json")
             except IOError as e:
-                msg = str(e) + ". Failed store of chef-repo debug to sub-dir, continuing"
-                logger.warning(msg)
+                logger.warning(str(e))
+                logger.warning("Failed store of chef-repo debug to sub-dir, continuing")
                 pass
 
             filename = "chef-repo.tar.gz"
@@ -498,7 +501,6 @@ class SharedData:
     def getManagedList(self):
         localData = self.getLocalData("ManagedList.json")
 
-        print "allocBuildServers=", globals.allocBuildServers
         if globals.allocBuildServers:
             sharedPath = "/user/" + self.__userName + "/"
         else:
