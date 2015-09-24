@@ -2008,7 +2008,7 @@ function initCallback(data) {
 }
 
 function settingsCallback(data) {
-    console.log("In uploadBatchFileCallback data=", data);
+    console.log("In settingsCallback data=", data);
     jenkinsState.loadingState.settingsLoading = false;
     if (data.status != "ok") {
         showAlert("Bad response from /settings!", data);
