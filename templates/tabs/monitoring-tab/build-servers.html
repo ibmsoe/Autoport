@@ -9,7 +9,7 @@
     <!--List / Install / Remove software on a given build server START-->
     <div class="jumbotron embedded-panel">
       <div class="btn btn-default btn-block" rv-on-click="jenkinsState.setManageSingleSlavePanel" id="manageSingleSlaveButton">
-        <h2 class="text-center">List / Install / Remove software on a given build server</h2>
+        <h2 class="text-center">List / Install / Remove software</h2>
       </div>
 
       <div id="manageSingleSlavePanel" class="jumbotron-button-content" rv-show="jenkinsState.manageSingleSlavePanel">
@@ -18,7 +18,7 @@
           <div class="col-lg-8">
             <input type="text"
               class="form-control"
-              placeholder="(e.g. firefox)"
+              placeholder="(e.g. firefox or leave blank to see which packages are installed)"
               id="packageFilter_Single"/>
           </div>
 
@@ -41,7 +41,7 @@
 
         <div rv-show="jenkinsState.singleSlavePackageTableReady">
           <div class="alert alert-success">
-            <div>Actions taken on the list below apply only to the chosen build server.  The managed package list is not updated. In this way you may customize the runtime environment of a given build server to facilitate a specific porting effort. Select the package and then the action to be taken.</div>
+            <div>Actions taken on the list below apply only to the chosen build server.  The managed package list is not updated. In this way you may customize the runtime environment of a given build server to facilitate a specific porting effort. When you are done, use the install services provided below to restore the managed runtime environment.</div>
           </div>
           <div id="singleServerPackageListToolbar" class="btn-group">
               <a rv-on-click="jenkinsState.installPackageForSingleSlave">
@@ -81,7 +81,7 @@
     <!--List / Install / Remove software across build servers START-->
     <div class="jumbotron embedded-panel">
       <div class="btn btn-default btn-block" rv-on-click="jenkinsState.setManageMultipleSlavePanel" id="manageMultipleSlaveButton">
-        <h2 class="text-center">List / Install / Remove software across build servers</h2>
+        <h2 class="text-center">List / Install / Remove software using managed runtime services</h2>
       </div>
 
       <div id="manageMultipleSlavePanel" class="jumbotron-button-content" rv-show="jenkinsState.manageMultipleSlavePanel">
