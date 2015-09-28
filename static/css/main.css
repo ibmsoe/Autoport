@@ -301,3 +301,37 @@ fieldset[disabled] .form-control {
     margin: 10px 30px !important;
     padding: 14px !important;
 }
+
+#loading_screen{
+    width: 213px;
+    height: 50px;
+    position: absolute;
+    top:0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+}
+
+.glyphicon-refresh-animate {
+   -webkit-animation-name: rotateThis;
+   -webkit-animation-duration: 2s;
+   -webkit-animation-iteration-count: infinite;
+   -webkit-animation-timing-function: linear;
+   -moz-animation: spin2 .7s infinite linear;
+}
+
+@-webkit-keyframes "rotateThis" {
+ from {
+        -webkit-transform: rotate( 0deg );
+    }
+ to  {
+        -webkit-transform: rotate( 360deg );
+    }
+}
+
+@-moz-keyframes spin2 {
+    from { -moz-transform: rotate(0deg);}
+    to { -moz-transform: rotate(360deg);}
+}
+

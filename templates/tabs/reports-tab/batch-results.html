@@ -52,10 +52,15 @@
             <span class="glyphicon glyphicon-bookmark"></span>
             Test Compare
         </button>
-        <button rv-on-click="batchReportState.archive" type="button" class="btn btn-primary" id="batch_report_archive"
+        <button rv-on-click="batchReportState.archive" type="button" class="btn btn-primary disabled" id="batch_report_archive"
             style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
             <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
             Archive
+        </button>
+        <button rv-on-click="batchReportState.removeBatchReports" type="button" class="btn btn-primary disabled" id="batch_report_remove"
+            style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+            <span class="glyphicon glyphicon-remove-circle"></span>
+            Remove
         </button>
       </div>
       <table class="table panel panel-default" id="batchReportListSelectTable"
@@ -75,7 +80,7 @@
         </thead>
       </table>
     </div>
-
+    {% include "tabs/reports-tab/batch-loading.html" %}
     <!-- Batch reports table for viewing history/detail/comparisons -->
     <div id="testBatchCompareTablePanel"
         class="table panel panel-default"

@@ -10,6 +10,8 @@ from stat import ST_SIZE, ST_MTIME
 from time import localtime, asctime
 from flask import json
 from project import Project
+import shutil
+from stat import S_ISDIR
 
 projectResultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
@@ -85,7 +87,7 @@ class Batch:
                 reportData = self.listLocalBatchReports(filt)
 
             if repoType == "gsa" or repoType == "all":
-                reportData = reportData.extend(self.listGSABatchReports(filt))
+                reportData.extend(self.listGSABatchReports(filt))
         except Exception as e:
             assert(False), str(e)
 
@@ -119,8 +121,10 @@ class Batch:
                 if not filt or filt in filename.lower():
                     try:
                         putdir = tempfile.mkdtemp(prefix="autoport_")
-                        self.ftp_client.get(filename, putdir + "/" + filename)
-                        filteredList.append(self.parseBatchReportList(putdir + "/" + filename, "gsa"))
+                        self.copyRemoteDirToLocal(globals.pathForBatchTestResults + "/" +filename, putdir)
+                        batchFilePath = os.listdir(putdir + "/" + filename)[0]
+                        filteredList.append(self.parseBatchReportList(\
+                                            os.path.join(putdir,filename,batchFilePath), "gsa"))
                     except Exception, ex:
                         logger.warning("listGSABatchReports Error: " + str(ex))
         except Exception as e:
@@ -179,7 +183,6 @@ class Batch:
             batchCreationTime = asctime(localtime(batchStats[ST_MTIME]))
         except OSError:
             batchCreationTime = "-"
-
         try:
             batchFile = open(filename)
             batchName, batchUID, batchSubmissionTime = ntpath.basename(filename).split('.')
@@ -387,3 +390,74 @@ class Batch:
         except Exception, ex:
             logger.warning("getLocalProjectForGivenBatch error: " +  str(ex))
         return projects
+
+    # Remove Batch Reports Data from local or GSA
+    def removeBatchReportsData(self, reports, catalog):
+        project = Project(catalog)
+        for name in reports.keys():
+            try:
+                if reports[name] == "local":
+                    shutil.rmtree(os.path.dirname(name))
+                else:
+                    filepath = globals.pathForBatchTestResults +os.path.basename(os.path.dirname(name))\
+                               + "/" + os.path.basename(name)
+                    projects = {}
+                    batchTestReportFile = self.ftp_client.open(filepath,'r')
+                    dataFile = batchTestReportFile.readlines()
+                    for line in dataFile:
+                        if line:
+                            projects[line.strip()] = 'gsa'
+                    # Projects report removal from GSA
+                    catalog.removeProjectsData(projects, project)
+
+                    # Batch report removal from GSA
+                    project.removeDirFromGSA(self.ssh_client, os.path.dirname(filepath))
+            except IOError as e:
+                logger.warning("Can't remove directory" + name + ": " + str(e))
+
+    # Archive Batch Reports Data to GSA
+    def archiveBatchReports(self, report):
+        batchReportDir = globals.pathForBatchTestResults + report.split('/')[3]
+        batchReportName = report.split('/')[4]
+        try:
+            self.ftp_client.stat(batchReportDir)
+            return "Already Exists"
+        except IOError as e:
+            pass # Directory's not there, try to add it
+
+        try:
+            self.ftp_client.mkdir(batchReportDir)
+            self.ftp_client.put(report,batchReportDir + '/' + batchReportName)
+            # Cleaning-up local batch_test_report after archival
+            shutil.rmtree(globals.pathForBatchTestResults+batchReportDir)
+            return "Success"
+        except IOError as e:
+            logger.warning("Can't push " + batchReportName + ": exception=" + str(e))
+            return "Failed - " + str(e)
+
+    # Recursively download a full directory, since paramiko won't walk
+    def copyRemoteDirToLocal(self, remotepath, localpath):
+        self.ftp_client.chdir(os.path.split(remotepath)[0])
+        parent=os.path.split(remotepath)[1]
+        for walker in self.remotePathWalker(parent):
+            try:
+                os.mkdir(os.path.join(localpath,walker[0]))
+            except:
+                pass
+            for file in walker[2]:
+                self.ftp_client.get(os.path.join(walker[0],file),os.path.join(localpath,walker[0],file))
+
+    def remotePathWalker(self, remotepath):
+        path=remotepath
+        files=[]
+        folders=[]
+        for f in self.ftp_client.listdir_attr(remotepath):
+            if S_ISDIR(f.st_mode):
+                folders.append(f.filename)
+            else:
+                files.append(f.filename)
+        yield path,folders,files
+        for folder in folders:
+            new_path=os.path.join(remotepath,folder)
+            for x in self.remotePathWalker(new_path):
+                yield x

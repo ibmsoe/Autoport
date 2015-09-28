@@ -37,6 +37,7 @@ from distutils.version import LooseVersion
 from github import Github
 from cache import Cache
 from requests.exceptions import MissingSchema
+from project import Project
 
 app = Flask(__name__, static_url_path='/autoport')
 
@@ -1113,6 +1114,33 @@ def listBatchReports(repositoryType):
         print "Error: ", str(e)
         return json.jsonify(status="failure", error=str(e)), 401
 
+# Archive batch reports data to GSA
+@app.route("/autoport/archiveBatchReports", methods=['POST'])
+def archiveBatchReports():
+    try:
+        result = {} 
+        reports = request.json['reports']
+        for report in reports:
+            projectsArr = []
+            f = open(report,'r')
+            projectsArr = f.read().strip('\n').split('\n')
+            catalog.archiveResults(projectsArr)
+            archiveRes = batch.archiveBatchReports(report)
+            result[report] = archiveRes
+        return json.jsonify(status="ok", results=result), 200
+    except Exception as e:
+        return json.jsonify(status="failure", error=str(e)), 401
+
+# Removes batch reports data from local or GSA
+@app.route("/autoport/removeBatchReports", methods=["POST"])
+def removeBatchReports():
+    try:
+        reports = request.json['reports']
+        batch.removeBatchReportsData(reports, catalog)
+        return json.jsonify(status="ok"), 200
+    except Exception as e:
+        return json.jsonify(status="failure", error=str(e)), 401
+
 # List information about packages on a build server by creating and triggering a Jenkins job on it
 @app.route("/autoport/listPackageForSingleSlave")
 def listPackageForSingleSlave():
@@ -1959,8 +1987,9 @@ def listTestResults(repositoryType):
 @app.route("/autoport/removeProjects", methods=["POST"])
 def removeProjects():
     try:
+        project = Project(catalog)
         projects = request.json['projects']
-        catalog.removeProjectsData(projects)
+        catalog.removeProjectsData(projects, project)
         return json.jsonify(status="ok"), 200
     except Exception as e:
         return json.jsonify(status="failure", error=str(e)), 401
