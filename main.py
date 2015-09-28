@@ -1774,10 +1774,10 @@ def synchManagedPackageList():
     if not path:
         return json.jsonify(status="failure", error="Could not synch the managed list.  Try again." )
 
-    jobs = createSynchJobs(nodes)
+    jobs, jobNode = createSynchJobs(nodes)
 
     return json.jsonify(status="ok",
-           message= str(len(jobs)) + " installation job(s) initiated in the background.")
+           message= str(len(jobs)) + " installation job(s) initiated in the background...", jobList = jobNode)
 
 def createSynchJobs(nodes):
     '''
@@ -1791,18 +1791,22 @@ def createSynchJobs(nodes):
 
     # dict to hold job names of all the chef jobs to be monitored
     jobs = []
+    jobNode = []
     try:
         serverNodes = nodes.split(",")
         for serverNode in serverNodes:
             for node in globals.nodeDetails:
                 if node['nodelabel'] == serverNode:
                     # Getting chef attributes and run_list for the node
-                    chefAttr, runList = chefData.setChefDataForSynch(node['distro'], node['rel'], node['arch'])
+                    chefAttr, runList, numberOfInstalls,numberOfUnInstalls = chefData.setChefDataForSynch(node['distro'],
+                                                                            node['rel'], node['arch'])
                     # Creating chef job for the node.
                     job = createChefJob(node['hostname'], chefAttr, runList, "managed-package")
                     try:
                         if job['status'] == "success":
                             jobs.append(job['jobName'])
+                            jobNode.append({'jobName':job['jobName'], 'nodeLabel': node['nodelabel'],\
+                                            'install': numberOfInstalls, 'uninstalls':numberOfUnInstalls })
                     except KeyError as e:
                         print str(e)
                         assert(False)
@@ -1821,7 +1825,7 @@ def createSynchJobs(nodes):
         for node in globals.nodeDetails:
             sharedData.cleanUpManagedList(node['distro'], node['rel'], node['arch'])
 
-    return jobs
+    return jobs, jobNode
 
 def createChefJob(host, chefAttr, runList, jobType="single-package"):
     tree = ET.parse("./config_template_knife_bootstrap.xml")
@@ -1890,14 +1894,35 @@ def createChefJob(host, chefAttr, runList, jobType="single-package"):
     else:
         return { 'status':"failure", 'error':"job creation failed for: " + jobName, 'rstatus':r.status_code }
 
+
+@app.route("/autoport/monitorJob", methods=["GET"])
+def monitorJob():
+    '''
+    monitorJob: monitors the jenkins job run for job name
+    inputs: HTTP GET param jobName: holds the jobName
+            HTTP GET param nodeLabel: holds the nodeLabel
+    '''
+    status = ""
+    requestJobName = request.args.get("jobName", "")
+    nodeLabel = request.args.get("nodeLabel", "")
+    if requestJobName:
+       status = monitorChefJobs(requestJobName, sync=True)
+    return json.jsonify(status="ok", jobstatus=status, nodeLabel=nodeLabel)
+
 def monitorChefJobs(jobName, sync=False):
     # Monitor each job in chefJobs
     building = True
     checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
     while building:
         try:
-            buildInfo = json.loads(requests.get(checkBuildUrl).text)
-            building = buildInfo['building']
+            requestInfo = requests.get(checkBuildUrl)
+            if requestInfo.status_code == 200:
+                buildInfo = json.loads(requests.get(checkBuildUrl).text)
+                building = buildInfo['building']
+            
+            if building:
+                sleep(3)
+                
             if not building:
                 jobStatus = buildInfo['result']
             # Check to make sure build isn't queued, if it is wait for it to dequeue
@@ -1906,7 +1931,7 @@ def monitorChefJobs(jobName, sync=False):
             queued = True
             count = 0;
             while queued and count < 20:
-                sleep(60)
+                sleep(10)
                 try:
                     r = requests.get(checkQueueUrl).text
                     projectInfo = json.loads(r)
@@ -1914,6 +1939,9 @@ def monitorChefJobs(jobName, sync=False):
                 # if it's not in the queue and not building something went wrong
                 except ValueError:
                     print "project failed to start building/queuing" + jobName
+                    if sync == True:
+                    #emit('my response', {'data': 'FAILURE'})
+                        return "FAILURE"
                 count += 1
             building = False
 

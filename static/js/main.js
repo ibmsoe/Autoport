@@ -1062,6 +1062,8 @@ var jenkinsState = {
         }
         jenkinsState.loadingState.managedPackageActionLoading = true;
         $("#syncManagedPackageButton").addClass("disabled");
+        $("#notifyManagedPanel").html("");
+        $("#notifyManagedPanel").hide();
         $.getJSON("synchManagedPackageList", { serverNodeCSV: selectedBuildServerCsv }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
     },
     uploadPackage: function (ev) {
@@ -2286,14 +2288,99 @@ function editManagedListCallback(data) {
     }
 }
 
+// function pollingState: objects maintains the polling state
+var pollingState =  function(){
+   var dataJob = {};
+   var pollCounter = 0;      // polling counter
+   var timeInterval = 60000; // polling interval in milliseconds
+   var pollAttempts = 20;    // # of polling attempts
+   return {
+       // function setData sets the data that needs to be passed to the server during polling
+       setData: function(data) {
+           dataJob = data;
+       },
+       // function poll: polls server using ajax
+       poll: function() {
+           console.log("polling....."+JSON.stringify(dataJob));
+           if (pollCounter < pollAttempts) {
+               if (dataJob.jobName != undefined) {
+                   jenkinsState.loadingState.managedPackageActionLoading = true;
+                   $("#syncManagedPackageButton").addClass("disabled");
+
+                   $.getJSON("monitorJob", dataJob, notificationCallback(this)).fail(notificationCallback(this));
+                   pollCounter++;
+               }
+           }
+           else{
+               $("#notifyManagedPanel").append("<br><span>Unable to fetch data from server.</span>");
+               jenkinsState.loadingState.managedPackageActionLoading = false;
+               $("#syncManagedPackageButton").removeClass("disabled");
+           }
+        },
+        /* function socketPoll:  socket polling -  TODO:
+        socketPoll: function() {
+            //socket.emit('monitorJob event', {'jobName':dataJob.jobName,'nodeLabel':dataJob.nodeLabel});
+        }*/
+    };
+};
+
+function notificationCallback(obj){
+    var title = "", message = "",type="", classcss="";
+
+    return function(data) {
+        if (data.jobstatus) {
+            title =data.jobstatus;
+            if (data.jobstatus == "SUCCESS") {
+                message= "Sync completed on "+data.nodeLabel;
+                type = "success";
+                classcss = "text-success";
+            }
+            if (data.jobstatus == "FAILURE") {
+                message= "Sync failed on "+data.nodeLabel;
+                type = "danger";
+                classcss = "text-warning";
+            }
+            $.notify({
+                 title: "<strong>"+title+"</strong> ",
+                 message: message
+            },
+            {
+                type: type
+            });
+            $("#notifyManagedPanel").append("<br><span class='"+classcss+"'><strong>"+title+"</strong> "+message+"</span>");
+            jenkinsState.loadingState.managedPackageActionLoading = false;
+            $("#syncManagedPackageButton").removeClass("disabled");
+        }
+        else{
+            jenkinsState.loadingState.managedPackageActionLoading = true;
+            $("#syncManagedPackageButton").addClass("disabled");
+            setTimeout(obj.poll(),obj.timeInterval);
+        }
+
+    };
+}
+
 function synchManagedPackageListCallback(data) {
     if (data.status === "ok") {
         showAlert(data.message);
+        $("#notifyManagedPanel").show();
+        $("#notifyManagedPanel").append("<br>"+data.message);
+        //Client server polling
+        if (data.jobList.length > 0){
+            for (var i=0; i< data.jobList.length; i++) {
+                console.log(data.jobList[i]);
+                var dataJob = data.jobList[i];
+                $("#notifyManagedPanel").append("<br>"+dataJob.install +" package(s) to be installed and "
+                                               + dataJob.uninstalls + " package(s) to be uninstalled on "
+                                               + dataJob.nodeLabel);
+                var pollObj = new pollingState();
+                pollObj.setData(dataJob);
+                setTimeout(pollObj.poll(),5000);
+            }
+        }
     } else {
         showAlert("Error!", data);
     }
-    jenkinsState.loadingState.managedPackageActionLoading = false;
-    $("#syncManagedPackageButton").removeClass("disabled");
 }
 
 // Compares two versions

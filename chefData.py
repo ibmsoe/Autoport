@@ -30,7 +30,8 @@ class ChefData:
         chefInstallAttrs['repo_hostname'] = self.__repo_hostname
         chefInstallAttrs['repo_name'] = self.__repo_name
         chefInstallAttrs['log_location'] = self.__logDir
-
+        numberOfInstalls = 0
+        numberOfUnInstalls = 0
         # Reading ManagedList.json
         try:
             localPath = self.__localDataDir + "ManagedList.json"
@@ -63,6 +64,7 @@ class ChefData:
                         elif distro in ('RHEL', 'Fedora', 'openSUSE', 'AIX'):
                             key = 'rpms'
                         pkgKey = pkg['name']
+                        numberOfInstalls = numberOfInstalls + 1
                         if 'version' in pkg:
                             chefInstallAttrs['buildServer'][key][pkgKey] = pkg['version']
                         else:
@@ -78,6 +80,7 @@ class ChefData:
                                 pkgKey = pkg['name']
                                 chefInstallAttrs['buildServer'][pkgKey] = {}
                             chefInstallAttrs['buildServer'][pkgKey]['version'] = pkg['version']
+                            numberOfUnInstalls = numberOfUnInstalls + 1
 
                     # Filling in userpackages based on current owner
                     # This would change when ManagedList.json will be maintained
@@ -93,6 +96,10 @@ class ChefData:
                                                               ]
                                               }
                                 chefInstallAttrs['buildServer']['userpackages'].update(userPackage)
+                                if pkg['action'] == 'install':
+                                    numberOfInstalls = numberOfInstalls + 1
+                                if pkg['action'] == 'remove':
+                                    numberOfUnInstalls = numberOfUnInstalls + 1
                             else:
                                 # If a userpackage has a type associated, it signifies
                                 # that it is a source install.We need to populate appropriate
@@ -104,17 +111,19 @@ class ChefData:
                                                      pkg['action'], pkg['extension'], \
                                                      chefInstallAttrs)
                                     chefInstallRecipes.extend(recipe)
+                                    numberOfInstalls = numberOfInstalls + 1
                                 elif pkg['action'] == 'remove' and pkg['arch'] == arch:
                                      chefRemoveAttrs, recipe = self.setChefDataForPackage(pkg['name'],
                                                      pkg['version'], pkg['type'], \
                                                      pkg['action'], pkg['extension'], \
                                                      chefRemoveAttrs)
                                      chefRemoveRecipes.extend(recipe)
+                                     numberOfUnInstalls = numberOfUnInstalls + 1
 
             chefAttr = [chefInstallAttrs, chefRemoveAttrs]
             recipes  = [chefInstallRecipes, chefRemoveRecipes]
 
-            return chefAttr,recipes
+            return chefAttr,recipes,numberOfInstalls,numberOfUnInstalls
         except KeyError as e:
             print str(e)
             assert(False)
