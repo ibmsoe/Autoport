@@ -1,9 +1,17 @@
 import globals
 import logging
 import logging.handlers
+import os
 
 def init():
     global logger
+
+    # For windows, create /tmp if it doesn't exist.  Log file is /tmp/autoport.log[.1[,.2[,.5]]]
+    try:
+        os.makedirs('/tmp')
+    except OSError:
+        if not os.path.isdir('/tmp'):
+            raise
 
     logger = logging.getLogger('autoport')
 
