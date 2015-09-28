@@ -137,6 +137,8 @@
           </div>
           <br/>
           {% include "tabs/monitoring-tab/managed-packages-action-loading.html" %}
+          <div class="alert alert-success alert-dismissable"  id="notifyManagedPanel" style="display:none" >
+          </div>
           <!-- START MULTIPLE SERVER PACKAGE LIST TABLE -->
           <div id="multiServerPackageListToolbar" class="btn-group">
               <a rv-on-click="jenkinsState.addToManagedList">

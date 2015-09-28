@@ -1,5 +1,5 @@
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="{{ url_for('static', filename='js/lib/jquery.min.js') }}"></script>
 
 <!-- Hashing algorithms, as element IDs can't have any special chars -->
 <script src="https://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/md5.js"></script>
@@ -20,3 +20,4 @@
 <script src="{{ url_for('static', filename='js/binders.js') }}"></script>
 <script src="{{ url_for('static', filename='js/formatters.js') }}"></script>
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/lib/bootstrap-notify.min.js') }}"></script>
