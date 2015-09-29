@@ -36,7 +36,7 @@ exists() {
 
     if [ -f /etc/redhat-release ] ; then
       DIST='redhat'
-      yum install wget
+      yum -y install wget
     elif [ -f /etc/debian_version ] ; then
       DIST=`grep DISTRIB_ID /etc/lsb-release | cut -d "=" -f 2 | tr '[A-Z]' '[a-z]'`
       apt-get -y -q install wget
