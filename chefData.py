@@ -80,7 +80,7 @@ class ChefData:
                                 pkgKey = pkg['name']
                                 chefInstallAttrs['buildServer'][pkgKey] = {}
                             chefInstallAttrs['buildServer'][pkgKey]['version'] = pkg['version']
-                            numberOfUnInstalls = numberOfUnInstalls + 1
+                            numberOfInstalls = numberOfInstalls + 1
 
                     # Filling in userpackages based on current owner
                     # This would change when ManagedList.json will be maintained

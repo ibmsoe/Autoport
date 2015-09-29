@@ -854,12 +854,14 @@ var jenkinsState = {
         var selectedPackageList = $('#singleServerPackageListTable').bootstrapTable('getSelections');
         if(selectedPackageList.length > 1 && clickAction == "install"){
             var tempPackArray = [];
-            for(var obj of selectedPackageList){
+            for(var i in selectedPackageList){
+                var obj = selectedPackageList[i];
                 if(!obj.updateAvailable){
                     continue;
                 }
                 var isUpdatedToTemp = false;
-                for(var tempObj of tempPackArray){
+                for(var j in tempPackArray){
+                    var tempObj = tempPackArray[j];
                     if((tempObj.packageName == obj.packageName) && compareVersion(tempObj.updateVersion, obj.updateVersion)){
                         tempObj['updateVersion'] = tempObj['updateVersion'];
                         isUpdatedToTemp = true;
@@ -873,8 +875,9 @@ var jenkinsState = {
                 selectedPackageList = tempPackArray;
             }
             var message = "The below packages are eligible for Install/Update \n";
-            for(var o of selectedPackageList){
-               message = message+o.packageName + ", Version - "+o.updateVersion;
+            for(var k in selectedPackageList){
+                var o = selectedPackageList[k];
+                message = message+o.packageName + ", Version - "+o.updateVersion;
             }
             if(message != "") {
                var confRes = confirm(message);
@@ -963,7 +966,8 @@ var jenkinsState = {
             buildServersToSync = jenkinsState.nodeLabels;
         }
         buildServerJsonObj = [];
-        for(var buildServObj of buildServersToSync){
+        for(var  buildIndex in  buildServersToSync){
+            var buildServObj = buildServersToSync[buildIndex];
             item = {}
             item ["value"] = buildServObj;
             item ["label"] = buildServObj;
@@ -978,9 +982,11 @@ var jenkinsState = {
         var selectedPackageList = $('#multiServerPackageListTable').bootstrapTable('getSelections');
         if(selectedPackageList.length > 1 && type == "add"){
             var tempPackArray = [];
-            for(var obj of selectedPackageList){
+            for(var i in selectedPackageList){
+                var obj = selectedPackageList[i];
                 var isUpdatedToTemp = false;
-                for(var tempObj of tempPackArray){
+                for(var k in tempPackArray){
+                    var tempObj = tempPackArray[k];
                     if((tempObj.packageName == obj.packageName) && compareVersion(tempObj.updateVersion, obj.updateVersion)){
                             tempObj['updateVersion'] = tempObj['updateVersion'];
                     }
@@ -1062,8 +1068,7 @@ var jenkinsState = {
         }
         jenkinsState.loadingState.managedPackageActionLoading = true;
         $("#syncManagedPackageButton").addClass("disabled");
-        $("#notifyManagedPanel").html("");
-        $("#notifyManagedPanel").hide();
+        $("#manageRuntime").hide();
         $.getJSON("synchManagedPackageList", { serverNodeCSV: selectedBuildServerCsv }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
     },
     uploadPackage: function (ev) {
@@ -1094,7 +1099,7 @@ var jenkinsState = {
 
             return false;
     },
-    stateFormatter(value, row, index){
+    stateFormatter: function(value, row, index){
         var retVal=false;
         if(!row.enableCheckBox)
             retVal = true;
@@ -2271,6 +2276,7 @@ function managePackageForSingleSlaveCallback(data) {
 function listManagedPackagesCallback(data) {
     jenkinsState.loadingState.managedPackageListLoading = false;
     if (data.status === "ok") {
+        $("#manageRuntime").show();
         jenkinsState.managedPackageList = data.packages;
         jenkinsState.managedPackageTableReady = true;
         $('#multiServerPackageListTable').bootstrapTable('load', jenkinsState.managedPackageList);
@@ -2294,10 +2300,23 @@ var pollingState =  function(){
    var pollCounter = 0;      // polling counter
    var timeInterval = 60000; // polling interval in milliseconds
    var pollAttempts = 20;    // # of polling attempts
+   var pollmessage = "";
    return {
        // function setData sets the data that needs to be passed to the server during polling
        setData: function(data) {
            dataJob = data;
+       },
+       // function setMessage:  sets the message
+       setMessage: function(data) {
+           this.pollmessage = data;
+       },
+       // function appendMessage: appends message to the previous message
+       appendMessage: function(data) {
+           this.pollmessage += data;
+       },
+       // function displayMessage:  displays message
+       displayMessage: function(data) {
+           showAlert(this.pollmessage);
        },
        // function poll: polls server using ajax
        poll: function() {
@@ -2312,7 +2331,8 @@ var pollingState =  function(){
                }
            }
            else{
-               $("#notifyManagedPanel").append("<br><span>Unable to fetch data from server.</span>");
+               this.appendMessage("<br><span>Unable to fetch data from server.</span>");
+               this.displayMessage();
                jenkinsState.loadingState.managedPackageActionLoading = false;
                $("#syncManagedPackageButton").removeClass("disabled");
            }
@@ -2331,23 +2351,25 @@ function notificationCallback(obj){
         if (data.jobstatus) {
             title =data.jobstatus;
             if (data.jobstatus == "SUCCESS") {
-                message= "Sync completed on "+data.nodeLabel;
+                message= "<br>Sync completed on "+data.nodeLabel;
                 type = "success";
                 classcss = "text-success";
             }
             if (data.jobstatus == "FAILURE") {
-                message= "Sync failed on "+data.nodeLabel;
+                message= "<br>Sync failed on "+data.nodeLabel;
                 type = "danger";
                 classcss = "text-warning";
             }
-            $.notify({
+            /*$.notify({
                  title: "<strong>"+title+"</strong> ",
                  message: message
             },
             {
                 type: type
-            });
-            $("#notifyManagedPanel").append("<br><span class='"+classcss+"'><strong>"+title+"</strong> "+message+"</span>");
+            });*/
+            obj.appendMessage(message);
+            obj.displayMessage();
+            //$("#notifyManagedPanel").append("<br><span class='"+classcss+"'><strong>"+title+"</strong> "+message+"</span>");
             jenkinsState.loadingState.managedPackageActionLoading = false;
             $("#syncManagedPackageButton").removeClass("disabled");
         }
@@ -2362,22 +2384,23 @@ function notificationCallback(obj){
 
 function synchManagedPackageListCallback(data) {
     if (data.status === "ok") {
-        showAlert(data.message);
-        $("#notifyManagedPanel").show();
-        $("#notifyManagedPanel").append("<br>"+data.message);
-        //Client server polling
+        var pollObj = new pollingState();
+        pollObj.setMessage("<br>"+data.message);
+        // Client server polling
         if (data.jobList.length > 0){
             for (var i=0; i< data.jobList.length; i++) {
-                console.log(data.jobList[i]);
                 var dataJob = data.jobList[i];
-                $("#notifyManagedPanel").append("<br>"+dataJob.install +" package(s) to be installed and "
+                /*$("#notifyManagedPanel").append("<br>"+dataJob.install +" package(s) to be installed and "
                                                + dataJob.uninstalls + " package(s) to be uninstalled on "
-                                               + dataJob.nodeLabel);
-                var pollObj = new pollingState();
+                                               + dataJob.nodeLabel);*/
+                pollObj.appendMessage("<br>"+dataJob.install +" package(s) to be installed and "
+                               + dataJob.uninstalls + " package(s) to be uninstalled on "
+                               + dataJob.nodeLabel);
                 pollObj.setData(dataJob);
                 setTimeout(pollObj.poll(),5000);
             }
         }
+        pollObj.displayMessage();
     } else {
         showAlert("Error!", data);
     }
