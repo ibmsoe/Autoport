@@ -11,8 +11,11 @@
 
   </head>
   <body>
-      <div class="container" id="toolContainer">
-        
+      <div id="loading_screen">
+          <button class="btn btn-lg btn-primary"><span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span>AutoPort Loading...</button>
+      </div>
+      <div class="container hide" id="toolContainer">
+
         {% include "error.html" %}
 
         {% include "header/header.html" %}
@@ -21,7 +24,7 @@
 
           <h2>
           <ul class="nav nav-tabs nav-justified">
-            <li class="active"><a rv-on-click="globalState.headerChange" 
+            <li class="active"><a rv-on-click="globalState.headerChange"
               id="searchTab" data-toggle="tab" href="#searchProject">Search</a></li>
             <li><a rv-on-click="globalState.headerChange" 
               id="batchTab" data-toggle="tab" href="#batchPanel">Batch Jobs</a></li>

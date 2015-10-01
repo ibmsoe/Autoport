@@ -5,6 +5,9 @@ import paramiko
 from flask import json
 from catalog import Catalog
 from resultParser import ResultParser
+from stat import S_ISDIR
+import posixpath
+from log import logger
 
 class Project:
     """
@@ -13,7 +16,7 @@ class Project:
     def __init__(self, catalog):
         self.catalog = catalog
         self.resParser = ResultParser()
-        self.projectResultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
+        self.projectResultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
     def getTestDetail(self, projectName, repo):
         """
@@ -33,9 +36,9 @@ class Project:
                 if(os.path.isfile(resultDir+"/test_result.arti")):
                     res = self.resParser.MavenBuildSummary(resultDir+"/test_result.arti")
             except Exception, ex:
-                print str(ex)
+                logger.info(str(ex))
         except Exception, ex:
-            print "Error: Project %s failed with error \"%s\"" % (projectName, str(ex))
+            logger.warning("Error: Project %s failed with error \"%s\"" % (projectName, str(ex)))
 
         # We may be able to do without meta.arti as most of the data can be derived from
         # the project name itself, but it may provide an indication that a build was successful
@@ -89,3 +92,22 @@ class Project:
             }
 
         return response_data
+
+    # Sub-Routine which deletes files and folders recursively from remote directory
+    # @Param - remotepath, which represents the GSA folder
+    # @Param - ftp_client, which represents paramiko SFTP object
+    def removeDirFromGSA(self, ftp_client, remotepath):
+        ftp_client = ftp_client.open_sftp()
+        try:
+            for file in ftp_client.listdir(remotepath):
+                try:
+                    filepath = os.path.join(remotepath, file)
+                    if S_ISDIR(ftp_client.stat(filepath).st_mode):
+                        removeDirFromGSA(ftp_client, filepath)
+                    else:
+                        ftp_client.remove(filepath)
+                except IOError as e:
+                    logger.warning("Can't remove file")
+            ftp_client.rmdir(remotepath)
+        except IOError as e:
+            logger.warning("Can't remove directory" + str(e))

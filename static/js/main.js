@@ -312,18 +312,21 @@ var batchState = {
     fileList: [],               // Stores batch files found in list/select
     selectedBatchFile: {},
     listLocalBatchFiles: function(ev) {
+        batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
         $.getJSON("listBatchFiles/local", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
     listArchivedBatchFiles: function(ev) {
+        batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
         $.getJSON("listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
     listAllBatchFiles: function(ev) {
+        batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
         $.getJSON("listBatchFiles/all", { filter: $("#batchFileFilter").val() },
@@ -398,6 +401,7 @@ var batchState = {
 
     // Actions for individual batch files
     buildAndTest: function(ev, el) {
+        batchState.loading = true;
         var servers = document.getElementById('batchBuildServers'),
             options = servers.getElementsByTagName('option'),
             selectedServers = [];
@@ -434,6 +438,9 @@ var batchState = {
             getBatchResultsCallback, "json").fail(getBatchResultsCallback);
     },
     remove: function(ev, el) {
+        if (confirm("Remove selected batch file(s)?") != true) {
+            return false;
+        }
         $.post("removeBatchFile", {filename: batchState.selectedBatchFile.filename,
             location: batchState.selectedBatchFile.location},
             removeBatchFileCallback, "json").fail(removeBatchFileCallback);
@@ -444,6 +451,7 @@ var batchState = {
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
     },
     archive: function(ev, el) {
+        batchState.loading = true;
         $.post("archiveBatchFile", {filename: batchState.selectedBatchFile.filename},
             archiveBatchFileCallback, "json").fail(archiveBatchFileCallback);
     },
@@ -489,11 +497,15 @@ var batchReportState = {
     loading: false,                         // parsing batch file.  Size is variable
     showBatchFile: false,                   // draw batch file detail table
     saveBatchFileName: "",                  // user input to save button for new batch file name
+    loading: false,
+    listingRepo: "",
     listLocalBatch: function(ev) {
         // reset report state to initial state so that data reflected is correctly on fresh canvas.
         batchReportState.reset();
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
+        batchReportState.loading = true;
+        batchReportState.listingRepo = "local"
         // callback to render data to Batch Report table
         $.getJSON("listBatchReports/local", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
@@ -503,6 +515,8 @@ var batchReportState = {
         batchReportState.reset();
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
+        batchReportState.loading = true;
+        batchReportState.listingRepo = "gsa"
         // callback to render data to Batch Report table
         $.getJSON("listBatchReports/gsa", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
@@ -512,6 +526,8 @@ var batchReportState = {
         batchReportState.reset();
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
+        batchReportState.loading = true;
+        batchReportState.listingRepo = "all"
         // callback to render data to Batch Report table
         $.getJSON("listBatchReports/all", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
@@ -585,7 +601,27 @@ var batchReportState = {
         }
     },
     archive: function(ev, el){
-        console.log("Under development");
+        if (confirm("On batch test report archival, corresponding project test reports would also be archived. ") != true) {
+            return false;
+        }
+        var selectedBatchReports = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+        var sel = [];
+        var query = {};
+        for (var i = 0; i < selectedBatchReports.length; i ++) {
+            sel[i] = selectedBatchReports[i].filename;
+            query[sel[i]] = selectedBatchReports[i].repo;
+        }
+        batchReportState.loading = true;
+        $.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            url: "archiveBatchReports",
+            data: JSON.stringify({
+                      reports: query
+            }),
+            success: archiveBatchReportsCallback,
+            dataType:'json'
+        }).fail(archiveBatchReportsCallback);
     },
     remove: function(ev, el) {
         // Will fire remove batch job test/build result.
@@ -620,6 +656,27 @@ var batchReportState = {
         });
 
         return external;
+    },
+    removeBatchReports:function(ev) {
+        var selectedBatchResults = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+        var query = {};
+        var sel = [];
+        if (confirm("Remove selected batch report(s)?") != true) {
+            return false;
+        }
+        batchReportState.loading = false;
+        for (var i = 0; i < selectedBatchResults.length; i ++) {
+            sel[i] = selectedBatchResults[i].filename;
+            query[sel[i]] = selectedBatchResults[i].repo;
+        }
+         $.ajax({
+            type: "POST",
+            contentType: "application/json; charset=utf-8",
+            url: "removeBatchReports",
+            data: JSON.stringify({reports: query}),
+            success: removeBatchReportsResp,
+            dataType:'json'
+        }).fail(removeBatchReportsResp);
     }
 };
 // batchReportState object ends
@@ -731,6 +788,7 @@ var reportState = {
 
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "local";
+        projectReportState.loadingState.diffLoading = true;
         $.getJSON("listTestResults/local", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").show();
     },
@@ -740,6 +798,7 @@ var reportState = {
 
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "archived";
+        projectReportState.loadingState.diffLoading = true;
         $.getJSON("listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
     },
@@ -749,6 +808,7 @@ var reportState = {
 
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "all";
+        projectReportState.loadingState.diffLoading = true;
         $.getJSON("listTestResults/all", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
     },
@@ -759,6 +819,7 @@ var reportState = {
         if (confirm("Remove selected project(s)?") != true) {
             return false;
         }
+        projectReportState.loadingState.diffLoading = true;
         for (var i = 0; i < selectedProjects.length; i ++) {
             sel[i] = selectedProjects[i].fullName;
             query[sel[i]] = selectedProjects[i].repository;
@@ -1229,6 +1290,7 @@ var projectReportState = {
             sel[i] = selectedProjects[i].fullName;
             query[sel[i]] = selectedProjects[i].repository;
         }
+        projectReportState.loadingState.diffLoading = true;
         $.ajax({
                 type: "POST",
          contentType: "application/json; charset=utf-8",
@@ -1417,6 +1479,7 @@ function doGetResultList() {
 function processResultList(data) {
     projectReportState.selectedProjects = [];
     projectReportState.projects = [];
+    projectReportState.loadingState.diffLoading = false;
     $("#resultRemoveBtn").addClass("disabled");
     if (data === undefined || data.status != "ok") {
         showAlert("Error:", data);
@@ -1440,6 +1503,21 @@ function removeProjectResp(data){
             reportState.listGSAProjects();
         }else {
             reportState.listAllProjects();
+        }
+    }
+}
+
+function removeBatchReportsResp(data){
+    if (data.status != "ok") {
+        showAlert("Error:", data);
+    }else{
+        showAlert("Deleted Successfully !");
+        if(batchReportState.compareRepo == "local"){
+            batchReportState.listLocalBatch();
+        }else if(batchReportState.compareRepo == "archived"){
+            batchReportState.listGSABatch();
+        }else {
+            batchReportState.listAllBatch();
         }
     }
 }
@@ -1892,6 +1970,7 @@ function processTestHistory(data) {
 }
 
 function archiveCallback(data) {
+    projectReportState.loadingState.diffLoading = false;
     if (data.status === "ok" ) {
         var errors = data.error;
         var alreadyThere = data.alreadyThere;
@@ -2120,8 +2199,11 @@ function batchSaveCallback(data) {
 
 function runBatchFileCallback(data) {
     console.log("In runBatchFileCallback");
+    batchState.loading = false;
     if (data.status !== "ok") {
         showAlert("", data);
+    } else {
+        showAlert("Build+Test Successful");
     }
 }
 
@@ -2182,6 +2264,8 @@ function parseBatchFileCallback(data, batch_obj){
 }
 
 function listBatchFilesCallback(data) {
+    batchState.loading = false;
+    $("#batch_report_remove").addClass("disabled");
     if (data.status === "ok") {
         batchState.fileList = data.results;
         console.log(batchState.fileList);
@@ -2194,6 +2278,7 @@ function listBatchFilesCallback(data) {
 }
 
 function listBatchReportFilesCallback(data) {
+    batchReportState.loading = false;
     if (data.status === "ok") {
         console.log(data.results);
         batchReportState.fileList = data.results;
@@ -2208,12 +2293,33 @@ function listBatchReportFilesCallback(data) {
 function removeBatchFileCallback(data) {
     if (data.status === "failure") {
         showAlert("Error!", data);
+    } else {
+        showAlert("Removed successfully!");
     }
 }
 
 function archiveBatchFileCallback(data) {
+    batchState.loading = false;
     if (data.status === "failure") {
         showAlert("Error!", data);
+    } else {
+        showAlert("Archived successfully");
+    }
+}
+
+function archiveBatchReportsCallback(data) {
+    batchReportState.loading = false;
+    if (data.status === "failure") {
+        showAlert("Error!", data);
+    }else {
+        showAlert("Archived Successfully!")
+        if(batchReportState.listingRepo == "local"){
+            batchReportState.listLocalBatch();
+        } else if(batchReportState.listingRepo == "gsa"){
+            batchReportState.listGSABatch();
+        } else {
+            batchReportState.listAllBatch();
+        }
     }
 }
 
@@ -2249,6 +2355,8 @@ function getJenkinsNodesCallback(data) {
 
 function getJenkinsNodeDetailsCallback(data) {
     console.log("In getJenkinsNodeDetailsCallback");
+    $('#toolContainer').removeClass('hide');
+    $('#loading_screen').hide();
     if (data.status === "ok") {
         jenkinsState.nodeDetails = data.details;
         jenkinsState.nodeUbuntu = data.ubuntu;
@@ -2471,6 +2579,11 @@ function toggleBatchReportButtons(){
     } else {
         $("#batch_report_compare").addClass("disabled");
     }
+    if(selectedProjects.length>0){
+        $("#batch_report_remove").removeClass("disabled");
+    }else{
+        $("#batch_report_remove").addClass("disabled");
+    }
 }
 
 $(document).ready(function() {
@@ -2553,6 +2666,13 @@ $(document).ready(function() {
     $('#batchListSelectTable').on('check.bs.table', function (e, row) {
         batchState.selectedBatchFile = row;
     });
+    $('#batchListSelectTable').change(function() {
+        if($('#batchListSelectTable').bootstrapTable('getSelections').length>0){
+            $('#batch_file_remove').removeClass('disabled');
+        }else{
+            $('#batch_file_remove').addClass('disabled');
+        }
+    });
     // Initializes an empty batch Report list/select table
     $('#batchReportListSelectTable').bootstrapTable({
         data: []
@@ -2615,6 +2735,13 @@ $(document).ready(function() {
         }
     });
 
+    $('#batchReportListSelectTable').change(function() {
+        if($('#batchReportListSelectTable').bootstrapTable('getSelections').length>0){
+            $('#batch_report_archive').removeClass('disabled');
+        }else{
+            $('#batch_report_archive').addClass('disabled');
+        }
+    });
 
     //Initalize Project Results table
     $('#testCompareSelectPanel').bootstrapTable({
