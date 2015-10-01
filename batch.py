@@ -127,8 +127,11 @@ class Batch:
                                             os.path.join(putdir,filename,batchFilePath), "gsa"))
                     except Exception, ex:
                         logger.warning("listGSABatchReports Error: " + str(ex))
+        except AttributeError:
+            assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         except Exception as e:
-            logger.warning("listGSABatchReports Error: " + str(e))
+            logger.warning("In listGSABatchReports Error: "+ str(e))
+            assert(False), str(e)
         return filteredList
 
     ########### Listing of Batch Results ends #######
@@ -160,7 +163,7 @@ class Batch:
         try:
             self.ftp_client.chdir(globals.pathForBatchFiles)
             self.ftp_client.put(filename, ntpath.basename(filename))
-        except AttributeError as e:
+        except AttributeError:
             return {"error": "Connection error to archive storage.  Use settings menu to configure!" }
         except:
             return {"error": "Could not archive batch file " + filename }
@@ -208,13 +211,11 @@ class Batch:
         finally:
             if isinstance(batchFile, file):
                 batchFile.close()
-        logger.debug("Leaving parseBatchReportList, return_data=" + str(return_data))
         return return_data
 
     # Gets number of build logs and test logs for given batch,
     # by traversing through the individual projects associated with the batch job
     def getLocalBuildAndTestLogs(self, jobNames = [], repo = 'local'):
-        logger.debug("In getLocalBuildAndTestLogs, Count jobNames[]=%s repo=%s" % (len(jobNames), repo))
         build_logs = 0
         test_logs = 0
         if repo == 'local':
@@ -228,7 +229,8 @@ class Batch:
             if os.path.exists('%s%s/%s' % (project_path, jobName.strip(), 'build_result.arti')):
                 build_logs += 1
 
-        logger.debug("Leaving getLocalBuildAndTestLogs, build_logs=%s test_logs=%s" % (build_logs, test_logs))
+        logger.debug("Leaving getLocalBuildAndTestLogs, Count jobNames[]=%s build_logs=%s test_logs=%s" %
+                     (len(jobNames), build_logs, test_logs))
         return {'build_logs': build_logs, 'test_logs': test_logs}
 
     # Fast look up for listing of all Batch Files.  Upon user selection of batch build and test,
@@ -399,8 +401,9 @@ class Batch:
                 if reports[name] == "local":
                     shutil.rmtree(os.path.dirname(name))
                 else:
-                    filepath = globals.pathForBatchTestResults +os.path.basename(os.path.dirname(name))\
-                               + "/" + os.path.basename(name)
+                    filepath = globals.pathForBatchTestResults + \
+                               os.path.basename(os.path.dirname(name)) + "/" + os.path.basename(name)
+                    logger.debug("In removeBatchReportsData, filepath=%s" % (filepath))
                     projects = {}
                     batchTestReportFile = self.ftp_client.open(filepath,'r')
                     dataFile = batchTestReportFile.readlines()
@@ -419,9 +422,14 @@ class Batch:
     def archiveBatchReports(self, report):
         batchReportDir = globals.pathForBatchTestResults + report.split('/')[3]
         batchReportName = report.split('/')[4]
+        logger.debug("In archiveBatchReports, report=%s batchReportDir=%s batchreportName=%s"
+                     % (str(reports), batchReportDir, batchReportName))
         try:
             self.ftp_client.stat(batchReportDir)
             return "Already Exists"
+        except AttributeError:
+            msg = "Connection error to archive storage.  Use settings menu to configure!"
+            assert(False), msg
         except IOError as e:
             pass # Directory's not there, try to add it
 
@@ -437,6 +445,7 @@ class Batch:
 
     # Recursively download a full directory, since paramiko won't walk
     def copyRemoteDirToLocal(self, remotepath, localpath):
+        logger.debug("In copyRemoteDirToLocal: remotepath=%s localpath=%s" % (remotepath, localpath))
         self.ftp_client.chdir(os.path.split(remotepath)[0])
         parent=os.path.split(remotepath)[1]
         for walker in self.remotePathWalker(parent):
@@ -457,7 +466,9 @@ class Batch:
             else:
                 files.append(f.filename)
         yield path,folders,files
+        logger.debug("In remotePathWalker: path=%s folders=%s files=%s" % (path,folders,files))
         for folder in folders:
             new_path=os.path.join(remotepath,folder)
             for x in self.remotePathWalker(new_path):
                 yield x
+                logger.debug("Second yield - %s" % str(x))

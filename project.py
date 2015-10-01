@@ -33,7 +33,7 @@ class Project:
         try:
             resultDir = self.catalog.getResults(projectName, repo)
             try:
-                if(os.path.isfile(resultDir+"/test_result.arti")):
+                if (os.path.isfile(resultDir+"/test_result.arti")):
                     res = self.resParser.MavenBuildSummary(resultDir+"/test_result.arti")
             except Exception, ex:
                 logger.info(str(ex))
@@ -55,8 +55,8 @@ class Project:
         # Validate that the directory looks like a test result
         project_info = self.projectResultPattern.match(projectName)
         try:
-            pkg = project_info.group(5)                         # ie. N-junit
-            ver = project_info.group(6)                         # ie. current
+            pkg = project_info.group(4)                         # ie. N-junit
+            ver = project_info.group(5)                         # ie. current
         except AttributeError:
             pass
 
@@ -97,6 +97,7 @@ class Project:
     # @Param - remotepath, which represents the GSA folder
     # @Param - ftp_client, which represents paramiko SFTP object
     def removeDirFromGSA(self, ftp_client, remotepath):
+        logger.debug("In removeDirFromGSA, remotepath=%s" % remotepath)
         ftp_client = ftp_client.open_sftp()
         try:
             for file in ftp_client.listdir(remotepath):

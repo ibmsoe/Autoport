@@ -442,10 +442,10 @@ var batchState = {
             return false;
         }
         $.post("removeBatchFile", {filename: batchState.selectedBatchFile.filename,
-            location: batchState.selectedBatchFile.location},
-            removeBatchFileCallback, "json").fail(removeBatchFileCallback);
+               location: batchState.selectedBatchFile.location},
+               removeBatchFileCallback, "json").fail(removeBatchFileCallback);
         var index = batchState.fileList.indexOf(batchState.selectedBatchFile);
-        if(index > -1) {
+        if (index > -1) {
             batchState.fileList.splice(index, 1);
         }
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
@@ -542,13 +542,13 @@ var batchReportState = {
         batchReportState.showListSelectTable = true;
         batchReportState.batchFile = {};
     },
-    history: function(){
+    history: function() {
         console.log("Batch History implementation is in progress");
     },
-    compare: function(){
+    compare: function() {
         console.log("Test Compare implementation is in progress");
     },
-    reset: function(){
+    reset: function() {
         // reset the Batch Report section to default values.
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
@@ -596,14 +596,11 @@ var batchReportState = {
             }).fail(function(data){
                 processBatchDetails(data, batchReportState);
             });
-        }else{
+        } else {
             showMessage("Error: ", "At Least one Batch job needs to be selected.");
         }
     },
     archive: function(ev, el){
-        if (confirm("On batch test report archival, corresponding project test reports would also be archived. ") != true) {
-            return false;
-        }
         var selectedBatchReports = $('#batchReportListSelectTable').bootstrapTable('getSelections');
         var sel = [];
         var query = {};
@@ -626,10 +623,10 @@ var batchReportState = {
     remove: function(ev, el) {
         // Will fire remove batch job test/build result.
         $.post("removeBatchFile", {filename: batchReportState.selectedBatchFile.filename,
-            location: batchReportState.selectedBatchFile.location},
-            removeBatchFileCallback, "json").fail(removeBatchFileCallback);
+                location: batchReportState.selectedBatchFile.location},
+                removeBatchFileCallback, "json").fail(removeBatchFileCallback);
         var index = batchReportState.fileList.indexOf(batchReportState.selectedBatchFile);
-        if(index > -1) {
+        if (index > -1) {
             batchReportState.fileList.splice(index, 1);
         }
         $('#batchReportListSelectTable').bootstrapTable('load', batchReportState.fileList);
@@ -657,7 +654,7 @@ var batchReportState = {
 
         return external;
     },
-    removeBatchReports:function(ev) {
+    removeBatchReports: function(ev) {
         var selectedBatchResults = $('#batchReportListSelectTable').bootstrapTable('getSelections');
         var query = {};
         var sel = [];
@@ -669,14 +666,14 @@ var batchReportState = {
             sel[i] = selectedBatchResults[i].filename;
             query[sel[i]] = selectedBatchResults[i].repo;
         }
-         $.ajax({
+        $.ajax({
             type: "POST",
             contentType: "application/json; charset=utf-8",
             url: "removeBatchReports",
             data: JSON.stringify({reports: query}),
-            success: removeBatchReportsResp,
+            success: removeBatchReportsCallback,
             dataType:'json'
-        }).fail(removeBatchReportsResp);
+        }).fail(removeBatchReportsCallback);
     }
 };
 // batchReportState object ends
@@ -829,9 +826,9 @@ var reportState = {
             contentType: "application/json; charset=utf-8",
             url: "removeProjects",
             data: JSON.stringify({projects: query}),
-            success: removeProjectResp,
+            success: removeProjectsCallback,
             dataType:'json'
-        }).fail(removeProjectResp);
+        }).fail(removeProjectsCallback);
     },
     setJobManagePanel: function(ev) {
         reportState.jobManagePanel = (reportState.jobManagePanel) ? false : true;
@@ -915,36 +912,36 @@ var jenkinsState = {
     //    clickAction: takes values 'install/remove'
     performActionOnSingleSlave: function(clickAction) {
         var selectedPackageList = $('#singleServerPackageListTable').bootstrapTable('getSelections');
-        if(selectedPackageList.length > 1 && clickAction == "install"){
+        if (selectedPackageList.length > 1 && clickAction == "install") {
             var tempPackArray = [];
-            for(var i in selectedPackageList){
+            for (var i in selectedPackageList) {
                 var obj = selectedPackageList[i];
-                if(!obj.updateAvailable){
+                if (!obj.updateAvailable){
                     continue;
                 }
                 var isUpdatedToTemp = false;
-                for(var j in tempPackArray){
+                for (var j in tempPackArray) {
                     var tempObj = tempPackArray[j];
                     if((tempObj.packageName == obj.packageName) && compareVersion(tempObj.updateVersion, obj.updateVersion)){
                         tempObj['updateVersion'] = tempObj['updateVersion'];
                         isUpdatedToTemp = true;
                     }
                 }
-                if(!isUpdatedToTemp){
+                if (!isUpdatedToTemp) {
                     tempPackArray.push(obj);
                 }
             }
-            if(tempPackArray.length > 0){
+            if (tempPackArray.length > 0) {
                 selectedPackageList = tempPackArray;
             }
             var message = "The below packages are eligible for Install/Update \n";
-            for(var k in selectedPackageList){
+            for (var k in selectedPackageList) {
                 var o = selectedPackageList[k];
                 message = message+o.packageName + ", Version - "+o.updateVersion;
             }
-            if(message != "") {
+            if (message != "") {
                var confRes = confirm(message);
-               if(!confRes){
+               if (!confRes) {
                    return false;
                }
             }
@@ -1492,31 +1489,32 @@ function processResultList(data) {
     }
 }
 
-function removeProjectResp(data){
+function removeProjectsCallback(data){
+    projectReportState.loadingState.diffLoading = false;
     if (data.status != "ok") {
         showAlert("Error:", data);
-    }else{
+    } else {
         showAlert("Deleted Successfully !");
-        if(projectReportState.compareRepo == "local"){
+        if (projectReportState.compareRepo == "local") {
             reportState.listLocalProjects();
-        }else if(projectReportState.compareRepo == "archived"){
+        } else if (projectReportState.compareRepo == "archived") {
             reportState.listGSAProjects();
-        }else {
+        } else {
             reportState.listAllProjects();
         }
     }
 }
 
-function removeBatchReportsResp(data){
+function removeBatchReportsCallback(data){
     if (data.status != "ok") {
         showAlert("Error:", data);
-    }else{
+    } else{
         showAlert("Deleted Successfully !");
-        if(batchReportState.compareRepo == "local"){
+        if (batchReportState.compareRepo == "local") {
             batchReportState.listLocalBatch();
-        }else if(batchReportState.compareRepo == "archived"){
+        } else if (batchReportState.compareRepo == "archived") {
             batchReportState.listGSABatch();
-        }else {
+        } else {
             batchReportState.listAllBatch();
         }
     }
@@ -1774,6 +1772,7 @@ function populate_batch_table_headers(pkg_name, pkg_version){
  * This function will be called to render Batch job report data.
 */
 function processBatchDetails(data) {
+    batchReportState.loading = true;
     // If the response is not a success display error message and return.
     if (data.status != "ok") {
         showAlert("Error:", data);
@@ -2203,7 +2202,7 @@ function runBatchFileCallback(data) {
     if (data.status !== "ok") {
         showAlert("", data);
     } else {
-        showAlert("Build+Test Successful");
+        showAlert("Batch job submitted");
     }
 }
 

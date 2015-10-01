@@ -51,7 +51,7 @@ chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
 
 
 
-# Be sure to update main.js also.
+# Be sure to update project.py, batch.py, and catalog.py also
 #
 # job result sample "hostname.181259.x86-ubuntu-14.04.junit.current.2015-04-24-h12-m23-s15/"
 # job result sample "hostname.887140.229_x86_ubuntu14.junit.current.2015-04-24-h12-m23-s12/"
@@ -1118,13 +1118,18 @@ def listBatchReports(repositoryType):
 @app.route("/autoport/archiveBatchReports", methods=['POST'])
 def archiveBatchReports():
     try:
-        result = {} 
+        result = {}
         reports = request.json['reports']
+        logger.info("In archiveBatchReports reports=" + str(reports))
         for report in reports:
             projectsArr = []
             f = open(report,'r')
             projectsArr = f.read().strip('\n').split('\n')
-            catalog.archiveResults(projectsArr)
+            f.close()
+            status, errors, alreadyThere = catalog.archiveResults(projectsArr)
+            print "status=%s errors=%s" % (status, errors)
+            if status == "failure":
+                return json.jsonify(status="failure", error=errors), 400
             archiveRes = batch.archiveBatchReports(report)
             result[report] = archiveRes
         return json.jsonify(status="ok", results=result), 200
@@ -1136,6 +1141,7 @@ def archiveBatchReports():
 def removeBatchReports():
     try:
         reports = request.json['reports']
+        logger.info("In removeBatchReports reports=" + str(reports))
         batch.removeBatchReportsData(reports, catalog)
         return json.jsonify(status="ok"), 200
     except Exception as e:

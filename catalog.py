@@ -202,6 +202,7 @@ class Catalog:
         errors = []
         alreadyThere = []
         copied = []
+        logger.debug("In archiveResults, builds=%s" % str(builds))
         for build in builds:
             remoteBuildPath = self.__copyPath + build
             localBuildPath = self.__localPath + build
