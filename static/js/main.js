@@ -851,6 +851,8 @@ var jenkinsState = {
     manageManagePanelFilter: false,
     uploadPackagePanel: false,
     showPackageTypeSelector: false,
+    showDebSelector: false,
+    showRpmSelector: false,
     setJenkinsPanel: function(ev) {
         jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
     },
@@ -876,7 +878,15 @@ var jenkinsState = {
             || $('#packageFile').val().indexOf('.zip') != -1
             || $('#packageFile').val().indexOf('.bin') != -1) {
             jenkinsState.showPackageTypeSelector = true;
-        } else {
+            jenkinsState.showDebSelector = false
+            jenkinsState.showRpmSelector = false;
+        } else if ($('#packageFile').val().indexOf('.deb') != -1){
+            jenkinsState.showDebSelector = true;
+            jenkinsState.showPackageTypeSelector = false;
+            jenkinsState.showRpmSelector = false;
+        } else if ($('#packageFile').val().indexOf('.rpm') != -1){
+            jenkinsState.showRpmSelector = true;
+            jenkinsState.showDebSelector = false;
             jenkinsState.showPackageTypeSelector = false;
         }
     },
@@ -1133,18 +1143,40 @@ var jenkinsState = {
     },
     uploadPackage: function (ev) {
         var file = $('#packageFile')[0].files[0];
+        var packageDetails = ""
         var packageType = $("#packageTypeOnPackageUpload").find(":selected").val();
-        if(($('#packageFile').val().indexOf('.tar') != -1
+        if ($('#packageFile').val().indexOf('.tar') != -1
             || $('#packageFile').val().indexOf('.zip') !=-1
-            ||  $('#packageFile').val().indexOf('.bin') !=-1) &&
-            (packageType == undefined || packageType == "")){
-            alert("Please select Package Type");
-            return false;
+            ||  $('#packageFile').val().indexOf('.bin') !=-1){
+            if (packageType == undefined || packageType == ""){
+                alert("Please select Package Type");
+                return false;
+            } else {
+                packageDetails = packageType
+            }
+        }
+        var debDetails = $("#debSelector").find(":selected").val();
+        if ($('#packageFile').val().indexOf('.deb') != -1){
+           if (debDetails == undefined || debDetails == "") {
+               alert("Please select appropriate deb type");
+               return false;
+            } else {
+                packageDetails = debDetails
+            }
+        }
+        var rpmDetails = $("#rpmSelector").find(":selected").val();
+        if ($('#packageFile').val().indexOf('.rpm') != -1) {
+           if (rpmDetails == undefined || rpmDetails == "") {
+               alert("Please select appropriate rpm type");
+               return false;
+            } else {
+                packageDetails = rpmDetails
+            }
         }
         jenkinsState.loadingState.packageUploadLoading = true
         var formData = new FormData();
         formData.append('packageFile', file);
-        formData.append('packageType',packageType);
+        formData.append('packageDetails',packageDetails);
 
                 $.ajax({
                  url: "uploadToRepo",
@@ -2161,6 +2193,8 @@ function uploadPackageCallback(data) {
     jenkinsState.loadingState.packageUploadLoading = false;
     $("#uploadPackageName").val('');
     jenkinsState.showPackageTypeSelector = false;
+    jenkinsState.showDebSelector = false;
+    jenkinsState.showRpmSelector = false;
     $("#packageTypeOnPackageUpload option").multiselect("clearSelection");
     console.log("In uploadPackageCallback");
     if (data.status !== "ok") {
@@ -2649,6 +2683,18 @@ $(document).ready(function() {
         buttonClass: "btn btn-primary",
         buttonText: function(options, select) {
             return "Build server";
+        }
+    });
+    $('#rpmSelector').multiselect({
+        buttonClass: "btn btn-primary",
+        buttonText: function(options, select) {
+            return "Distro / Release";
+        }
+    });
+    $('#debSelector').multiselect({
+        buttonClass: "btn btn-primary",
+        buttonText: function(options, select) {
+            return "Distro / Release";
         }
     });
     // Initializes an empty bach reports table

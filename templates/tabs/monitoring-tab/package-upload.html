@@ -10,6 +10,26 @@
         Select File <input type="file" name="packageFile" id="packageFile" rv-on-change="jenkinsState.onPackageFileSelected">
       </div>
     </div>
+
+    <div class="input-group-btn dropdown" rv-show="jenkinsState.showDebSelector">
+      <span>
+        <select id="debSelector" size="2">
+          <option value="ubuntu/trusty">ubuntu / trusty</option>
+          <option value="ubuntu/utopic" disabled>ubuntu / utopic</option>
+          <option value="debian/jessie" disabled>debian / jessie</option>
+        </select>
+      </span>
+    </div>
+
+    <div class="input-group-btn dropdown" rv-show="jenkinsState.showRpmSelector">
+      <span>
+        <select id="rpmSelector" size="2">
+          <option value="rhel/7.1">rhel / 7.1</option>
+          <option value="fedora / 21" disabled>fedora/21</option>
+        </select>
+      </span>
+    </div>
+
     <div class="input-group-btn dropdown" rv-show="jenkinsState.showPackageTypeSelector">
       <span>
         <select id="packageTypeOnPackageUpload" size="2">

@@ -1953,10 +1953,9 @@ def monitorChefJobs(jobName, sync=False):
             if requestInfo.status_code == 200:
                 buildInfo = json.loads(requests.get(checkBuildUrl).text)
                 building = buildInfo['building']
-            
             if building:
                 sleep(3)
-                
+
             if not building:
                 jobStatus = buildInfo['result']
             # Check to make sure build isn't queued, if it is wait for it to dequeue
@@ -2286,7 +2285,7 @@ def getPackagesCSVFromManagedList(slaveNodeDistro, mljson):
 def uploadToRepo():
     postedFile = dict(request.files)
     # sourceType input from combobox
-    sourceType = request.form["packageType"]
+    packageDetails = request.form["packageDetails"]
     try:
         file = postedFile['packageFile'][0]
     except KeyError:
@@ -2295,7 +2294,7 @@ def uploadToRepo():
 
     # Checking package extension before uploading
     if file and sharedData.getPkgExtensions(file.filename):
-        status_msg = sharedData.uploadPackage(file, sourceType)
+        status_msg = sharedData.uploadPackage(file, packageDetails)
         if status_msg:
            return json.jsonify(status="failure",
                 error=status_msg), 400

@@ -267,7 +267,7 @@ class SharedData:
             if filename.endswith(ext):
                 return ext
 
-    def getRepoDetails(self, localPath, filename, type):
+    def getRepoDetails(self, localPath, filename, details):
         # Framing remotepath and command, to transfer the file
         # and update the custom repository
         # based on type (rpm/deb/tar.gz/bin)
@@ -275,17 +275,26 @@ class SharedData:
         command  = ""
         repo_base_dir = self.__repoPathPrefix
         extension = self.getPkgExtensions(filename)
+
+        # details would hold a string in format of os/os-release
+        # e.g "ubuntu/trusty" or "rhel/7.1"
+
         if extension == '.rpm':
-            repoPath = "%s/rpms" % (repo_base_dir)
+            os = details.split("/")[0]
+            osRelease = details.split("/")[1]
+            repoPath = "%s/rpms/%s/%s/" % (repo_base_dir,os,osRelease)
             command = "createrepo --update -v %s" % (repoPath)
         elif extension == '.deb':
-            repoPath = "%s/debs/" % (repo_base_dir)
-            command = "reprepro -V -b %s includedeb autoport_repo \
-                       %s/%s" % (repoPath, repoPath, filename)
+            os = details.split("/")[0]
+            osRelease = details.split("/")[1]
+            deb_base_dir = repo_base_dir + "/debs/" + os
+            repoPath = "%s/%s" % (deb_base_dir, osRelease)
+            command = "reprepro -V -b %s includedeb %s \
+                       %s/%s" % (deb_base_dir, osRelease, repoPath, filename)
         elif tarfile.is_tarfile(localPath) or zipfile.is_zipfile(localPath) or extension == '.bin':
             # archive.log holds tar filename, version and sourceType CSV
             archiveLogPath = "%s/archives/archive.log" % (repo_base_dir)
-
+            type = details
             # Extracting version string
             try:
                 pkgVersion = re.findall("(\d+[(\-\d+\.)(\.\d+\-)]+\d+)",filename)[-1]
@@ -329,14 +338,14 @@ class SharedData:
         with closing(tarfile.open(output_filename, "w:gz")) as tar:
             tar.add(source_dir, arcname=os.path.basename(source_dir))
 
-    def uploadPackage(self, file, sourceType):
+    def uploadPackage(self, file, packageDetails):
 
         # Saving the file to a local path on autoport host
         localPath = self.putLocalFile(file)
 
         # Based on the file type, deciding the remote path where the file is
         # to be saved and framing the appropriate command to add it to custom repository.
-        remotePath, command  = self.getRepoDetails(localPath, file.filename, sourceType)
+        remotePath, command  = self.getRepoDetails(localPath, file.filename, packageDetails)
 
         # If no remotePath is returned , file is not a valid rpm/deb or archive
         # hence deleting the package uploaded to temporary location
