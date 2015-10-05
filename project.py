@@ -36,21 +36,24 @@ class Project:
                 if (os.path.isfile(resultDir+"/test_result.arti")):
                     res = self.resParser.MavenBuildSummary(resultDir+"/test_result.arti")
             except Exception, ex:
-                logger.info(str(ex))
+                logger.debug("In getTestDetail, Project %s failed with error \"%s\"" % (projectName, str(ex)))
         except Exception, ex:
-            logger.warning("Error: Project %s failed with error \"%s\"" % (projectName, str(ex)))
+            logger.debug("In getTestDetail, repo=%s file=%s/test_result.arti file error " % (repo, projectName))
+            logger.debug("Error \"%s\"" % (str(ex)))
 
         # We may be able to do without meta.arti as most of the data can be derived from
         # the project name itself, but it may provide an indication that a build was successful
         # as this file is produced by Jenkins as opposed to the buildAnalyzer
-        try:
-            meta_file = open(resultDir+"/meta.arti")
-            meta = json.load(meta_file)
-            meta_file.close()
-        except Exception, ex:
-            # If meta.arti is not found just continue with what is available.
-            print "Error", str(ex)
-            meta = []
+        meta = {}
+        if resultDir:
+            try:
+                meta_file = open(resultDir+"/meta.arti")
+                meta = json.load(meta_file)
+                meta_file.close()
+            except Exception, ex:
+                # If meta.arti is not found just continue with what is available.
+                logger.debug("In getTestDetail, repo=%s file=%s/meta.arti file error " % (repo, projectName))
+                logger.debug("Error \"%s\"" % (str(ex)))
 
         # Validate that the directory looks like a test result
         project_info = self.projectResultPattern.match(projectName)
@@ -58,7 +61,8 @@ class Project:
             pkg = project_info.group(4)                         # ie. N-junit
             ver = project_info.group(5)                         # ie. current
         except AttributeError:
-            pass
+            pkg = ""
+            ver = ""
 
         self.catalog.cleanTmp()
 
@@ -108,7 +112,7 @@ class Project:
                     else:
                         ftp_client.remove(filepath)
                 except IOError as e:
-                    logger.warning("Can't remove file")
+                    logger.warning("Can't remove file %s" % filepath)
             ftp_client.rmdir(remotepath)
         except IOError as e:
             logger.warning("Can't remove directory" + str(e))

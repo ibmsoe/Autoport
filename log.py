@@ -6,13 +6,6 @@ import os
 def init():
     global logger
 
-    # For windows, create /tmp if it doesn't exist.  Log file is /tmp/autoport.log[.1[,.2[,.5]]]
-    try:
-        os.makedirs('/tmp')
-    except OSError:
-        if not os.path.isdir('/tmp'):
-            raise
-
     logger = logging.getLogger('autoport')
 
     # Set root object's lvl as it is adjusted below in chgLevel
@@ -21,7 +14,7 @@ def init():
         logLevel = logging.INFO
     logger.setLevel(globals.logLevel)
 
-    fh = logging.handlers.RotatingFileHandler('/tmp/autoport.log', maxBytes=4000000, backupCount=5)
+    fh = logging.handlers.RotatingFileHandler('./data/autoport.log', maxBytes=4000000, backupCount=5)
     ch = logging.StreamHandler()
 
     # Set console level.  This can't be changed via the settings menu

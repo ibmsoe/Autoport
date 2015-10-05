@@ -1804,7 +1804,7 @@ function populate_batch_table_headers(pkg_name, pkg_version){
  * This function will be called to render Batch job report data.
 */
 function processBatchDetails(data) {
-    batchReportState.loading = true;
+    batchReportState.loading = false;
     // If the response is not a success display error message and return.
     if (data.status != "ok") {
         showAlert("Error:", data);
