@@ -420,10 +420,10 @@ class Batch:
 
     # Archive Batch Reports Data to GSA
     def archiveBatchReports(self, report):
-        batchReportDir = globals.pathForBatchTestResults + report.split('/')[3]
-        batchReportName = report.split('/')[4]
+        batchReportDir = globals.pathForBatchTestResults + os.path.basename(os.path.dirname(report)) 
+        batchReportName = os.path.basename(report) 
         logger.debug("In archiveBatchReports, report=%s batchReportDir=%s batchreportName=%s"
-                     % (str(reports), batchReportDir, batchReportName))
+                     % (str(report), batchReportDir, batchReportName))
         try:
             self.ftp_client.stat(batchReportDir)
             return "Already Exists"
@@ -437,7 +437,7 @@ class Batch:
             self.ftp_client.mkdir(batchReportDir)
             self.ftp_client.put(report,batchReportDir + '/' + batchReportName)
             # Cleaning-up local batch_test_report after archival
-            shutil.rmtree(globals.pathForBatchTestResults+batchReportDir)
+            shutil.rmtree(os.path.dirname(report))
             return "Success"
         except IOError as e:
             logger.warning("Can't push " + batchReportName + ": exception=" + str(e))

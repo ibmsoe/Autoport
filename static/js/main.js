@@ -543,7 +543,34 @@ var batchReportState = {
         batchReportState.batchFile = {};
     },
     history: function() {
-        console.log("Batch History implementation is in progress");
+        batchReportState.loading = true;
+        var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+        if (selectedBatchJobs.length > 0){
+            var query = {};
+            for (var i = 0; i < selectedBatchJobs.length; i ++) {
+                if (query[selectedBatchJobs[i].repo] === undefined){
+                    query[selectedBatchJobs[i].repo] = [];
+                }
+                query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
+            }
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "getBatchTestDetails",
+                data: JSON.stringify({
+                    batchList: query
+                }),
+                success: function(data){
+                    processBatchHistory(data, batchReportState);
+                },
+                dataType:'json'
+            }).fail(function(data){
+                processBatchHistory(data, batchReportState);
+            });
+
+        } else {
+              showMessage("Error: ", "At Least one Batch job needs to be selected.");
+        }
     },
     compare: function() {
         console.log("Test Compare implementation is in progress");
@@ -1804,7 +1831,6 @@ function populate_batch_table_headers(pkg_name, pkg_version){
  * This function will be called to render Batch job report data.
 */
 function processBatchDetails(data) {
-    batchReportState.loading = false;
     // If the response is not a success display error message and return.
     if (data.status != "ok") {
         showAlert("Error:", data);
@@ -1849,6 +1875,78 @@ function processBatchDetails(data) {
         $("#batchHeader").html(main_header_data); // Add code to generate headers data similar to existing logic for projecrts
         batchReportState.batchReportTableReady = true;
     }
+    batchReportState.loading = false;
+}
+
+function processBatchHistory(data){
+    ProjectRegExp = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)/i;
+    if(data["results"]){
+         batchNames = Object.keys(data["results"]);
+        var batchReportTestHistory = [];
+        var job_list = data["results"];
+        for (var j = 0; j < batchNames.length; j++){
+            var splitted_job_info = ProjectRegExp.exec(job_list[j]["job"]);
+            var arch = splitted_job_info[3];
+            var name = splitted_job_info[4];
+            var version = splitted_job_info[5];
+            var timestamp = splitted_job_info[6];
+            var results = job_list[j]["results"];
+            batchReportTestHistory[timestamp] = {"arch":arch, "name":name, "version":version,"results":results, "job":job_list[j]["job"]};
+        }
+        var keys = Object.keys(batchReportTestHistory);
+        keys.sort(function(a,b){
+            var date1 = a.replace("-h", "T");
+            date1 = date1.replace("-m", ":");
+            date1 = date1.replace("-s", ":");
+
+            var date2 = b.replace("-h", "T");
+            date2 = date2.replace("-m", ":");
+            date2 = date2.replace("-s", ":");
+            return new Date(date1) - new Date(date2);
+        });
+        var tempBatchReportResp = [];
+        for (var i=0;i<keys.length;i++){
+            tempBatchReportResp[keys[i]] = batchReportTestHistory[keys[i]];
+        }
+        batchReportTestHistory = [];
+        batchReportTestHistory = tempBatchReportResp;
+        var main_table = document.getElementById("testBatchResultsTable");
+        main_table.innerHTML = '';
+        var data_table = document.createElement('table');
+        data_table.setAttribute('border', '1');
+        var blank_row = document.createElement('tr');
+        var blank_cell = document.createElement('td');
+        blank_cell.setAttribute('colspan', '6');
+        var blank_text = document.createTextNode('');
+        blank_cell.appendChild(blank_text);
+        blank_row.appendChild(blank_cell);
+        main_table.appendChild(blank_row);
+        main_header_data = null;
+         batchNames = Object.keys(batchReportTestHistory);
+        for (var i = 0; i < Object.keys(batchReportTestHistory).length; i++) {
+            var report = batchReportTestHistory[batchNames[i]];
+            if(main_header_data !== null){
+                main_header_data += ', ' + report.job;
+            }else{
+                main_header_data = report.job;
+            }
+            data_table.appendChild(populate_batch_table_headers(report.name, report.version));
+            data_table.appendChild(populate_batch_table_data(report.name, report.results));
+            var blank_text = document.createTextNode('');
+            blank_cell.appendChild(blank_text);
+            blank_row.appendChild(blank_cell);
+            data_table.appendChild(blank_row);
+        }
+        var tr = document.createElement('tr');
+        tr.appendChild(data_table);
+        main_table.appendChild(tr);
+        $("#batchHeader").html(main_header_data); // Add code to generate headers data similar to existing logic for projects
+        $("#batchHeaderPreText").html('Test history for Batch job(s): ');
+        batchReportState.batchReportTableReady = true;
+    }else{
+         showAlert("Error:", data);
+    }
+    batchReportState.loading = false;
 }
 
 function processTestHistory(data) {
