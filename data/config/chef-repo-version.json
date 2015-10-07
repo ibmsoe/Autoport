@@ -3,7 +3,5 @@
     "version": "3",
     "sequence": "3",
     "name": "chef-repo-version.json",
-    "cook-version": "0.1.4",
-    "username": "<username>",
-    "hostname": "v-ng-0295"
+    "cook-version": "0.1.4"
 }
