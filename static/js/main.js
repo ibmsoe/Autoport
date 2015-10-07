@@ -573,7 +573,40 @@ var batchReportState = {
         }
     },
     compare: function() {
-        console.log("Test Compare implementation is in progress");
+     // fetch, render and display Report in table.
+        batchReportState.loading = true;
+        batchReportState.showBatchFile = false;
+
+        // Get list of all selected batch test runs for fetchinf details.
+        var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+        if (selectedBatchJobs.length > 0){
+            var query = {};
+            // Generate key-value pair with batch name and repository location, repository being the key of dictionary
+            for (var i = 0; i < selectedBatchJobs.length; i ++) {
+                if (query[selectedBatchJobs[i].repo] === undefined){
+                    query[selectedBatchJobs[i].repo] = [];
+                }
+                query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
+            }
+
+            // fetch the Batch details and handle it appropriately.
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "getBatchTestDetails",
+                data: JSON.stringify({
+                    batchList: query
+                }),
+                success: function(data){
+                    processBatchCompare(data, batchReportState);
+                },
+                dataType:'json'
+            }).fail(function(data){
+                processBatchCompare(data, batchReportState);
+            });
+        }else{
+            showMessage("Error: ", "At Least one Batch job needs to be selected.");
+        }
     },
     reset: function() {
         // reset the Batch Report section to default values.
@@ -1791,7 +1824,6 @@ function processTestDetail(data) {
 // Batch Details population logic
 function populate_batch_table_data(test_name, job_results){
     if (!job_results){
-        console.log(job_results);
         return null;
     }
     var tr = document.createElement('tr');
@@ -1851,16 +1883,25 @@ function processBatchDetails(data) {
         main_table.appendChild(blank_row);
         main_header_data = null;
 
+        batchNames = Object.keys(data.results);
+        var all_jobs = [];
+
+        for (var j = 0; j < batchNames.length; j++){
+          if (batchNames[j] !== 'status'){
+            all_jobs = all_jobs.concat(data.results[batchNames[j]]);
+          }
+        }
+
         // Populate Batch details in table.
-        for (var i in data.results) {
+        for (var i = 0; i < all_jobs.length; i++) {
             if(main_header_data !== null){
-                main_header_data += ', ' + data.results[i].job;
+                main_header_data += ', ' + all_jobs[i].job;
             }else{
-                main_header_data = data.results[i].job;
+                main_header_data = all_jobs[i].job;
             }
 
-            data_table.appendChild(populate_batch_table_headers(data.results[i].pkg, data.results[i].ver));
-            data_table.appendChild(populate_batch_table_data(data.results[i].pkg, data.results[i].results));
+            data_table.appendChild(populate_batch_table_headers(all_jobs[i].pkg, all_jobs[i].ver));
+            data_table.appendChild(populate_batch_table_data(all_jobs[i].pkg, all_jobs[i].results));
             var blank_text = document.createTextNode('');
             blank_cell.appendChild(blank_text);
             blank_row.appendChild(blank_cell);
@@ -1872,7 +1913,8 @@ function processBatchDetails(data) {
         tr.appendChild(data_table);
         main_table.appendChild(tr);
 
-        $("#batchHeader").html(main_header_data); // Add code to generate headers data similar to existing logic for projecrts
+        $("#batchHeader").html(main_header_data); // Add code to generate headers data similar to existing logic for projects
+        $("#batchHeaderPreText").html('Test results for Batch job(s): ');
         batchReportState.batchReportTableReady = true;
     }
     batchReportState.loading = false;
@@ -2411,7 +2453,6 @@ function listBatchFilesCallback(data) {
 function listBatchReportFilesCallback(data) {
     batchReportState.loading = false;
     if (data.status === "ok") {
-        console.log(data.results);
         batchReportState.fileList = data.results;
         batchReportState.showListSelectTable = true;
 
@@ -2705,7 +2746,7 @@ function compareVersion(version1,version2){
 
 function toggleBatchReportButtons(){
     var selectedProjects = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-    if (selectedProjects.length === 2) {
+    if (selectedProjects.length === 2 && selectedProjects[0].batch_name == selectedProjects[1].batch_name) {
         $("#batch_report_compare").removeClass("disabled");
     } else {
         $("#batch_report_compare").addClass("disabled");
@@ -2715,6 +2756,340 @@ function toggleBatchReportButtons(){
     }else{
         $("#batch_report_remove").addClass("disabled");
     }
+}
+
+/**
+ * This Function will generate Object with data in following 
+ * format which will be used for getting left and right tables.
+ * {
+    "MEAN-R.562595.2015-09-02-h16-m36-s30": {
+        "local-desktop.562595.x86-64-rhel-7.1.N-node-v0.x-archive.current.2015-09-29-h14-m01-s57": {
+            "node-v0": {
+                "arch": "x86-64-rhel-7.1",
+                "version": "x-archive.current",
+                "timestamp": "2015-09-29-h14-m01-s57",
+                "results": {}
+            }
+        },
+        "local-desktop.562595.x86-64-rhel-7.1.N-redis.current.2015-09-29-h14-m01-s57": {
+            "redis": {
+                "arch": "x86-64-rhel-7.1",
+                "version": "current",
+                "timestamp": "2015-09-29-h14-m01-s57",
+                "results": {
+                    "duration": 0,
+                    "errors": 0,
+                    "failures": 0,
+                    "results": {},
+                    "skipped": 0,
+                    "total": 0
+                }
+            }
+        },
+        "local-desktop.562595.x86-64-rhel-7.1.N-angularjs.current.2015-09-29-h14-m01-s57": {
+            "angularjs": {
+                "arch": "x86-64-rhel-7.1",
+                "version": "current",
+                "timestamp": "2015-09-29-h14-m01-s57",
+                "results": {
+                    "duration": 0,
+                    "errors": 0,
+                    "failures": 0,
+                    "results": {},
+                    "skipped": 0,
+                    "total": 0
+                }
+            }
+        }
+    },
+    "MEAN-R.734853.2015-09-02-h16-m36-s30": {
+        "local-desktop.734853.ppcle-ubuntu-14.04.N-node-v0.x-archive.current.2015-09-29-h17-m03-s51": {
+            "node-v0": {
+                "arch": "ppcle-ubuntu-14.04",
+                "version": "x-archive.current",
+                "timestamp": "2015-09-29-h17-m03-s51",
+                "results": {}
+            }
+        },
+        "local-desktop.734853.ppcle-ubuntu-14.04.N-redis.current.2015-09-29-h17-m03-s51": {
+            "redis": {
+                "arch": "ppcle-ubuntu-14.04",
+                "version": "current",
+                "timestamp": "2015-09-29-h17-m03-s51",
+                "results": {
+                    "duration": 0,
+                    "errors": 0,
+                    "failures": 0,
+                    "results": {},
+                    "skipped": 0,
+                    "total": 0
+                }
+            }
+        },
+        "local-desktop.734853.ppcle-ubuntu-14.04.N-angularjs.current.2015-09-29-h17-m03-s51": {
+            "angularjs": {
+                "arch": "ppcle-ubuntu-14.04",
+                "version": "current",
+                "timestamp": "2015-09-29-h17-m03-s51",
+                "results": {}
+            }
+        }
+    }
+}
+ * @param organizedData
+ * @param data
+ * @param elemPosition
+ * @returns updated organizedData
+ */
+function generateOrganizedData(organizedData, data, batch_name, more_info, elemPosition){
+    var arch = more_info[1];
+    var name = more_info[0];
+    var version = more_info[2];
+    var timestamp = more_info[3];
+    var results = more_info[4];
+    var job_name = data[elemPosition]["job"];
+
+    if (organizedData[batch_name] === undefined){
+        organizedData[batch_name] = {};
+    }
+
+    if (organizedData[batch_name][job_name] === undefined){
+        organizedData[batch_name][job_name] = {};
+    }
+
+    if (organizedData[batch_name][job_name][name] === undefined){
+        organizedData[batch_name][job_name][name] = {};
+    }
+
+    organizedData[batch_name][job_name][name] = {
+        "arch": arch,
+        "version": version,
+        "timestamp": timestamp,
+        "results": data[elemPosition]["results"]
+    };
+
+    return organizedData;
+}
+
+/**
+ * This function will organize the data in the format 
+ * which will allow us to show comparison based on following criteria
+ * 1. Build slave architecture where job was executed.
+ * 2. Project version which was executed on Build slave.
+ * 3. Datetime when the job was submitted.
+ * @param data
+ * @param batch_report_obj
+ */
+function processBatchCompare(data){
+    ProjectRegExp = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)/i;
+    organizedData = {};
+    if(data["results"]){
+        // Hide listing of Batch jiobs before showing the batch details.
+        batchReportState.showListSelectTable = false;
+
+        batchNames = Object.keys(data["results"]);
+
+        for (var j = 0; j < batchNames.length; j++){
+            if(batchNames[j] !== "status"){
+                job_list = data["results"][batchNames[j]];
+                for (var i = 0; i < job_list.length; i++){
+                    try{
+                        splitted_job_info = ProjectRegExp.exec(job_list[i]["job"]);
+                        arch = splitted_job_info[3];
+                        name = splitted_job_info[4];
+                        version = splitted_job_info[5];
+                        timestamp = splitted_job_info[6];
+                        results = job_list[i]["results"];
+                        var more_info = [name, arch, version, timestamp, results];
+                        // Prepare data for comparison between two batch jobs.
+                        organizedData = generateOrganizedData(organizedData, job_list, batchNames[j], more_info, i);
+                    }catch(e){
+                        console.log(e);
+                    }
+                }
+            }
+        }
+
+        organizedDataKeys = Object.keys(organizedData);
+        // Now the first key will be left table and second key will be used for right table.
+        // Generate left table. All other info will be used for generating metadata info
+        processBatchCompareData(organizedData);
+        batchReportState.batchReportTableReady = true;
+    }
+}
+
+function populate_batch_compare_header(jobNames){
+    var row = document.createElement('tr');
+    for (var i = 0; i < jobNames.length; i++){
+        var cell = document.createElement('th');
+        cell.setAttribute('class', 'batchCompareHeader');
+        cell.setAttribute('colspan', '4');
+        var text = document.createTextNode(jobNames[i]);
+        cell.appendChild(text);
+        row.appendChild(cell);
+    }
+    return row;
+}
+
+function generateTableData(main_table, project_info, table_rows){
+
+    var project_arch = document.createElement('td');
+    project_arch.setAttribute('colspan', '2');
+    var project_arch_text = document.createTextNode(project_info.arch);
+    project_arch.appendChild(project_arch_text);
+    table_rows[0].appendChild(project_arch);
+
+    var project_version = document.createElement('td');
+    project_version.setAttribute('colspan', '2');
+    var project_version_text = document.createTextNode(project_info.version);
+    project_version.appendChild(project_version_text);
+    table_rows[0].appendChild(project_version);
+
+    var project_timestamp = document.createElement('td');
+    project_timestamp.setAttribute('colspan', '4');
+    var project_timestamp_text = document.createTextNode(project_info.timestamp);
+    project_timestamp.appendChild(project_timestamp_text);
+    table_rows[1].appendChild(project_timestamp);
+
+    var project_result_t = document.createElement('td');
+    var project_result_f = document.createElement('td');
+    var project_result_s = document.createElement('td');
+    var project_result_e = document.createElement('td');
+    var project_result_t_text = document.createTextNode('T');
+    var project_result_f_text = document.createTextNode('F');
+    var project_result_e_text = document.createTextNode('E');
+    var project_result_s_text = document.createTextNode('S');
+
+    project_result_t.appendChild(project_result_t_text);
+    project_result_f.appendChild(project_result_f_text);
+    project_result_e.appendChild(project_result_e_text);
+    project_result_s.appendChild(project_result_s_text);
+
+    table_rows[2].appendChild(project_result_t);
+    table_rows[2].appendChild(project_result_f);
+    table_rows[2].appendChild(project_result_e);
+    table_rows[2].appendChild(project_result_s);
+
+    // Now Finally add Result data
+    if(project_info.results.length > 0){
+        var project_result_data_t_value = project_info.results.total;
+        var project_result_data_f_value = project_info.results.failures;
+        var project_result_data_e_value = project_info.results.errors;
+        var project_result_data_s_value = project_info.results.skipped;
+    }
+
+    var project_result_data_t = document.createElement('td');
+    var project_result_data_f = document.createElement('td');
+    var project_result_data_s = document.createElement('td');
+    var project_result_data_e = document.createElement('td');
+
+    var project_result_data_t_text = document.createTextNode((project_result_data_t_value !== undefined)?project_result_data_t_value: 0);
+    var project_result_data_f_text = document.createTextNode((project_result_data_t_value !== undefined)?project_result_data_f_value: 0);
+    var project_result_data_e_text = document.createTextNode((project_result_data_t_value !== undefined)?project_result_data_e_value: 0);
+    var project_result_data_s_text = document.createTextNode((project_result_data_t_value !== undefined)?project_result_data_s_value: 0);
+
+    project_result_data_t.appendChild(project_result_data_t_text);
+    project_result_data_f.appendChild(project_result_data_f_text);
+    project_result_data_e.appendChild(project_result_data_e_text);
+    project_result_data_s.appendChild(project_result_data_s_text);
+
+    table_rows[3].appendChild(project_result_data_t);
+    table_rows[3].appendChild(project_result_data_f);
+    table_rows[3].appendChild(project_result_data_e);
+    table_rows[3].appendChild(project_result_data_s);
+
+    main_table.appendChild(table_rows[0]);
+    main_table.appendChild(table_rows[1]);
+    main_table.appendChild(table_rows[2]);
+    main_table.appendChild(table_rows[3]);
+}
+
+function populate_batch_compare_data(left_batch, right_batch, main_table){
+    var left_job_names = Object.keys(left_batch);
+    var right_job_names = Object.keys(right_batch);
+
+    var left_jobs = [];
+    var right_jobs = [];
+
+    for (var i = 0; i < left_job_names.length; i++){
+        left_jobs.push(left_batch[left_job_names[i]]);
+    }
+
+    for (var i = 0; i < left_job_names.length; i++){
+        right_jobs.push(right_batch[right_job_names[i]]);
+    }
+
+    // Assuming that both batch for comparison should have same set of projects.
+    // Hence count of project also will be same. Also every job will have one package.
+
+    for(var i = 0; i < left_jobs.length; i++){
+        var table_rows = [
+            document.createElement('tr'),
+            document.createElement('tr'),
+            document.createElement('tr'),
+            document.createElement('tr')
+        ];
+
+        // Add Project Name as first column.
+        var project_name = document.createElement('td');
+        project_name.setAttribute('rowspan', '4');
+        project_name.setAttribute('colspan', '4');
+        project_name.setAttribute('class', 'mainTitle');
+        projectName = Object.keys(left_jobs[i]);
+        var project_name_text = document.createTextNode(projectName);
+        project_name.appendChild(project_name_text);
+        table_rows[0].appendChild(project_name);
+
+        generateTableData(main_table, left_jobs[i][projectName], table_rows);
+        generateTableData(main_table, left_jobs[i][projectName], table_rows);
+
+        var blank_row = document.createElement('tr');
+        var blank_cell = blank_row.insertCell(0);
+        blank_cell.setAttribute('colspan', '12');
+        blank_cell.innerHTML = "&nbsp;";
+        main_table.appendChild(blank_row);
+    }
+}
+
+/*
+ * This function will be called to render Batch job report data.
+ */
+function processBatchCompareData(data) {
+    // Hide listing of Batch jiobs before showing the batch details.
+    // Initialize a new blank table holding Batch report data
+    var main_table = document.getElementById("testBatchResultsTable");
+    main_table.innerHTML = '';
+    var data_table = document.createElement('table');
+    data_table.setAttribute('border', '1');
+    var blank_row = document.createElement('tr');
+    var blank_cell = document.createElement('td');
+    blank_cell.setAttribute('colspan', '12');
+    var blank_text = document.createTextNode('');
+    blank_cell.appendChild(blank_text);
+    blank_row.appendChild(blank_cell);
+    main_table.appendChild(blank_row);
+    main_header_data = null;
+
+    // The API returning data should check if both selected Batch Jobs are 2 different runs,
+    // of the same Batch else don't show comparison.
+    var batchNames = Object.keys(data);
+
+    if( batchNames.length == 2){
+        batchNames.unshift("Test");
+        main_table.appendChild(populate_batch_compare_header(batchNames));
+        // for each project generate row with data
+        populate_batch_compare_data(data[batchNames[1]], data[batchNames[2]], main_table);
+    }else{
+        showAlert("Error:", "Please select two jobs for comparison");
+    }
+
+    // finally append the Batch details table to the placeholder table on UI.
+    var tr = document.createElement('tr');
+    tr.appendChild(data_table);
+    main_table.appendChild(tr);
+    var selectedProjects = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+    var batchName =  (selectedProjects.length > 0)?selectedProjects[0].batch_name:'';
+    $("#batchHeaderPreText").html('Job comparison for Batch "'+ batchName + '": ');
 }
 
 $(document).ready(function() {
@@ -2925,7 +3300,6 @@ $(document).ready(function() {
     });
 
     $('#batchReportListSelectTable').show(function() {
-        console.log("Showing reports");
         toggleBatchReportButtons();
     });
 });

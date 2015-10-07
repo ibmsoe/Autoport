@@ -47,7 +47,7 @@
             <span class="glyphicon glyphicon-time"></span>
             Test History
         </button>
-        <button rv-on-click="batchReportState.compare" type="button" class="btn btn-primary" id="batch_report_compare"
+        <button title="Selected Batch Result should be from same batch job." rv-on-click="batchReportState.compare" type="button" class="btn btn-primary" id="batch_report_compare"
             style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
             <span class="glyphicon glyphicon-bookmark"></span>
             Test Compare
@@ -86,7 +86,7 @@
         class="table panel panel-default"
         rv-show="batchReportState.batchReportTableReady">
       <div class="panel panel-primary">
-        <div class="panel-heading">Test results for Batch job(s): <span id="batchHeader"></span></div>
+        <div class="panel-heading"><span id="batchHeaderPreText"></span> <span id="batchHeader"></span></div>
         <div class="table-container">
           <table id="testBatchResultsTable">
           </table>

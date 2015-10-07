@@ -335,3 +335,8 @@ fieldset[disabled] .form-control {
     to { -moz-transform: rotate(360deg);}
 }
 
+.mainTitle{
+    font-family: Arial;
+    font-weight:bold;
+    font-size:18px;
+}

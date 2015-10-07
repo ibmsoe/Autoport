@@ -192,6 +192,7 @@ class Batch:
             jobNames = batchFile.readlines()
             buildAndTestLogs = self.getLocalBuildAndTestLogs(jobNames)
             project_count = len(jobNames)
+            buildServer = None
             if len(jobNames):
                 # All the jobs will be for same build server, hence only checking for the first entry
                 buildServer = projectResultPattern.match(jobNames[0]).group(3)
@@ -371,7 +372,11 @@ class Batch:
         # Get the project Names and fetch test details from them.
         projects = self.getLocalProjectForGivenBatch(batchList.get('local', []))
         project = Project(catalog)
-        return project.getTestDetails(projects, 'local')
+        final_response = {"status": "ok"}
+        for batchName in projects:
+            results = project.getTestDetails(projects[batchName], 'local')
+            final_response[batchName] = results.get("results")
+        return final_response
         # @TODO add code for GSA/archived jobs too.
         # Now from the projects associated with Batch Get the info and send to requesting call.
 
@@ -379,7 +384,9 @@ class Batch:
     def getLocalProjectForGivenBatch(self, batchList):
         # Strip batch name from given batch file path in the list batchList
         batchNames = [str(ntpath.basename(i)) for i in batchList]
-        projects = []
+        projects = {}
+        for batchName in batchNames:
+            projects[batchName] = [];
         # Walk through directories and search for the batch related projects to fetch info.
         try:
             for dirname, dirnames, filenames in os.walk(globals.localPathForBatchTestResults):
@@ -387,7 +394,7 @@ class Batch:
                     actualFilePath = "%s/%s" % (dirname, filename)
                     if filename != ".gitignore" and filename in batchNames:
                         batchFile = open(actualFilePath)
-                        projects.extend([i.strip() for i in batchFile.readlines()])
+                        projects[filename].extend([i.strip() for i in batchFile.readlines()])
                         batchFile.close()
         except Exception, ex:
             logger.warning("getLocalProjectForGivenBatch error: " +  str(ex))
