@@ -8,6 +8,10 @@ globals.init()
 import log
 logger = log.init()
 
+# Next create thread pool for Jenkins Master
+from mover import Mover
+mover = Mover()
+
 # Imports
 import xml.etree.ElementTree as ET
 import requests
@@ -39,17 +43,18 @@ from cache import Cache
 from requests.exceptions import MissingSchema
 from project import Project
 
-app = Flask(__name__, static_url_path='/autoport')
-
+# Constants
 maxResults = 10
-resParser = ResultParser()
-# Initialize the Catalog and Batch object.
+
+# Initialize autoport framework
 catalog = Catalog()
 batch = Batch()
 sharedData = SharedData(urlparse(globals.jenkinsUrl).hostname)
 chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
+resParser = ResultParser()
 
-
+# Initialize web application framework
+app = Flask(__name__, static_url_path='/autoport')
 
 # Be sure to update project.py, batch.py, and catalog.py also
 #
@@ -714,8 +719,9 @@ def createJob_common(time, uid, id, tag, node, javaType,
         timestr = strftime("%Y-%m-%d-h%H-m%M-s%S", time)
         artifactFolder = jobName + "." + timestr
 
-        # Split off a thread to query for build completion and move artifacts to local machine
-        args = [((jobName, globals.localPathForTestResults, timestr), {})]
+        # Split off a thread to transfer job results upon job completion to localDir
+        localDir = globals.localPathForTestResults + jobName + "." + timestr + "/"
+        args = [((jobName, localDir), {})]
         threadRequests = makeRequests(moveArtifacts, args)
         [globals.threadPool.putRequest(req) for req in threadRequests]
 
@@ -858,7 +864,8 @@ def createJob(i_id = None,
 
 # Polls the Jenkins master to see when a job has completed and moves artifacts over to local
 # storage once/if they are available
-def moveArtifacts(jobName, localBaseDir, time):
+def moveArtifacts(jobName, localDir, moverCv=None):
+    logger.debug("In moveArtifacts, jobName=%s localDir=%s" % (jobName, localDir))
     outDir = ""
     checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
 
@@ -879,6 +886,7 @@ def moveArtifacts(jobName, localBaseDir, time):
 
             count = 0;
             while queued and count < 20:
+                logger.debug("moveArtifacts: sleep 10 build is queued - not started")
                 sleep(10)
                 try:
                     r = requests.get(checkQueueUrl).text
@@ -886,7 +894,7 @@ def moveArtifacts(jobName, localBaseDir, time):
                     inQueue = projectInfo['inQueue']
                 # if it's not in the queue and not building something went wrong
                 except ValueError:
-                    print "project failed to start building/queuing" + jobName
+                    logger.debug("moveArtifacts: project failed to start building/queuing" + jobName)
                 count += 1
             if count == 20:
                 return outDir
@@ -895,20 +903,13 @@ def moveArtifacts(jobName, localBaseDir, time):
     # grab the build artifacts through ftp if build was successful
     artifactsPath = globals.artifactsPathPrefix + jobName + "/builds/"
     try:
-        # create an FTP connection to Jenkins
-        sshClient = paramiko.SSHClient()
-        sshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        sshClient.connect(urlparse(globals.jenkinsUrl).hostname,
-                          username=globals.configJenkinsUsername,
-                          key_filename=globals.configJenkinsKey)
-        ftpClient = sshClient.open_sftp()
-        ftpClient.chdir(artifactsPath)
+        mover.chdir(artifactsPath)
 
         # Probably does not need to be in a loop as the build number
         # is created as part of starting the job which occurred a
         # a few instructions earlier but better safe than sorry.
         for i in range(4):
-            flist = ftpClient.listdir()
+            flist = mover.listdir()
 
             # 1 is a sym link to the first build for that job.
             # If we delete each job after each run, we only care about
@@ -919,9 +920,11 @@ def moveArtifacts(jobName, localBaseDir, time):
             # name so it is always build 1
             if "1" in flist:
                 artifactsPath = artifactsPath + "1/"
-                ftpClient.chdir(artifactsPath)
+                mover.chdir(artifactsPath)
+                logger.debug("moveArtifacts: build complete  %s" % jobName)
                 break
             else:
+                logger.debug("moveArtifacts: sleep 5 waiting for build to complete")
                 sleep(5)
 
         # Now loop trying to get the build artifacts.  Artifact files
@@ -932,26 +935,38 @@ def moveArtifacts(jobName, localBaseDir, time):
         # can move the sleep upfront but preliminary testing indicates
         # that this will work.
         for i in range(4):
-            flist = ftpClient.listdir()
+            flist = mover.listdir()
 
             if "archive" in flist:
                 artifactsPath = artifactsPath + "archive/"
-                ftpClient.chdir(artifactsPath)
+                mover.chdir(artifactsPath)
 
-                localArtifactsPath = localBaseDir + jobName + "." + time + "/"
-                os.mkdir(localArtifactsPath)
-
-                # Set output parm.  Only needed for synchronous call from List Package
-                outDir = localArtifactsPath
-
-                flist = ftpClient.listdir()
-                for f in flist:
-                    ftpClient.get(f, localArtifactsPath + f)
+                try:
+                    os.mkdir(localDir)
+                    flist = mover.listdir()
+                    logger.debug("moveArtifacts: found artifacts %s %s" % (jobName, str(flist)))
+                    for f in flist:
+                        mover.get(f, localDir + f)
+                    outDir = localDir                           # Transfer success
+                except IOError as e:
+                    logger.warning("moveArtifacts: failed to transfer artifacts %s" % str(flist))
+                    logger.debug("moveArtifacts: Error %s" % (str(e)))
                 break
             else:
+                logger.debug("moveArtifacts: sleep 10 waiting for artifacts")
                 sleep(10)
     except IOError as e:
-        print "archive move FTP failure" + jobName + " error: " + e
+        logger.warning("moveArtifacts: FTP failure for Job %s %s" % (jobName, str(e)))
+
+    if moverCv:
+        # Display address of moverCv variable.  Should be the same as top half app.route requester.
+        logger.debug("Leaving moveArtifacts, moverCv=%s outDir=%s" % (str(hex(id(moverCv))), outDir))
+        moverCv['cv'].acquire()
+        moverCv['outDir'] = outDir
+        moverCv['cv'].notifyAll()
+        moverCv['cv'].release()
+    else:
+        logger.debug("Leaving moveArtifacts, outDir=%s" % (outDir))
 
     return outDir
 
@@ -1156,7 +1171,8 @@ def listPackageForSingleSlave():
     if selectedBuildServer == "":
         return json.jsonify(status="failure", error="Build server not selected"), 400
 
-    # If packageFilter is not provided, get info only about installed packages. Else get info about packages matching the filter
+    # If packageFilter is not provided, get info only about installed packages.
+    # Else get info about packages matching the filter
     if packageFilter == "":
         configXmlFilePath="./config_template_query_installed_packages_single_slave.xml"
         jobNameSuffix = "listAllInstalledPackagesSingleSlave"
@@ -1176,8 +1192,45 @@ def listPackageForSingleSlave():
     except KeyError:
         return json.jsonify(status="failure", error=results['error']), 404
 
-def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, configXmlFilePath, jobNameSuffix):
-# Read template XML file
+def singleSlaveCallback(outDir):
+    logger.debug("In singleSlaveCallback, query results transferred to outDir=%s" % outDir)
+
+    # If present, read the json file and then delete it and its containing folder
+    jsonData = []
+    if outDir != "":
+        localArtifactsFilePath = outDir + "packageListSingleSlave.json"
+        try:
+            packageJsonFile = open(localArtifactsFilePath)
+            jsonData = json.load(packageJsonFile)
+        except Exception as e:
+            logger.debug("singleSlaveCallback: Error %s" % str(e))
+        else:
+            packageJsonFile.close()
+            # Delete the json file and its containing folder upon success
+            os.remove(localArtifactsFilePath)
+            os.rmdir(outDir)
+    return jsonData
+
+def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, configXmlFilePath, jobNameSuffix, cv=None):
+
+    returnData = {}
+
+    # This condition variable links the completion of the function moveArtifacts()
+    # that is run asynchronously by a thread with the invocation of the function
+    # listPackageForSingleSlave_Callback that processes the output of the thread
+    moverCv = {}
+    moverCv['cv'] = threading.Condition()
+    moverCv['outDir'] = ""
+
+    logger.debug("In createJob_SingleSlavePanel_Common, cv=%s packageFilter=%s, configXmlFilePath=%s jobNameSuffix=%s," %
+       (str(hex(id(cv))), packageFilter, configXmlFilePath, jobNameSuffix))
+    logger.debug("createJob_SingleSlavePanel_Common, cv=%s moverCv:%s" % (str(hex(id(cv))), str(hex(id(moverCv)))))
+
+    def createJob_SingleSlavePanel_Callback(outDir):
+        data = singleSlaveCallback(outDir)
+        return data
+
+    # Read template XML file
     tree = ET.parse(configXmlFilePath)
     root = tree.getroot()
 
@@ -1215,6 +1268,7 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
     }
 
     try:
+        logger.debug("createJob_SingleSlavePanel_Common: creating jenkins job %s" % jobName)
         r = requests.post(
             globals.jenkinsUrl + "/createItem",
             headers = {
@@ -1227,6 +1281,7 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
             proxies = NO_PROXY
         )
     except MissingSchema as e:
+        logger.error("createJob_SingleSlavePanel_Common: Please provide valid jenkins url in settings menu")
         assert(False), "Please provide valid jenkins url in settings menu!"
 
     if r.status_code == 200:
@@ -1236,41 +1291,75 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
 
-        # Move artifacts.  Wait for completion as we need to return content of file
+
+        # Split off a thread to transfer job results from jenkins master to localDir
+        # Wait for thread completion as we need to return the content of the result file
         time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
-        outDir = moveArtifacts(jobName, globals.localPathForListResults, time)
+        localDir = globals.localPathForListResults + jobName + "." + time + "/"
+        args = [((jobName, localDir, moverCv), {})]
+        threadRequests = makeRequests(moveArtifacts, args)
 
-        # If present, read the json file and then delete it and its containing folder
-        if outDir != "":
-            localArtifactsFilePath = outDir + "packageListSingleSlave.json"
-            packageJsonFile = open(localArtifactsFilePath)
-            try:
-                packageData = json.load(packageJsonFile)
-            except ValueError, ex:
-                packageData = []
-            packageJsonFile.close()
+        # Wait for handler createJob_SingleSlavePanel_Callback to run as the caller is expecting results
+        moverCv['cv'].acquire()
+        [globals.threadPool.putRequest(req) for req in threadRequests]
+        logger.debug("createJob_SingleSlavePanel_Common, sleeping on moverCv=%s" % str(hex(id(moverCv))))
+        moverCv['cv'].wait()
+        outDir = moverCv['outDir']
+        logger.debug("createJob_SingleSlavePanel_Common, after sleep on moverCv=%s" % str(hex(id(moverCv))))
+        moverCv['cv'].release()
 
-            # Delete the json file and its containing folder
-            os.remove(localArtifactsFilePath)
-            os.rmdir(outDir)
+        packageData = createJob_SingleSlavePanel_Callback(outDir)
 
-            # In case we were not able to generate the package data due to absence
-            # of apt-show-versions package on Ubuntu server, the json file has contents:
+        if packageData:
+            # Check for errors on the build server.  Errors are reflected on a per package basis via the
+            # key Failure_reason.  For example, apt-show-versions <package> errors is captured as
             # {"Failure_reason": "Could not generate the package data"}.
             key = "Failure_reason"
             if key in packageData:
                 failure_reason = packageData[key]
-                return { 'status': "failure", 'error': failure_reason }
+                returnData = { 'status': "failure", 'error': failure_reason }
             else:
-                return { 'status': "ok", 'packageData': packageData, 'node': selectedBuildServer }
-
-        return { 'status': "failure", 'error': "Did not transfer package file" }
+                returnData = { 'status': "ok", 'packageData': packageData, 'node': selectedBuildServer }
+        else:
+                returnData = { 'status': "failure", 'error': "Did not transfer package file" }
 
     if r.status_code == 400:
-        return { 'status': "failure", 'error': "Could not create/trigger the Jenkins job" }
+        returnData = { 'status': "failure", 'error': "Could not create/trigger the Jenkins job" }
+
+    if cv:
+         cv['cv'].acquire()
+         cv['results'].append(returnData)
+         cv['cnt'] -= 1
+         if cv['cnt'] == 0:
+             cv['cv'].notifyAll()
+         cv['cv'].release()
+
+    return returnData
 
 # Query detailed Jenkin node state for managed lists
 def queryNode(node, action):
+
+    callbackData = []              # Apparently has to be an array to avoid new variable allocation
+
+    def queryNodeCallback(request, outDir):
+        logger.debug("In queryNodeCallback, query results transferred to outDir=%s" % outDir)
+        if outDir:
+            jsonData = {}
+            localArtifactsFilePath = outDir + "query-os.json"
+            try:
+                jsonFile = open(localArtifactsFilePath)
+                jsonData = json.load(jsonFile)
+                logger.debug("jsonData=%s" % jsonData)
+            except Exception as e:
+                logger.debug("queryNodeCallback: Error %s" % str(e))
+            else:
+                jsonFile.close()
+                callbackData.append(jsonData)
+                # Delete the json file and its containing folder
+                os.remove(localArtifactsFilePath)
+                os.rmdir(outDir)
+
+    logger.debug("In queryNode, node=%s action=%s" % (node, action))
 
     # Read template XML file
     tree = ET.parse("./config_template_query_slave.xml")
@@ -1303,6 +1392,7 @@ def queryNode(node, action):
         'no': 'pass',
     }
 
+    logger.debug("queryNode: creating jenkins job %s" % jobName)
     r = requests.post(
         globals.jenkinsUrl + "/createItem",
         headers = {
@@ -1322,23 +1412,17 @@ def queryNode(node, action):
         # Start Jenkins job
         requests.get(startJobUrl, proxies=NO_PROXY)
 
-        # This is a synchronous call.  Wait for job to complete
+        # Split off a thread to transfer job results from jenkins master to localDir
+        # Wait for thread completion as we need to return the content of the result file
         time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
-        outDir = moveArtifacts(jobName, globals.localPathForListResults, time)
+        localDir = globals.localPathForListResults + jobName + "." + time + "/"
+        args = [((jobName, localDir), {})]
+        threadRequests = makeRequests(moveArtifacts, args, queryNodeCallback)
+        [globals.threadPool.putRequest(req) for req in threadRequests]
+        globals.threadPool.wait()
 
-        # If present, read the json file.  Let's not treat this as a fatal error
-        jsonData = {}
-        if outDir:
-            localArtifactsFilePath = outDir + action + ".json"
-            try:
-                jsonFile = open(localArtifactsFilePath)
-                jsonData = json.load(jsonFile)
-                jsonFile.close()
-            except KeyError:
-                pass
-            # Delete the json file and its containing folder
-            os.remove(localArtifactsFilePath)
-            os.rmdir(outDir)
+        # Get callback data
+        jsonData = callbackData[0]
 
         return { 'status': "success", 'detail': jsonData }
 
@@ -1348,7 +1432,23 @@ def queryNode(node, action):
     return { 'status': "failure", 'error': "Unknown failure"  }
 
 
-def listPackageForSingleSlave_common(packageName, selectedBuildServer):
+def listPackageForSingleSlave_common(packageName, selectedBuildServer, cv=None):
+
+    returnData = {}
+
+    # This condition variable links the completion of the function moveArtifacts()
+    # that is run asynchronously by a thread with the invocation of the function
+    # listPackageForSingleSlave_Callback that processes the output of the thread
+    moverCv = {}
+    moverCv['cv'] = threading.Condition()
+    moverCv['outDir'] = ""
+
+    logger.debug("In listPackageForSingleSlave_common, cv=%s packageName=%s selectedBuildServer=%s" % (str(hex(id(cv))), packageName, selectedBuildServer))
+    logger.debug("listPackageForSingleSlave_common, cv=%s moverCv:%s" % (str(hex(id(cv))), str(hex(id(moverCv)))))
+
+    def listPackageForSingleSlave_Callback(outDir):
+        data = singleSlaveCallback(outDir)
+        return data
 
     # Read template XML file
     tree = ET.parse("./config_template_package_list_single_slave.xml")
@@ -1389,6 +1489,7 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer):
     }
 
     try:
+        logger.debug("listPackageForSingleSlave_common: creating jenkins job %s" % jobName)
         r = requests.post(
             globals.jenkinsUrl + "/createItem",
             headers = {
@@ -1411,102 +1512,39 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer):
 
         # Move artifacts.  Wait for completion as we need to return content of file
         time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
-        outDir = moveArtifacts(jobName, globals.localPathForListResults, time)
+        localDir = globals.localPathForListResults + jobName + "." + time + "/"
+        args = [((jobName, localDir, moverCv), {})]
+        threadRequests = makeRequests(moveArtifacts, args)
+
+        # Wait for handler listPackageForSingleSlave_Callback to run as the caller is expecting results
+        moverCv['cv'].acquire()
+        [globals.threadPool.putRequest(req) for req in threadRequests]
+        moverCv['cv'].wait()
+        outDir = moverCv['outDir']
+        moverCv['cv'].release()
+
+        packageData = listPackageForSingleSlave_Callback(outDir)
+
+        logger.debug("listPackageForSingleSlave_common: packageData=%s selectedBuildServer=%s" % (str(packageData), selectedBuildServer))
 
         # If present, read the json file and then delete it and its containing folder
-        if outDir != "":
-            localArtifactsFilePath = outDir + "packageListSingleSlave.json"
-            packageJsonFile = open(localArtifactsFilePath)
-            packageData = json.load(packageJsonFile)
-            packageJsonFile.close()
-
-            # Delete the json file and its containing folder
-            os.remove(localArtifactsFilePath)
-            os.rmdir(outDir)
-            return { 'status': "ok", 'packageData': packageData, 'node':selectedBuildServer }
-
-        return { 'status': "failure", 'error': "Did not transfer package file" }
+        if packageData:
+            returnData = { 'status': "ok", 'packageData': packageData, 'node': selectedBuildServer }
+        else:
+            returnData = { 'status': "failure", 'error': "Did not transfer package file" }
 
     if r.status_code == 400:
-        return { 'status': "failure", 'error': "Could not create/trigger the Jenkins job" }
+        returnData = { 'status': "failure", 'error': "Could not create/trigger the Jenkins job" }
 
-# Query detailed Jenkin node state for managed lists
-def queryNode(node, action):
+    if cv:
+         cv['cv'].acquire()
+         cv['results'].append(returnData)
+         cv['cnt'] -= 1
+         if cv['cnt'] == 0:
+             cv['cv'].notifyAll()
+         cv['cv'].release()
 
-    # Read template XML file
-    tree = ET.parse("./config_template_query_slave.xml")
-    root = tree.getroot()
-    # Find elements we want to modify
-    xml_node = root.find("./assignedNode")
-    xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
-
-    # Modify selected elements
-    xml_node.text = node
-
-    # add parameters information
-    i = 1
-    for param in xml_parameters:
-        if i == 1:
-            param.text = node
-        elif i == 2:
-            param.text = action
-        i += 1
-
-    # Set Job name
-    uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = globals.localHostName + '.' + str(uid) + '.' + node + '.' + "querySingleSlave"
-
-    # Add header to the config
-    configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)
-
-    # Send to Jenkins
-    NO_PROXY = {
-        'no': 'pass',
-    }
-
-    r = requests.post(
-        globals.jenkinsUrl + "/createItem",
-        headers = {
-            'Content-Type': 'application/xml'
-        },
-        params = {
-            'name': jobName
-        },
-        data = configXml,
-        proxies = NO_PROXY
-    )
-
-    if r.status_code == 200:
-        # Success, send the jenkins job and start it right away.
-        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
-
-        # Start Jenkins job
-        requests.get(startJobUrl, proxies=NO_PROXY)
-
-        # This is a synchronous call.  Wait for job to complete
-        time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
-        outDir = moveArtifacts(jobName, globals.localPathForListResults, time)
-
-        # If present, read the json file.  Let's not treat this as a fatal error
-        jsonData = {}
-        if outDir:
-            localArtifactsFilePath = outDir + action + ".json"
-            try:
-                jsonFile = open(localArtifactsFilePath)
-                jsonData = json.load(jsonFile)
-                jsonFile.close()
-            except KeyError:
-                pass
-            # Delete the json file and its containing folder
-            os.remove(localArtifactsFilePath)
-            os.rmdir(outDir)
-
-        return { 'status': "success", 'detail': jsonData }
-
-    if r.status_code == 400:
-        return { 'status': "failure", 'error': "Could not create/trigger the Jenkins Node Query job" }
-
-    return { 'status': "failure", 'error': "Unknown failure"  }
+    return returnData
 
 # Install/Delete/Update package on selected build server/slave via a Jenkins job
 @app.route("/autoport/managePackageForSingleSlave")
@@ -1647,13 +1685,19 @@ def managePackageForSingleSlave():
 @app.route("/autoport/listManagedPackages", methods=["GET"])
 def listManagedPackages():
 
+    cv = {}
+    cv['cv'] = threading.Condition()
+    cv['cnt'] = 0
+    cv['results'] = []
+
     packageList = []
 
-    def listCallback(request, data):
+    def listCallback(data):
         '''
         callback to handle return value of each thread
         and manipulate it further.
         '''
+        logger.debug("In listCallback, data=%s" % data)
         if data['status'] == 'ok':
             try:
                 i = globals.nodeLabels.index(data['node'])
@@ -1714,6 +1758,9 @@ def listManagedPackages():
                     packageList.append(pkg)
             except KeyError:
                 return json.jsonify(status="failure", error=results['error'] ), 404
+
+    # Start of listManagedPackages
+
     try:
         distro = request.args.get("distro", "")
     except KeyError:
@@ -1723,6 +1770,8 @@ def listManagedPackages():
         package = request.args.get("package", "")
     except KeyError:
         return json.jsonify(status="failure", error="missing package argument"), 400
+
+    logger.debug("In listManagedPackages, distro=%s package=%s" % (distro, package))
 
     # Get managed list
     ml = sharedData.getManagedList()
@@ -1748,16 +1797,29 @@ def listManagedPackages():
 
     arg_list = []
     for node in nodes:
+        cv['cnt'] += 1
         if  package == "":
-            arg_list.append(([packageNames, node], {}))
+            arg_list.append(([packageNames, node, cv], {}))
             methodName = listPackageForSingleSlave_common
         else:
-            arg_list.append(([node, package, configXmlFilePath, jobNameSuffix],{}))
+            arg_list.append(([node, package, configXmlFilePath, jobNameSuffix, cv],{}))
             methodName = createJob_SingleSlavePanel_Common
 
+    logger.debug("listManagedPackages, methodName=%s arg_list=%s" % (methodName, arg_list))
+
     threadRequests = makeRequests(methodName, arg_list, listCallback)
+
+    cv['cv'].acquire()
     [globals.threadPool.putRequest(req) for req in threadRequests]
-    globals.threadPool.wait()
+    while cv['cnt']:
+        cv['cv'].wait()
+    cv['cv'].release()
+
+    for data in cv['results']:
+        if data:
+            listCallback(data)
+
+    logger.debug("listManagedPackages, packages=%s" % packageList)
 
     return json.jsonify(status="ok", packages=packageList)
 
@@ -1849,7 +1911,7 @@ def createSynchJobs(nodes):
         assert(False)
 
     # Invoking the routine to monitor the chef jobs created above as
-    # a seperate thread running in the background.
+    # a separate thread running in the background.  There are no artifacts to be transferred
     threadRequests = makeRequests(monitorChefJobs, jobs)
     [globals.threadPool.putRequest(req) for req in threadRequests]
 

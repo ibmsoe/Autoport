@@ -1,10 +1,14 @@
 import globals
 import logging
 import logging.handlers
+import paramiko
 import os
 
 def init():
     global logger
+
+    paramiko.util.log_to_file('./data/sftp.log')
+    logging.getLogger("paramiko").setLevel(logging.WARNING)
 
     logger = logging.getLogger('autoport')
 
