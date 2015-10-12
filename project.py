@@ -64,7 +64,9 @@ class Project:
             pkg = ""
             ver = ""
 
-        self.catalog.cleanTmp()
+        #self.catalog.cleanTmp()
+        # not cleaning /tmp folder as this is required for showing build logs and test logs
+        # Instead will be clearing when next request for comparison is done.
 
         return { "job": projectName, "pkg" : pkg or '-', "ver": ver or '-',
                  "results": res, "project": meta, "repository": repo }
@@ -116,3 +118,91 @@ class Project:
             ftp_client.rmdir(remotepath)
         except IOError as e:
             logger.warning("Can't remove directory" + str(e))
+
+    def stripDataFromJobName(self, jobFileName):
+        jobName = self.projectResultPattern.match(jobFileName).group(2)                     # uuid field
+        jobNode = self.projectResultPattern.match(jobFileName).group(3)                     # build server
+        jobPkg = self.projectResultPattern.match(jobFileName).group(4)                      # project name
+        jobPkgVer = self.projectResultPattern.match(jobFileName).group(5)                   # project version
+        jobDate = self.projectResultPattern.match(jobFileName).group(6)                     # build date
+
+        return (jobName, jobNode, jobPkg, jobPkgVer, jobDate)
+
+    def getDiffLogResult(self, logFile, leftBuild, rightBuild, leftRepo, rightRepo):
+        """
+        This function will read given logfile and generate a comparison diff data.
+        Args:
+            logfile(str): which log file to use test_result.arti or build_result.arti
+            leftBuild(str):         First Build job Name
+            rightBuild(str):        Second Build job Name
+            leftRepo(str):          First Build job Repo Name for comparison
+            rightRepo(str):         Second Build job Repo Name for comparison
+
+        Returns:
+            Dictionary with comparison data for given projects.
+        """
+
+        if (not (leftBuild and rightBuild)):
+            return {"error": "Invalid argument", "http_code": 400}
+
+        leftDir = self.catalog.getResults(leftBuild, leftRepo)
+        rightDir = self.catalog.getResults(rightBuild, rightRepo)
+
+        if (not(leftDir and rightDir)):
+            return {"error": "Result not found", "http_code": 401}
+
+        try:
+            rightName, rightNode, rightPkg, rightPkgVer, rightDate = self.stripDataFromJobName(rightBuild)
+        except AttributeError:
+            return {"error": "Invalid job name" + rightBuild, "http_code": 402}
+
+        try:
+            leftName, leftNode, leftPkg, leftPkgVer, leftDate = self.stripDataFromJobName(leftBuild)
+        except AttributeError:
+            return {"error": "Invalid job name" + leftBuild, "http_code": 402}
+
+        try:
+            res = self.resParser.ResLogCompare(logFile, leftName, leftDir, rightName, rightDir)
+        except BaseException as e:
+            return {"error": str(e), "http_code": 500}
+
+        leftCol = {
+            'log': logFile,
+            'job': leftBuild,
+            'repo': leftRepo,
+            'pkgname': leftPkg,
+            'pkgver': leftPkgVer,
+            'date': leftDate,
+            'diffName': leftName
+        }
+
+        try:
+            # Build server may be unknown to us
+            i = globals.nodeLabels.index(leftNode)
+            leftCol['distro'] = globals.nodeOSes[i]
+        except ValueError:
+            leftCol['distro'] = leftNode
+
+        rightCol = {
+            'log': logFile,
+            'job': rightBuild,
+            'repo': rightRepo,
+            'pkgname': rightPkg,
+            'pkgver': rightPkgVer,
+            'date': rightDate,
+            'diffName': leftName
+        }
+
+        try:
+            # Build server may be unknown to us
+            i = globals.nodeLabels.index(rightNode)
+            rightCol['distro'] = globals.nodeOSes[i]
+        except ValueError:
+            rightCol['distro'] = rightNode
+
+        return {
+            "leftCol": leftCol,
+            "rightCol": rightCol,
+            "results": res,
+            "http_code": 200
+        }

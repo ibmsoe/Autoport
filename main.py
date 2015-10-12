@@ -49,6 +49,7 @@ maxResults = 10
 # Initialize autoport framework
 catalog = Catalog()
 batch = Batch()
+project = Project(catalog)
 sharedData = SharedData(urlparse(globals.jenkinsUrl).hostname)
 chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
 resParser = ResultParser()
@@ -2150,74 +2151,42 @@ def getDiffLogResults():
     leftRepo = request.args.get("leftrepository", "local")
     rightRepo = request.args.get("rightrepository", "local")
 
-    if (leftBuild == "" or rightBuild == ""):
-        return json.jsonify(status="failure", error="Invalid argument"), 400
+    logs = project.getDiffLogResult(logFile, leftBuild, rightBuild, leftRepo, rightRepo)
 
-    leftDir = catalog.getResults(leftBuild, leftRepo)
-    rightDir = catalog.getResults(rightBuild, rightRepo)
+    if logs.has_key('error'):
+        return json.jsonify(
+            status = "failure",
+            error = logs.get("error", "Something went wrong")
+        ), logs.get("http_code", 500)
+    else:
+        return json.jsonify(
+            status = "ok",
+            leftCol = logs.get("leftCol", []),
+            rightCol = logs.get("rightCol", []),
+            results = logs.get("results", [])
+        )
 
-    if (leftDir == None or rightDir == None):
-        return json.jsonify(status="failure", error="Result not found"), 401
+# Get diff log output
+@app.route("/autoport/getDiffBatchLogResults", methods=["POST"])
+def getDiffBatchLogResults():
+    leftBatch  = request.json.get("leftbatch", "")
+    rightBatch = request.json.get("rightbatch", "")
+    leftRepo = request.json.get("leftrepo", "local")
+    rightRepo = request.json.get("rigthrepo", "local")
+    logFile = request.json.get("logfile", "test_result.arti")
 
-    try:
-        leftName = resultPattern.match(leftBuild).group(2)                     # uuid field
-        leftNode = resultPattern.match(leftBuild).group(3)                     # build server
-        leftPkg = resultPattern.match(leftBuild).group(4)                      # project name
-        leftPkgVer = resultPattern.match(leftBuild).group(5)                   # project version
-        leftDate = resultPattern.match(leftBuild).group(6)                     # build date
-    except AttributeError:
-        return json.jsonify(status="failure", error="Invalid job name" + leftbuild), 402
+    logs = batch.getBatchDiffLogResults(leftBatch, rightBatch, leftRepo, rightRepo, catalog, logFile)
 
-    try:
-        rightName = resultPattern.match(rightBuild).group(2)                   # uuid field
-        rightNode = resultPattern.match(rightBuild).group(3)                   # build server
-        rightPkg = resultPattern.match(rightBuild).group(4)                    # project name
-        rightPkgVer = resultPattern.match(rightBuild).group(5)                 # project version
-        rightDate = resultPattern.match(rightBuild).group(6)                   # build date
-    except AttributeError:
-        return json.jsonify(status="failure", error="Invalid job name" + rightbuild), 403
-
-    try:
-        res = resParser.ResLogCompare(logFile, leftName, leftDir, rightName, rightDir)
-    except BaseException as e:
-        return json.jsonify(status="failure", error=str(e)), 500
-
-    catalog.cleanTmp()
-
-    leftCol = {}
-    leftCol['log'] = logFile
-    leftCol['job'] = leftBuild
-    leftCol['repo'] = leftRepo
-    leftCol['pkgname'] = leftPkg
-    leftCol['pkgver'] = leftPkgVer
-    try:
-        # Build server may be unknown to us
-        i = globals.nodeLabels.index(leftNode)
-        leftCol['distro'] = globals.nodeOSes[i]
-    except ValueError:
-        leftCol['distro'] = leftNode
-    leftCol['date'] = leftDate
-    leftCol['diffName'] = leftName
-
-    rightCol = {}
-    rightCol['log'] = logFile
-    rightCol['job'] = rightBuild
-    rightCol['repo'] = rightRepo
-    rightCol['pkgname'] = rightPkg
-    rightCol['pkgver'] = rightPkgVer
-    try:
-        # Build server may be unknown to us
-        i = globals.nodeLabels.index(rightNode)
-        rightCol['distro'] = globals.nodeOSes[i]
-    except ValueError:
-        rightCol['distro'] = rightNode
-    rightCol['date'] = rightDate
-    rightCol['diffName'] = rightName
-
-    return json.jsonify(status = "ok",
-                        leftCol = leftCol,
-                        rightCol = rightCol,
-                        results = res)
+    if logs.has_key('error'):
+        return json.jsonify(
+            status = "failure",
+            error = logs.get("error", "Something went wrong")
+        ), logs.get("http_code", 500)
+    else:
+        return json.jsonify(
+            status = "ok",
+            results = logs
+        )
 
 @app.route("/autoport/getTestHistory", methods=["POST"])
 def getTestHistory():

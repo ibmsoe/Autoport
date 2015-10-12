@@ -37,7 +37,7 @@
     <!-- List batch files table -->
     <div rv-show="batchReportState.showListSelectTable">
       <div id="batchReportListSelectToolbar" class="btn-group">
-        <button rv-on-click="batchReportState.detail" type="button" class="btn btn-primary" id="batch_report_detail"
+        <button rv-on-click="batchReportState.detail" type="button" class="btn btn-primary disabled" id="batch_report_detail"
             style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
             <span class="glyphicon glyphicon-zoom-in"></span>
             Test Details
@@ -63,7 +63,7 @@
             Remove
         </button>
       </div>
-      <table class="table panel panel-default" id="batchReportListSelectTable"
+      <table class="table panel panel-default batchDetailsPanel" id="batchReportListSelectTable"
         data-pagination="true" data-click-to-select="true"
         data-toolbar="#batchReportListSelectToolbar">
         <thead>
@@ -92,10 +92,42 @@
           </table>
         </div>
       </div>
-      <a class="backToResults" rv-on-click="batchReportState.backToBatchList">
+      <a class="backToBatchResults" rv-on-click="batchReportState.backToBatchList">
         <button type="button" class="btn btn-info">
-        <span class="glyphicon glyphicon-chevron-left"></span>
-        Back to list
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            Back to list
+        </button>
+      </a>
+      <a class="backToBatchResults" rv-show="batchReportState.hasBuildLog" rv-on-click="batchReportState.compareBatchBuildLog">
+        <button type="button" class="btn btn-info">
+            <span class="glyphicon glyphicon-bookmark"></span>
+            Compare Build Logs
+        </button>
+      </a>
+      <a class="backToBatchResults" rv-show="batchReportState.hasTestLog" rv-on-click="batchReportState.compareBatchTestLog">
+        <button type="button" class="btn btn-info">
+            <span class="glyphicon glyphicon-bookmark"></span>
+            Compare Test Logs
+        </button>
+      </a>
+    </div>
+
+    <div id="testBatchCompareLog"
+        class="table panel panel-default"
+        rv-show="batchReportState.batchReportLogRequested">
+      <div class="panel panel-primary">
+        <div class="panel-heading"><span id="batchReportLogHeaderPreText"></span> <span id="batchReportLogHeader"></span></div>
+        <div class="table-container">
+          <table id="testBatchLogResultsTable">
+          </table>
+        </div>
+      </div>
+      <a class="backToBatchResultsCompare"
+       rv-show="batchReportState.batchReportLogRequested"
+       rv-on-click="batchReportState.backToBatchResultsCompare">
+        <button type="button" class="btn btn-info">
+            <span class="glyphicon glyphicon-chevron-left"></span>
+            Back to Job Comparison
         </button>
       </a>
     </div>

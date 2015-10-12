@@ -123,8 +123,17 @@ class Batch:
                         putdir = tempfile.mkdtemp(prefix="autoport_")
                         self.copyRemoteDirToLocal(globals.pathForBatchTestResults + "/" +filename, putdir)
                         batchFilePath = os.listdir(putdir + "/" + filename)[0]
-                        filteredList.append(self.parseBatchReportList(\
-                                            os.path.join(putdir,filename,batchFilePath), "gsa"))
+                        batchTestReportFile = self.ftp_client.open(globals.pathForBatchTestResults + filename + "/" + batchFilePath,'r')
+                        dataFile = batchTestReportFile.readlines()
+                        for projectsReport in dataFile:
+                            self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
+                        filteredList.append(
+                            self.parseBatchReportList(
+                                os.path.join(putdir,filename,batchFilePath),
+                                "gsa",
+                                putdir
+                            )
+                        )
                     except Exception, ex:
                         logger.warning("listGSABatchReports Error: " + str(ex))
         except AttributeError:
@@ -169,7 +178,7 @@ class Batch:
             return {"error": "Could not archive batch file " + filename }
 
     # Parses given batch file and returns data in JSON format.
-    def parseBatchReportList(self, filename, location):
+    def parseBatchReportList(self, filename, location, tmpDir = None):
         logger.debug("In parseBatchReportList, filename=%s location=%s" % (filename, location))
         batchFile = None
         return_data = {
@@ -190,7 +199,7 @@ class Batch:
             batchFile = open(filename)
             batchName, batchUID, batchSubmissionTime = ntpath.basename(filename).split('.')
             jobNames = batchFile.readlines()
-            buildAndTestLogs = self.getLocalBuildAndTestLogs(jobNames)
+            buildAndTestLogs = self.getLocalBuildAndTestLogs(jobNames, location, tmpDir)
             project_count = len(jobNames)
             buildServer = None
             if len(jobNames):
@@ -216,10 +225,12 @@ class Batch:
 
     # Gets number of build logs and test logs for given batch,
     # by traversing through the individual projects associated with the batch job
-    def getLocalBuildAndTestLogs(self, jobNames = [], repo = 'local'):
+    def getLocalBuildAndTestLogs(self, jobNames = [], repo = 'local', tmpDir = None):
         build_logs = 0
         test_logs = 0
-        if repo == 'local':
+        if tmpDir:
+            project_path = tmpDir + '/'
+        elif repo == 'local':
             project_path = globals.localPathForTestResults
         else:
             project_path = globals.pathForTestResults
@@ -368,36 +379,55 @@ class Batch:
 
     # @TODO Below code for getting Batch Test Details and other functionality is in progress.
     def getBatchTestDetails(self, batchList, catalog):
+        # clear old records and continue with fresh data.
+        catalog.cleanTmp()
         out = []
+        repos = {}
         # Get the project Names and fetch test details from them.
-        projects = self.getLocalProjectForGivenBatch(batchList.get('local', []))
+        if batchList.get('local'):
+            repos["local"] = self.getLocalProjectForGivenBatch(batchList.get('local', []), 'local')
+        if batchList.get('gsa'):
+            repos["gsa"] = self.getLocalProjectForGivenBatch(batchList.get('gsa', []), 'gsa')
+
         project = Project(catalog)
         final_response = {"status": "ok"}
-        for batchName in projects:
-            results = project.getTestDetails(projects[batchName], 'local')
-            final_response[batchName] = results.get("results")
+        for repo in repos:
+            projects = repos[repo]
+            for batchName in projects:
+                results = project.getTestDetails(projects[batchName], repo)
+                final_response[batchName] = results.get("results")
         return final_response
-        # @TODO add code for GSA/archived jobs too.
-        # Now from the projects associated with Batch Get the info and send to requesting call.
 
     # Fetch all the info related to local projects for given batch job.
-    def getLocalProjectForGivenBatch(self, batchList):
+    def getLocalProjectForGivenBatch(self, batchList, repo):
         # Strip batch name from given batch file path in the list batchList
         batchNames = [str(ntpath.basename(i)) for i in batchList]
+        pathsToWalk = []
         projects = {}
         for batchName in batchNames:
             projects[batchName] = [];
         # Walk through directories and search for the batch related projects to fetch info.
+        if repo == 'local':
+            pathsToWalk = [globals.localPathForBatchTestResults]
+        else:
+            pathsToWalk = [os.path.dirname(batchFile) for batchFile in batchList]
+
+        pathsToWalk = set(pathsToWalk)
+
         try:
-            for dirname, dirnames, filenames in os.walk(globals.localPathForBatchTestResults):
-                for filename in sorted(filenames):
-                    actualFilePath = "%s/%s" % (dirname, filename)
-                    if filename != ".gitignore" and filename in batchNames:
-                        batchFile = open(actualFilePath)
-                        projects[filename].extend([i.strip() for i in batchFile.readlines()])
-                        batchFile.close()
+            for path in pathsToWalk:
+                for dirname, dirnames, filenames in os.walk(path):
+                    for filename in sorted(filenames):
+                        actualFilePath = "%s/%s" % (dirname, filename)
+                        if filename != ".gitignore" and filename in batchNames:
+                            batchFile = open(actualFilePath)
+                            if not projects.has_key(filename):
+                                projects[filename] = []
+                            projects[filename].extend([i.strip() for i in batchFile.readlines()])
+                            batchFile.close()
         except Exception, ex:
             logger.warning("getLocalProjectForGivenBatch error: " +  str(ex))
+
         return projects
 
     # Remove Batch Reports Data from local or GSA
@@ -479,3 +509,73 @@ class Batch:
             for x in self.remotePathWalker(new_path):
                 yield x
                 logger.debug("Second yield - %s" % str(x))
+
+    def getBatchDiffLogResults(self, leftBatch, rightBatch, leftRepo, rightRepo, catalog, logfile = 'test_result.arti'):
+        """
+        This function will read given logfile and generate a comparison diff data.
+        Args:
+            leftBatch(str):         First Batch Name for comparison
+            rightBatch(str):        Second Batch Name for comparison
+            leftRepo(str):          First Batch Repo Name for comparison
+            rightRepo(str):         Second Batch Repo Name for comparison
+            catalog(Catalog):       Catalog object
+            logfile(str)(Optional): which log file to use test_result.arti or build_result.arti
+
+        Returns:
+            Dictionary with comparison details for given batch jobs
+        """
+        final_response = {}
+        final_data = {}
+        project_obj = Project(catalog)
+        leftArch = None
+        rightArch = None
+
+        # call project getDiffLogResult recursively for each project in batch and append output
+        # get list of projects in a batch
+        left_projects = self.getLocalProjectForGivenBatch([leftBatch], leftRepo)
+        right_projects = self.getLocalProjectForGivenBatch([rightBatch], rightRepo)
+
+        # Assuming both left and right project names will be same set of project names, only job names will differ.
+        for batchName in left_projects:
+            newBatchName = batchName.split('.')[0]
+            if not final_response.has_key(newBatchName):
+                final_response[newBatchName] = {}
+            for project in left_projects[batchName]:
+                projectName = projectResultPattern.match(project).group(4)
+                if not leftArch:
+                    leftArch = projectResultPattern.match(project).group(3)
+                if not final_response[newBatchName].has_key(projectName):
+                    final_response[newBatchName][projectName] = {}
+                final_response[newBatchName][projectName]["left"] = project
+                final_response[newBatchName][projectName]["left_parent_name"] = batchName
+                final_response[newBatchName][projectName]["left_version"] = projectResultPattern.match(project).group(5)
+
+        for batchName in right_projects:
+            newBatchName = batchName.split('.')[0]
+            if not final_response.has_key(newBatchName):
+                final_response[newBatchName] = {}
+            for project in right_projects[batchName]:
+                projectName = projectResultPattern.match(project).group(4)
+                if not rightArch:
+                    rightArch = projectResultPattern.match(project).group(3)
+                if not final_response[newBatchName].has_key(projectName):
+                    final_response[newBatchName][projectName] = {}
+                final_response[newBatchName][projectName]["right"] = project
+                final_response[newBatchName][projectName]["right_parent_name"] = batchName
+                final_response[newBatchName][projectName]["right_version"] = projectResultPattern.match(project).group(5)
+
+        # We have paired jobs now call project_obj.getDiffLogResult recursively and get data.
+        for batchName in final_response:
+            for project in final_response[batchName]:
+                if final_response[batchName][project].has_key("left") and final_response[batchName][project].has_key("right"):
+                    final_response[batchName][project]["diff"] = project_obj.getDiffLogResult(                
+                        logfile,
+                        final_response[batchName][project]["left"],
+                        final_response[batchName][project]["right"],
+                        leftRepo,
+                        rightRepo
+                    )
+
+        final_response["left_arch"] = leftArch
+        final_response["right_arch"] = rightArch
+        return final_response

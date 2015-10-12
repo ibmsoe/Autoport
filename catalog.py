@@ -173,6 +173,10 @@ class Catalog:
             msg = "Exception: " + str(e)
             logger.warning(msg)
             return None
+        except Exception,e:
+            msg = "Exception: " + str(e)
+            logger.warning(msg)
+            return None
 
     def getGSAResults(self, build):
         try:
@@ -193,6 +197,10 @@ class Catalog:
             logger.warning(msg)
             assert(False), msg
         except IOError as e:
+            msg = "Exception: " + str(e)
+            logger.warning(msg)
+            return None
+        except Exception,e:
             msg = "Exception: " + str(e)
             logger.warning(msg)
             return None

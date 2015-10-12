@@ -340,3 +340,54 @@ fieldset[disabled] .form-control {
     font-weight:bold;
     font-size:18px;
 }
+
+.backToBatchResults {
+    margin-top: 10px;
+    padding: 25px;
+}
+
+.test_success{
+    background-color: #66aa66;
+}
+.test_failure{
+    background-color: #ff3333;
+}
+
+
+#testBatchCompareLog td,th {
+    border-bottom: 1px solid grey;
+    border-left: 1px solid grey;
+    padding: 3px;
+}
+#testBatchCompareLog td p {
+    word-wrap: break-word;
+    font-size: 15px;
+    max-width: 350px;
+}
+
+#testBatchCompareLog th.testSuite {
+    background-color: lightgrey;
+}
+
+#testBatchCompareLog td.testClass {
+}
+
+#testBatchCompareLog td.testResult {
+    text-align: right;
+}
+
+#testBatchCompareLog td.testResultArch {
+    text-align: right;
+    border-left: 1px solid black;
+}
+
+#testBatchCompareLog td.testErr {
+    color: red;
+    font-weight: bold;
+}
+
+#testBatchCompareLog {
+    margin-left: auto;
+    margin-right: auto;
+    border: 1px solid black;
+}

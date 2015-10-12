@@ -492,6 +492,9 @@ var batchReportState = {
     currentBatchJobs: [],
     selectedBatchJob: {},
     batchReportTableReady: false,
+    hasBuildLog: false,
+    hasTestLog: false,
+    batchReportLogRequested: false,
     batchFile: {},                          // content of batch file.  All fields resolved
     javaType: "",                           // Initial value in config section
     loading: false,                         // parsing batch file.  Size is variable
@@ -540,7 +543,18 @@ var batchReportState = {
         // For going back to displaying batch listing and hiding details.
         batchReportState.batchReportTableReady = false;
         batchReportState.showListSelectTable = true;
+        batchReportState.hasBuildLog = false;
+        batchReportState.hasTestLog = false;
         batchReportState.batchFile = {};
+        batchReportState.batchReportLogRequested = false;
+        batchReportState.loading = false;
+    },
+    backToBatchResultsCompare: function(ev) {
+        // For going back to displaying batch comparison and hiding details.
+        batchReportState.batchReportTableReady = true;
+        batchReportState.batchReportLogRequested = false;
+        $('#testBatchLogResultsTable tr').remove();
+        batchReportState.loading = false;
     },
     history: function() {
         batchReportState.loading = true;
@@ -572,7 +586,73 @@ var batchReportState = {
               showMessage("Error: ", "At Least one Batch job needs to be selected.");
         }
     },
-    compare: function() {
+    compareBatchBuildLog: function(){
+        batchReportState.batchReportLogRequested = true;
+        // fetch, render and display Report in table.
+        batchReportState.loading = true;
+        batchReportState.showBatchFile = false;
+        batchReportState.batchReportTableReady = false;
+
+        // Get list of all selected batch test runs for fetchinf details.
+        var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+        if (selectedBatchJobs.length == 2){
+            // fetch the Batch details and handle it appropriately.
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "getDiffBatchLogResults",
+                data: JSON.stringify({
+                    leftbatch: selectedBatchJobs[0].filename,
+                    rightbatch: selectedBatchJobs[1].filename,
+                    leftrepo: selectedBatchJobs[0].repo,
+                    rigthrepo: selectedBatchJobs[1].repo,
+                    logfile: 'build_result.arti'
+                }),
+                success: function(data){
+                    processBatchTestLogCompare(data, batchReportState, true);
+                },
+                dataType:'json'
+            }).fail(function(data){
+                processBatchTestLogCompare(data, batchReportState, true);
+            });
+        }else{
+            showMessage("Error: ", "Two Batch job from the list needs to be selected.");
+        }
+    },
+    compareBatchTestLog: function(){
+        batchReportState.batchReportLogRequested = true;
+        // fetch, render and display Report in table.
+        batchReportState.loading = true;
+        batchReportState.showBatchFile = false;
+        batchReportState.batchReportTableReady = false;
+
+        // Get list of all selected batch test runs for fetchinf details.
+        var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+        if (selectedBatchJobs.length == 2){
+            // fetch the Batch details and handle it appropriately.
+            $.ajax({
+                type: "POST",
+                contentType: "application/json; charset=utf-8",
+                url: "getDiffBatchLogResults",
+                data: JSON.stringify({
+                    leftbatch: selectedBatchJobs[0].filename,
+                    rightbatch: selectedBatchJobs[1].filename,
+                    leftrepo: selectedBatchJobs[0].repo,
+                    rigthrepo: selectedBatchJobs[1].repo,
+                    logfile: 'test_result.arti'
+                }),
+                success: function(data){
+                    processBatchTestLogCompare(data, batchReportState, false);
+                },
+                dataType:'json'
+            }).fail(function(data){
+                processBatchTestLogCompare(data, batchReportState, false);
+            });
+        }else{
+            showMessage("Error: ", "Two Batch job from the list needs to be selected.");
+        }
+    },
+    compare: function(){
      // fetch, render and display Report in table.
         batchReportState.loading = true;
         batchReportState.showBatchFile = false;
@@ -587,6 +667,8 @@ var batchReportState = {
                     query[selectedBatchJobs[i].repo] = [];
                 }
                 query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
+                batchReportState.hasBuildLog = (selectedBatchJobs[i].build_log_count > 0)?true:false;
+                batchReportState.hasTestLog = (selectedBatchJobs[i].test_log_count > 0)?true:false;
             }
 
             // fetch the Batch details and handle it appropriately.
@@ -605,7 +687,7 @@ var batchReportState = {
                 processBatchCompare(data, batchReportState);
             });
         }else{
-            showMessage("Error: ", "At Least one Batch job needs to be selected.");
+            showMessage("Error: ", "Two Batch job from the list needs to be selected.");
         }
     },
     reset: function() {
@@ -622,7 +704,11 @@ var batchReportState = {
         batchReportState.javaType = "";
         batchReportState.loading = false;
         batchReportState.showBatchFile = false;
+        batchReportState.hasBuildLog = false;
+        batchReportState.hasTestLog = false;
         batchReportState.saveBatchFileName = "";
+        batchReportState.batchReportLogRequested = false;
+        batchReportState.loading = false;
     },
     detail: function(ev, el) {
         // fetch, render and display Report in table.
@@ -2751,10 +2837,20 @@ function toggleBatchReportButtons(){
     } else {
         $("#batch_report_compare").addClass("disabled");
     }
-    if(selectedProjects.length>0){
+
+    if(selectedProjects.length > 0){
         $("#batch_report_remove").removeClass("disabled");
     }else{
         $("#batch_report_remove").addClass("disabled");
+        $("#batch_report_archive").addClass("disabled");
+    }
+
+    for(var i = 0; i < selectedProjects.length; i++){
+        if(selectedProjects[i].repo == 'gsa'){
+            $("#batch_report_archive").addClass("disabled");
+            break;
+        }
+        $("#batch_report_archive").removeClass("disabled");
     }
 }
 
@@ -2878,7 +2974,6 @@ function generateOrganizedData(organizedData, data, batch_name, more_info, elemP
  * 2. Project version which was executed on Build slave.
  * 3. Datetime when the job was submitted.
  * @param data
- * @param batch_report_obj
  */
 function processBatchCompare(data){
     ProjectRegExp = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)/i;
@@ -2915,7 +3010,109 @@ function processBatchCompare(data){
         // Generate left table. All other info will be used for generating metadata info
         processBatchCompareData(organizedData);
         batchReportState.batchReportTableReady = true;
+        batchReportState.loading = false;
     }
+}
+
+/**
+ * This function will organize the data in the format
+ * which will allow us to show comparison between Logs for given batch jobs.
+ * @param data
+ * @param batch_report_obj
+ */
+function processBatchTestLogCompare(data, batch_report_obj){
+    if(data["results"]){
+        // Hide listing of Batch jiobs before showing the batch details.
+        batch_report_obj.showListSelectTable = false;
+        var keys = Object.keys(data["results"]);
+        var left_parent_batch = null;
+        var right_parent_batch = null
+        var table_rows = [];
+
+        if( keys.length === 3){
+            var main_table = document.getElementById("testBatchLogResultsTable");
+            batchName = keys[0];
+            left_arch = data["results"]["left_arch"];
+            right_arch = data["results"]["right_arch"];
+            // First generate all non-header data, once done generate header as the required info about parent batch name will be available after traversing project data.
+            for (project in data["results"][batchName]){
+                if (!left_parent_batch){
+                    left_parent_batch = data["results"][batchName][project]["left_parent_name"];
+                }
+                if(!right_parent_batch){
+                    right_parent_batch = data["results"][batchName][project]["right_parent_name"];
+                }
+                var new_row = generate_batch_log_compare_row(data["results"][batchName][project], project);
+                if (new_row !== null){
+                    table_rows.push(new_row);
+                }
+            }
+
+            main_table.appendChild(generate_batch_log_compare_header(left_parent_batch, right_parent_batch, left_arch, right_arch));
+            for (var i = 0; i < table_rows.length; i++){
+                var blank_row = document.createElement('tr');
+                var blank_cell = blank_row.insertCell(0);
+                blank_cell.setAttribute('colspan', '12');
+                blank_cell.innerHTML = "&nbsp;";
+                main_table.appendChild(blank_row);
+                main_table.appendChild(table_rows[i]);
+            }
+        }
+        batch_report_obj.batchReportTableReady = false;
+        batch_report_obj.batchReportLogRequested = true;
+        batch_report_obj.loading = false;
+    }
+}
+
+function generate_batch_log_compare_row(comparison_data, projectName, shouldColorCode){
+    project_diff = comparison_data["diff"];
+    var columns = [projectName];
+    if (project_diff === undefined){
+        return null;
+    }
+    if (project_diff.error !== undefined){
+        columns.push("Logs not available");
+        columns.push("Logs not available");
+    }else{
+        leftColDiffName = project_diff["leftCol"]["diffName"];
+        rightColDiffName = project_diff["rightCol"]["diffName"];
+        columns.push(project_diff["results"]["diff"][leftColDiffName]);
+        columns.push(project_diff["results"]["diff"][rightColDiffName]);
+    }
+
+    var row = document.createElement('tr');
+    for (var i = 0; i < columns.length; i++){
+        var cell = document.createElement('td');
+        cell.innerHTML = '<p>' + columns[i] + '</p>';
+        if (i % 3 == 0){
+            cell.setAttribute('class', 'mainTitle');
+        }else{
+            class_names = 'batchCompareLogData';
+            if(shouldColorCode && columns[i].search("All tests passed without errors!") == -1 && columns[i] !== 'Logs not available'){
+                class_names = class_names + ' testErr';
+            }
+            cell.setAttribute('class', class_names);
+        }
+        cell.setAttribute('colspan', '4');
+        cell.setAttribute('style', 'vertical-align:top;');
+
+        row.appendChild(cell);
+    }
+    return row;
+}
+
+function generate_batch_log_compare_header(left_parent_batch, right_parent_batch, left_arch, right_arch){
+    var columns = ["Test/Build Project Name", left_parent_batch + '<br>' + left_arch, right_parent_batch + '<br>' + right_arch];
+
+    var row = document.createElement('tr');
+    for (var i = 0; i < columns.length; i++){
+        var cell = document.createElement('th');
+        cell.setAttribute('class', 'batchCompareLogHeader');
+        cell.setAttribute('colspan', '4');
+        cell.innerHTML = columns[i];
+        row.appendChild(cell);
+    }
+    return row;
 }
 
 function populate_batch_compare_header(jobNames){
@@ -3041,7 +3238,7 @@ function populate_batch_compare_data(left_batch, right_batch, main_table){
         table_rows[0].appendChild(project_name);
 
         generateTableData(main_table, left_jobs[i][projectName], table_rows);
-        generateTableData(main_table, left_jobs[i][projectName], table_rows);
+        generateTableData(main_table, right_jobs[i][projectName], table_rows);
 
         var blank_row = document.createElement('tr');
         var blank_cell = blank_row.insertCell(0);
