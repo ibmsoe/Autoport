@@ -127,6 +127,7 @@ class Batch:
                         dataFile = batchTestReportFile.readlines()
                         for projectsReport in dataFile:
                             self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
+                        batchTestReportFile.close()
                         filteredList.append(
                             self.parseBatchReportList(
                                 os.path.join(putdir,filename,batchFilePath),
@@ -134,7 +135,7 @@ class Batch:
                                 putdir
                             )
                         )
-                    except Exception, ex:
+                    except Exception as ex:
                         logger.warning("listGSABatchReports Error: " + str(ex))
         except AttributeError:
             assert(False), "Connection error to archive storage.  Use settings menu to configure!"
@@ -216,7 +217,7 @@ class Batch:
                 "build_log_count": buildAndTestLogs['build_logs'] or 'Not Available',
                 "test_log_count": buildAndTestLogs['test_logs'] or 'Not Available'
             })
-        except Exception, ex:
+        except Exception as ex:
             logger.warning("parseBatchReportList Error: " + str(ex))
         finally:
             if isinstance(batchFile, file):
@@ -425,7 +426,7 @@ class Batch:
                                 projects[filename] = []
                             projects[filename].extend([i.strip() for i in batchFile.readlines()])
                             batchFile.close()
-        except Exception, ex:
+        except Exception as ex:
             logger.warning("getLocalProjectForGivenBatch error: " +  str(ex))
 
         return projects
