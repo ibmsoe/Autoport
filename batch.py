@@ -369,7 +369,12 @@ class Batch:
             except KeyError:
                 package['build']['artifacts'] = ""
 
-        return { "status":"ok", "fileBuf":fileBuf }
+            try:
+                artifacts = package['build']['primaryLang']
+            except KeyError:
+                package['build']['primaryLang'] = ""
+
+        return { "status": "ok", "fileBuf": fileBuf }
 
     # Closing the SSHClient
     def disconnect(self):

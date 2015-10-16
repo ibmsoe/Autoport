@@ -101,7 +101,7 @@ class ResultParser:
             with codecs.open(filedir+'/meta.arti', encoding='utf-8', mode='rb') as f:
                 metadata = json.load(f)
                 f.close
-            buildsys = metadata.get('Build System','')
+            buildsys = metadata.get('Primary Language','')
             if buildsys == 'Python':
                 result.append(self.PythonBuildSummary(filedir+'/test_result.arti'))
             elif buildsys == 'JavaScript':

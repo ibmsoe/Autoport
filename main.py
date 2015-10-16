@@ -552,7 +552,7 @@ def uploadBatchFile():
         f = open(openPath, 'wb')
         f.write(fileStr)
         f.close()
-    except Exception, ex:
+    except Exception as ex:
         print "Error: ", str(ex)
 
     # Open Batch details file and update the owner to Logged in GSA user or Anonymous.
@@ -565,7 +565,7 @@ def uploadBatchFile():
             batch_info['config']['owner'] = globals.configUsername or 'Anonymous'
             batch_detail_file = open(openPath, 'w')
             batch_detail_file.write(json.dumps(batch_info, indent=4, sort_keys=True))
-    except Exception, ex:
+    except Exception as ex:
         print "Error: ", str(ex)
     finally:
         # Close the files if the were opened in try block
@@ -603,9 +603,8 @@ def uploadBatchFile():
     return json.jsonify(status="ok")
 
 # Common routine for createJob and runBatchJob
-# TODO - added buildSystem = "NA" for batch jobs, need to add buildSystem to batch files
 def createJob_common(time, uid, id, tag, node, javaType,
-                     selectedBuild, selectedTest, selectedEnv, artifacts, buildSystem = "NA"):
+                     selectedBuild, selectedTest, selectedEnv, artifacts, primaryLang):
 
     # Get repository
     repo = globals.cache.getRepo(id)
@@ -625,10 +624,7 @@ def createJob_common(time, uid, id, tag, node, javaType,
     xml_github_url = root.find("./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
     xml_git_url = root.find("./scm/userRemoteConfigs/hudson.plugins.git.UserRemoteConfig/url")
     xml_default_branch = root.find("./scm/branches/hudson.plugins.git.BranchSpec/name")
-    xml_build_command = root.find("./builders/hudson.tasks.Shell/command")
-    xml_test_command = root.find("./builders/org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder/buildStep/command")
     xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
-    xml_artifacts = root.find("./publishers/hudson.tasks.ArtifactArchiver/artifacts")
     xml_node = root.find("./assignedNode")
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
@@ -654,27 +650,31 @@ def createJob_common(time, uid, id, tag, node, javaType,
     jobFolder = jobName + "." + timestr
 
     # This is the build shell script that is invoked on the build slave
-    buildCmds  = "echo autoport-env: \'" + selectedEnv + "\' > build_result.arti; "
-    buildCmds += "echo autoport-cmd: \'" + selectedBuild + "\' >> build_result.arti; "
-    buildCmds += selectedBuild
+    buildCmd = selectedBuild
 
     # This is the test shell script that is invoked on the build slave
-    testCmds  = "echo autoport-env = \'" + selectedEnv + "\' > test_result.arti; "
-    testCmds += "echo autoport-cmd = \'" + selectedTest + "\' >> test_result.arti; "
-    testCmds += selectedTest
+    testCmd = selectedTest
 
-    xml_build_command.text = buildCmds
-    xml_test_command.text = testCmds
+    # This is the install shell script that is invoked on the build slave
+    installCmd = ""                      # TODO: implement packaging and dependency resolution in batch files
+
     xml_env_command.text = selectedEnv
 
     # In addition to whatever other environmental variables I need to inject
     # I should add whether to pick IBM Java or Open JDK
     xml_env_command.text += javaType + "\n"
-    xml_artifacts.text = artifacts
 
     # Job metadata as passed to jenkins
     jobMetadataName = "meta.arti"
-    jobMetadata = "{ \"Package\": \"" + jobName + "\", \"Version\": \"" + tag + "\", \"Build System\":\"" + buildSystem + "\", \"Architecture\": \"" + node + "\", \"Environment\": \"" + xml_env_command.text + "\", \"Date\": \"" + timestr + "\"}"
+    jobMetadata = "{ \"Package\": \"" + jobName + "\",\
+                     \"Version\": \"" + tag + "\",\
+                     \"Primary Language\": \"" + primaryLang + "\",\
+                     \"Environment\": \"" + selectedEnv + "\",\
+                     \"Build Command\": \"" + buildCmd + "\",\
+                     \"Test Command\": \"" + testCmd + "\",\
+                     \"Install Command\": \"" + installCmd + "\",\
+                     \"Architecture\": \"" + node + "\",\
+                     \"Date\": \"" + timestr + "\" }"
 
     # add parameters information
     i = 1
@@ -683,6 +683,14 @@ def createJob_common(time, uid, id, tag, node, javaType,
             param.text = jobMetadataName
         elif i == 2:
             param.text = jobMetadata
+        elif i == 3:
+            param.text = selectedEnv
+        elif i == 4:
+            param.text = buildCmd
+        elif i == 5:
+            param.text = testCmd
+        elif i == 6:
+            param.text = installCmd
         i += 1
 
     # Add header to the config
@@ -727,13 +735,13 @@ def createJob_common(time, uid, id, tag, node, javaType,
         [globals.threadPool.putRequest(req) for req in threadRequests]
 
         # Stays on the same page, after creating a new jenkins job.
-        return { 'status':"ok", 'sjobUrl':startJobUrl, 'hjobUrl':homeJobUrl,
-                 'jobFolder':jobFolder, 'artifactFolder': artifactFolder }
+        return { 'status': "ok", 'sjobUrl': startJobUrl, 'hjobUrl': homeJobUrl,
+                 'jobFolder': jobFolder, 'artifactFolder': artifactFolder }
 
     if r.status_code == 400:
-        return { 'status':"failure", 'error':"jenkins HTTP error job exists : " + jobName, 'rstatus':r.status_code }
+        return { 'status': "failure", 'error': "jenkins HTTP error job exists : " + jobName, 'rstatus': r.status_code }
 
-    return { 'status':"failure", 'error':"jenkins HTTP error " + str(r.status_code), 'rstatus':r.status_code }
+    return { 'status': "failure", 'error': "jenkins HTTP error " + str(r.status_code), 'rstatus': r.status_code }
 
 
 # Create Job - takes a repo id, repo tag, and build node and creates a Jenkins job for it
@@ -749,7 +757,7 @@ def createJob(i_id = None,
               i_selectedTest = None,
               i_selectedEnv = None,
               i_artifacts = None,
-              i_buildSystem = None,
+              i_primaryLang = None,
               i_isBatchJob = False):
 
     # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
@@ -840,15 +848,15 @@ def createJob(i_id = None,
 
     # Get artifacts info
     try:
-        buildSystem = request.form["buildSystem"]
+        primaryLang = request.form["primaryLang"]
     except KeyError:
-        if i_buildSystem != None:
-            buildSystem = i_buildSystem
+        if i_primaryLang != None:
+            primaryLang = i_primaryLang
         else:
-            return json.jsonify(status="failure", error="missing build system"), 400
+            return json.jsonify(status="failure", error="missing primary language"), 400
 
     rc = createJob_common(localtime(), uid, id, tag, node, javaType, selectedBuild,
-                          selectedTest, selectedEnv, artifacts, buildSystem)
+                          selectedTest, selectedEnv, artifacts, primaryLang)
 
     try:
         rcstatus = rc['status']
@@ -1044,7 +1052,8 @@ def runBatchFile ():
                       package['build']['selectedBuild'],
                       package['build']['selectedTest'],
                       package['build']['selectedEnv'],
-                      package['build']['artifacts'])
+                      package['build']['artifacts'],
+                      package['build']['primaryLang'])
             submittedJob = True
 
             try:
@@ -2123,10 +2132,6 @@ def getTestResults():
     except BaseException as e:
         return json.jsonify(status="failure", error=str(e)), 500
 
-    # We may be able to do without meta.arti as most of the data can be derived from
-    # the project name itself, but it may provide an indication that a build was successful
-    # as this file is produced by Jenkins as opposed to the buildAnalyzer
-
     lf = open(leftdir+"/meta.arti")
     rf = open(rightdir+"/meta.arti")
     leftmeta = json.load(lf)
@@ -2258,9 +2263,6 @@ def getTestDetail():
         except BaseException as e:
             return json.jsonify(status="failure", error=str(e)), 500
 
-        # We may be able to do without meta.arti as most of the data can be derived from
-        # the project name itself, but it may provide an indication that a build was successful
-        # as this file is produced by Jenkins as opposed to the buildAnalyzer
         f = open(resultDir+"/meta.arti")
         meta = json.load(f)
         f.close()

@@ -4,28 +4,50 @@
   <description></description>
   <keepDependencies>false</keepDependencies>
   <properties>
-    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.9.1">
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.12.0">
       <projectUrl></projectUrl>
     </com.coravy.hudson.plugins.github.GithubProjectProperty>
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>
           <name>META_NAME</name>
-          <description/>
-          <defaultValue/>
+          <description>Job profile file name</description>
+          <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>META_CONTENTS</name>
-          <description/>
-          <defaultValue/>
+          <description>Job parameters</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CMDENV</name>
+          <description>Calculated environment variables</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CMD1</name>
+          <description>Command to build the project</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CMD2</name>
+          <description>Command to test the project</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CMD3</name>
+          <description>Command to install the project to resolve a dependency in a batch file or a command to tar the project for packaging</description>
+          <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
-    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.21">
+    <hudson.plugins.libvirt.BeforeJobSnapshotJobProperty plugin="libvirt-slave@1.8.5"/>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
       <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
     </com.sonyericsson.rebuild.RebuildSettings>
   </properties>
-  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.2.2">
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.4.0">
     <configVersion>2</configVersion>
     <userRemoteConfigs>
       <hudson.plugins.git.UserRemoteConfig>
@@ -49,49 +71,65 @@
   <triggers/>
   <concurrentBuild>false</concurrentBuild>
   <builders>
-    <hudson.tasks.Shell>
-      <command>
-      </command>
-    </hudson.tasks.Shell>
-    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="conditional-buildstep@1.3.3">
-      <condition class="org.jenkins_ci.plugins.run_condition.core.StatusCondition" plugin="run-condition@1.0">
-        <worstResult>
-          <name>SUCCESS</name>
-          <ordinal>0</ordinal>
-          <color>BLUE</color>
-          <completeBuild>true</completeBuild>
-        </worstResult>
-        <bestResult>
-          <name>SUCCESS</name>
-          <ordinal>0</ordinal>
-          <color>BLUE</color>
-          <completeBuild>true</completeBuild>
-        </bestResult>
-      </condition>
-      <buildStep class="hudson.tasks.Shell">
-        <command/>
-      </buildStep>
+    <org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder plugin="conditional-buildstep@1.3.3">
       <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.0"/>
-    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
-    <hudson.tasks.Shell>
-      <command>echo $META_CONTENTS > $META_NAME</command>
-    </hudson.tasks.Shell>
+      <runCondition class="org.jenkins_ci.plugins.run_condition.core.AlwaysRun" plugin="run-condition@1.0"/>
+      <conditionalbuilders>
+        <hudson.tasks.Shell>
+          <command>echo $META_CONTENTS &gt; $META_NAME</command>
+        </hudson.tasks.Shell>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+              if [ -n &quot;$CMD1&quot; ]; then
+                 echo &quot;Autoport PATH: $PATH&quot; &gt; build_result.arti;
+                 echo &quot;Autoport ENV:  $CMDENV&quot; &gt;&gt; build_result.arti;
+                 echo &quot;Autoport cmd:  $CMD1&quot; &gt;&gt; build_result.arti;
+                 echo &quot;&quot; &gt;&gt; build_result.arti;
+                 echo $CMD1 | tee autoport_build_cmd;
+                 chmod a+x autoport_build_cmd;
+                 ./autoport_build_cmd;
+              fi</command>
+        </hudson.tasks.Shell>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+              if [ -n &quot;$CMD2&quot; ]; then
+                 echo &quot;Autoport PATH: $PATH&quot; &gt; test_result.arti;
+                 echo &quot;Autoport ENV:  $CMDENV&quot; &gt;&gt; test_result.arti;
+                 echo &quot;Autoport cmd:  $CMD2&quot; &gt;&gt; test_result.arti;
+                 echo &quot;&quot; &gt;&gt; test_result.arti;
+                 echo $CMD2 | tee autoport_test_cmd;
+                 chmod a+x autoport_test_cmd;
+                 ./autoport_test_cmd;
+              fi</command>
+        </hudson.tasks.Shell>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+              if [ -n &quot;$CMD3&quot; ]; then
+                 echo &quot;Autoport PATH: $PATH&quot; &gt; install_result.arti;
+                 echo &quot;Autoport ENV:  $CMDENV&quot; &gt;&gt; install_result.arti;
+                 echo &quot;Autoport cmd:  $CMD3&quot; &gt;&gt; install_result.arti;
+                 echo &quot;&quot; &gt;&gt; install_result.arti;
+                 echo $CMD3 | tee autoport_install_cmd;
+                 chmod a+x autoport_install_cmd;
+                 ./autoport_install_cmd;
+              fi</command>
+        </hudson.tasks.Shell>
+      </conditionalbuilders>
+    </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
-      <artifacts>
-      </artifacts>
-      <latestOnly>false</latestOnly>
+      <artifacts>*.arti</artifacts>
       <allowEmptyArchive>false</allowEmptyArchive>
       <onlyIfSuccessful>false</onlyIfSuccessful>
+      <fingerprint>false</fingerprint>
       <defaultExcludes>true</defaultExcludes>
     </hudson.tasks.ArtifactArchiver>
   </publishers>
   <buildWrappers>
-    <EnvInjectBuildWrapper plugin="envinject@1.89">
+    <EnvInjectBuildWrapper plugin="envinject@1.91.3">
       <info>
-        <propertiesContent>
-        </propertiesContent>
+        <propertiesContent></propertiesContent>
         <loadFilesFromMaster>false</loadFilesFromMaster>
       </info>
     </EnvInjectBuildWrapper>

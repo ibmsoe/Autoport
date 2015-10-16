@@ -15,9 +15,10 @@ def determineProgress ():
     success = 0
     unstable = 0
     failure = 0
+    aborted = 0
     # projects that have never been built or are in the process of being built
     neverBeenBuilt = 0
-    progressResults = [neverBeenBuilt, failure, unstable, success]
+    progressResults = [neverBeenBuilt, failure, unstable, success, aborted]
 
     for row in all_jobs:
         if   row['lastBuild'] == None:
@@ -30,6 +31,8 @@ def determineProgress ():
             progressResults[2] += 1
         elif row['lastBuild']['result'] == 'SUCCESS':
             progressResults[3] += 1
+        elif row['lastBuild']['result'] == 'ABORTED':
+            progressResults[4] += 1
         else:
             print "Unknown Status Encountered " + str(row['lastBuild'])
 
@@ -41,8 +44,9 @@ def determineProgress ():
     failureP = progressResults[1] * 100 / total
     unstableP = progressResults[2] * 100 / total
     successP = progressResults[3] * 100 / total
+    abortedP = progressResults[4] * 100 / total
 
-    percentages = [neverBeenBuiltP, failureP, unstableP, successP]
+    percentages = [neverBeenBuiltP, failureP, unstableP, successP, abortedP]
 
     results = [progressResults, percentages]
 
