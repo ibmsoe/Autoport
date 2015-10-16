@@ -50,7 +50,7 @@ maxResults = 10
 catalog = Catalog()
 batch = Batch()
 project = Project(catalog)
-sharedData = SharedData(urlparse(globals.jenkinsUrl).hostname)
+sharedData = SharedData()
 chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
 resParser = ResultParser()
 
@@ -232,6 +232,7 @@ def settings():
                             globals.pathForTestResults, globals.localPathForTestResults)
             batch.connect(globals.hostname, globals.port,
                           globals.configUsername, globals.configPassword)
+            sharedData.connect(urlparse(globals.jenkinsUrl).hostname, userName = globals.configUsername)
     except Exception as e :
         batch.disconnect()
         return json.jsonify(status="failure", gsaConnected=globals.gsaConnected, error=str(e))
@@ -2352,6 +2353,7 @@ def autoportInitialisation():
     # for performing initial setup of the Jenkins master.  Only required items
     # should be performed here.  On error, messages are printed to the console
     # and assert(False) is invoked to provide the debug context.
+    sharedData.connect(urlparse(globals.jenkinsUrl).hostname)
     sharedData.uploadChefData()
     if globals.hostname and globals.configUsername and globals.configPassword :
         catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)

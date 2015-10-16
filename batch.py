@@ -354,6 +354,9 @@ class Batch:
                     return { "error": "batch file invalid project " + name }
                 package['build'] = inferBuildSteps(globals.cache.getDir(repo), repo)
 
+            if "selectedBuild" not in package['build']:
+                package['build']['selectedBuild'] = ""
+
             try:
                 selectedTest = package['build']['selectedTest']
             except KeyError:

@@ -92,12 +92,13 @@ from collections import OrderedDict
 from contextlib import closing
 
 class SharedData:
-    def __init__(self, jenkinsHost,
+    def connect(self, jenkinsHost,
             jenkinsUser="root",
             jenkinsKey=globals.configJenkinsKey,
             jenkinsHome="/home/jenkins",
             sharedDataDir="/var/opt/autoport/",
-            repoPathPrefix="/var/www/autoport_repo"):
+            repoPathPrefix="/var/www/autoport_repo",
+            userName=globals.configUsername):
         self.__jenkinsHost = jenkinsHost
         self.__jenkinsUser = jenkinsUser
         self.__jenkinsKey = jenkinsKey
@@ -107,7 +108,7 @@ class SharedData:
         self.__localDataDir = globals.localPathForConfig
         self.__localPackageDir = globals.localPathForPackages
         self.__localHostName = globals.localHostName
-        self.__userName = globals.configUsername
+        self.__userName = userName 
 
         logger.info("Connecting to jenkins master " + jenkinsHost)
 
