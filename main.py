@@ -1003,7 +1003,7 @@ def runBatchFile ():
         except KeyError:
             return json.jsonify(status="failure", error=fileBuf['error']), 400
 
-        time = localtime()
+        submissionTime = localtime()
 
         # Randomly generate a batch job UID to append to the job name to provide a grouping
         # for all jobs in the batch file for reporting purposes.
@@ -1026,8 +1026,9 @@ def runBatchFile ():
                 batchDirName,
                 ntpath.basename(batchNameOnly),
                 uid,
-                createdTime
+                strftime("%Y-%m-%d-h%H-m%M-s%S", submissionTime)
             )
+
             if not os.path.exists(batchDirName):
                 os.makedirs(batchDirName)
         except ValueError:
@@ -1044,7 +1045,7 @@ def runBatchFile ():
             if selectedBuild == "":
                 continue
 
-            createJob_results = createJob_common(time,
+            createJob_results = createJob_common(localtime(),
                       uid,
                       package['id'],
                       package['tag'],
@@ -1153,7 +1154,7 @@ def archiveBatchReports():
             projectsArr = f.read().strip('\n').split('\n')
             f.close()
             status, errors, alreadyThere = catalog.archiveResults(projectsArr)
-            print "status=%s errors=%s" % (status, errors)
+            logger.info("status=%s errors=%s" % (status, errors))
             if status == "failure":
                 return json.jsonify(status="failure", error=errors), 400
             archiveRes = batch.archiveBatchReports(report)

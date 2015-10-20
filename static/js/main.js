@@ -557,33 +557,43 @@ var batchReportState = {
         batchReportState.loading = false;
     },
     history: function() {
+        batchReportState.loading = true;
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+        var notReadyJobList = [];
         if (selectedBatchJobs.length > 0){
             var query = {};
             for (var i = 0; i < selectedBatchJobs.length; i ++) {
-                if (query[selectedBatchJobs[i].repo] === undefined){
-                    query[selectedBatchJobs[i].repo] = [];
-                }
-                query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
+                if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[i])){
+                    notReadyJobList.push(selectedBatchJobs[i]);
+                    continue;
+                }else{
+                    }if (query[selectedBatchJobs[i].repo] === undefined){
+                        query[selectedBatchJobs[i].repo] = [];
+                    }
+                    query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
             }
-            batchReportState.loading = true;
-            $.ajax({
-                type: "POST",
-                contentType: "application/json; charset=utf-8",
-                url: "getBatchTestDetails",
-                data: JSON.stringify({
-                    batchList: query
-                }),
-                success: function(data){
+            if (selectedBatchJobs.length > notReadyJobList.length){
+                $.ajax({
+                    type: "POST",
+                    contentType: "application/json; charset=utf-8",
+                    url: "getBatchTestDetails",
+                    data: JSON.stringify({
+                        batchList: query
+                    }),
+                    success: function(data){
+                        processBatchHistory(data, batchReportState);
+                    },
+                    dataType:'json'
+                }).fail(function(data){
                     processBatchHistory(data, batchReportState);
-                },
-                dataType:'json'
-            }).fail(function(data){
-                processBatchHistory(data, batchReportState);
-            });
-
+                });
+            }else{
+                showMessage("Info: ", "No build or test logs are presently available");
+                batchReportState.loading = false;
+            }
         } else {
               showMessage("Error: ", "At Least one Batch job needs to be selected.");
+              batchReportState.loading = false;
         }
     },
     compareBatchBuildLog: function(){
@@ -595,7 +605,9 @@ var batchReportState = {
 
         // Get list of all selected batch test runs for fetchinf details.
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-        if (selectedBatchJobs.length == 2){
+        if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[0]) || !checkIfBuildAndTestLogCreated(selectedBatchJobs[1])){
+            showMessage("Info: ", "No build or test logs are presently available");
+        }else if (selectedBatchJobs.length == 2){
             // fetch the Batch details and handle it appropriately.
             $.ajax({
                 type: "POST",
@@ -617,6 +629,7 @@ var batchReportState = {
             });
         }else{
             showMessage("Error: ", "Two Batch job from the list needs to be selected.");
+            batchReportState.loading = false;
         }
     },
     compareBatchTestLog: function(){
@@ -628,7 +641,10 @@ var batchReportState = {
 
         // Get list of all selected batch test runs for fetchinf details.
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-        if (selectedBatchJobs.length == 2){
+        if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[0]) || !checkIfBuildAndTestLogCreated(selectedBatchJobs[1])){
+            showMessage("Info: ", "No build or test logs are presently available");
+            batchReportState.loading = false;
+        }else if (selectedBatchJobs.length == 2){
             // fetch the Batch details and handle it appropriately.
             $.ajax({
                 type: "POST",
@@ -650,6 +666,7 @@ var batchReportState = {
             });
         }else{
             showMessage("Error: ", "Two Batch job from the list needs to be selected.");
+            batchReportState.loading = false;
         }
     },
     compare: function(){
@@ -659,7 +676,10 @@ var batchReportState = {
 
         // Get list of all selected batch test runs for fetchinf details.
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-        if (selectedBatchJobs.length > 0){
+        if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[0]) || !checkIfBuildAndTestLogCreated(selectedBatchJobs[1])){
+            showMessage("Info: ", "No build or test logs are presently available");
+            batchReportState.loading = false;
+        }else if (selectedBatchJobs.length == 2){
             var query = {};
             // Generate key-value pair with batch name and repository location, repository being the key of dictionary
             for (var i = 0; i < selectedBatchJobs.length; i ++) {
@@ -688,6 +708,7 @@ var batchReportState = {
             });
         }else{
             showMessage("Error: ", "Two Batch job from the list needs to be selected.");
+            batchReportState.loading = false;
         }
     },
     reset: function() {
@@ -717,14 +738,21 @@ var batchReportState = {
 
         // Get list of all selected batch test runs for fetchinf details.
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-        if (selectedBatchJobs.length > 0){
+        if( !checkIfBuildAndTestLogCreated(selectedBatchJobs)){
+            showMessage("Info: ", "No build or test logs are presently available");
+        }else if (selectedBatchJobs.length > 0){
             var query = {};
+            var notReadyJobList = [];
             // Generate key-value pair with batch name and repository location, repository being the key of dictionary
             for (var i = 0; i < selectedBatchJobs.length; i ++) {
-                if (query[selectedBatchJobs[i].repo] === undefined){
-                    query[selectedBatchJobs[i].repo] = [];
-                }
-                query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
+                if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[i])){
+                    notReadyJobList.push(selectedBatchJobs[i]);
+                    continue;
+                }else{
+                    }if (query[selectedBatchJobs[i].repo] === undefined){
+                        query[selectedBatchJobs[i].repo] = [];
+                    }
+                    query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
             }
 
             // fetch the Batch details and handle it appropriately.
@@ -744,6 +772,7 @@ var batchReportState = {
             });
         } else {
             showMessage("Error: ", "At Least one Batch job needs to be selected.");
+            batchReportState.loading = false;
         }
     },
     archive: function(ev, el){
@@ -751,8 +780,10 @@ var batchReportState = {
         var sel = [];
         var query = {};
         for (var i = 0; i < selectedBatchReports.length; i ++) {
-            sel[i] = selectedBatchReports[i].filename;
-            query[sel[i]] = selectedBatchReports[i].repo;
+            if (selectedBatchReports[i].repo == 'local'){
+                sel[i] = selectedBatchReports[i].filename;
+                query[sel[i]] = selectedBatchReports[i].repo;
+            }
         }
         batchReportState.loading = true;
         $.ajax({
@@ -2012,20 +2043,25 @@ function processBatchDetails(data) {
 function processBatchHistory(data){
     ProjectRegExp = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)/i;
     if(data["results"]){
-         batchNames = Object.keys(data["results"]);
+        var batchNames = Object.keys(data["results"]);
         var batchReportTestHistory = [];
         var job_list = data["results"];
+        var all_jobs = [];
+
         for (var j = 0; j < batchNames.length; j++){
-           if(batchNames[j]=='status'){
-                continue;
-            }
-            var splitted_job_info = ProjectRegExp.exec(job_list[batchNames[j]][0]["job"]);
+          if (batchNames[j] !== 'status'){
+            all_jobs = all_jobs.concat(data.results[batchNames[j]]);
+          }
+        }
+
+        for (var j = 0; j < all_jobs.length; j++){
+            var splitted_job_info = ProjectRegExp.exec(all_jobs[j]["job"]);
             var arch = splitted_job_info[3];
             var name = splitted_job_info[4];
             var version = splitted_job_info[5];
             var timestamp = splitted_job_info[6];
-            var results = job_list[batchNames[j]][0]["results"];
-            batchReportTestHistory[timestamp] = {"arch":arch, "name":name, "version":version,"results":results, "job":job_list[batchNames[j]][0]["job"]};
+            var results = all_jobs[j]["results"];
+            batchReportTestHistory[timestamp] = {"arch":arch, "name":name, "version":version,"results":results, "job":all_jobs[j]["job"]};
         }
         var keys = Object.keys(batchReportTestHistory);
         keys.sort(function(a,b){
@@ -2854,11 +2890,11 @@ function toggleBatchReportButtons(){
     }
 
     for(var i = 0; i < selectedProjects.length; i++){
-        if(selectedProjects[i].repo == 'gsa'){
-            $("#batch_report_archive").addClass("disabled");
+        if(selectedProjects[i].repo == 'local'){
+            $("#batch_report_archive").removeClass("disabled");
             break;
         }
-        $("#batch_report_archive").removeClass("disabled");
+        $("#batch_report_archive").addClass("disabled");
     }
 }
 
@@ -3001,7 +3037,7 @@ function processBatchCompare(data){
                         arch = splitted_job_info[3];
                         name = splitted_job_info[4];
                         version = splitted_job_info[5];
-                        timestamp = splitted_job_info[6];
+                        timestamp = splitted_job_info[6].replace('-m', ':').replace('-s', ':').replace('-h', ' ');
                         results = job_list[i]["results"];
                         var more_info = [name, arch, version, timestamp, results];
                         // Prepare data for comparison between two batch jobs.
@@ -3140,19 +3176,19 @@ function generateTableData(main_table, project_info, table_rows){
 
     var project_arch = document.createElement('td');
     project_arch.setAttribute('colspan', '2');
-    var project_arch_text = document.createTextNode(project_info.arch);
+    var project_arch_text = document.createTextNode((project_info)?project_info.arch:"Not Available");
     project_arch.appendChild(project_arch_text);
     table_rows[0].appendChild(project_arch);
 
     var project_version = document.createElement('td');
     project_version.setAttribute('colspan', '2');
-    var project_version_text = document.createTextNode(project_info.version);
+    var project_version_text = document.createTextNode((project_info)?project_info.version:"Not Available");
     project_version.appendChild(project_version_text);
     table_rows[0].appendChild(project_version);
 
     var project_timestamp = document.createElement('td');
     project_timestamp.setAttribute('colspan', '4');
-    var project_timestamp_text = document.createTextNode(project_info.timestamp);
+    var project_timestamp_text = document.createTextNode((project_info)?project_info.timestamp:"Not Available");
     project_timestamp.appendChild(project_timestamp_text);
     table_rows[1].appendChild(project_timestamp);
 
@@ -3176,11 +3212,11 @@ function generateTableData(main_table, project_info, table_rows){
     table_rows[2].appendChild(project_result_s);
 
     // Now Finally add Result data
-    if(project_info.results.length > 0){
-        var project_result_data_t_value = project_info.results.total;
-        var project_result_data_f_value = project_info.results.failures;
-        var project_result_data_e_value = project_info.results.errors;
-        var project_result_data_s_value = project_info.results.skipped;
+    if(project_info && project_info.results && project_info.results.length > 0){
+        var project_result_data_t_value = (project_info && project_info.results)?project_info.results.total:0;
+        var project_result_data_f_value = (project_info && project_info.results)?project_info.results.failures:0;
+        var project_result_data_e_value = (project_info && project_info.results)?project_info.results.errors:0;
+        var project_result_data_s_value = (project_info && project_info.results)?project_info.results.skipped:0;
     }
 
     var project_result_data_t = document.createElement('td');
@@ -3295,6 +3331,10 @@ function processBatchCompareData(data) {
     var selectedProjects = $('#batchReportListSelectTable').bootstrapTable('getSelections');
     var batchName =  (selectedProjects.length > 0)?selectedProjects[0].batch_name:'';
     $("#batchHeaderPreText").html('Job comparison for Batch "'+ batchName + '": ');
+}
+
+function checkIfBuildAndTestLogCreated(selectedRow){
+    return !(selectedRow.build_log_count == "Not Available" || selectedRow.test_log_count == "Not Available");
 }
 
 $(document).ready(function() {

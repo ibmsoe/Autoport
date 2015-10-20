@@ -7,7 +7,7 @@ import ntpath
 from log import logger
 from buildAnalyzer import inferBuildSteps
 from stat import ST_SIZE, ST_MTIME
-from time import localtime, asctime
+from time import localtime, asctime, strftime, strptime
 from flask import json
 from project import Project
 import shutil
@@ -199,6 +199,10 @@ class Batch:
         try:
             batchFile = open(filename)
             batchName, batchUID, batchSubmissionTime = ntpath.basename(filename).split('.')
+            # knowing that date format will be "%Y-%m-%d-h%H-m%M-s%S"
+            # Converting it to "%Y-%m-%d-%H-%M-%S"
+            batchSubmissionTimeObj = strptime(batchSubmissionTime, "%Y-%m-%d-h%H-m%M-s%S")
+            batchSubmissionTime = strftime("%Y-%m-%d %H:%M:%S", batchSubmissionTimeObj)
             jobNames = batchFile.readlines()
             buildAndTestLogs = self.getLocalBuildAndTestLogs(jobNames, location, tmpDir)
             project_count = len(jobNames)
@@ -481,7 +485,7 @@ class Batch:
 
         try:
             self.ftp_client.mkdir(batchReportDir)
-            self.ftp_client.put(report,batchReportDir + '/' + batchReportName)
+            self.ftp_client.put(report, batchReportDir + '/' + batchReportName)
             # Cleaning-up local batch_test_report after archival
             shutil.rmtree(os.path.dirname(report))
             return "Success"
