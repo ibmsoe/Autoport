@@ -33,11 +33,11 @@ class Project:
         try:
             resultDir = self.catalog.getResults(projectName, repo)
             try:
-                if (os.path.isfile(resultDir+"/test_result.arti")):
+                if resultDir and os.path.isfile(resultDir+"/test_result.arti"):
                     res = self.resParser.MavenBuildSummary(resultDir+"/test_result.arti")
-            except Exception, ex:
+            except Exception as ex:
                 logger.debug("In getTestDetail, Project %s failed with error \"%s\"" % (projectName, str(ex)))
-        except Exception, ex:
+        except Exception as ex:
             logger.debug("In getTestDetail, repo=%s file=%s/test_result.arti file error " % (repo, projectName))
             logger.debug("Error \"%s\"" % (str(ex)))
 
@@ -50,7 +50,7 @@ class Project:
                 meta_file = open(resultDir+"/meta.arti")
                 meta = json.load(meta_file)
                 meta_file.close()
-            except Exception, ex:
+            except Exception as ex:
                 # If meta.arti is not found just continue with what is available.
                 logger.debug("In getTestDetail, repo=%s file=%s/meta.arti file error " % (repo, projectName))
                 logger.debug("Error \"%s\"" % (str(ex)))

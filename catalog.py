@@ -66,8 +66,8 @@ class Catalog:
             logger.warning("SSH connection error to archive storage")
             logger.warning("You may need to authenticate.  Check networking!")
         except IOError as e:
-            logger.warning(str(e))
             logger.warning("Please ensure that the archive hostname is correct in the settings menu!")
+            logger.warning(str(e))
 
     def listJobResults(self, repoType, filt):
         results = []
@@ -80,8 +80,9 @@ class Catalog:
             if repoType == "gsa" or repoType == "all":
                 jobs = jobs + self.listGSAJobResults(filt)
         except Exception as e:
-            logger.warning(str(e))
-            assert(False), str(e)
+            msg = "ListJobResult: " + str(e)                   # Usually a missing test_result.arti
+            logger.debug(msg)
+            assert(False), msg
 
         for jobDesc in jobs:
              job = jobDesc[0]
@@ -141,8 +142,9 @@ class Catalog:
                 if filt in item.lower() or filt == "":
                     filteredList.append([item, "gsa"])
         except IOError as e:
-            log.warning(str(e))
-            assert(False), str(e)
+            msg = "listGSAJobResults: " + str(e)
+            logger.warning(msg)
+            assert(False), msg
         except AttributeError as e:
             msg = "Connection error to archive storage.  Use settings menu to configure!"
             logger.warning(msg)
@@ -170,12 +172,12 @@ class Catalog:
             self.__tmpdirs.append(putdir)
             return putdir
         except IOError as e:
-            msg = "Exception: " + str(e)
+            msg = "getLocalResults: " + str(e)
             logger.warning(msg)
             return None
-        except Exception,e:
-            msg = "Exception: " + str(e)
-            logger.warning(msg)
+        except Exception as e:
+            msg = "getLocalResults: " + str(e)
+            logger.debug(msg)
             return None
 
     def getGSAResults(self, build):
@@ -197,12 +199,12 @@ class Catalog:
             logger.warning(msg)
             assert(False), msg
         except IOError as e:
-            msg = "Exception: " + str(e)
+            msg = "getGSAResults: " + str(e)
             logger.warning(msg)
             return None
-        except Exception,e:
-            msg = "Exception: " + str(e)
-            logger.warning(msg)
+        except Exception as e:
+            msg = "getGSAResults: " + str(e)
+            logger.debug(msg)
             return None
 
     def archiveResults(self, builds):
@@ -229,7 +231,7 @@ class Catalog:
             try:
                 tmpDir = self.getLocalResults(build)
                 if tmpDir == None:
-                    logger.warning("Can't fetch jenkins copy of " + build)
+                    logger.debug("Can't fetch jenkins copy of " + build)
                     errors.append(build)
                     continue
                 try:

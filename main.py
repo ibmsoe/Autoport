@@ -670,7 +670,7 @@ def createJob_common(time, uid, id, tag, node, javaType,
     jobMetadata = "{ \"Package\": \"" + jobName + "\",\
                      \"Version\": \"" + tag + "\",\
                      \"Primary Language\": \"" + primaryLang + "\",\
-                     \"Environment\": \"" + selectedEnv + "\",\
+                     \"Environment\": \"" + selectedEnv.replace('"', "'") + "\",\
                      \"Build Command\": \"" + buildCmd + "\",\
                      \"Test Command\": \"" + testCmd + "\",\
                      \"Install Command\": \"" + installCmd + "\",\
@@ -2223,7 +2223,7 @@ def getTestHistory():
             if projectName[0] == prj['name'] and projectName[1] == prj['version']:
                 resultDir = catalog.getResults(prj['fullName'], prj['repository'])
                 try:
-                    if (os.path.isfile(resultDir + "/test_result.arti")):
+                    if resultDir and os.path.isfile(resultDir + "/test_result.arti"):
                         prjRes = resParser.MavenBuildSummary(resultDir + "/test_result.arti")
                     else:
                         continue
@@ -2256,7 +2256,7 @@ def getTestDetail():
         repo = projects[projectName]
         resultDir = catalog.getResults(projectName, repo)
         try:
-            if(os.path.isfile(resultDir+"/test_result.arti")):
+            if resultDir and os.path.isfile(resultDir+"/test_result.arti"):
                 res = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
             else:
                 return json.jsonify(status="failure", error="build failed, no test results"), 500
