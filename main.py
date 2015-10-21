@@ -1433,10 +1433,8 @@ def queryNode(node, action):
         [globals.threadPool.putRequest(req) for req in threadRequests]
         globals.threadPool.wait()
 
-        # Get callback data
-        jsonData = callbackData[0]
-
-        return { 'status': "success", 'detail': jsonData }
+        if callbackData:
+            return { 'status': "success", 'detail': callbackData[0]}
 
     if r.status_code == 400:
         return { 'status': "failure", 'error': "Could not create/trigger the Jenkins Node Query job" }
