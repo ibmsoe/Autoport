@@ -29,6 +29,7 @@ var globalState = {
     isSearchTabActive: true,
     isBatchTabActive: false,
     isReportsTabActive: false,
+    isJenkinsTabActive: false,
 
     isHelpDisplayed: true,
 
@@ -43,16 +44,25 @@ var globalState = {
             globalState.isSearchTabActive = true;
             globalState.isBatchTabActive = false;
             globalState.isReportsTabActive = false;
+            globalState.isJenkinsTabActive = false;
         }
         else if (ev.target.id === "batchTab") {
             globalState.isSearchTabActive = false;
             globalState.isBatchTabActive = true;
             globalState.isReportsTabActive = false;
+            globalState.isJenkinsTabActive = false;
         }
         else if (ev.target.id === "reportsTab") {
             globalState.isSearchTabActive = false;
             globalState.isBatchTabActive = false;
             globalState.isReportsTabActive = true;
+            globalState.isJenkinsTabActive = false;
+        }
+        else if (ev.target.id === "jenkinsTab") {
+            globalState.isSearchTabActive = false;
+            globalState.isBatchTabActive = false;
+            globalState.isReportsTabActive = false;
+            globalState.isJenkinsTabActive = true;
         }
     },
     reset: function() {
