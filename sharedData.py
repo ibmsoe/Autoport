@@ -305,7 +305,9 @@ class SharedData:
             # Extracting architecture string if available in archive name
             arch_strings = {
                 'x86_64' : ['x86_64', 'amd64', 'x64', 'x86-64'],
-                'ppc64le' : ['ppc64le', 'ppc64el', 'powerpc64le', 'ppcle64']
+                'ppc64le' : ['ppc64le', 'ppc64el', 'powerpc64le', 'ppcle64'],
+                'aix' : ['aix5.1', 'aix5.2', 'aix5.3', 'aix6.1', 'aix7.1', 'aix7.2'],
+                's390x' : ['s390x']
                }
             pkgArch = ''
             for k,v in arch_strings.iteritems():
