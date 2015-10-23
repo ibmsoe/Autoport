@@ -233,6 +233,8 @@ def settings():
             batch.connect(globals.hostname, globals.port,
                           globals.configUsername, globals.configPassword)
             sharedData.connect(urlparse(globals.jenkinsUrl).hostname, userName = globals.configUsername)
+            mover.resetConnection()
+            mover.start(urlparse(globals.jenkinsUrl).hostname, globals.configJenkinsUsername, globals.configJenkinsKey)
     except Exception as e :
         batch.disconnect()
         return json.jsonify(status="failure", gsaConnected=globals.gsaConnected, error=str(e))
@@ -2354,6 +2356,8 @@ def autoportInitialisation():
     # and assert(False) is invoked to provide the debug context.
     sharedData.connect(urlparse(globals.jenkinsUrl).hostname)
     sharedData.uploadChefData()
+    mover.start(urlparse(globals.jenkinsUrl).hostname, globals.configJenkinsUsername,\
+                globals.configJenkinsKey)
     if globals.hostname and globals.configUsername and globals.configPassword :
         catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
         batch.connect(globals.hostname, globals.port,
