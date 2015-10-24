@@ -190,7 +190,7 @@ class Project:
             'pkgname': rightPkg,
             'pkgver': rightPkgVer,
             'date': rightDate,
-            'diffName': leftName
+            'diffName': rightName
         }
 
         try:
