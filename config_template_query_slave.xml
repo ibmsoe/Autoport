@@ -2,6 +2,12 @@
 <project>
   <actions/>
   <description></description>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>7</daysToKeep>
+    <numToKeep>3000</numToKeep>
+    <artifactDaysToKeep>7</artifactDaysToKeep>
+    <artifactNumToKeep>3000</artifactNumToKeep>
+  </logRotator>
   <keepDependencies>false</keepDependencies>
   <properties>
     <hudson.model.ParametersDefinitionProperty>
@@ -18,6 +24,11 @@
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.libvirt.BeforeJobSnapshotJobProperty plugin="libvirt-slave@1.8.5"/>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
+      <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
+    </com.sonyericsson.rebuild.RebuildSettings>
   </properties>
   <scm class="hudson.scm.NullSCM"/>
   <assignedNode></assignedNode>
@@ -33,10 +44,10 @@
 #!/bin/sh
 #
 # This script will invoke a command on the build server. RHEL and UBUNTU distributions are supported
-# Inputs:   ACTION        "query-os"     Query basic O/S parameters
+# Inputs:   ACTION        &quot;query-os&quot;     Query basic O/S parameters
 #           NODE                         NodeLabel for current node
 #
-# Output:   A json file for "query-os" containing the following fields:
+# Output:   A json file for &quot;query-os&quot; containing the following fields:
 #           distro:                      RHEL or Ubuntu
 #           rel:                         Distribution Release
 #           vers:                        Distribution Version
@@ -49,47 +60,47 @@ set +x
 
 uname -a
 
-echo "NODE: " $NODE
-echo "ACTION: " $ACTION
+echo &quot;NODE: &quot; $NODE
+echo &quot;ACTION: &quot; $ACTION
 
-DISTRIBUTION="UBUNTU"
+DISTRIBUTION=&quot;UBUNTU&quot;
 if [ -e /etc/redhat-release ] ; then
-    DISTRIBUTION="RHEL"
+    DISTRIBUTION=&quot;RHEL&quot;
 fi
 
-echo "DISTRIBUTION: " $DISTRIBUTION
+echo &quot;DISTRIBUTION: &quot; $DISTRIBUTION
 
 case $ACTION in
-    "query-os")
+    &quot;query-os&quot;)
         case $DISTRIBUTION in
-             "RHEL")
+             &quot;RHEL&quot;)
                  cat /etc/redhat-release
                  rpm -qa | grep redhat-release
-                 DISTRO='"distro": "RHEL"'
-                 REL1=`rpm -q --queryformat '%{VERSION}' $(rpm -qa '(redhat)-release(|-server|-workstation|-client|-computenode)')`
-                 echo "REL1"=$REL1
-                 REL=`cat /etc/redhat-release | awk '{print $7}'`
-                 VER=`cat /etc/redhat-release | awk '{print $7}'`
+                 DISTRO=&apos;&quot;distro&quot;: &quot;RHEL&quot;&apos;
+                 REL1=`rpm -q --queryformat &apos;%{VERSION}&apos; $(rpm -qa &apos;(redhat)-release(|-server|-workstation|-client|-computenode)&apos;)`
+                 echo &quot;REL1&quot;=$REL1
+                 REL=`cat /etc/redhat-release | awk &apos;{print $7}&apos;`
+                 VER=`cat /etc/redhat-release | awk &apos;{print $7}&apos;`
                  ;;
-             "UBUNTU")
+             &quot;UBUNTU&quot;)
                  lsb_release -i -r
                  cat /etc/issue
-                 DISTRO='"distro": "UBUNTU"'
-                 REL=`lsb_release -r | awk '{print $2}'`
-                 VER=`cat /etc/issue | awk '{print $2}'`
+                 DISTRO=&apos;&quot;distro&quot;: &quot;UBUNTU&quot;&apos;
+                 REL=`lsb_release -r | awk &apos;{print $2}&apos;`
+                 VER=`cat /etc/issue | awk &apos;{print $2}&apos;`
                  ;;
         esac
 
         ARCH=`uname -m`
         HOSTNAME=`hostname`
-        echo "{$DISTRO, \"rel\": \"$REL\",\"version\": \"$VER\", \"arch\": \"$ARCH\", \"hostname\": \"$HOSTNAME\", \"nodelabel\": \"$NODE\"}" > $ACTION.json
+        echo &quot;{$DISTRO, \&quot;rel\&quot;: \&quot;$REL\&quot;,\&quot;version\&quot;: \&quot;$VER\&quot;, \&quot;arch\&quot;: \&quot;$ARCH\&quot;, \&quot;hostname\&quot;: \&quot;$HOSTNAME\&quot;, \&quot;nodelabel\&quot;: \&quot;$NODE\&quot;}&quot; &gt; $ACTION.json
         ;;
 esac
 
 if [ -e $ACTION.json ] ; then
     cat $ACTION.json
 else
-    echo "No command artifacts produced!"
+    echo &quot;No command artifacts produced!&quot;
 fi
 
 # Adding a user autochef to the node.
@@ -98,8 +109,8 @@ if ! id -u autochef &gt; /dev/null 2&gt;&amp;1; then
 fi
 
 # Adding user autochef to sudoers list.
-if ! sudo grep "autochef ALL=(ALL) NOPASSWD:ALL" /etc/sudoers &gt; /dev/null 2&gt;&amp;1; then
-  echo "autochef ALL=(ALL) NOPASSWD:ALL" | sudo tee -a /etc/sudoers &gt; /dev/null 2&gt;&amp;1;
+if ! sudo grep &quot;autochef ALL=(ALL) NOPASSWD:ALL&quot; /etc/sudoers &gt; /dev/null 2&gt;&amp;1; then
+  echo &quot;autochef ALL=(ALL) NOPASSWD:ALL&quot; | sudo tee -a /etc/sudoers &gt; /dev/null 2&gt;&amp;1;
 fi
 
 exit 0
@@ -109,11 +120,33 @@ exit 0
   <publishers>
     <hudson.tasks.ArtifactArchiver>
       <artifacts>*.json</artifacts>
-      <latestOnly>false</latestOnly>
       <allowEmptyArchive>false</allowEmptyArchive>
       <onlyIfSuccessful>true</onlyIfSuccessful>
+      <fingerprint>false</fingerprint>
       <defaultExcludes>true</defaultExcludes>
     </hudson.tasks.ArtifactArchiver>
+    <hudson.plugins.postbuildtask.PostbuildTask plugin="postbuild-task@1.8">
+      <tasks>
+        <hudson.plugins.postbuildtask.TaskProperties>
+          <logTexts>
+            <hudson.plugins.postbuildtask.LogProperties>
+              <logText>Archiving artifacts</logText>
+              <operator>AND</operator>
+            </hudson.plugins.postbuildtask.LogProperties>
+          </logTexts>
+          <EscalateStatus>false</EscalateStatus>
+          <RunIfJobSuccessful>true</RunIfJobSuccessful>
+          <script>
+#!/bin/bash
+# This script removes the current project from the build slave.   This script is invoked after the results have been archived
+cwd=`pwd`
+cd ..
+pwd
+echo &quot;Removing project: $cwd&quot;
+rm -rf $cwd</script>
+        </hudson.plugins.postbuildtask.TaskProperties>
+      </tasks>
+    </hudson.plugins.postbuildtask.PostbuildTask>
   </publishers>
   <buildWrappers/>
 </project>

@@ -2,6 +2,12 @@
 <project>
   <actions/>
   <description></description>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>7</daysToKeep>
+    <numToKeep>3000</numToKeep>
+    <artifactDaysToKeep>7</artifactDaysToKeep>
+    <artifactNumToKeep>3000</artifactNumToKeep>
+  </logRotator>
   <keepDependencies>false</keepDependencies>
   <properties>
     <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.12.0">
@@ -125,6 +131,53 @@
       <fingerprint>false</fingerprint>
       <defaultExcludes>true</defaultExcludes>
     </hudson.tasks.ArtifactArchiver>
+    <hudson.plugins.postbuildtask.PostbuildTask plugin="postbuild-task@1.8">
+      <tasks>
+        <hudson.plugins.postbuildtask.TaskProperties>
+          <logTexts>
+            <hudson.plugins.postbuildtask.LogProperties>
+              <logText>Archiving artifacts</logText>
+              <operator>AND</operator>
+            </hudson.plugins.postbuildtask.LogProperties>
+          </logTexts>
+          <EscalateStatus>false</EscalateStatus>
+          <RunIfJobSuccessful>true</RunIfJobSuccessful>
+          <script>
+#!/bin/bash
+# This script keeps the most recent KEEPBUILDS number of builds
+
+# For example, if KEEPBUILDS=75 and there are 100 builds, it will
+# remove the oldest 25 builds.
+
+KEEPBUILDS=50
+
+cwd=`pwd`
+cd ..
+pwd
+
+echo &quot;Current directory: $cwd&quot;
+
+numBuilds=`ls -crd * | wc -l`
+buildsToRemove=$((numBuilds-$KEEPBUILDS))
+
+echo &quot;Total number of builds: $numBuilds&quot;
+echo &quot;Number of builds to remove: $buildsToRemove&quot;
+
+if [ $buildsToRemove &gt; 0 ]; then
+    removeList=`ls -crd * | head -n $buildsToRemove`
+
+    echo &quot;----- Start removeList ----- &quot;
+    for i in $removeList
+    do
+        ls -ld $i
+        sudo rm -rf $i
+    done
+    echo &quot;----- End removeList ----- &quot;
+fi
+          </script>
+        </hudson.plugins.postbuildtask.TaskProperties>
+      </tasks>
+    </hudson.plugins.postbuildtask.PostbuildTask>
   </publishers>
   <buildWrappers>
     <EnvInjectBuildWrapper plugin="envinject@1.91.3">
