@@ -3223,10 +3223,10 @@ function generateTableData(main_table, project_info, table_rows){
 
     // Now Finally add Result data
     if(project_info && project_info.results && project_info.results.length > 0){
-        var project_result_data_t_value = (project_info && project_info.results)?project_info.results.total:0;
-        var project_result_data_f_value = (project_info && project_info.results)?project_info.results.failures:0;
-        var project_result_data_e_value = (project_info && project_info.results)?project_info.results.errors:0;
-        var project_result_data_s_value = (project_info && project_info.results)?project_info.results.skipped:0;
+        var project_result_data_t_value = project_info.results.total;
+        var project_result_data_f_value = project_info.results.failures;
+        var project_result_data_e_value = project_info.results.errors;
+        var project_result_data_s_value = project_info.results.skipped;
     }
 
     var project_result_data_t = document.createElement('td');
