@@ -9,10 +9,13 @@ from urlparse import urlparse
 th = local()
 
 class Mover:
-    def __init__(self):
-        self.__jenkinsHost = urlparse(globals.jenkinsUrl).hostname
-        self.__jenkinsUser = "root"
-        self.__jenkinsKey = globals.configJenkinsKey
+    def start(self, jenkinsHost,
+            jenkinsUser="root",
+            jenkinsKey=globals.configJenkinsKey):
+
+        self.__jenkinsHost = jenkinsHost
+        self.__jenkinsUser = jenkinsUser
+        self.__jenkinsKey = jenkinsKey
 
         # Keep startup times short.  Only connect a few threads to Jenkins upfront.  The rest
         # will be dynamically added as required.  This also enables authentication issues to be
@@ -100,8 +103,21 @@ class Mover:
         if th.__status:
             msg = "Thread[%s] failed to connected to Jenkins master" % str(th.__id)
             logger.error(msg)
-            assert(False), msg 
+            assert(False), msg
         sleep(3)                            # Sleep just to make sure no thread is scheduled twice
+
+    # Resetting threadpool
+    def resetConnection(self):
+        try:
+            for i in range(globals.threadPoolSize):
+                th.__id=i
+                self.close()
+            globals.threadPool.dismissWorkers(globals.threadPoolSize)
+            globals.threadPool.joinAllDismissedWorkers()
+            globals.threadPool = ThreadPool(globals.threadPoolSize)
+            th.__status = -1
+        except Exception as e:
+            logger.error("mover.resetConnection: " + str(e))
 
     def mkdir(self, path):
         try:
