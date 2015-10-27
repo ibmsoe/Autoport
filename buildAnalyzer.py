@@ -27,7 +27,9 @@ def text_analytics_build_commands(listing, repo):
         build_found = False
         build_line_number = 0
 
-        commands = [' mvn ',' ant ', ' build ']
+        commands = ['mvn ', 'ant ', ' build ', 'npm ', 'gem ', 'scons ',
+                    'cmake ']
+
         if f.name in ('README.md','BUILDING.md', 'BUILDING.txt','BUILDING',
                       'README.maven', 'README.ant', 'README.textile'):
             if f.type == 'file' and f.size != 0:
@@ -43,13 +45,15 @@ def text_analytics_build_commands(listing, repo):
                         build_line_number = idx
                     if build_found and (idx - build_line_number) < proximity_threshold:
                         for command in commands:
-                            if command in line and 'install' not in line and\
-                            len(line) > 0 and len(line) <= max_chars and\
+                            if len(line) > 0 and len(line) <= max_chars and\
                             len(line.split(' ')) <= max_words and\
                             lines <= max_lines and\
                             not line[len(line) - 1] == ':':
-                                retval.append(utils.clean(line))
-                                lines = lines + 1
+                                if command in line:
+                                    retval.append(utils.clean(line))
+                                    lines = lines + 1
+                                elif repo.lang == 'C' and 'make' in line:
+                                    retval.append(utils.clean(line))
         if len(retval) > 0: # If you find a build command in one file, then
                             # don't check other files
             break
