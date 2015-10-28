@@ -4,6 +4,7 @@ import shutil
 import os
 import re
 import shutil
+import time
 import globals
 from stat import S_ISDIR
 from log import logger
@@ -11,6 +12,9 @@ from log import logger
 resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
 class Catalog:
+    def __init__(self):
+        globals.init()
+
     def connect(self, archiveHost, jenkinsHost,
             archivePort=globals.port,
             archiveUser=globals.configUsername,
@@ -284,10 +288,30 @@ class Catalog:
                 logger.warning("Can't remove directory " + remoteBuildPath + " : " + str(e))
 
     def cleanTmp(self):
-        for tmpdir in self.__tmpdirs:
-            if os.path.exists(tmpdir):
-                shutil.rmtree(tmpdir, ignore_errors=True)
-        self.__tmpdirs = []
+        total_dir_to_clean = len(self.__tmpdirs)
+        file_position_cleared = []
+        try:
+            for i in range(total_dir_to_clean):
+                if os.path.exists(self.__tmpdirs[i]):
+                    # check if data expired
+                    last_modified_time = os.path.getmtime(self.__tmpdirs[i])
+                    current_time = time.time()
+
+                    if (current_time - last_modified_time) > float(globals.expiryForTmp):
+                        shutil.rmtree(self.__tmpdirs[i], ignore_errors=True)
+                        file_position_cleared.append(i)
+
+            # Flush removed folders from list.
+            for i in file_position_cleared:
+                logger.info("Clearing directory: " + self.__tmpdirs[i])
+                del self.__tmpdirs[i]
+
+        except ValueError as ex:
+            logger.warning("CleanTmp: " + str(ex))
+
+    def newTmpDirectoryAdded(self, dirname = None):
+        if dirname:
+            self.__tmpdirs.append(dirname)
 
     def close(self):
         try:

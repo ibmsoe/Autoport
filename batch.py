@@ -13,9 +13,14 @@ from project import Project
 import shutil
 from stat import S_ISDIR
 
+from catalog import Catalog
+
 projectResultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
 class Batch:
+    def __init__(self, catalog):
+        self.catalog = catalog
+
     # Connecting to SSHClient using GSA credentials
     def connect(self, archiveHost=globals.hostname,
                 archivePort=globals.port,
@@ -69,6 +74,7 @@ class Batch:
             for filename in sorted(flist):
                 if not filt or filt in filename.lower():
                     putdir = tempfile.mkdtemp(prefix="autoport_")
+                    self.catalog.newTmpDirectoryAdded(putdir)
                     self.ftp_client.get(filename, putdir + "/" + filename)
                     filteredList.append(self.parseBatchFileList(putdir + "/" + filename, "gsa"))
         except IOError as e:
@@ -121,13 +127,13 @@ class Batch:
                 if not filt or filt in filename.lower():
                     try:
                         putdir = tempfile.mkdtemp(prefix="autoport_")
+                        self.catalog.newTmpDirectoryAdded(putdir)
                         self.copyRemoteDirToLocal(globals.pathForBatchTestResults + "/" +filename, putdir)
                         batchFilePath = os.listdir(putdir + "/" + filename)[0]
-                        batchTestReportFile = self.ftp_client.open(globals.pathForBatchTestResults + filename + "/" + batchFilePath,'r')
+                        batchTestReportFile = open("%s/%s/%s" % (putdir, filename, batchFilePath), 'r')
                         dataFile = batchTestReportFile.readlines()
                         for projectsReport in dataFile:
                             self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
-                        batchTestReportFile.close()
                         filteredList.append(
                             self.parseBatchReportList(
                                 os.path.join(putdir,filename,batchFilePath),
@@ -137,6 +143,10 @@ class Batch:
                         )
                     except Exception as ex:
                         logger.warning("listGSABatchReports Error: " + str(ex))
+                    finally:
+                        if isinstance(batchTestReportFile, file):
+                            batchTestReportFile.close()
+                        self.catalog.cleanTmp()
         except AttributeError:
             assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         except Exception as e:
@@ -288,6 +298,8 @@ class Batch:
                 owner = "Anonymous"
         except KeyError:
             owner = "Anonymous"
+
+        self.catalog.cleanTmp()
 
         return {"location": location, "owner": owner, "name": name, "size": size, \
             "datemodified": datemodified, "environment": environment, "filename": filename}

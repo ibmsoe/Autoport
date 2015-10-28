@@ -53,6 +53,7 @@ def init():
     global artifactsPathPrefix
     global threadPoolSize
     global useTextAnalytics
+    global expiryForTmp
 
     # user configuration globals that are supported by the user interface
     jenkinsUrl = configOptions['jenkinsurl']
@@ -71,6 +72,7 @@ def init():
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
     useTextAnalytics = configOptions['usetextanalytics'] == 'True'
+    expiryForTmp = configOptions['expiryfortmp']
 
     if not configOptions.has_key('port'):
         port = 22

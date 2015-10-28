@@ -22,6 +22,7 @@ import re
 import threading
 import paramiko
 import ntpath
+import shutil
 from sharedData import SharedData
 from chefData import ChefData
 from threadpool import makeRequests
@@ -48,7 +49,7 @@ maxResults = 10
 
 # Initialize autoport framework
 catalog = Catalog()
-batch = Batch()
+batch = Batch(catalog)
 project = Project(catalog)
 sharedData = SharedData()
 chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
@@ -2364,6 +2365,12 @@ def autoportInitialisation():
                       globals.configUsername, globals.configPassword)
 
 if __name__ == "__main__":
+    # When the server instance is freshly started clear up all the /tmp/ directories created by the application
+    # in previous run, that were not cleaned up.
+    for dirname, dirnames, filenames in os.walk('/tmp/'):
+        if dirname.startswith('/tmp/autoport_'):
+            logger.info("Deleting: " + dirname)
+            shutil.rmtree(dirname, ignore_errors=True)
 
     p = argparse.ArgumentParser()
     p.add_argument("-p", "--public", action="store_true",
