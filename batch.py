@@ -306,6 +306,7 @@ class Batch:
 
     # Full verification of batch file including generation of build command if not specified
     def parseBatchFile(self, filename):
+        logger.debug("In parseBatchFile, filename=%s" % filename)
         f = open(filename)
         try:
             fileBuf = json.load(f)
@@ -326,6 +327,11 @@ class Batch:
             return {"error": "Missing 'name' field in config section in batch file" }
 
         try:
+            packages = fileBuf['packages']
+        except KeyError:
+            return {"error": "Missing 'packages' section in batch file" }
+
+        try:
             owner = fileBuf['config']['owner']
             if owner == "":
                 fileBuf['config']['owner'] = "Anonymous"
@@ -339,10 +345,7 @@ class Batch:
         except KeyError:
             fileBuf['config']['java'] = "OpenJDK"
 
-        try:
-            package = fileBuf['packages']
-        except KeyError:
-            return {"error": "Missing packages section in batch file" }
+        logger.debug("parseBatchFile: file['config']['java']=%s" % fileBuf['config']['java'])
 
         for package in fileBuf['packages']:
             try:
@@ -370,7 +373,9 @@ class Batch:
                     return { "error": "batch file invalid project " + name }
                 package['build'] = inferBuildSteps(globals.cache.getDir(repo), repo)
 
-            if "selectedBuild" not in package['build']:
+            try:
+                selectedBuild = package['build']['selectedBuild']
+            except KeyError:
                 package['build']['selectedBuild'] = ""
 
             try:
@@ -389,7 +394,7 @@ class Batch:
                 package['build']['artifacts'] = ""
 
             try:
-                artifacts = package['build']['primaryLang']
+                primaryLang = package['build']['primaryLang']
             except KeyError:
                 package['build']['primaryLang'] = ""
 

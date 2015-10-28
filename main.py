@@ -999,12 +999,21 @@ def runBatchFile ():
     except KeyError:
         return json.jsonify(status="failure", error="missing buildServer argument"), 400
 
+    logger.debug("In runBatchFile, batchName=%s, node=%s" % (batchName, node))
+
+    submittedJob = False
     if batchName != "":
         results = batch.parseBatchFile(batchName)
         try:
             fileBuf = results['fileBuf']
         except KeyError:
-            return json.jsonify(status="failure", error=fileBuf['error']), 400
+            return json.jsonify(status="failure", error=results['error']), 400
+
+        try:
+            error = fileBuf['error']
+            return json.jsonify(status="failure", error=error), 401
+        except KeyError:
+            pass
 
         submissionTime = localtime()
 
@@ -1016,6 +1025,8 @@ def runBatchFile ():
         javaType = ""
         if fileBuf['config']['java'] == "IBM Java":
             javaType = "JAVA_HOME=/opt/ibm/java"
+
+        logger.debug("runBatchFile, javaType=%s node=%s" % (javaType, node))
 
         # Create batch results template, stores list of job names associated with batch file
         # Create a folder of format  <batch_name>.<uuid>
@@ -1040,7 +1051,6 @@ def runBatchFile ():
         f = open(newBatchName, 'a+')
 
         # Parse package data
-        submittedJob = False
         for package in fileBuf['packages']:
 
             # if a project can't be built, skip it. Top N may not be buildable - documentation

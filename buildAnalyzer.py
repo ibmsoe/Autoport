@@ -1,4 +1,5 @@
 from github import GithubException
+from log import logger
 import globals
 import utils
 
@@ -8,58 +9,69 @@ import utils
 # The last list definition is returned. With a little luck, it is the preferred
 # cmd line as provided by the readme.
 
-def text_analytics_build_commands(listing, repo):
+def text_analytics_cmds(project, projectLang, grepStack, searchKey):
     """
-    :param listing: Directory Listing
-    :param repo: Repository to search build command in
+    :param project: project name
+    :param projectLang: primary language of project
+    :param searchKey: build or test
+    :param grepStack: list of file contents each as a string to analyze
     :return: A build command :rtype str
     """
-    proximity_threshold = 5 # We insist that the build command that we extract
-                             # be within 10 lines after encountering the word
-                             # 'build'
-    max_lines = 5 # Limit the number of lines (i.e. individual commands) we
-                  # allow in our output
-    max_words = 16 # Limit the number of words we allow per individual command
-    max_chars = 64 # Limit the number of characters per individual command
+    proximity_threshold = 10 # We insist that the command that we extract be within
+                             # x lines after encountering the word 'build' or 'text'.
+                             # Need to factor in HTML syntax.
+    max_lines = 5   # Limit the number of lines (i.e. individual commands)
+    max_words = 16  # Limit the number of words we allow per individual command
+    max_chars = 128 # Limit the number of characters per individual command
+
+    logger.debug("In text_analytics_cmds, project=%s, searchKey=%s, cnt grepStack[]=%s" % (project, searchKey, str(len(grepStack))))
+
+    # List most common build and test commands first
+    commands = ['mvn ', 'ant ', 'npm ', 'grunt ', 'python ', 'py.test ', 'cd ', 
+                'gem ', 'rake ', 'build.sh ', 'bootstrap.sh ', 'autogen.sh ',
+                'autoreconf ', 'automake ', 'aclocal ', 'scons ', 'sbt ',
+                'cmake ', 'gradle ', 'bundle ', 'perl ', 'php ']
 
     retval = []
-    for f in listing:
+    for fstr in grepStack:
         build_found = False
         build_line_number = 0
+        lines = 0
 
-        commands = ['mvn ', 'ant ', ' build ', 'npm ', 'gem ', 'scons ',
-                    'cmake ']
+        for idx, line in enumerate(fstr.splitlines()):
+            line = line.lower()
+            if searchKey in line:
+                build_found = True
+                build_line_number = idx
+            if build_found and\
+               idx - build_line_number < proximity_threshold:
+                if len(line):
+                    logger.debug("text_analytics_cmds, idx=%s scanning line=%s" % (str(idx), line))
+                    for command in commands:
+                                                                    # TODO: validate start of command line
+                        if len(line.split(' ')) <= max_words and\
+                           lines <= max_lines and\
+                           not line[len(line) - 1] == ':':          # command lines don't end with :
+                            if command in line:
+                                retval.append(utils.clean(line))
+                                lines = lines + 1
+                                break
+                            elif (projectLang == 'C' or projectLang == 'C++' or projectLang == 'Perl') and 'make' in line:
+                                retval.append(utils.clean(line))
+                                lines = lines + 1
+                                break
+            else:
+                build_found = False
 
-        if f.name in ('README.md','BUILDING.md', 'BUILDING.txt','BUILDING',
-                      'README.maven', 'README.ant', 'README.textile'):
-            if f.type == 'file' and f.size != 0:
-                fstr = repo.get_file_contents(f.path).content.decode('base64',
-                                                                     'strict')
-                """ :type : str """
-                lines = 0
-                
-                for idx, line in enumerate(fstr.splitlines()):
-                    line = line.lower()
-                    if 'build' in line:
-                        build_found = True
-                        build_line_number = idx
-                    if build_found and (idx - build_line_number) < proximity_threshold:
-                        for command in commands:
-                            if len(line) > 0 and len(line) <= max_chars and\
-                            len(line.split(' ')) <= max_words and\
-                            lines <= max_lines and\
-                            not line[len(line) - 1] == ':':
-                                if command in line:
-                                    retval.append(utils.clean(line))
-                                    lines = lines + 1
-                                elif repo.lang == 'C' and 'make' in line:
-                                    retval.append(utils.clean(line))
-        if len(retval) > 0: # If you find a build command in one file, then
-                            # don't check other files
-            break
+        if len(retval):
+            break          # If you find a build command sequence in one file, don't search other files
+
     return ';'.join(retval)
 
 def inferBuildSteps(listing, repo):
+
+    if not listing or not repo:
+        return { 'success': False, 'error': "Github I/O error" }
 
     # Gather all possible build, test, and environment options
     # This is what gets returned
@@ -157,17 +169,17 @@ def inferBuildSteps(listing, repo):
 
     base_perl_def = {
         'build system': "Perl",
-         'primary lang': "Perl",
-         'grep build': "",
-         'grep test': "make check",
-         'grep env': "",
-         'build': "if [ -e Makefile.PL ]; then perl Makefile.PL >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1; make install >> build_result.arti 2>&1",
-         'test' : "make test >> test_result.arti 2>&1",
-         'env' : "",
-         'artifacts': "*.arti",
-         'reason': "primary language",
-         'error': "",
-         'success': True }
+        'primary lang': "Perl",
+        'grep build': "",
+        'grep test': "make check",
+        'grep env': "",
+        'build': "if [ -e Makefile.PL ]; then perl Makefile.PL >> build_result.arti 2>&1; fi; make >> build_result.arti 2>&1; make install >> build_result.arti 2>&1",
+        'test' : "make test >> test_result.arti 2>&1",
+        'env' : "",
+        'artifacts': "*.arti",
+        'reason': "primary language",
+        'error': "",
+        'success': True }
 
     base_c_def = {
         'build system': "make",
@@ -304,7 +316,7 @@ def inferBuildSteps(listing, repo):
 
     c_def = {
         'build system': "make",
-        'primary lang': "C/C++",
+        'primary lang': repo.language,
         'grep build': "",
         'grep test': "make check",
         'grep env': "CFLAGS=",
@@ -318,7 +330,7 @@ def inferBuildSteps(listing, repo):
 
     bootstrap_def = {
         'build system': "make",
-        'primary lang': "C/C++",
+        'primary lang': repo.language,
         'grep build': "",
         'grep test': "make check",
         'grep env': "CFLAGS=",
@@ -333,7 +345,7 @@ def inferBuildSteps(listing, repo):
     # This is most favored definition and is appended to the end of the list
     buildsh_def = {
         'build system': "custom build script",
-        'primary lang': "",
+        'primary lang': repo.language,
         'grep build': "build.sh",
         'grep test': "build.sh check",
         'grep env': "",
@@ -345,8 +357,11 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
+    logger.debug("In inferBuildSteps, name=%s, primary lang=%s" % (repo.name, repo.language))
+
     # Fix base empty definition in case it is returned
-    base_empty_def['primary lang'] = repo.language
+    if repo.language:
+        base_empty_def['primary lang'] = repo.language
 
     # Append empty language definition to list
     langlist = [ base_empty_def ]
@@ -393,11 +408,14 @@ def inferBuildSteps(listing, repo):
             bootstrap = f
         elif f.name in ('build.sh', 'run_build.sh'):
             buildsh = f
-        elif f.name in ('BUILDING.md', 'BUILDING.txt', 'README.maven', 'README.ant'):
+        elif f.name in ('BUILDING.md', 'BUILDING.txt', 'README.maven', 'README.ant', 'BUILDING', 'README.textile'):
             if f.type == 'file' and f.size != 0:
-                fstr = repo.get_file_contents(f.path).content.decode('base64', 'strict')
-                if fstr != "":
-                    grepstack.insert(0, fstr)
+                try:
+                    fstr = repo.get_file_contents(f.path).content.decode('base64', 'strict')
+                    if fstr != "":
+                        grepstack.insert(0, fstr)
+                except:
+                    pass
 
     # build.sh is favored, because it bridges languages, sets environment variables, ...
     # Else if only the primary language definition is present, len(langlist) <= 2), push
@@ -429,12 +447,12 @@ def inferBuildSteps(listing, repo):
         if lang['env']:
             build_info['envOptions'].append(lang['env'])
         build_info['reason'] = lang['reason']
+        build_info['primaryLang'] = lang['primary lang']
 
     # Check the last element added to the langlist for readme/other important file info
     lang = langlist[-1]
     if lang['build']:
         build_info['buildSystem'] = lang['build system']
-        build_info['primaryLang'] = lang['primary lang']
         for readmeStr in grepstack:
             if readmeStr:
                 delim = ["`", "'", '"', "#", "\n"]                   # delimiters used to denote end of cmd
@@ -466,27 +484,37 @@ def inferBuildSteps(listing, repo):
                         build_info['envOptions'].append(strFound)
                 break
 
-    #Add commands extracted using text analytics
-    text_analytics_suffix = ' >> build_result.arti 2>&1;'
-    build_command = text_analytics_build_commands(listing, repo)
+        # Add build commands extracted using text analytics
+        text_analytics_suffix = ' >> build_result.arti 2>&1;'
+        command = text_analytics_cmds(repo.name, repo.language, grepstack, 'build')
+        logger.debug("inferBuildSteps, text_analytics build cmd=%s" % command)
+        if command:
+            command = command + text_analytics_suffix
+            if globals.useTextAnalytics:
+                build_info['buildOptions'].insert(len(build_info), '[TextAnalytics]' + command)
+            else:
+                build_info['buildOptions'].insert(0, '[TextAnalytics]' + command)
 
-    if build_command:
-        if globals.useTextAnalytics:
-            build_info['buildOptions'].insert(len(build_info), '[TextAnalytics]'+build_command+text_analytics_suffix)
-        else:
-            #print 'Globals.useTextAnalytics:' +str(globals.useTextAnalytics)
-            build_info['buildOptions'].insert(0, '[TextAnalytics]'+build_command+text_analytics_suffix)
+        # Add build commands extracted using text analytics
+        text_analytics_suffix = ' >> test_result.arti 2>&1;'
+        command = text_analytics_cmds(repo.name, repo.language, grepstack, 'test')
+        logger.debug("inferBuildSteps, text_analytics test cmd=%s" % command)
+        if command:
+            command = command + text_analytics_suffix
+            if globals.useTextAnalytics:
+                build_info['testOptions'].insert(len(build_info), '[TextAnalytics]' + command)
+            else:
+                build_info['testOptions'].insert(0, '[TextAnalytics]' + command)
+
     # Make the build, test, and env options of the last added element the default options
     # as those are the most likely to be correct
     if build_info['buildOptions']:
         build_info['success'] = True
         build_info['selectedBuild'] = build_info['buildOptions'][-1]
-
         if build_info['testOptions']:
             build_info['selectedTest'] = build_info['testOptions'][-1]
-
-            if build_info['envOptions']:
-                build_info['selectedEnv'] = build_info['envOptions'][-1]
+        if build_info['envOptions']:
+            build_info['selectedEnv'] = build_info['envOptions'][-1]
 
     return build_info
 
@@ -503,6 +531,8 @@ def appendArtifact(cmd):
 # list of delimiters and finds the one with the smallest index, returning the string found between the
 # two indices
 def buildFilesParser(fileBuf, searchTerm, delimeter):
+    logger.debug("In buildFilesParser, searchTerm=%s delimeter=%s" % (searchTerm, delimeter))
+
     # Get the length of the file
     lenFileBuf = len(fileBuf)
 
@@ -530,4 +560,3 @@ def buildFilesParser(fileBuf, searchTerm, delimeter):
             return fileBuf[i:][:smallestIndex]
 
     return ""
-
