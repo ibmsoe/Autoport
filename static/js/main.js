@@ -2400,6 +2400,8 @@ function showDetail(data) {
             legend(document.getElementById('generateLangLegend'), detailState.generateRepo.languages);
         }
     }
+    $('.dropMenuScroll').css('max-height',($('#singleDetailPanel').height()-140)+"px");
+    $('.multiSearchDropMenuScroller').css('max-height',($('#generateBox').height()-110)+"px");
 }
 
 // assign variables in global state
@@ -2720,7 +2722,7 @@ function managePackageForSingleSlaveCallback(data) {
                 }
                 text += '<tr class="' + activeclass + '">';
                 text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].packageName + '</td>';
-                text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].packageAction + '</td>';
+                text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].packageAction + '/update</td>';
                 text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].status + '</td>';
                 text += '</tr>';
             }

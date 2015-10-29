@@ -391,3 +391,12 @@ fieldset[disabled] .form-control {
     margin-right: auto;
     border: 1px solid black;
 }
+.dropMenuScroll{
+    max-width:100%;
+    overflow: auto;
+}
+
+.multiSearchDropMenuScroller{
+    max-width:100%;
+    overflow: auto;
+}

@@ -132,10 +132,10 @@
           <div class="dropdown buttonRight">
 
             <!-- Dropdown box for choosing what kind of java to use. -->
-            <div class="input-group-btn">
+            <div class="dropdown">
               <button rv-show="detailState.repo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.javaType } <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right">
-                <li rv-on-click="detailState.selectJavaType"><a>Open JDK</a></li>
+                <li rv-on-click="detailState.selectJavaType"><a>OpenJDK</a></li>
                 <li rv-on-click="detailState.selectJavaType"><a>IBM Java</a></li>
               </ul>
             </div>
@@ -153,7 +153,7 @@
                 Use { detailState.repo.useVersion} version
                 <span class="caret"></span>
               </button>
-              <ul class="dropdown-menu dropdown-menu-right">
+              <ul class="dropdown-menu dropdown-menu-right dropMenuScroll">
                 <li class="dropdown-header">Recent</li>
                 <li><a tabindex="-1"
                   rv-on-click="detailState.repo.updateVersion">Current</a></li>
@@ -222,7 +222,7 @@
               Select build options
               <span class="caret"></span>
             </button>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu dropMenuScroll">
               <li rv-each-tag="detailState.repo.build.buildOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
             </ul>
             <br />
@@ -235,7 +235,7 @@
               Select test options
               <span class="caret"></span>
             </button>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu dropMenuScroll">
               <li rv-each-tag="detailState.repo.build.testOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
             </ul>
             <br />
@@ -248,7 +248,7 @@
               Select environment options
               <span class="caret"></span>
             </button>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu dropMenuScroll">
               <li rv-each-tag="detailState.repo.build.envOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeEnvOptions">{ tag }</a></li>
             </ul>
             <br />

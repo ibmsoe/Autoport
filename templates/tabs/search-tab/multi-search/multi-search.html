@@ -89,7 +89,7 @@
                 Use { detailState.generateRepo.useVersion} version
                 <span class="caret"></span>
               </button>
-              <ul class="dropdown-menu dropdown-menu-right" role="menu"
+              <ul class="dropdown-menu dropdown-menu-right multiSearchDropMenuScroller" role="menu"
                 airia-labelledby="singleVersions">
                 <li role="presentation" class="dropdown-header">Recent</li>
                 <li role="presentation"><a role="menuitem" tabindex="-1"
@@ -159,7 +159,7 @@
               Select build options
               <span class="caret"></span>
             </button>
-            <ul class="dropdown-menu" role="menu">
+            <ul class="dropdown-menu dropMenuScroll" role="menu">
               <li role="presentation" rv-each-tag="detailState.generateRepo.build.buildOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
             </ul>
             <br />
@@ -172,7 +172,7 @@
               Select test options
               <span class="caret"></span>
             </button>
-            <ul class="dropdown-menu" role="menu">
+            <ul class="dropdown-menu dropMenuScroll" role="menu">
               <li role="presentation" rv-each-tag="detailState.generateRepo.build.testOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
             </ul>
             <br />
@@ -185,7 +185,7 @@
               Select environment options
               <span class="caret"></span>
             </button>
-            <ul class="dropdown-menu" role="menu">
+            <ul class="dropdown-menu dropMenuScroll" role="menu">
               <li role="presentation" rv-each-tag="detailState.generateRepo.build.envOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeEnvOptions">{ tag }</a></li>
             </ul>
             <br />
