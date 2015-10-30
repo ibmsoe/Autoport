@@ -512,6 +512,7 @@ var batchReportState = {
     saveBatchFileName: "",                  // user input to save button for new batch file name
     loading: false,
     listingRepo: "",
+    comparison: false,
     listLocalBatch: function(ev) {
         // reset report state to initial state so that data reflected is correctly on fresh canvas.
         batchReportState.reset();
@@ -558,22 +559,30 @@ var batchReportState = {
         batchReportState.batchFile = {};
         batchReportState.batchReportLogRequested = false;
         batchReportState.loading = false;
+        batchReportState.comparison = false;
     },
     backToBatchResultsCompare: function(ev) {
-        // For going back to displaying batch comparison and hiding details.
-        batchReportState.batchReportTableReady = true;
-        batchReportState.batchReportLogRequested = false;
-        $('#testBatchLogResultsTable tr').remove();
+        if(batchReportState.comparison){
+            // For going back to displaying batch comparison and hiding details.
+            batchReportState.batchReportTableReady = true;
+            batchReportState.batchReportLogRequested = false;
+            $('#testBatchLogResultsTable tr').remove();
+        }else{
+            $('#testBatchLogResultsTable tr').remove();
+            batchReportState.backToBatchList(ev);
+        }
+
         batchReportState.loading = false;
     },
     history: function() {
         batchReportState.loading = true;
+        batchReportState.showListSelectTable = false;
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
         var notReadyJobList = [];
         if (selectedBatchJobs.length > 0){
             var query = {};
             for (var i = 0; i < selectedBatchJobs.length; i ++) {
-                if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[i])){
+                if( !checkIfBuildAndTestLogCreated()){
                     notReadyJobList.push(selectedBatchJobs[i]);
                     continue;
                 }else{
@@ -615,7 +624,7 @@ var batchReportState = {
 
         // Get list of all selected batch test runs for fetchinf details.
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-        if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[0]) || !checkIfBuildAndTestLogCreated(selectedBatchJobs[1])){
+        if( selectedBatchJobs.length == 2 && !checkIfBuildAndTestLogCreated('build')){
             showMessage("Info: ", "No build or test logs are presently available");
         }else if (selectedBatchJobs.length == 2){
             // fetch the Batch details and handle it appropriately.
@@ -651,7 +660,7 @@ var batchReportState = {
 
         // Get list of all selected batch test runs for fetchinf details.
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-        if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[0]) || !checkIfBuildAndTestLogCreated(selectedBatchJobs[1])){
+        if( selectedBatchJobs.length == 2 && !checkIfBuildAndTestLogCreated('test')){
             showMessage("Info: ", "No build or test logs are presently available");
             batchReportState.loading = false;
         }else if (selectedBatchJobs.length == 2){
@@ -682,11 +691,12 @@ var batchReportState = {
     compare: function(){
      // fetch, render and display Report in table.
         batchReportState.loading = true;
+        batchReportState.comparison = true;
         batchReportState.showBatchFile = false;
 
         // Get list of all selected batch test runs for fetchinf details.
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-        if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[0]) || !checkIfBuildAndTestLogCreated(selectedBatchJobs[1])){
+        if( selectedBatchJobs.length > 0 && !checkIfBuildAndTestLogCreated()){
             showMessage("Info: ", "No build or test logs are presently available");
             batchReportState.loading = false;
         }else if (selectedBatchJobs.length == 2){
@@ -748,14 +758,14 @@ var batchReportState = {
 
         // Get list of all selected batch test runs for fetchinf details.
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-        if( !checkIfBuildAndTestLogCreated(selectedBatchJobs)){
+        if( !checkIfBuildAndTestLogCreated()){
             showMessage("Info: ", "No build or test logs are presently available");
         }else if (selectedBatchJobs.length > 0){
             var query = {};
             var notReadyJobList = [];
             // Generate key-value pair with batch name and repository location, repository being the key of dictionary
             for (var i = 0; i < selectedBatchJobs.length; i ++) {
-                if( !checkIfBuildAndTestLogCreated(selectedBatchJobs[i])){
+                if( !checkIfBuildAndTestLogCreated()){
                     notReadyJobList.push(selectedBatchJobs[i]);
                     continue;
                 }else{
@@ -2888,8 +2898,12 @@ function toggleBatchReportButtons(){
     var selectedProjects = $('#batchReportListSelectTable').bootstrapTable('getSelections');
     if (selectedProjects.length === 2 && selectedProjects[0].batch_name == selectedProjects[1].batch_name) {
         $("#batch_report_compare").removeClass("disabled");
+        $("#batch_report_compare_build_log").removeClass("disabled");
+        $("#batch_report_compare_test_log").removeClass("disabled");
     } else {
         $("#batch_report_compare").addClass("disabled");
+        $("#batch_report_compare_build_log").addClass("disabled");
+        $("#batch_report_compare_test_log").addClass("disabled");
     }
 
     if(selectedProjects.length > 0){
@@ -3345,8 +3359,19 @@ function processBatchCompareData(data) {
     $("#batchHeaderPreText").html('Job comparison for Batch "'+ batchName + '": ');
 }
 
-function checkIfBuildAndTestLogCreated(selectedRow){
-    return !(selectedRow.build_log_count == "Not Available" || selectedRow.test_log_count == "Not Available");
+function checkIfBuildAndTestLogCreated(log_comparison_type){
+    var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+    show_button = true;
+    for(var i = 0; i < selectedBatchJobs.length; i++){
+        if(log_comparison_type == 'test' && selectedBatchJobs[i].test_log_count == "Not Available"){
+            return false;
+        }else if(log_comparison_type == 'build' && selectedBatchJobs[i].build_log_count == "Not Available"){
+            return false;
+        }else if (log_comparison_type === undefined){
+            return !(selectedBatchJobs[i].build_log_count == "Not Available" && selectedBatchJobs[i].test_log_count == "Not Available");
+        }
+    }
+    return true;
 }
 
 $(document).ready(function() {

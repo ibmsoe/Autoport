@@ -580,6 +580,8 @@ class Batch:
                 final_response[newBatchName][projectName]["left_parent_name"] = batchName
                 final_response[newBatchName][projectName]["left_version"] = projectResultPattern.match(project).group(5)
 
+        logger.debug("After adding Left_projects to list: %s " % json.dumps(final_response))
+
         for batchName in right_projects:
             newBatchName = batchName.split('.')[0]
             if not final_response.has_key(newBatchName):
@@ -593,6 +595,8 @@ class Batch:
                 final_response[newBatchName][projectName]["right"] = project
                 final_response[newBatchName][projectName]["right_parent_name"] = batchName
                 final_response[newBatchName][projectName]["right_version"] = projectResultPattern.match(project).group(5)
+
+        logger.debug("After adding right_projects to list: %s " % json.dumps(final_response))
 
         # We have paired jobs now call project_obj.getDiffLogResult recursively and get data.
         for batchName in final_response:
@@ -608,4 +612,5 @@ class Batch:
 
         final_response["left_arch"] = leftArch
         final_response["right_arch"] = rightArch
+        logger.debug("Final data with diff: %s " % json.dumps(final_response))
         return final_response

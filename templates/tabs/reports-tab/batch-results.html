@@ -37,28 +37,38 @@
     <!-- List batch files table -->
     <div rv-show="batchReportState.showListSelectTable">
       <div id="batchReportListSelectToolbar" class="btn-group">
-        <button rv-on-click="batchReportState.detail" type="button" class="btn btn-primary disabled" id="batch_report_detail"
-            style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
-            <span class="glyphicon glyphicon-zoom-in"></span>
-            Test Details
-        </button>
         <button rv-on-click="batchReportState.history" type="button" class="btn btn-primary" id="batch_report_history"
-            style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+            style="float: left; margin-right: 10px; margin-left: 10px; margin-top: 20px; border-radius: 5px">
             <span class="glyphicon glyphicon-time"></span>
             Test History
         </button>
+        <button rv-on-click="batchReportState.detail" type="button" class="btn btn-primary disabled" id="batch_report_detail"
+            style="float: left; margin-right: 10px; margin-left: 10px; margin-top: 20px; border-radius: 5px">
+            <span class="glyphicon glyphicon-zoom-in"></span>
+            Test Details
+        </button>
         <button title="Selected Batch Result should be from same batch job." rv-on-click="batchReportState.compare" type="button" class="btn btn-primary" id="batch_report_compare"
-            style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+            style="float: left; margin-right: 10px; margin-left: 10px; margin-top: 20px; border-radius: 5px">
             <span class="glyphicon glyphicon-bookmark"></span>
-            Test Compare
+            Test Compare(2)
+        </button>
+        <button title="Selected Batch Result should be from same batch job." rv-on-click="batchReportState.compareBatchBuildLog" type="button" class="btn btn-primary" id="batch_report_compare_build_log"
+            style="float: left; margin-right: 10px; margin-left: 10px; margin-top: 20px; border-radius: 5px">
+            <span class="glyphicon glyphicon-bookmark"></span>
+            Build Log Compare(2)
+        </button>
+        <button title="Selected Batch Result should be from same batch job." rv-on-click="batchReportState.compareBatchTestLog" type="button" class="btn btn-primary" id="batch_report_compare_test_log"
+            style="float: left; margin-right: 10px; margin-left: 10px; margin-top: 20px; border-radius: 5px">
+            <span class="glyphicon glyphicon-bookmark"></span>
+            Test Log Compare(2)
         </button>
         <button rv-on-click="batchReportState.archive" type="button" class="btn btn-primary disabled" id="batch_report_archive"
-            style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+            style="float: left; margin-right: 10px; margin-left: 10px; margin-top: 20px; border-radius: 5px">
             <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
             Archive
         </button>
         <button rv-on-click="batchReportState.removeBatchReports" type="button" class="btn btn-primary disabled" id="batch_report_remove"
-            style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+            style="float: left; margin-right: 10px; margin-left: 10px; margin-top: 20px; border-radius: 5px">
             <span class="glyphicon glyphicon-remove-circle"></span>
             Remove
         </button>
