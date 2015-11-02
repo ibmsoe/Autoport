@@ -46,6 +46,7 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
             if build_found and\
                idx - build_line_number < proximity_threshold:
                 if len(line):
+                    # TODO: Remove, limit, or put under globals.text_analytics before GA
                     logger.debug("text_analytics_cmds, idx=%s scanning line=%s" % (str(idx), line))
                     for command in commands:
                                                                     # TODO: validate start of command line
@@ -460,26 +461,28 @@ def inferBuildSteps(listing, repo):
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
                     if strFound:
-                        strFound = appendArtifact(strFound)
+                        strFound = appendArtifact(strFound, "test_result.arti")
                         build_info['testOptions'].append(strFound)
                 cmd = lang['grep build']
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
                     if strFound:
-                        strFound = appendArtifact(strFound)
+                        strFound = appendArtifact(strFound, "build_result.arti")
                         build_info['buildOptions'].append(strFound)
                 env = lang['grep env']
                 if env:
-                    # Look first for 'VAR='.  Form is VAR=7
-                    delim = [";", " ", "#", "\n"]                    # delimiters used to denote end of environment variable
-                    strFound = buildFilesParser(readmeStr, env, delim)
+                    # Look first for 'VAR="' form. eg. VAR="string"
+                    envStr = env + '"'
+                    delim = ['"']                        # delimiters used to denote end of environment variable
+                    strFound = buildFilesParser(readmeStr, envStr, delim)
                     if strFound:
-                        # Look next for 'VAR="'.  Form is VAR="string"
-                        envStr = env + '"'
-                        delim = ['"']                           # delimiters used to denote end of environment variable
-                        strFound2 = buildFilesParser(readmeStr, envStr, delim)
-                        if strFound2:
-                            strFound = strFound2 + '"'
+                        strFound = strFound + '"'
+                    else:
+                        # Look next for 'VAR=' form. .eg VAR=7
+                        delim = [";", " ", "#", "\n"]    # delimiters used to denote end of environment variable
+                        strFound = buildFilesParser(readmeStr, env, delim)
+                        if strFound.find('"'):           # this case was checked first above.  This is a reject
+                            strFound = ""
                     if strFound:
                         build_info['envOptions'].append(strFound)
                 break
@@ -520,43 +523,61 @@ def inferBuildSteps(listing, repo):
 
 # appendArtifact - Removes trailing semi-colon if present and modifies
 # command to re-direct stdin/stderr to the Jenkins's build artifact
-def appendArtifact(cmd):
+def appendArtifact(cmd, file):
     if cmd[-1] == ';':
         cmd = cmd[:-1]
     if '>' not in cmd:
-        cmd += " >> test_result.arti 2>&1"
+        cmd = cmd + " >> " + file + " 2>&1"
     return cmd;
 
-# Build Files Parser - Looks for string searchTerm in string fileBuf and then iterates over
-# list of delimiters and finds the one with the smallest index, returning the string found between the
-# two indices
+# Build Files Parser - Looks for string searchTerm in string fileBuf and then
+# iterates over list of delimiters and finds the one with the smallest index,
+# returning the string found between the two indices
 def buildFilesParser(fileBuf, searchTerm, delimeter):
-    logger.debug("In buildFilesParser, searchTerm=%s delimeter=%s" % (searchTerm, delimeter))
+
+    # Need to prepend "./" in front of these commands as they are part of the project 
+    localCmds = ['bootstrap.sh', 'autogen.sh', 'build.sh' ]
+
+    # Disallow strings containing the following substrings
+    # -- compile of 32-bit apps not supported on le.  eg. -m32 redis
+    # -- we don't want any platform specific strings as this is cross-platform
+    disallow = ['32', 'arm', 'x86', 'ppc', 's390' ]
 
     # Get the length of the file
     lenFileBuf = len(fileBuf)
 
-    # Search the fileBuf for searchTerm
-    try:
-        i = fileBuf.find(searchTerm)
-    except UnicodeDecodeError:
-        return ""
+    i = 0
+    found = False
+    while i != -1 and i < lenFileBuf and not found:
 
-    if i != -1:
-        startingIndex = len(searchTerm)
-        smallestIndex = lenFileBuf # this is one bigger than the biggest index, acts as infinity
-        # If searchTerm found find the smallest index delimeter
-        for delim in delimeter:
-            if smallestIndex < lenFileBuf:
+        try:
+            i = fileBuf.find(searchTerm, i)
+        except UnicodeDecodeError:
+            return ""
+
+        match = ""
+        if i != -1:
+            startingIndex = len(searchTerm)
+            lenFileBuf -= startingIndex
+
+            # Find delimiter with the smallest index as there are multiple delimiters
+            smallestIndex = lenFileBuf;
+            for delim in delimeter:
                 j = fileBuf[i:].find(delim, startingIndex, smallestIndex)
-            else:
-                j = fileBuf[i:].find(delim, startingIndex)
+                if j != -1:
+                    smallestIndex = j
+                    match = fileBuf[i:][:smallestIndex]
+            if match:
+                found = not any(x in match.lower() for x in disallow)
+                if not found:
+                    logger.debug("buildFilesParser, searchTerm=%s eliminated match=%s" % (searchTerm, match))
+                    match = ""
+            i += startingIndex
 
-            if j != -1:
-                smallestIndex = j
+    if found:
+        for x in localCmds:
+            if not "./" + x in match:
+                match = match.replace(x, "./" + x)
 
-        # If smallest index is smaller than the length of the searchTerm we found a delimeter
-        if smallestIndex < lenFileBuf:
-            return fileBuf[i:][:smallestIndex]
-
-    return ""
+    logger.debug("Leaving buildFilesParser, searchTerm=%s match=%s" % (searchTerm, match))
+    return match
