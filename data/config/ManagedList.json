@@ -36,6 +36,9 @@
                     "name": "bzip2"
                 },
                 {
+                    "name": "check"
+                },
+                {
                     "name": "clang-3.6"
                 },
                 {
@@ -123,6 +126,9 @@
                     "name": "libmodule-install-perl"
                 },
                 {
+                    "name": "libmruby-dev"
+                },
+                {
                     "name": "libncurses5-dev"
                 },
                 {
@@ -132,7 +138,7 @@
                     "name": "libreadline-dev"
                 },
                 {
-                    "name": "libmruby-dev"
+                    "name": "librpm-dev"
                 },
                 {
                     "name": "libsnappy-dev"
@@ -205,6 +211,9 @@
                 },
                 {
                     "name": "python-lzo"
+                },
+                {
+                    "name": "python-nose"
                 },
                 {
                     "name": "python-protobuf"
@@ -327,7 +336,13 @@
                     "name": "bzip2"
                 },
                 {
+                    "name": "check-devel"
+                },
+                {
                     "name": "cmake"
+                },
+                {
+                    "name": "expat-devel"
                 },
                 {
                     "name": "flex"
@@ -414,7 +429,10 @@
                     "name": "pkgconfig"
                 },
                 {
-                    "name": "python"
+                    "name": "python-devel"
+                },
+                {
+                    "name": "python-nose"
                 },
                 {
                     "name": "python-py"
@@ -424,6 +442,9 @@
                 },
                 {
                     "name": "qt-devel"
+                },
+                {
+                    "name": "rpm-devel"
                 },
                 {
                     "name": "ruby"

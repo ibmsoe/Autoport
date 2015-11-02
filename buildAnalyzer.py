@@ -372,20 +372,13 @@ def inferBuildSteps(listing, repo):
         if lang['primary lang'] == repo.language:
             langlist.append(lang)
 
-    # Create a stack of readme files to grep
-    grepstack = []
-    try:
-        readmeStr = repo.get_readme().content.decode('base64', 'strict')
-    except IOError as e:
-        return { 'success': False, 'error': "I/O error({0}): {1}".format(e.errno, e.strerror) }
-    except GithubException as e:
-        return { 'success': False, 'error': "GithubException ({0}): {1}".format(e.status, e.data['message']), 'primary lang': repo.language }
-    grepstack.insert(0, readmeStr)                 # may be a null pointer
-
     # Add build system specific definitions to language list based on the presense
     # of specific files like pom.xml.  Also, queue readme related files to grep later
     # looking for environment variables and command lines
     # TODO: This is just looking at files in the root directory.
+
+    readmeFiles = ['building', 'readme']
+    grepstack = []
 
     buildsh = None
     bootstrap = None
@@ -409,12 +402,13 @@ def inferBuildSteps(listing, repo):
             bootstrap = f
         elif f.name in ('build.sh', 'run_build.sh'):
             buildsh = f
-        elif f.name in ('BUILDING.md', 'BUILDING.txt', 'README.maven', 'README.ant', 'BUILDING', 'README.textile'):
+        elif any(x in f.name.lower() for x in readmeFiles):
             if f.type == 'file' and f.size != 0:
                 try:
                     fstr = repo.get_file_contents(f.path).content.decode('base64', 'strict')
                     if fstr != "":
                         grepstack.insert(0, fstr)
+                        logger.debug("inferBuildSteps, grepfile=%s" % f.name)
                 except:
                     pass
 
