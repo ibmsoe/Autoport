@@ -9,6 +9,9 @@ class ChefData:
         self.__localDataDir = globals.localPathForConfig
         self.__logDir = globals.localTarRepoLocation
 
+    def setRepoHost(self, repoHost):
+        self.__repo_hostname = repoHost + ":90"
+
     def setChefDataForSynch(self, distro, distroVersion, arch):
         # This routine in called during synch, to fill up
         # the chef-attributes (package/versions) based on

@@ -278,6 +278,14 @@ def settings():
             # XXX Why is this accessing Jenkins?
             catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
 
+            chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
+
+            jenkinsUrlSubStringLength =  globals.jenkinsUrl.rfind(':')
+            if jenkinsUrlSubStringLength > 4:
+                jenkinsUrlNoPort = globals.jenkinsUrl[:globals.jenkinsUrl.rfind(':')]
+            else:
+                jenkinsUrlNoPort = globals.jenkinsUrl
+            globals.jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
         if userChange:
             logger.info("Applying user parameters")
             autoportUserInit()

@@ -32,7 +32,7 @@ var globalState = {
     isJenkinsTabActive: false,
 
     isHelpDisplayed: true,
-
+    tempJenkinsUrl:"",
     toggleHelp: function() {
         globalState.isHelpDisplayed = !globalState.isHelpDisplayed;
         $("#toggleHelpBtn").text((globalState.isHelpDisplayed?"Hide":"Show")+" help");
@@ -76,6 +76,7 @@ var globalState = {
         document.getElementById('password').value = globalState.configPasswordInit;
         globalState.useTextAnalytics = globalState.useTextAnalyticsInit;
         document.getElementById('loglevel').value = globalState.logLevelInit;
+        globalState.tempJenkinsUrl = globalState.jenkinsUrl;
     },
     updateParameters: function () {
         jenkinsState.loadingState.settingsLoading = true;
@@ -2441,6 +2442,7 @@ function initCallback(data) {
     globalState.configPassword = data.configPassword;
     globalState.useTextAnalytics = data.useTextAnalytics;
     globalState.logLevel = data.logLevel;
+    globalState.tempJenkinsUrl = data.jenkinsUrl;
 
     if (data.gsaConnected !== undefined) {
        if (data.gsaConnected) {
@@ -2459,14 +2461,16 @@ function settingsCallback(data) {
     if (data.status != "ok") {
         showAlert("Bad response from /settings!", data);
     } else {
-        jenkinsState.nodeNames = [];
-        jenkinsState.nodeLabels = [];
-        jenkinsState.nodeDetails = [];
-        jenkinsState.nodeRHEL = [];
-        jenkinsState.nodeUbuntu = [];
-        getJenkinsNodesCallback(data);
-        getJenkinsNodeDetailsCallback(data);
-        showAlert("Updated successfully");
+        if(globalState.tempJenkinsUrl != $('#url').val()){
+            jenkinsState.nodeNames = [];
+            jenkinsState.nodeLabels = [];
+            jenkinsState.nodeDetails = [];
+            jenkinsState.nodeRHEL = [];
+            jenkinsState.nodeUbuntu = [];
+            getJenkinsNodesCallback(data);
+            getJenkinsNodeDetailsCallback(data);
+            showAlert("Updated successfully");
+        }
     }
     if (data.gsaConnected !== undefined) {
        if (data.gsaConnected) {
@@ -2695,10 +2699,39 @@ function getJenkinsNodeDetailsCallback(data) {
         for (i = 0; i < jenkinsState.nodeDetails.length; i++) {
             console.log("Node details: ", jenkinsState.nodeDetails[i]);
         }
+        updateDropdownsWithNodeDetails();
     }
     else {
         showAlert("Could not get Jenkins slaves", data);
     }
+}
+
+function updateDropdownsWithNodeDetails(){
+    $('#singleJenkinsBuildServers').multiselect('refresh');
+    $('#singleJenkinsBuildServers').multiselect('destroy');
+    $('#singleJenkinsBuildServers').multiselect('deselect', jenkinsState.nodeLabels);
+    $('#singleJenkinsBuildServers+div>button>span').text('Build Servers');
+    $('#singleJenkinsBuildServers+div>button').addClass('btn btn-primary');
+
+
+    $('#singleBuildServers').multiselect('refresh');
+    $('#singleBuildServers').multiselect('destroy');
+    $('#singleBuildServers').multiselect('select', jenkinsState.nodeLabels);
+    $('#singleBuildServers+div>button>span').text('Select Build Servers');
+    $('#singleBuildServers+div>button').addClass('btn btn-primary');
+
+    $('#generateBuildServers').multiselect('refresh');
+    $('#generateBuildServers').multiselect('destroy');
+    $('#generateBuildServers').multiselect('select', jenkinsState.nodeLabels);
+    $('#generateBuildServers+div>button>span').text('Select Build Servers');
+    $('#generateBuildServers+div>button').addClass('btn btn-primary');
+
+    $('#batchBuildServers').multiselect('refresh');
+    $('#batchBuildServers').multiselect('destroy');
+    $('#batchBuildServers').multiselect('deselect', jenkinsState.nodeLabels);
+    $('#batchBuildServers+div>button>span').text('Build Servers');
+    $('#batchBuildServers+div>button').addClass('btn btn-primary');
+
 }
 
 function listPackageForSingleSlaveCallback(data) {
