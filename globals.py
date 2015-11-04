@@ -86,6 +86,7 @@ def init():
     global nodeNames
     global nodeOSes
     global nodeHosts
+    global nodeIPs
     global nodeDetails
     global nodeUbuntu
     global nodeRHEL
@@ -128,6 +129,7 @@ def init():
 
     nodeLabels = []
     nodeNames = []
+    nodeIPs = []
     nodeDetails = []
     nodeUbuntu = []
     nodeRHEL = []

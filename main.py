@@ -133,6 +133,7 @@ def getJenkinsNodeDetails_init():
     del globals.nodeRHEL[:]
     del globals.nodeOSes[:]
     del globals.nodeHosts[:]
+    del globals.nodeIPs[:]
 
     action = "query-os"
     for node in globals.nodeLabels:
@@ -150,13 +151,22 @@ def getJenkinsNodeDetails_init():
                 osName = "RHEL"
             globals.nodeOSes.append(osName + ' ' + detail['version'] + ' ' + detail['arch'].upper())
             globals.nodeHosts.append(detail['hostname'])
-        except KeyError:
-            logger.warning("No O/S information for node " + node)
+            globals.nodeIPs.append(detail['ipaddress'])
+        except KeyError as e:
+            if e.args[0] == 'distro':
+                logger.warning("No O/S information for node " + node)
+            elif e.args[0] == 'ipaddress':
+                logger.warning("No IP address information for node " + node)
+            elif e.args[0] == 'hostname':
+                logger.warning("No hostname information for node " + node)
+            else:
+                logger.warning(e.message)
             pass
 
     logger.info("All nodes: " + str(globals.nodeLabels))
     logger.info("All OSes: " + str(globals.nodeOSes))
     logger.info("All hostnames: " + str(globals.nodeHosts))
+    logger.info("All IPs: " + str(globals.nodeIPs))
     logger.info("Ubuntu nodes: " + str(globals.nodeUbuntu))
     logger.info("RHEL nodes: " + str(globals.nodeRHEL))
 
@@ -1648,9 +1658,10 @@ def managePackageForSingleSlave():
        for node in globals.nodeDetails:
           if node['nodelabel'] == selectedBuildServer:
               host = node['hostname']
+              ipaddress = node['ipaddress']
        chefAttr, runList = chefData.setChefDataForPackage(packageName, packageVersion, \
                                packageType, packageAction, extension)
-       job = createChefJob(host, chefAttr, runList)
+       job = createChefJob(host, ipaddress, chefAttr, runList)
        buildStatus = ""
        try:
            if job['status'] == "success":
@@ -1982,7 +1993,7 @@ def createSynchJobs(nodes):
                     chefAttr, runList, numberOfInstalls,numberOfUnInstalls = chefData.setChefDataForSynch(node['distro'],
                                                                             node['rel'], node['arch'])
                     # Creating chef job for the node.
-                    job = createChefJob(node['hostname'], chefAttr, runList, "managed-package")
+                    job = createChefJob(node['hostname'], node['ipaddress'], chefAttr, runList, "managed-package")
                     try:
                         if job['status'] == "success":
                             jobs.append(job['jobName'])
@@ -2008,7 +2019,7 @@ def createSynchJobs(nodes):
 
     return jobs, jobNode
 
-def createChefJob(host, chefAttr, runList, jobType="single-package"):
+def createChefJob(host, ipaddress, chefAttr, runList, jobType="single-package"):
     tree = ET.parse("./config_template_knife_bootstrap.xml")
     root = tree.getroot()
 
@@ -2029,12 +2040,14 @@ def createChefJob(host, chefAttr, runList, jobType="single-package"):
             if i == 1:
                 param.text = host
             elif i == 2:
-                param.text = json.dumps(chefAttr[0])
+                param.text = ipaddress
             elif i == 3:
-                param.text = json.dumps(runList[0])
+                param.text = json.dumps(chefAttr[0])
             elif i == 4:
-                param.text = json.dumps(chefAttr[1])
+                param.text = json.dumps(runList[0])
             elif i == 5:
+                param.text = json.dumps(chefAttr[1])
+            elif i == 6:
                 param.text = json.dumps(runList[1])
             i += 1
     else:
@@ -2042,8 +2055,10 @@ def createChefJob(host, chefAttr, runList, jobType="single-package"):
             if i == 1:
                 param.text = host
             elif i == 2:
-                param.text = json.dumps(chefAttr)
+                param.text = ipaddress
             elif i == 3:
+                param.text = json.dumps(chefAttr)
+            elif i == 4:
                 param.text = json.dumps(runList)
             i += 1
 

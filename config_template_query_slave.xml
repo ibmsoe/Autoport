@@ -53,7 +53,8 @@
 #           vers:                        Distribution Version
 #           arch:                        Processor Architecture
 #           hostname:                    Short hostname
-#           nodelabel:                   Jenkins node label 
+#           nodelabel:                   Jenkins node label
+#           ipaddress:                   Jenkins node ipaddress
 
 set +o noclobber # Allow overwrite of files just in case it is set to off
 set +x
@@ -69,6 +70,17 @@ if [ -e /etc/redhat-release ] ; then
 fi
 
 echo &quot;DISTRIBUTION: &quot; $DISTRIBUTION
+
+IPADDR=$(python - &lt;&lt;-EOF
+import socket
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# Does not send packets, just creates a connection to
+# DNS server of Google
+s.connect(( &quot;8.8.8.8&quot;, 80))
+print s.getsockname()[0]
+s.close
+EOF
+)
 
 case $ACTION in
     &quot;query-os&quot;)
@@ -93,7 +105,7 @@ case $ACTION in
 
         ARCH=`uname -m`
         HOSTNAME=`hostname`
-        echo &quot;{$DISTRO, \&quot;rel\&quot;: \&quot;$REL\&quot;,\&quot;version\&quot;: \&quot;$VER\&quot;, \&quot;arch\&quot;: \&quot;$ARCH\&quot;, \&quot;hostname\&quot;: \&quot;$HOSTNAME\&quot;, \&quot;nodelabel\&quot;: \&quot;$NODE\&quot;}&quot; &gt; $ACTION.json
+        echo &quot;{$DISTRO, \&quot;rel\&quot;: \&quot;$REL\&quot;,\&quot;version\&quot;: \&quot;$VER\&quot;, \&quot;arch\&quot;: \&quot;$ARCH\&quot;, \&quot;hostname\&quot;: \&quot;$HOSTNAME\&quot;, \&quot;nodelabel\&quot;: \&quot;$NODE\&quot;, \&quot;ipaddress\&quot;: \&quot;$IPADDR\&quot;}&quot; &gt; $ACTION.json
         ;;
 esac
 
