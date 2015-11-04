@@ -54,15 +54,15 @@ class Mover:
                     th.__jenkinsFtpClient = th.__jenkinsSshClient.open_sftp()
                     th.__jenkinsTransportSession = th.__jenkinsSshClient.get_transport()
                 except paramiko.AuthenticationException as e:
-                    msg="Thread[%s] Please provide valid Jenkins credentials in settings menu!" % str(th.__id)
+                    msg="Thread[%s] Please provide valid Jenkins credentials (%s) in settings menu!" % (str(th.__id), self.__jenkinsHost)
                     logger.debug(msg)
                     logger.debug(str(e))
                 except paramiko.SSHException as e:
                     msg="Thread[%s] SSH connection error to Jenkins.  You may need to authenticate.  Check networking!" % str(th.__id)
                     logger.debug(msg)
                     logger.debug(str(e))
-                except IOError as e:
-                    msg = "Thread[%s] Please ensure that the host associated with the Jenkins URL is reachable!" % str(th.__id)
+                except Exception as e:
+                    msg = "Thread[%s] connect Error: %s" % (str(th.__id), str(e))
                     logger.debug(msg)
                     logger.debug(str(e))
                 else:

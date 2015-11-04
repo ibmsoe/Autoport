@@ -261,10 +261,6 @@ def settings():
         return json.jsonify(status="failure", error="bad value for logLevel"), 400
 
     try:
-        userChange = hostname != globals.hostname or\
-           configUsername != globals.configUsername or\
-           configPassword != globals.configPassword
-
         if jenkinsUrl != globals.jenkinsUrl:
             logger.info("Stopping threads[] connected to old Jenkins master")
 
@@ -286,14 +282,22 @@ def settings():
             else:
                 jenkinsUrlNoPort = globals.jenkinsUrl
             globals.jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
-        if userChange:
+
+    except Exception as e :
+        logger.warning("settings: Jenkins=%s Error=%s" % (urlparse(globals.jenkinsUrl).hostname, str(e)))
+        msg = "Invalid Jenkins URL or networking issue.\nHostname: %s\nError: %s" % (urlparse(globals.jenkinsUrl).hostname, str(e))
+        return json.jsonify(status="failure", gsaConnected=globals.gsaConnected, error=msg)
+
+    try:
+        if hostname != globals.hostname or configUsername != globals.configUsername or configPassword != globals.configPassword:
             logger.info("Applying user parameters")
             autoportUserInit()
 
     except Exception as e :
-        logger.warning("settings: Error %s" % (str(e)))
+        logger.warning("settings: Archive parameters Error=%s" % (str(e)))
+        msg = "Invalid Archive Parameters (hostname, username, or password) %s\nError: %s" % (str(e))
         batch.disconnect()
-        return json.jsonify(status="failure", gsaConnected=globals.gsaConnected, error=str(e))
+        return json.jsonify(status="failure", gsaConnected=globals.gsaConnected, error=msg)
 
     return json.jsonify(status="ok", gsaConnected=globals.gsaConnected,
                         nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels,

@@ -126,7 +126,7 @@ class SharedData:
             msg="SSH connection error to Jenkins.  You may need to authenticate.  Check networking!"
             logger.warning(msg)
             assert(False), msg
-        except IOError as e:
+        except Exception as e:
             msg = str(e) + ". Please ensure that the host associated with the Jenkins URL is reachable!"
             logger.error(msg)
             assert(False), msg
@@ -137,7 +137,7 @@ class SharedData:
             f = open(localPath)
             dataStr = json.load(f, object_pairs_hook=OrderedDict) # Load the json data maintaining its original order.
             f.close();
-        except IOError as e:
+        except Exception as e:
             assert(False), str(e)
         return dataStr
 
@@ -147,9 +147,8 @@ class SharedData:
             f = open(localPath, 'w')
             json.dump(data, f, indent=4, sort_keys=False) # writes back in pretty printed json form
             f.close();
-        except IOError as e:
-            print str(e)
-            assert(False)
+        except Exception as e:
+            assert(False), str(e)
         return localPath
 
     def getSharedData(self, name, path):
@@ -160,9 +159,11 @@ class SharedData:
             self.__jenkinsFtpClient.get(name, localPath)
             f = open(localPath)
             data = json.load(f)
+        except Exception as e:
+            logger.debug("getSharedData: Error %s" % str(e))
+        else:
             f.close()
-        except IOError as e:
-            pass
+
         return data
 
     def putSharedData(self, data, oldData, path):
@@ -180,7 +181,7 @@ class SharedData:
         try:
             previousDirectory = self.__sharedDataDir
             self.__jenkinsFtpClient.chdir(previousDirectory)
-        except IOError as e:
+        except Exception as e:
             self.__jenkinsFtpClient.mkdir(previousDirectory)
 
         # Create the optional directories provided via path
@@ -189,7 +190,7 @@ class SharedData:
             try:
                 previousDirectory = previousDirectory + directory + "/"
                 self.__jenkinsFtpClient.chdir(previousDirectory)
-            except IOError as e:
+            except Exception as e:
                 self.__jenkinsFtpClient.mkdir(previousDirectory)
 
         try:
@@ -210,7 +211,7 @@ class SharedData:
             if afterData and afterData['sequence'] != data['sequence']:
                 return ""
 
-        except IOError as e:
+        except Exception as e:
             print str(e)
             assert(False)
 
@@ -221,7 +222,7 @@ class SharedData:
         try:
             localPath = os.path.join(self.__localPackageDir, file.filename)
             file.save(localPath)
-        except IOError as e:
+        except Exception as e:
             print str(e)
             assert(False)
         return localPath
@@ -231,13 +232,13 @@ class SharedData:
         # shared by all autoport instances
         try:
             self.__jenkinsFtpClient.chdir(remotePath)
-        except IOError as e:
+        except Exception as e:
             self.__jenkinsFtpClient.mkdir(remotePath)
         try:
             remotePath = os.path.join(remotePath, filename)
             self.__jenkinsFtpClient.put(localPath, remotePath)
 
-        except IOError as e:
+        except Exception as e:
             print str(e)
             assert(False)
 
@@ -253,7 +254,7 @@ class SharedData:
                 stderr = channel.makefile_stderr('rb', -1).readlines()
                 if stderr:
                     print stderr
-        except IOError as e:
+        except Exception as e:
             print str(e)
         return exit_status, stderr
 
@@ -414,7 +415,7 @@ class SharedData:
                 localData['hostname'] = self.__localHostName
                 localPath = self.putLocalData(localData, "")
                 shutil.copyfile(localPath, "chef-repo/autoport-chef-repo-version.json")
-            except IOError as e:
+            except Exception as e:
                 logger.warning(str(e))
                 logger.warning("Failed store of chef-repo debug to sub-dir, continuing")
                 pass
