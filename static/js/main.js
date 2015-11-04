@@ -2459,6 +2459,13 @@ function settingsCallback(data) {
     if (data.status != "ok") {
         showAlert("Bad response from /settings!", data);
     } else {
+        jenkinsState.nodeNames = [];
+        jenkinsState.nodeLabels = [];
+        jenkinsState.nodeDetails = [];
+        jenkinsState.nodeRHEL = [];
+        jenkinsState.nodeUbuntu = [];
+        getJenkinsNodesCallback(data);
+        getJenkinsNodeDetailsCallback(data);
         showAlert("Updated successfully");
     }
     if (data.gsaConnected !== undefined) {
@@ -3386,15 +3393,14 @@ $(document).ready(function() {
         dataType: "json",
         async:false
     });
-    // TODO : Make this asynchronous as there may be a lot of build slaves.  Enhance autoport driver to use threads
-    //        for parallelism but with a synchronous return wrt thread to aggregate data for caller
     $.ajax({
         type: 'POST',
+        contentType: "application/json; charset=utf-8",
         url: "getJenkinsNodeDetails",
-        data: {},
+        data: JSON.stringify({nodeLabels: jenkinsState.nodeLabels}),
         success: getJenkinsNodeDetailsCallback,
         dataType: "json",
-        async:false
+        async:true
     });
     // Initialize bootstrap multiselect plugin
     // Config options go here

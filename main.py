@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!ns/usr/bin/env python
 
 # Importing globals and initializing them is the top priority
 import globals
@@ -93,15 +93,11 @@ def init():
                         logLevel=globals.logLevel,
                         gsaConnected=globals.gsaConnected)
 
-#TODO - add error checking
-@app.route("/autoport/getJenkinsNodes", methods=["POST"])
-def getJenkinsNodes():
+def getJenkinsNodes_init():
+    nodeNames = []
+    nodeLabels = []
+
     nodesUrl = globals.jenkinsUrl + "/computer/api/json?pretty=true"
-
-    # Empty the global lists
-    del globals.nodeNames[:]
-    del globals.nodeLabels[:]
-
     try:
         nodesResults = json.loads(requests.get(nodesUrl).text)
         nodes = nodesResults['computer']
@@ -112,20 +108,24 @@ def getJenkinsNodes():
         if not node['offline']:
             name = node['displayName']
             if name != "master":
-                globals.nodeNames.append(name)
+                nodeNames.append(name)
                 root = ET.fromstring(requests.get(globals.jenkinsUrl +
                     "/computer/" + name + "/config.xml").text)
-                globals.nodeLabels.append(root.find("./label").text)
+                nodeLabels.append(root.find("./label").text)
 
-    return json.jsonify(status="ok", nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels)
+    return nodeNames, nodeLabels
+
+@app.route("/autoport/getJenkinsNodes", methods=["POST"])
+def getJenkinsNodes():
+    # Query online build slaves when client attaches
+    nodeNames, nodeLabels = getJenkinsNodes_init()
+    return json.jsonify(status="ok", nodeNames=nodeNames, nodeLabels=nodeLabels)
 
 # Get O/S details for build servers including distribution, release, version, hostname, ...
 # Don't fail as a lot of func is still possible.  Nodes may go offline at any time.
 # TODO - Run with threads in parallel synchronously as caller requires data
 
-@app.route("/autoport/getJenkinsNodeDetails", methods=["POST"])
-def getJenkinsNodeDetails():
-    action = "query-os"
+def getJenkinsNodeDetails_init():
 
     # Empty the global lists
     del globals.nodeDetails[:]
@@ -134,6 +134,7 @@ def getJenkinsNodeDetails():
     del globals.nodeOSes[:]
     del globals.nodeHosts[:]
 
+    action = "query-os"
     for node in globals.nodeLabels:
         results = queryNode(node, action)
         try:
@@ -159,7 +160,42 @@ def getJenkinsNodeDetails():
     logger.info("Ubuntu nodes: " + str(globals.nodeUbuntu))
     logger.info("RHEL nodes: " + str(globals.nodeRHEL))
 
-    return json.jsonify(status="ok", details=globals.nodeDetails, ubuntu=globals.nodeUbuntu, rhel=globals.nodeRHEL)
+@app.route("/autoport/getJenkinsNodeDetails", methods=["POST"])
+def getJenkinsNodeDetails():
+
+    try:
+        nodeLabels = request.json['nodeLabels']
+    except KeyError:
+        return json.jsonify(status="failure", error="missing nodeLabels argument"), 400
+
+    if not nodeLabels:
+        return json.jsonify(status="failure", error="There are no online Jenkins build slaves"), 404
+
+    logger.debug("In getJenkinsNodeDetails, nodeLabels=%s" % nodeLabels)
+
+    # Utilize cached data to avoid long connect times or connect failures when a build slave is busy or hung
+    nodeDetails = []
+    nodeUbuntu = []
+    nodeRHEL = []
+    for node in nodeLabels:
+        if not node in globals.nodeLabels:
+            logger.info("getJenkinsNodeDetails, new node=%s" % node)
+            msg = "Unknown Jenkins Server: %s.  Refresh build server configuration on Build Server tab" % node
+            return json.jsonify(status="failure", error=msg), 408
+
+        if node in globals.nodeUbuntu:
+            nodeUbuntu.append(node)
+        elif node in globals.nodeRHEL:
+            nodeRHEL.append(node)
+
+        i = globals.nodeLabels.index(node)
+        nodeDetails.append(globals.nodeDetails[i])
+
+    logger.info("All nodes: " + str(nodeLabels))
+    logger.info("Ubuntu nodes: " + str(nodeUbuntu))
+    logger.info("RHEL nodes: " + str(nodeRHEL))
+
+    return json.jsonify(status="ok", details=nodeDetails, ubuntu=nodeUbuntu, rhel=nodeRHEL)
 
 # Settings function
 @app.route("/autoport/settings", methods=['POST'])
@@ -225,22 +261,36 @@ def settings():
         return json.jsonify(status="failure", error="bad value for logLevel"), 400
 
     try:
-        if (jenkinsUrl != globals.jenkinsUrl or hostname != globals.hostname or \
-            configUsername != globals.configUsername or configPassword != globals.configPassword):
-            catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname,
-                            globals.port, globals.configUsername, globals.configPassword,
-                            globals.configJenkinsUsername, globals.configJenkinsKey,
-                            globals.pathForTestResults, globals.localPathForTestResults)
-            batch.connect(globals.hostname, globals.port,
-                          globals.configUsername, globals.configPassword)
-            sharedData.connect(urlparse(globals.jenkinsUrl).hostname, userName = globals.configUsername)
+        userChange = hostname != globals.hostname or\
+           configUsername != globals.configUsername or\
+           configPassword != globals.configPassword
+
+        if jenkinsUrl != globals.jenkinsUrl:
+            logger.info("Stopping threads[] connected to old Jenkins master")
+
+            # Drain thread queue to ensure that old requests are completed first
             mover.resetConnection()
-            mover.start(urlparse(globals.jenkinsUrl).hostname, globals.configJenkinsUsername, globals.configJenkinsKey)
+
+            # Initialize globals, mover threads, and Chef master
+            autoportJenkinsInit()
+
+            # Initialize catalog
+            # XXX Why is this accessing Jenkins?
+            catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
+
+        if userChange:
+            logger.info("Applying user parameters")
+            autoportUserInit()
+
     except Exception as e :
+        logger.warning("settings: Error %s" % (str(e)))
         batch.disconnect()
         return json.jsonify(status="failure", gsaConnected=globals.gsaConnected, error=str(e))
 
-    return json.jsonify(status="ok", gsaConnected=globals.gsaConnected)
+    return json.jsonify(status="ok", gsaConnected=globals.gsaConnected,
+                        nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels,
+                        details=globals.nodeDetails, ubuntu=globals.nodeUbuntu,
+                        rhel=globals.nodeRHEL)
 
 @app.route("/autoport/progress")
 def progress():
@@ -2360,19 +2410,29 @@ def getBatchTestDetails():
     else:
         return json.jsonify(status=batchDetails['status'], results = batchDetails)
 
-def autoportInitialisation():
+def autoportJenkinsInit():
     # This is called before starting the flask application.  It is responsible
     # for performing initial setup of the Jenkins master.  Only required items
     # should be performed here.  On error, messages are printed to the console
     # and assert(False) is invoked to provide the debug context.
-    sharedData.connect(urlparse(globals.jenkinsUrl).hostname)
-    sharedData.uploadChefData()
+
+    # Start threads as getJenkinsNodeDetails uses thread pool
     mover.start(urlparse(globals.jenkinsUrl).hostname, globals.configJenkinsUsername,\
                 globals.configJenkinsKey)
+
+    # Get new jenkins node information
+    globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
+    getJenkinsNodeDetails_init()
+
+    sharedData.connect(urlparse(globals.jenkinsUrl).hostname)
+    sharedData.uploadChefData()
+
+def autoportUserInit():
     if globals.hostname and globals.configUsername and globals.configPassword :
         catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
         batch.connect(globals.hostname, globals.port,
                       globals.configUsername, globals.configPassword)
+    # XXX catalog needs a disconnect
 
 if __name__ == "__main__":
     # When the server instance is freshly started clear up all the /tmp/ directories created by the application
@@ -2400,7 +2460,8 @@ if __name__ == "__main__":
     if args.allocBuildServers:
         globals.allocBuildServers = args.allocBuildServers
 
-    autoportInitialisation()
+    autoportJenkinsInit()
+    autoportUserInit()
 
     hostname = "127.0.0.1"
     if args.public:

@@ -25,21 +25,18 @@ class Mover:
             threadRequests = makeRequests(self.connectInit, [((i,), {})])
             [globals.threadPool.putRequest(req) for req in threadRequests]
 
-        # Do 1 to validate the connection.  This guarantees that config.ini data / globals is correct  
+        # Do 1 to validate the connection.  This is synchronous
         for i in range(1):
             threadRequests = makeRequests(self.connect, [((i,), {})])
             [globals.threadPool.putRequest(req) for req in threadRequests]
-            globals.threadPool.wait()
+        globals.threadPool.wait()
 
-        # Do 2 more to validate reconnect logic.  Has to be 2 as the same thread may be re-scheduled
-        for i in range(2):
+        # Thread queueing results in new thread connections later, so do them all now
+        # asynchronously so that they are ready when needed without having to wait.  This is
+        # the connectRetry logic, so all paths are used during startup
+        for i in range(globals.threadPoolSize - 1):
             threadRequests = makeRequests(self.connectRetry, [((), {})])
             [globals.threadPool.putRequest(req) for req in threadRequests]
-
-        # Uncomment this if you want to connect all up front.  
-#       for i in range(globals.threadPoolSize):
-#           threadRequests = makeRequests(self.connectValidate, [((i,), {})])
-#           [globals.threadPool.putRequest(req) for req in threadRequests]
 
     def connectInit(self, i):
         th.__status = -1
@@ -65,7 +62,7 @@ class Mover:
                     logger.debug(msg)
                     logger.debug(str(e))
                 except IOError as e:
-                    msg = "Thread[%s] Please ensure that the host associated with the Jenkins URL is reachable!"
+                    msg = "Thread[%s] Please ensure that the host associated with the Jenkins URL is reachable!" % str(th.__id)
                     logger.debug(msg)
                     logger.debug(str(e))
                 else:
@@ -109,13 +106,15 @@ class Mover:
     # Resetting threadpool
     def resetConnection(self):
         try:
+            # Gain control over each thread
             for i in range(globals.threadPoolSize):
-                th.__id=i
-                self.close()
+                threadRequests = makeRequests(self.close, [((), {})])
+                [globals.threadPool.putRequest(req) for req in threadRequests]
+            globals.threadPool.wait()
+
             globals.threadPool.dismissWorkers(globals.threadPoolSize)
             globals.threadPool.joinAllDismissedWorkers()
             globals.threadPool = ThreadPool(globals.threadPoolSize)
-            th.__status = -1
         except Exception as e:
             logger.error("mover.resetConnection: " + str(e))
 
@@ -213,11 +212,10 @@ class Mover:
 
     def close(self):
         try:
-            th.__jenkinsFtpClient.close()
-        except Exception as e:
-            th.__status = -1
-            self.connectRetry()
-            try:
+            if not th.__status:
                 th.__jenkinsFtpClient.close()
-            except Exception as e:
-                logger.error("mover.close: " + str(e))
+                th.__status = -1
+                logger.info("Thread[%s] closed connection to Jenkins master" % str(th.__id))
+            sleep(4)
+        except Exception as e:
+            logger.error("mover.close: " + str(e))
