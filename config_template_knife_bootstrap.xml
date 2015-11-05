@@ -18,6 +18,11 @@
                <defaultValue />
             </hudson.model.StringParameterDefinition>
             <hudson.model.StringParameterDefinition>
+               <name>ipaddress</name>
+               <description />
+               <defaultValue />
+            </hudson.model.StringParameterDefinition>
+            <hudson.model.StringParameterDefinition>
                <name>chefInstallAttr</name>
                <description />
                <defaultValue />
@@ -61,7 +66,7 @@
 # If both the actions are carried out in a single bootstrap command the version value
 # gets overriden as per the last version entry in ManagedList.json , this leads to installation
 # and removal of same version of the package. To avoid this we carry out install and unistall
-# of packages seperately. 
+# of packages seperately.
 
 # Running chef recipes for removing packages
 if [ ! -z "$chefRemoveAttr" -a "$chefRemoveAttr" != " " ]; then
@@ -88,7 +93,7 @@ rm -rf $role.json
 # Running the chef scripts to install appropriate pacakges.
 
 echo "-------------------Running knife bootstrap to remove packages---------------"
-knife bootstrap $host -N $host -x autochef -P autochef --sudo --use-sudo-password autochef -r role[$role]
+knife bootstrap $ipaddress -N $host -x autochef -P autochef --sudo --use-sudo-password autochef -r role[$role]
 
 echo "---------------------Deleting chef role created for installation of packages"
 knife role delete $role -y
@@ -113,7 +118,7 @@ knife role from file $role.json
 rm -rf $role.json
 
 echo "-------------------Running knife bootstrap to install packages---------------------"
-knife bootstrap $host -N $host -x autochef -P autochef --sudo --use-sudo-password autochef -r role[$role]
+knife bootstrap $ipaddress -N $host -x autochef -P autochef --sudo --use-sudo-password autochef -r role[$role]
 
 echo "---------------------Deleting chef role created for installation of packages"
 knife role delete $role -y

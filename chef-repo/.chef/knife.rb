@@ -1,8 +1,8 @@
-# chef_server is set to hostname of the current node , considering that workstation and chef-server are on the same node
+# chef_server is set to ipaddress of the current node , considering that workstation and chef-server are on the same node
 # As per design , in autoport both chef-server and chef-workstation would be configured on the same node.
 
 current_dir = File.dirname(__FILE__)
-chef_server = Socket.gethostbyname(Socket.gethostname).first
+chef_server = Socket.ip_address_list[1].ip_address
 
 log_level                :info
 log_location             STDOUT
