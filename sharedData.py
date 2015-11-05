@@ -136,9 +136,10 @@ class SharedData:
         try:
             f = open(localPath)
             dataStr = json.load(f, object_pairs_hook=OrderedDict) # Load the json data maintaining its original order.
-            f.close();
         except Exception as e:
             assert(False), str(e)
+        else:
+            f.close();
         return dataStr
 
     def putLocalData(self, data, prefix):
@@ -146,9 +147,10 @@ class SharedData:
         try:
             f = open(localPath, 'w')
             json.dump(data, f, indent=4, sort_keys=False) # writes back in pretty printed json form
-            f.close();
         except Exception as e:
             assert(False), str(e)
+        else:
+            f.close();
         return localPath
 
     def getSharedData(self, name, path):
@@ -200,20 +202,24 @@ class SharedData:
             nowData = self.getSharedData(data['name'], path)
             if (nowData and not oldData) or \
                (nowData and nowData['sequence'] != oldData['sequence']):
+                logger.debug("putSharedData: shared data put by another autoport client")
                 return ""
 
             # Write "putShared" local data to shared location
             self.__jenkinsFtpClient.put(localPath, sharedPath)
+            logger.debug("putSharedData: wrote data to Jenkins master at %s" % sharedPath)
 
             # Read to see if our write was the last one, else return
             # an error for calling code to retry
             afterData = self.getSharedData(data['name'], path)
-            if afterData and afterData['sequence'] != data['sequence']:
+            if not afterData:
+                logger.debug("putSharedData: write to Jenkins master failed")
+            elif afterData['sequence'] != data['sequence']:
+                logger.debug("putSharedData: jenkins data different version=%s sequence=%s" % (afterData['version'], afterData['sequence']))
                 return ""
 
         except Exception as e:
-            print str(e)
-            assert(False)
+            assert(False), str(e)
 
         return sharedPath
 
@@ -223,8 +229,7 @@ class SharedData:
             localPath = os.path.join(self.__localPackageDir, file.filename)
             file.save(localPath)
         except Exception as e:
-            print str(e)
-            assert(False)
+            assert(False), str(e)
         return localPath
 
     def putSharedFile(self, localPath, remotePath, filename):
@@ -239,8 +244,7 @@ class SharedData:
             self.__jenkinsFtpClient.put(localPath, remotePath)
 
         except Exception as e:
-            print str(e)
-            assert(False)
+            assert(False), str(e)
 
     def executeSharedCommand(self, command):
         # Execute remote commands on Jenkins Master to manipulate shared data
@@ -255,7 +259,7 @@ class SharedData:
                 if stderr:
                     print stderr
         except Exception as e:
-            print str(e)
+            logger.debug("executeSharedCommand: Error %s" % str(e))
         return exit_status, stderr
 
     def getPkgExtensions(self, filename):
@@ -416,8 +420,8 @@ class SharedData:
                 localPath = self.putLocalData(localData, "")
                 shutil.copyfile(localPath, "chef-repo/autoport-chef-repo-version.json")
             except Exception as e:
-                logger.warning(str(e))
                 logger.warning("Failed store of chef-repo debug to sub-dir, continuing")
+                logger.warning(str(e))
                 pass
 
             filename = "chef-repo.tar.gz"
@@ -481,9 +485,7 @@ class SharedData:
                (localVersion == newSharedVersion and localSequence > newSharedSequence) or \
                (exit_status):
 
-                msg = "Re-try upload of chef cookbook"
-                logger.info(msg)
-                print msg
+                logger.info("Re-try upload of chef cookbook")
 
                 cmdR = "chef-server-ctl reconfigure > ../chef-server-reconfig.out.$$ 2>&1"
                 command = cmd1 + " && " + cmd2 + " && " + cmdR + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
