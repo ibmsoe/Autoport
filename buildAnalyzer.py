@@ -32,6 +32,11 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
                 'autoreconf ', 'automake ', 'aclocal ', 'scons ', 'sbt ',
                 'cmake ', 'gradle ', 'bundle ', 'perl ', 'php ']
 
+    # List words that, if appearing in front of a command, indicate that it's
+    # descriptive text, not a build command
+    english = ['the', 'a', 'an', 'is', 'are', 'can', 'you', 'of', 'in', 'from',
+               'this', 'to', 'that', 'when', 'should', 'might']
+    
     retval = []
     for fstr in grepStack:
         build_found = False
@@ -48,6 +53,16 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
                 if len(line):
                     # TODO: Remove, limit, or put under globals.text_analytics before GA
                     logger.debug("text_analytics_cmds, idx=%s scanning line=%s" % (str(idx), line))
+
+                    isText = False
+                    for word in english:
+                        if word in line.split(' '):
+                            isText = True
+                            break
+
+                    if isText:
+                        continue
+                    
                     for command in commands:
                                                                     # TODO: validate start of command line
                         if len(line.split(' ')) <= max_words and\
