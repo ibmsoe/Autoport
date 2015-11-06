@@ -567,11 +567,10 @@ var batchReportState = {
             // For going back to displaying batch comparison and hiding details.
             batchReportState.batchReportTableReady = true;
             batchReportState.batchReportLogRequested = false;
-            $('#testBatchLogResultsTable tr').remove();
         }else{
-            $('#testBatchLogResultsTable tr').remove();
             batchReportState.backToBatchList(ev);
         }
+        $('#testBatchLogResultsTable tr').remove();
 
         batchReportState.loading = false;
     },
