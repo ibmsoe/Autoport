@@ -1,0 +1,45 @@
+{% load i18n %}
+{#<a href="javascript:void(0);" id="{{ stack.id }}" onmouseover="query_stack_ip()">{% trans "IP Address" %}</a>#}
+{#<script type="text/javascript">#}
+{#    function query_stack_ip() {#}
+{#        $.get(#}
+{#                '{% url "horizon:project:stacks:ip_info" stack.id %}',#}
+{#                function(data) {#}
+{#                    var message = "";#}
+{#                    for (i in data.outputs) {#}
+{#                        var out_title = data.outputs[i].output_key;#}
+{#                        if (data.outputs[i].output_key.indexOf("master_server_floating_ip") != -1) {#}
+{#                            out_title = gettext("Master node floating ip");#}
+{#                        }#}
+{#                        if (data.outputs[i].output_key.indexOf("master_server_internal_ip") != -1) {#}
+{#                            out_title = gettext("Master node internal ip");#}
+{#                        }#}
+{#                        message += out_title + " : <b>" + data.outputs[i].output_value + "</b>" + "<br>";#}
+{#                    }#}
+{#                    layer.tips(message, "#{{ stack.id }}",#}
+{#                            {#}
+{#                                tips: [1, '#3595CC'],#}
+{#                                time: 7000,#}
+{#                                closeBtn: 1,#}
+{#                                maxWidth: 300#}
+{#                            });#}
+{#                }#}
+{#        )#}
+{#    }#}
+{#</script>#}
+<span id="stack_ip_{{ stack.id }}"><i class="fa fa-rotate-right fa-spin"></i></span>
+<script type="text/cjs">
+        $.get(
+                '{% url "horizon:project:stacks:ip_info" stack.id %}',
+                function(data) {
+                    var span_id = "#stack_ip_{{ stack.id }}";
+                    var stack_ip = "";
+                    for (i in data.outputs) {
+                       stack_ip += data.outputs[i].output_key + " : <b>"+data.outputs[i].output_value+"</b><br>";
+                    }
+                    console.log(stack_ip);
+                    console.log(span_id);
+                    $(span_id).html(stack_ip);
+                }
+        )
+</script>

@@ -1,0 +1,8 @@
+Dear：
+
+Your server is creating, the following is your server infomation:
+External IP：{{ topic.floating_ip }}
+Internal IP：{{ topic.fixed_ip }}
+Account： opuser ; Password：p0weruser。
+Password for root：passw0rd .
+When you first login, Please change the password immediately!

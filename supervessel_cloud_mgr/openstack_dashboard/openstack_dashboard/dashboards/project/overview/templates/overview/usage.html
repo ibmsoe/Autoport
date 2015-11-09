@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Instance Overview" %}{% endblock %}
+
+{#{% block page_header %}#}
+{#  {% include "horizon/common/_page_header.html" with title=_("Overview") %}#}
+{#{% endblock page_header %}#}
+{% block crumbtitle %}
+    <li>
+        {% trans "Overview" %}
+    </li>
+{% endblock crumbtitle %}
+{% block table_css_classes %}
+    table table-striped table-bordered table-hover
+{% endblock %}
+
+{% block main %}
+    <section id="widget-grid" class="">
+        {% include "horizon/common/_limit_summary.html" %}
+
+        {% if simple_tenant_usage_enabled %}
+            {% include "horizon/common/_usage_summary.html" %}
+            <div class="row">
+                <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                    <!-- Widget ID (each widget will need unique ID)-->
+                    <div class="jarviswidget jarviswidget-color-darken" data-widget-editbutton="false" data-widget-deletebutton="false">
+                        <header>
+                            <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                            <h2>{% trans "All Instances" %} </h2>
+                        </header>
+                        <div>
+                            <div class="jarviswidget-editbox">
+                            </div>
+                            {{ table.render }}
+                        </div>
+                    </div>
+                </article>
+            </div>
+        {% endif %}
+    </section>
+{% endblock %}

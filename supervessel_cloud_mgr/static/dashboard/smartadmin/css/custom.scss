@@ -1,0 +1,122 @@
+/* new clearfix */
+.clearfix:after {
+  visibility: hidden;
+  display: block;
+  font-size: 0;
+  content: " ";
+  clear: both;
+  height: 0;
+}
+* html .clearfix {
+  zoom: 1;
+} // IE6
+*:first-child+html .clearfix {
+  zoom: 1;
+} // IE7
+
+@mixin box-shadow($shadow...) {
+  -webkit-box-shadow: $shadow; // iOS <4.3 & Android <4.1
+  box-shadow: $shadow;
+}
+
+td.actions_column .row_actions a,
+td.actions_column .row_actions input,
+td.actions_column .row_actions button,
+div.table_actions_menu .dropdown-menu a,
+div.table_actions_menu .dropdown-menu input,
+div.table_actions_menu .dropdown-menu button {
+  background: none;
+  float: none;
+  display: block;
+  padding: 5px 10px;
+  color: #333333;
+  text-align: left;
+  border-radius: 0;
+  border: 0 none;
+  @include box-shadow(none);
+}
+
+td.actions_column .row_actions .hide {
+  display: none;
+}
+
+tr td.actions_column ul.row_actions.single,
+tr:hover td.actions_column ul.row_actions.single,
+td.actions_column ul.row_actions.single,
+td.actions_column ul.row_actions.single:hover {
+  border: none;
+}
+
+td.actions_column ul.row_actions.single li.action {
+  display: block;
+}
+
+td.actions_column ul.row_actions.single li.action:hover {
+  background-color: transparent;
+}
+
+td.actions_column ul.row_actions.single a,
+td.actions_column ul.row_actions.single input,
+td.actions_column ul.row_actions.single button {
+  color: #5bc0de;
+}
+
+td.actions_column ul.row_actions.single a:hover,
+td.actions_column ul.row_actions.single input:hover,
+td.actions_column ul.row_actions.single button:hover {
+  color: #333333;
+}
+
+.table_actions .table_actions_menu {
+  display: inline-block;
+  position: relative;
+  margin-left: 5px;
+  .dropdown-menu {
+    left: auto;
+    right: 0;
+    a, button {
+      margin-left: 0px;
+      padding-left: 22px;
+      .glyphicon {
+        margin-left: -14px;
+      }
+    }
+  }
+}
+
+.dropdown-menu button {
+  line-height: 18px; /* Matches rule for ".dropdown-menu a" in bootstrap */
+  width: 100%;
+}
+.btn-group .dropdown-menu .btn {
+  border-radius: 0;
+}
+.dropdown-menu .btn.btn-danger,
+.dropdown-menu .btn.btn-danger:hover,
+.dropdown-menu .btn.btn-success,
+.dropdown-menu .btn.btn-success:hover,
+.dropdown-menu .btn.btn-info,
+.dropdown-menu .btn.btn-info:hover {
+  text-shadow: none; /* remove default bootstrap shadowing from button text. */
+}
+.dropdown-menu li:hover {
+  background: none;
+}
+
+td.actions_column .dropdown-menu a:hover,
+td.actions_column .dropdown-menu button:hover,
+div.table_actions_menu .dropdown-menu a:hover,
+div.table_actions_menu .dropdown-menu button:hover {
+  background-color: #3276B1;
+}
+.dropdown-menu .btn.btn-danger {
+  color: #d9534f;
+}
+.dropdown-menu .btn.btn-danger:hover {
+  background-color: #3276b1;
+}
+
+.dropdown-menu.role_dropdown {
+  right: 0;
+  left: auto;
+}

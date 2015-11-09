@@ -1,0 +1,34 @@
+{% load i18n %}
+{% for hidden in form.hidden_fields %}
+    {{ hidden }}
+{% endfor %}
+{% for field in form.visible_fields %}
+    <section>
+        <label class="label">{{ field.label_tag }}</label>
+        <label class="input"> <i class="icon-append fa fa-user"></i>
+            {{ field }}
+            {% if field.auto_id == 'id_username' %}
+                <b class="tooltip tooltip-top-right"><i class="fa fa-user txt-color-teal"></i> {% trans "Please enter email address" %}</b>
+            {% endif %}
+            {% if field.auto_id == 'id_password' %}
+                <b class="tooltip tooltip-top-right"><i class="fa fa-lock txt-color-teal"></i> {% trans "Enter your password" %}</b>
+                {% if form.warnings %}
+                    <script type="text/javascript">
+                        $("#id_password").addClass('state-error').removeClass('state-success');
+                    </script>
+                    <em class="invalid" for="id_password">
+                        {% for i in form.warnings %}
+                            {{ i }}
+                        {% endfor %}
+                    </em>
+                {% endif %}
+                {% if form.non_field_errors %}
+                    <br>
+                    {% for err in form.non_field_errors %}
+                        <span class="help-block"><i class="fa fa-warning"></i> {{ err }}</span>
+                    {% endfor %}
+                {% endif %}
+            {% endif %}
+        </label>
+    </section>
+{% endfor %}

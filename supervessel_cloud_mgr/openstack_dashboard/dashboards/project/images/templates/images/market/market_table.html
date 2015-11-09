@@ -1,0 +1,115 @@
+{% load i18n %}
+{% with table.needs_form_wrapper as needs_form_wrapper %}
+{% with columns=table.get_columns rows=table.get_rows %}
+<div class="col-sm-12">
+    {% if needs_form_wrapper %}<form action="{{ table.get_full_url }}" id="market_form" method="POST">{% csrf_token %}{% endif %}
+    {{ table.render_table_actions }}
+    {% if needs_form_wrapper %}</form>{% endif %}
+	<div class="well well-light">
+        {% for row in rows %}
+        {% if forloop.counter0 == 0 or forloop.counter == 4 or forloop.counter == 8 %}
+		<div class="row">
+        {% endif %}
+                        <div class="col-xs-12 col-sm-6 col-md-3">
+                            <div class="panel panel-success pricing-big">
+                                {% for cell in row %}
+                                    {% if "is_top__" in cell.id %}
+                                        {% if cell.value %}
+                                            <img src="{{ STATIC_URL }}dashboard/smartadmin/img/ribbon.png" class="ribbon" alt="">
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                                <div class="panel-heading">
+                                    <h3 class="panel-title">
+                                        {% for cell in row %}
+                                            {% if "title__" in cell.id %}
+                                                <span class="font-xs short_content">{{ cell.value }}</span>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </h3>
+                                </div>
+                                <div class="panel-body no-padding text-align-center">
+{#                                    <div class="the-price">#}
+{#                                            {% for cell in row %}#}
+{#                                                {% if "points__" in cell.id %}#}
+{#                                                    <h3>#}
+{#                                                        <strong>{{ cell.value }}</strong> Points#}
+{#                                                    </h3>#}
+{#                                                {% endif %}#}
+{#                                            {% endfor %}#}
+{#                                    </div>#}
+                                    <div class="price-features">
+                                        <ul class="list-unstyled text-left">
+                                            <li> <strong>{% trans "Creator" %}:</strong> {% for cell in row %}{% if "creator__" in cell.id %}{{ cell.value }}{% endif %}{% endfor %}</li>
+                                            <li> <strong>{% trans "Introduction" %}:</strong> {% for cell in row %}{% if "introduction__" in cell.id %}<span class="short_content">{{ cell.value }}</span>{% endif %}{% endfor %}</li>
+                                            <li> <strong>{% trans "Intergrated Software" %}:</strong> {% for cell in row %}{% if "integrated_software__" in cell.id %}<span class="short_content">{{ cell.value }}</span>{% endif %}{% endfor %}</li>
+                                            <li> <strong>{% trans "Downloads" %}:</strong> {% for cell in row %}{% if "downloads__" in cell.id %}{{ cell.value }}{% endif %}{% endfor %}</li>
+                                            <li> <strong>{% trans "Tags" %}:</strong>{% for cell in row %}{% if "tags__" in cell.id %}<span class="short_content"> {% for tag in cell.value %}&nbsp;&nbsp;<span class="label bg-color-blue"><i class="fa fa-tag"></i> {{ tag }}</span> {% endfor %}</span>{% endif %}{% endfor %}</li>
+                                            <li> <strong>{% trans "Base Type" %}:{% for cell in row %}{% if "base_type__" in cell.id %}{{ cell.value }}{% endif %}{% endfor %}</strong></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                                <div class="panel-footer text-align-center">
+{#                                    <a href="javascript:void(0);" class="btn btn-info btn-block" rel="popover-hover" data-placement="top" data-original-title="{% trans 'Detail' %}" data-content="{% for cell in row %}{% if 'detail__' in cell.id %}{{ cell.value }}{% endif %}{% endfor %}" data-html="true"><span>Details</span></a>#}
+                                    {% for cell in row %}
+                                        {% if "detail__" in cell.id %}
+                                            <button class="btn btn-primary btn-block" data-toggle="modal" data-target="#{{ cell.id }}">
+                                                {% trans "Details" %}
+                                            </button>
+                                        {% endif %}
+                                        {% if "launch_link__" in cell.id %}
+                                            <a href="{{ cell.value }}"  class="ajax-modal btn btn-primary btn-block {% if cell.value == 'javascript:void(0);' %}disabled{% endif %}" role="button">{% trans "Launch <span> now!</span>" %}</a>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        {% for cell in row %}
+                            {% if "detail__" in cell.id %}
+                            <div class="modal fade" id="{{ cell.id }}" tabindex="-1" role="dialog" aria-labelledby="{{ cell.id }}" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">
+                                                &times;
+                                            </button>
+                                            <h4 class="modal-title" id="myModalLabel">{% trans "Details" %}</h4>
+                                        </div>
+                                        <div class="modal-body" data-html="true">
+                                            {% autoescape on %}
+                                            {{ cell.value|safe }}
+                                            {% endautoescape %}
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-default" data-dismiss="modal">
+                                                {% trans "Ok" %}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        {% endfor %}
+        {% if forloop.counter0 == 3 or forloop.counter == 7 or forloop.counter == 11 %}
+		</div>
+            <hr>
+        {% endif %}
+        {% endfor %}
+        <div style="width:200px; margin:0 auto">
+            <ul class="pager">
+                <li class="previous">
+                    {% if table.has_prev_data %}
+                        <a href="?{{ table.get_prev_pagination_string }}">&larr; {% trans "Prev" %}</a>
+                    {% endif %}
+                </li>
+                <li class="next">
+                    {% if table.has_more_data %}
+                        <a href="?{{ table.get_pagination_string }}">{% trans "Next" %} &rarr;</a>
+                    {% endif %}
+                </li>
+            </ul>
+        </div>
+	</div>
+</div>
+{% endwith %}
+{% endwith %}

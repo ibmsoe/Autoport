@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+<h1>{{ topic.creator }} {{ topic.request_title }} {{ topic.image_id }}</h1>
+
+<p>类型： {{ topic.base_type }}</p>
+
+<p>标签： {% for tag in topic.tags %}{{ tag }}, {% endfor %}</p>
+
+<p>opuser账户密码： {{ topic.password }}</p>
+
+<p>root账户密码： {{ topic.root_password }}</p>
+
+<p>以下是英文的信息：</p>
+
+<p>标题： {{ topic.title_en }}</p>
+
+<p>简介： {{ topic.introduction_en }}</p>
+
+<p>详细介绍： {{ topic.details_en|safe }}</p>
+
+<p>集成的软件： {{ topic.integrated_software }}</p>
+
+<p>以下是中文的信息：</p>
+
+<p>标题： {{ topic.title }}</p>
+
+<p>简介： {{ topic.introduction }}</p>
+
+<p>详细介绍： {{ topic.details|safe }}</p>
+
+</body>
+</html>

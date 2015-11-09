@@ -1,0 +1,167 @@
+{% load i18n horizon humanize sizeformat %}
+
+<div class="row">
+    <article class="col-sm-12">
+        <!-- new widget -->
+        <div class="jarviswidget" id="wid-id-0" data-widget-togglebutton="false" data-widget-editbutton="false" data-widget-fullscreenbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false">
+            <header>
+                <span class="widget-icon"> <i class="glyphicon glyphicon-stats txt-color-darken"></i> </span>
+                <h2>{% trans "Usage Statistics" %}</h2>
+            </header>
+            <div class="no-padding">
+                <div class="widget-body">
+                    <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                        <div class="row">
+                            <br>
+                            <div class="col-xs-6 col-sm-6 col-md-12 col-lg-12">
+                                <span class="text"> {% trans "Instances" %}
+                                    <span class="pull-right">
+                                        {% if use_system_quota %}
+                                            {% blocktrans with used=usage.limits.totalInstancesUsed|intcomma quota=usage.limits.maxTotalInstances|quotainf|intcomma %}
+                                                {{ used }}/{{ quota }}
+                                            {% endblocktrans %}
+                                        {% else %}
+                                            {% blocktrans with used=total_instances_used|intcomma quota=max_total_instances|quotainf|intcomma %}
+                                                {{ used }}/{{ quota }}
+                                            {% endblocktrans %}
+                                        {% endif %}
+                                    </span>
+                                </span>
+                                <div class="progress">
+                                    {% if use_system_quota %}
+                                        <div class="progress-bar bg-color-greenLight"
+                                             data-progress-indicator-flavor
+                                             data-quota-limit="{{ usage.limits.maxTotalInstances }}"
+                                             data-quota-used="{{ usage.limits.totalInstancesUsed }}"
+                                             aria-valuetransitiongoal="{% widthratio usage.limits.totalInstancesUsed usage.limits.maxTotalInstances 100 %}">
+                                        </div>
+                                    {% else %}
+                                        <div class="progress-bar bg-color-greenLight"
+                                             data-progress-indicator-flavor
+                                             data-quota-limit="{{ max_total_instances }}"
+                                             data-quota-used="{{ total_instances_used }}"
+                                             aria-valuetransitiongoal="{% widthratio total_instances_used max_total_instances 100 %}">
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+{#                            <div class="col-xs-6 col-sm-6 col-md-12 col-lg-12">#}
+{#                                <span class="text"> {% trans "VCPUs" %}#}
+{#                                    <span class="pull-right">#}
+{#                                        {% blocktrans with used=usage.limits.totalCoresUsed|intcomma max=usage.limits.maxTotalCores|intcomma %}#}
+{#                                            {{ used }}/{{ max }}#}
+{#                                        {% endblocktrans %}#}
+{#                                    </span>#}
+{#                                </span>#}
+{#                            <div class="progress">#}
+{#                                <div class="progress-bar bg-color-greenLight"#}
+{#                                     data-progress-indicator-flavor#}
+{#                                     data-quota-limit="{{ usage.limits.maxTotalCores }}"#}
+{#                                     data-quota-used="{{ usage.limits.totalCoresUsed }}"#}
+{#                                     aria-valuetransitiongoal="{% widthratio usage.limits.totalCoresUsed usage.limits.maxTotalCores 100 %}">#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            </div>#}
+{#                            <div class="col-xs-6 col-sm-6 col-md-12 col-lg-12">#}
+{#                                <span class="text"> {% trans "RAM" %}#}
+{#                                    <span class="pull-right">#}
+{#                                        {% blocktrans with used=usage.limits.totalRAMUsed|intcomma max=usage.limits.maxTotalRAMSize|intcomma %}#}
+{#                                            {{ used }}/{{ max }}#}
+{#                                        {% endblocktrans %}#}
+{#                                    </span>#}
+{#                                </span>#}
+{#                                <div class="progress">#}
+{#                                    <div class="progress-bar bg-color-greenLight"#}
+{#                                         data-progress-indicator-flavor#}
+{#                                         data-quota-limit="{{ usage.limits.maxTotalRAMSize }}"#}
+{#                                         data-quota-used="{{ usage.limits.totalRAMUsed }}"#}
+{#                                         aria-valuetransitiongoal="{% widthratio usage.limits.totalRAMUsed usage.limits.maxTotalRAMSize 100 %}">#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <div class="col-xs-6 col-sm-6 col-md-12 col-lg-12">#}
+{#                                <span class="text"> {% trans "Floating IPs" %}#}
+{#                                    <span class="pull-right">#}
+{#                                        {% blocktrans with used=usage.limits.totalFloatingIpsUsed|intcomma max=usage.limits.maxTotalFloatingIps|intcomma %}#}
+{#                                            {{ used }}/{{ max }}#}
+{#                                        {% endblocktrans %}#}
+{#                                    </span>#}
+{#                                </span>#}
+{#                                <div class="progress">#}
+{#                                    <div class="progress-bar bg-color-greenLight"#}
+{#                                         data-progress-indicator-flavor#}
+{#                                         data-quota-limit="{{ usage.limits.maxTotalFloatingIps }}"#}
+{#                                         data-quota-used="{{ usage.limits.totalFloatingIpsUsed }}"#}
+{#                                         aria-valuetransitiongoal="{% widthratio usage.limits.totalFloatingIpsUsed usage.limits.maxTotalFloatingIps 100 %}">#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+                        </div>
+                    </div>
+{#                    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">#}
+{#                        <div class="row">#}
+{#                            <br>#}
+{#                            <div class="col-xs-6 col-sm-6 col-md-12 col-lg-12">#}
+{#                                <span class="text"> {% trans "Security Groups" %}#}
+{#                                    <span class="pull-right">#}
+{#                                        {% blocktrans with used=usage.limits.totalSecurityGroupsUsed|intcomma available=usage.limits.maxSecurityGroups|intcomma%}#}
+{#                                            {{ used }}/{{ available }}#}
+{#                                        {% endblocktrans %}#}
+{#                                    </span>#}
+{#                                </span>#}
+{#                                <div class="progress">#}
+{#                                    <div class="progress-bar bg-color-greenLight"#}
+{#                                         data-progress-indicator-flavor#}
+{#                                         data-quota-limit="{{ usage.limits.maxSecurityGroups }}"#}
+{#                                         data-quota-used="{{ usage.limits.totalSecurityGroupsUsed }}"#}
+{#                                         aria-valuetransitiongoal="{% widthratio usage.limits.totalSecurityGroupsUsed usage.limits.maxSecurityGroups 100 %}">#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <div class="col-xs-6 col-sm-6 col-md-12 col-lg-12">#}
+{#                                <span class="text"> {% trans "Volumes" %}#}
+{#                                    <span class="pull-right">#}
+{#                                        {% blocktrans with used=usage.limits.totalVolumesUsed|intcomma available=usage.limits.maxTotalVolumes|intcomma%}#}
+{#                                            {{ used }}/{{ available }}#}
+{#                                        {% endblocktrans %}#}
+{#                                    </span>#}
+{#                                </span>#}
+{#                                <div class="progress">#}
+{#                                    <div class="progress-bar bg-color-greenLight"#}
+{#                                         data-progress-indicator-flavor#}
+{#                                         data-quota-limit="{{ usage.limits.maxTotalVolumes }}"#}
+{#                                         data-quota-used="{{ usage.limits.totalVolumesUsed }}"#}
+{#                                         aria-valuetransitiongoal="{% widthratio usage.limits.totalVolumesUsed usage.limits.maxTotalVolumes 100 %}">#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                            <div class="col-xs-6 col-sm-6 col-md-12 col-lg-12">#}
+{#                                <span class="text"> {% trans "Volume Storage" %}#}
+{#                                    <span class="pull-right">#}
+{#                                        {% blocktrans with used=usage.limits.totalGigabytesUsed|intcomma available=usage.limits.maxTotalVolumeGigabytes|intcomma%}#}
+{#                                            {{ used }}/{{ available }}#}
+{#                                        {% endblocktrans %}#}
+{#                                    </span>#}
+{#                                </span>#}
+{#                                <div class="progress">#}
+{#                                    <div class="progress-bar bg-color-greenLight"#}
+{#                                         data-progress-indicator-flavor#}
+{#                                         data-quota-limit="{{ usage.limits.maxTotalVolumeGigabytes }}"#}
+{#                                         data-quota-used="{{ usage.limits.totalGigabytesUsed }}"#}
+{#                                         aria-valuetransitiongoal="{% widthratio usage.limits.totalGigabytesUsed usage.limits.maxTotalVolumeGigabytes 100 %}">#}
+{#                                    </div>#}
+{#                                </div>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    </div>#}
+                </div>
+            </div>
+        </div>
+    </article>
+</div>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+    $('.progress-bar').progressbar({
+        display_text : 'fill'
+    });
+</script>

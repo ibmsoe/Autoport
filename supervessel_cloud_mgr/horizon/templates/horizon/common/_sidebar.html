@@ -1,0 +1,31 @@
+{% load branding horizon i18n %}
+{% load url from future %}
+
+<div class='sidebar'>
+    <!-- User info -->
+    <div class="login-info">
+        <span> <!-- User image size is adjusted inside CSS, it should stay as it -->
+
+            <img src="{{ STATIC_URL }}dashboard/smartadmin/img/avatars/sunny.png" alt="{{ request.user.username }}" class="online" />
+            <a href="javascript:void(0);">
+            <span style="text-transform: lowercase" id="LoginUserName">
+                {{ request.user.username }}
+            </span>
+            </a>
+{#                <i class="fa fa-angle-down"></i>#}
+{#            <a href="javascript:void(0);" id="show-shortcut" data-action="toggleShortcut">#}
+{#                <span>#}
+{#                    {% trans "More Service" %}#}
+{#                    <i class="glyphicon glyphicon-chevron-down"></i>#}
+{#                </span>#}
+{#            </a>#}
+            <br>
+
+        </span>
+    </div>
+    <!-- end user info -->
+  {% horizon_nav %}
+    <span class="minifyme" data-action="minifyMenu">
+        <i class="fa fa-arrow-circle-left hit"></i>
+    </span>
+</div>

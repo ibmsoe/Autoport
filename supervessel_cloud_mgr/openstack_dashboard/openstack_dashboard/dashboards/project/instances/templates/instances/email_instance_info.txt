@@ -1,0 +1,8 @@
+亲：
+
+您的服务器正在创建中，下面是服务器的信息：
+外部IP地址：{{ topic.floating_ip }}
+内部IP地址：{{ topic.fixed_ip }}
+账号： opuser 密码：p0weruser。
+root密码：passw0rd　。
+当您第一次登陆时, 请您马上修改密码。

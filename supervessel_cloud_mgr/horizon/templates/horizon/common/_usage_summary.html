@@ -1,0 +1,26 @@
+{% load i18n sizeformat %}
+<div class="row">
+    <h2 class="row-seperator-header"><i class="fa fa-info-circle"></i> {% trans "Usage Summary" %} </h2>
+    <div class="col-sm-12">
+        <div class="well">
+            <div class="row">
+                <div class="col-sm-6">
+                    <p>
+                        <span><strong>{% trans "Active Instances" %}:</strong> <span class="badge bg-color-greenLight">{{ usage.summary.instances|default:'0' }}</span></span>
+                    </p>
+                </div>
+                <div class="col-sm-6">
+                    <p>
+                        <span><strong>{% trans "Active RAM" %}:</strong> <span class="badge bg-color-greenLight">{{ usage.summary.memory_mb|mbformat|default:'0' }}</span></span>
+                    </p>
+{#                    <p>#}
+{#                        <span><strong>{% trans "This Period's VCPU-Hours" %}:</strong> <span class="badge bg-color-greenLight">{{ usage.summary.vcpu_hours|floatformat:2|default:'0' }}</span></span>#}
+{#                    </p>#}
+{#                    <p>#}
+{#                        <span><strong>{% trans "This Period's GB-Hours" %}:</strong> <span class="badge bg-color-greenLight">{{ usage.summary.disk_gb_hours|floatformat:2|default:'0' }}</span></span>#}
+{#                    </p>#}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

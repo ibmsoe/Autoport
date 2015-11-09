@@ -1,0 +1,56 @@
+{% extends "horizon/common/_modal_form.html" %}
+{% load i18n %}
+{% load url from future %}
+
+{% block form_id %}launch_stack_form{% endblock %}
+{% block form_action %}{% url 'horizon:project:stacks:launch' %}{% endblock %}
+
+{% block modal-header %}{% trans "Launch Stack" %}{% endblock %}
+
+{% block modal-body %}
+    <div class="row">
+        <div class="col-sm-6">
+            <fieldset>
+                {% include "horizon/common/_form_fields.html" %}
+            </fieldset>
+        </div>
+        <div class="col-sm-6">
+            <h3>{% trans "Stack Information" %}:</h3>
+        </div>
+    </div>
+{% endblock %}
+
+{% block modal-footer %}
+    <input class="btn btn-primary pull-right" id="stack_submit" type="submit" disabled="disabled" value="{% trans 'Launch Stack' %}" />
+    <button type="button" class="btn bg-color-redLight cancel" data-dismiss="modal">{% trans "Cancel" %}</button>&nbsp;&nbsp;
+{% endblock %}
+
+{% block modal-js %}
+    <script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/bootstrapvalidator/bootstrapValidator.min.js"></script>
+    <script type="text/javascript">
+        function update_stack_choices(field) {
+            var $this = $(field);
+            $this.closest(".form-group").nextAll().hide();
+            $("input:radio[name=node_count]").removeAttr("checked");
+            $("input:radio[name=disk_size]").removeAttr("checked");
+            $("#stack_submit").attr("disabled", "disabled");
+            if ($("input:radio[name=service_type]:checked").size() > 0) {
+                $("#id_node_count").closest(".form-group").show();
+            }
+        }
+        $(document).on('change', '#id_service_type', function (evt) {
+            update_stack_choices(this);
+        });
+        $(document).on('change', "#id_node_count", function (evt) {
+            if ($("input:radio[name=node_count]:checked").size() > 0){
+                $("#id_disk_size").closest(".form-group").show();
+            }
+        });
+        $(document).on('change', "#id_disk_size", function (evt) {
+            if ($("input:radio[name=disk_size]:checked").size() > 0){
+                $("#stack_submit").removeAttr("disabled");
+            }
+        });
+        $('#id_service_type').change();
+    </script>
+{% endblock %}

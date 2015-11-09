@@ -1,0 +1,232 @@
+{% load branding i18n %}
+{% load url from future %}
+{% load context_selection %}
+
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/control.min.js"></script>
+<script type="text/javascript">
+    function show_compute_service() {
+        var custom_content = '<ul><li><a href={% url "horizon:project:images:market" %} class="jarvismetro-tile big-cubes bg-color-blue"> <span class="iconbox"> <i class="fa fa-archive fa-4x"></i> <span style="margin-top: -15px;text-align: center;">{% trans "Pre-installed compute service" %}</span> </span></a> </li>';
+        custom_content += '</ul>';
+        $("#shortcut").html(custom_content);
+    }
+</script>
+<script type="text/cjs">
+    $.get(
+            '{% site_web_root %}/notify_count',
+            function(data) {
+                $("#notify_count").html(data.count);
+            }
+    )
+    $.get(
+            '{% site_web_root %}/get_user_points',
+            function(data) {
+                $("#user_points").html(data.points);
+            }
+    )
+</script>
+<!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//crl.ptopenlab.com:8800/piwik/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', 1]);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<noscript><p><img src="//crl.ptopenlab.com:8800/piwik/piwik.php?idsite=1" style="border:0;" alt="" /></p></noscript>
+<!-- End Piwik Code -->
+
+<div id="logo-group">
+    <!-- PLACE YOUR LOGO HERE -->
+    <span id="logo"> <img src="{{ STATIC_URL }}dashboard/smartadmin/img/logo.png" alt="SmartAdmin"> </span>
+    <!-- END LOGO PLACEHOLDER -->
+
+    <span class="label" style="margin-top: 20px;">VPN/Notify:</span>
+    <span id="activity" class="activity-dropdown"> <i class="fa fa-user"></i> <b class="badge" id="notify_count">0</b></span>
+
+    <!-- AJAX-DROPDOWN : control this dropdown height, look and feel from the LESS variable file -->
+    <div class="ajax-dropdown">
+
+        <!-- the ID links are fetched via AJAX to the ajax container "ajax-notifications" -->
+        <div class="btn-group btn-group-justified" data-toggle="buttons">
+            {% if request.user.vpn_password != "" %}
+            <label class="btn btn-default">
+                <input type="radio" name="activity" id="{% site_web_root %}/vpn_account">
+                {% trans "VPN Account" %}
+            </label>
+            {% endif %}
+            <label class="btn btn-default">
+                <input type="radio" name="activity" id="{% site_web_root %}/notification">
+                {% trans "Notify" %} </label>
+        </div>
+
+        <!-- notification content -->
+        <div class="ajax-notifications custom-scroll">
+
+            <div class="alert alert-transparent">
+                <h4>{% trans "Click the notification button to show messages here" %}</h4>
+                {% trans "You can read VPN Account infomation and notification recently" %}
+            </div>
+
+            <i class="fa fa-lock fa-4x fa-border"></i>
+
+        </div>
+        <!-- end notification content -->
+
+        <!-- footer: refresh area -->
+{#        <span> Last updated on: 12/12/2013 9:43AM#}
+{#            <button type="button" data-loading-text="<i class='fa fa-refresh fa-spin'></i> Loading..." class="btn btn-xs btn-default pull-right">#}
+{#                <i class="fa fa-refresh"></i>#}
+{#            </button>#}
+{#        </span>#}
+        <!-- end footer -->
+
+    </div>
+</div>
+
+<!-- projects dropdown -->
+<div class="project-context hidden-xs">
+
+    <span class="label"></span>
+    <span class="project-selector dropdown-toggle" data-toggle="dropdown">
+        {% trans 'More Service' %} <i class="fa fa-angle-down"></i>
+    </span>
+
+{#    <!-- Suggestion: populate this list with fetch and push technique -->#}
+    <ul class="dropdown-menu dropdown-menu-large row">
+        <li>
+            <a onclick="javascript:show_compute_service();" data-action="toggleShortcut">
+                {% trans 'Compute Service' %}
+            </a>
+        </li>
+    </ul>
+{#    <!-- end dropdown-menu-->#}
+
+</div>
+<!-- end projects dropdown -->
+
+<!-- pulled right: nav area -->
+<div class="pull-right">
+
+    <!-- collapse menu button -->
+    <div id="hide-menu" class="btn-header pull-right">
+        <span> <a href="javascript:void(0);" data-action="toggleMenu" title={% trans "Collapse Menu" %}><i class="fa fa-reorder"></i></a> </span>
+    </div>
+    <!-- end collapse menu -->
+
+    <!-- #MOBILE -->
+    <!-- Top menu profile link : this shows only when top menu is active -->
+    <ul id="mobile-profile-img" class="header-dropdown-list hidden-xs padding-5">
+        <li class="">
+            <a href="#" class="dropdown-toggle no-margin userdropdown" data-toggle="dropdown">
+                <img src="{{ STATIC_URL }}dashboard/smartadmin/img/avatars/sunny.png" alt="{{ request.user.username }}" class="online" />
+            </a>
+            <ul class="dropdown-menu pull-right">
+{#                <li>#}
+{#                    <a href="javascript:void(0);" class="padding-10 padding-top-0 padding-bottom-0"><i class="fa fa-cog"></i> Setting</a>#}
+{#                </li>#}
+{#                <li class="divider"></li>#}
+{#                <li>#}
+{#                    <a href="profile.html" class="padding-10 padding-top-0 padding-bottom-0"> <i class="fa fa-user"></i> <u>P</u>rofile</a>#}
+{#                </li>#}
+{#                <li class="divider"></li>#}
+{#                <li>#}
+{#                    <a href="javascript:void(0);" class="padding-10 padding-top-0 padding-bottom-0" data-action="toggleShortcut"><i class="fa fa-arrow-down"></i> <u>S</u>hortcut</a>#}
+{#                </li>#}
+{#                <li class="divider"></li>#}
+                <li>
+                    <a href="javascript:void(0);" class="padding-10 padding-top-0 padding-bottom-0" data-action="launchFullscreen"><i class="fa fa-arrows-alt"></i> Full <u>S</u>creen</a>
+                </li>
+                <li class="divider"></li>
+                <li>
+                    <a href="login.html" class="padding-10 padding-top-5 padding-bottom-5" data-action="userLogout"><i class="fa fa-sign-out fa-lg"></i> <strong><u>L</u>ogout</strong></a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+    <!-- logout button -->
+    <div id="logout" class="btn-header transparent pull-right">
+        <span>
+            <a href={% url 'logout' %} data-action="userLogout"
+               data-logout-msg=" " title={% trans "Logout" %}><i
+                    class="fa fa-sign-out"></i></a>
+        </span>
+    </div>
+    <!-- end logout button -->
+
+    <!-- fullscreen button -->
+    <div id="fullscreen" class="btn-header transparent pull-right">
+        <span> <a href="javascript:void(0);" data-action="launchFullscreen" title={% trans "Full Screen" %}><i class="fa fa-arrows-alt"></i></a> </span>
+    </div>
+    <!-- end fullscreen button -->
+
+    <!-- #Voice Command: Start Speech -->
+    <div id="speech-btn" class="btn-header transparent pull-right hidden-sm hidden-xs">
+        <div>
+            <a href="javascript:void(0)" title="Voice Command" data-action="voiceCommand"><i class="fa fa-microphone"></i></a>
+            <div class="popover bottom"><div class="arrow"></div>
+                <div class="popover-content">
+                    <h4 class="vc-title">Voice command activated <br><small>Please speak clearly into the mic</small></h4>
+                    <h4 class="vc-title-error text-center">
+                        <i class="fa fa-microphone-slash"></i> Voice command failed
+                        <br><small class="txt-color-red">Must <strong>"Allow"</strong> Microphone</small>
+                        <br><small class="txt-color-red">Must have <strong>Internet Connection</strong></small>
+                    </h4>
+                    <a href="javascript:void(0);" class="btn btn-success" onclick="commands.help()">See Commands</a>
+                    <a href="javascript:void(0);" class="btn bg-color-purple txt-color-white" onclick="$('#speech-btn .popover').fadeOut(50);">Close Popup</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- end voice command -->
+
+    <!-- multiple lang dropdown : find all flags in the flags page -->
+    <ul class="header-dropdown-list hidden-xs">
+        <li>
+            {% ifequal 'en' LANGUAGE_CODE %}
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown"> <img src="{{ STATIC_URL }}dashboard/smartadmin/img/blank.gif" class="flag flag-us" alt="United States"> <span> US</span> <i class="fa fa-angle-down"></i> </a>
+            {% endifequal %}
+            {% ifequal 'zh-cn' LANGUAGE_CODE %}
+                <a href="#" class="dropdown-toggle" data-toggle="dropdown"> <img src="{{ STATIC_URL }}dashboard/smartadmin/img/blank.gif" class="flag flag-cn" alt="China"> <span> 中文</span> <i class="fa fa-angle-down"></i> </a>
+            {% endifequal %}
+            <ul class="dropdown-menu pull-right">
+                <li {% ifequal 'en' LANGUAGE_CODE %}class="active"{% endifequal %}>
+                    <a href="{% ifequal 'en' LANGUAGE_CODE %}#{% else %}{% site_web_root %}/set_language?language=en{% endifequal %}"><img src="{{ STATIC_URL }}dashboard/smartadmin/img/blank.gif" class="flag flag-us" alt="United States"> English (US)</a>
+                </li>
+                <li {% ifequal 'zh-cn' LANGUAGE_CODE %}class="active"{% endifequal %}>
+                    <a href="{% ifequal 'zh-cn' LANGUAGE_CODE %}#{% else %}{% site_web_root %}/set_language?language=zh-cn{% endifequal %}"><img src="{{ STATIC_URL }}dashboard/smartadmin/img/blank.gif" class="flag flag-cn" alt="China"> 中文</a>
+                </li>
+            </ul>
+        </li>
+    </ul>
+    <!-- end multiple lang -->
+    <ul class="header-dropdown-list hidden-xs">
+        <li>
+            {% for region in request.user.available_services_regions %}
+                {% if request.user.services_region == region %}
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                        <span> {% trans 'Current Region' %}: {% trans region %} </span> <i class="fa fa-angle-down"></i>&nbsp;&nbsp;
+                    </a>
+                {% endif %}
+            {% endfor %}
+            <ul class="dropdown-menu pull-right">
+                {% for region in request.user.available_services_regions %}
+                    <li {% if request.user.services_region == region %}class="active"{% endif %}>
+                        <a href="{% if request.user.services_region != region %}{% url 'switch_services_region' region %}?next={{ request.horizon.panel.get_absolute_url }}{% else %}#{% endif %}">{% trans region %}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </li>
+    </ul>
+
+    <div class="header-points">
+        <span>{% trans "Blue Points" %}: <b id="user_points"><i class="fa fa-rotate-right fa-spin"></i></b></span>
+    </div>
+
+</div>
+<!-- end pulled right: nav area -->

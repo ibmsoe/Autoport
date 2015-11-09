@@ -1,0 +1,107 @@
+{% load compress %}
+<script data-pace-options='{ "restartOnRequestAfter": true }' src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/pace/pace.min.js"></script>
+
+<!-- Link to Google CDN's jQuery + jQueryUI; fall back to local -->
+{#<script src="//cdn.jsdelivr.net/jquery/2.1.1/jquery.min.js"></script>#}
+{#<script>#}
+{#    if (!window.jQuery) {#}
+{#        document.write('<script src="{{ STATIC_URL }}dashboard/smartadmin/js/libs/jquery-2.1.1.min.js"><\/script>');#}
+{#    }#}
+{#</script>#}
+{##}
+{#<script src="//cdn.jsdelivr.net/jquery.ui/1.10.3/jquery-ui.min.js"></script>#}
+{#<script>#}
+{#    if (!window.jQuery.ui) {#}
+{#        document.write('<script src="{{ STATIC_URL }}dashboard/smartadmin/js/libs/jquery-ui-1.10.3.min.js"><\/script>');#}
+{#    }#}
+{#</script>#}
+
+<!-- IMPORTANT: APP CONFIG -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/app.config.js"></script>
+
+<!-- JS TOUCH : include this plugin for mobile drag / drop touch events-->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/jquery-touch/jquery.ui.touch-punch.min.js"></script>
+
+<!-- BOOTSTRAP JS -->
+{#<script src="{{ STATIC_URL }}dashboard/smartadmin/js/bootstrap/bootstrap.min.js"></script>#}
+
+{% compress js %}
+<!-- CUSTOM NOTIFICATION -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/notification/SmartNotification.js"></script>
+
+<!-- JARVIS WIDGETS -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/smartwidgets/jarvis.widget.js"></script>
+
+<!-- EASY PIE CHARTS -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/easy-pie-chart/jquery.easy-pie-chart.js"></script>
+
+<!-- SPARKLINES -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/sparkline/jquery.sparkline.js"></script>
+
+<!-- JQUERY VALIDATE -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/jquery-validate/jquery.validate.js"></script>
+
+<!-- JQUERY MASKED INPUT -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/masked-input/jquery.maskedinput.js"></script>
+
+<!-- JQUERY SELECT2 INPUT -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/select2/select2.js"></script>
+
+<!-- JQUERY UI + Bootstrap Slider -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/bootstrap-slider/bootstrap-slider.js"></script>
+
+<!-- browser msie issue fix -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/msie-fix/jquery.mb.browser.js"></script>
+
+<!-- FastClick: For mobile devices -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/fastclick/fastclick.js"></script>
+
+<!-- Demo purpose only -->
+{#<script src="{{ STATIC_URL }}dashboard/smartadmin/js/demo.js"></script>#}
+
+<!-- MAIN APP JS FILE -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/app.js"></script>
+
+<!-- ENHANCEMENT PLUGINS : NOT A REQUIREMENT -->
+<!-- Voice command : plugin -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/speech/voicecommand.js"></script>
+
+<!-- SmartChat UI : plugin -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/smart-chat-ui/smart.chat.ui.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/smart-chat-ui/smart.chat.manager.js"></script>
+
+<!-- PAGE RELATED PLUGIN(S) -->
+
+<!-- Flot Chart Plugin: Flot Engine, Flot Resizer, Flot Tooltip -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/flot/jquery.flot.cust.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/flot/jquery.flot.resize.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/flot/jquery.flot.time.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/flot/jquery.flot.tooltip.min.js"></script>
+
+<!-- Vector Maps Plugin: Vectormap engine, Vectormap language -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/vectormap/jquery-jvectormap-1.2.2.min.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/vectormap/jquery-jvectormap-world-mill-en.js"></script>
+
+<!-- Full Calendar -->
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/moment/moment.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/fullcalendar/jquery.fullcalendar.js"></script>
+
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/datatables/jquery.dataTables.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/datatables/dataTables.colVis.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/datatables/dataTables.tableTools.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/datatables/dataTables.bootstrap.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/datatable-responsive/datatables.responsive.js"></script>
+
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/libs/jquery-labelauty.js"></script>
+{% endcompress %}
+
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/layer/layer.js"></script>
+{#<script src="{{ STATIC_URL }}dashboard/custom/js/include/jquery-labelauty.js"></script>#}
+{#<script src="{{ STATIC_URL }}dashboard/custom/js/include/jquery.webui-popover.min.js"></script>#}
+
+<!--[if IE 8]>
+
+		<h1>Your browser is out of date, please update your browser by going to www.microsoft.com/download</h1>
+
+		<![endif]-->
+

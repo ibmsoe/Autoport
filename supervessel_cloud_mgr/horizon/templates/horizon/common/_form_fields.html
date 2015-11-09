@@ -1,0 +1,17 @@
+{% include 'horizon/common/_form_errors.html' with form=form %}
+{% for field in form.visible_fields %}
+    {% with field as field and form as form %}
+    {% include 'horizon/common/_form_field.html' %}
+    {% endwith %}
+{% endfor %}
+<script type="text/javascript">
+    $(":input[name='accelerator_type']").labelauty();
+    $(":input[name='sys_type']").labelauty();
+    $(":input[name='architecture']").labelauty();
+    $(":input[name='use_accelerator']").labelauty();
+    $(":input[name='accelerator']").labelauty();
+    $(":input[name='capi']").labelauty();
+    $(":input[name='service_type']").labelauty();
+    $(":input[name='node_count']").labelauty();
+    $(":input[name='disk_size']").labelauty();
+</script>

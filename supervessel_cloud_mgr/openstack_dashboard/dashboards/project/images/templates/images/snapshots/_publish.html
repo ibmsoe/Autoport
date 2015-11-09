@@ -1,0 +1,93 @@
+{% extends "horizon/common/_modal_form.html" %}
+{% load i18n %}
+{% load url from future %}
+
+{% block form_id %}publish_image_form{% endblock %}
+{% block form_action %}{% url 'horizon:project:images:snapshots:publish' snapshot.id %}{% endblock %}
+
+{% block modal-header %}{% trans "Publish Image" %}{% endblock %}
+
+{% block modal-body %}
+    <div class="row">
+        <fieldset>
+            {% include "horizon/common/_form_fields.html" %}
+        </fieldset>
+    </div>
+{% endblock %}
+
+{% block modal-footer %}
+    <input class="btn btn-primary pull-right" type="submit" value="{% trans 'Publish Image' %}" />
+    <a class="btn btn-danger cancel">{% trans "Cancel" %}</a>&nbsp;&nbsp;
+{% endblock %}
+
+{% block modal-js %}
+    <script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/ckeditor/ckeditor.js"></script>
+    <script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/bootstrap-tags/bootstrap-tagsinput.min.js"></script>
+    <script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/bootstrapvalidator/bootstrapValidator.min.js"></script>
+    <script type="text/javascript">
+        CKEDITOR.replace( 'details_en', { height: '180px', startupFocus : false} );
+        CKEDITOR.replace( 'details', { height: '180px', startupFocus : false} );
+        $('#publish_image_form').bootstrapValidator({
+            feedbackIcons : {
+                valid : 'glyphicon glyphicon-ok',
+                invalid : 'glyphicon glyphicon-remove',
+                validating : 'glyphicon glyphicon-refresh'
+            },
+            fields : {
+                tags : {
+                    validators : {
+                        notEmpty : {
+                            message : gettext('Need to set tags')
+                        },
+                    }
+                },
+                introduction_en : {
+                    validators : {
+                        notEmpty : {
+                            message : gettext('Must set english introduction')
+                        },
+                        stringLength : {
+                            max : 80,
+                            message : gettext('The length of introduction must less than 80')
+                        }
+                    }
+                },
+                title_en : {
+                    validators : {
+                        notEmpty : {
+                            message : gettext('Must set english title')
+                        },
+                        stringLength : {
+                            max : 80,
+                            message : gettext('The length of title must less than 80')
+                        }
+                    }
+                },
+
+                integrated_software : {
+                    validators : {
+                        notEmpty : {
+                            message : gettext('Must set integrated software')
+                        },
+                        stringLength : {
+                            max : 80,
+                            message : gettext('The length of integrated must less than 80')
+                        }
+                    }
+                },
+
+                details_en : {
+                    validators : {
+                        notEmpty : {
+                            message : gettext('Must set english details')
+                        },
+                        stringLength : {
+                            max : 500,
+                            message : gettext('The length of english details must less than 500')
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+{% endblock %}
