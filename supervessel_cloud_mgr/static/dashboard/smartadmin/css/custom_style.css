@@ -1,0 +1,54 @@
+/*
+ * It is advised not to edit the smartadmin_production.css
+ * as this will override any changes you make in the 
+ * later versions of this theme. 
+ * 
+ * We advise that you use use this CSS to override 
+ * SmartAdmin styles. 
+ * 
+ * Rename the stylesheet to whatever your liking so it will stay
+ * unique to you with each update of SmartAdmin.
+ */
+
+/*
+ * INDEX
+ * 
+ * - HTML
+ * - BODY
+ * - CUSTOM STYLES
+ */
+
+body .modal-dialog {
+    width: 70%;
+}
+
+body .modal-backdrop {
+  position: fixed;
+  bottom: 0;
+  height: auto !important;
+}
+
+.header-points {
+    list-style: none;
+    float: right;
+    position: relative;
+    /*margin: 0px;*/
+    /*padding-left: 0px;*/
+    /*padding-right: 0px;*/
+    color: #FFF;
+    text-decoration: none;
+    display: block;
+    padding: 2px 7px 3px;
+    border-radius: 3px;
+    margin-top: 14px;
+    margin-right: 10px;
+}
+
+.modal-body {
+    overflow-y: scroll;
+    overflow-y: -moz-scrollbars-vertical;
+    height: 100%;
+    max-height:500px;
+    margin-right: 0 !important;
+}
+

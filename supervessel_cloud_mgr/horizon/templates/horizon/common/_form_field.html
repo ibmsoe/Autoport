@@ -1,0 +1,65 @@
+{% load form_helpers %}
+{% load i18n %}
+
+{#<div class="form-group padding-5{% if field.errors %} has-error{% endif %} {{ field.css_classes }}">#}
+<section class="form-group padding-5">
+    {% if field|is_booleanfield %}
+        {% if field.auto_id %}
+            <label class="control-label {{ classes.label }} {% if field.field.required %}{{ form.required_css_class }}{% endif %}">{{ field.label }}</label>
+        {% endif %}
+        <input type="checkbox" id="{{ field.auto_id }}" name="{{ field.name }}" data-labelauty="{% trans 'Use accelerator' %}|{% trans 'Do not use accelerator' %}">
+        {% if field.help_text %}
+            <div class="note">
+                {{ field.help_text|safe }}
+            </div>
+        {% endif %}
+    {% elif field|is_radio or field|is_multiple_checkbox %}
+        {% if field.auto_id %}
+            <label class="control-label {{ classes.label }} {% if field.field.required %}{{ form.required_css_class }}{% endif %}">{{ field.label }}</label>
+            {% for error in field.errors %}
+                <span class="help-block alert alert-danger {{ form.error_css_class }}">{{ error }}</span>
+            {% endfor %}
+        {% endif %}
+        <ul class="list-inline" id="{{ field.auto_id }}" style="margin-left: 0px;">
+            {% for choice in field.field.choices %}
+                <li>
+                    <input type="{% if field|is_radio %}radio{% else %}checkbox{% endif %}" name="{{ field.name }}" value="{{ choice.0 }}" data-labelauty="{{ choice.1 }}">
+                </li>
+            {% endfor %}
+        </ul>
+        {% if field.help_text %}
+            <div class="note">
+                {{ field.help_text|safe }}
+            </div>
+        {% endif %}
+        {% if field.auto_id == "id_capi" %}
+            <p class="text-danger" id="capi_error"></p>
+        {% endif %}
+    {% else %}
+        {% if field.auto_id %}
+            <label class="control-label {{ classes.label }} {% if field.field.required %}{{ form.required_css_class }}{% endif %}" for="{{ field.auto_id }}">{{ field.label }}</label>
+        {% endif %}
+
+        {% if field.auto_id == "id_snapshot_name" %}
+            <div class="input-group">
+            {% for tmp_field in form.hidden_fields %}
+            {% if tmp_field.auto_id == "id_snapshot_prefix" %}
+                <span class="input-group-addon">{{ tmp_field.value }}</span>
+            {% endif %}
+            {% endfor %}
+        {% endif %}
+        {{ field|add_bootstrap_class }}
+        {% if field.auto_id == "id_snapshot_name" %}
+            </div>
+        {% endif %}
+        {% if field.help_text %}
+            <div class="note">
+                {{ field.help_text|safe }}
+            </div>
+        {% endif %}
+        {% for error in field.errors %}
+            <span class="help-block alert alert-danger {{ form.error_css_class }}">{{ error }}</span>
+        {% endfor %}
+    {% endif %}
+{#</div>#}
+</section>

@@ -1,0 +1,30 @@
+{% load i18n %}
+<div class="well well-sm">
+    <div class="smart-timeline">
+        <ul class="smart-timeline-list">
+            {% with table.needs_form_wrapper as needs_form_wrapper %}
+                {% with columns=table.get_columns rows=table.get_rows %}
+                    {% for row in rows %}
+                        <li>
+                            <div class="smart-timeline-icon">
+                                <img src="{{ STATIC_URL }}dashboard/smartadmin/img/avatars/sunny.png" width="32" height="32" alt="user" />
+                            </div>
+                            <div class="smart-timeline-time">
+                                {% for cell in row reversed %}
+                                    {% if "start_time" in cell.id %}
+                                        <small>{{ cell.value }}</small>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="smart-timeline-content">
+                                {% for cell in row reversed %}
+                                    <p>{{ cell.value }}</p>
+                                {% endfor %}
+                            </div>
+                        </li>
+                    {% endfor %}
+                {% endwith %}
+            {% endwith %}
+        </ul>
+    </div>
+</div>

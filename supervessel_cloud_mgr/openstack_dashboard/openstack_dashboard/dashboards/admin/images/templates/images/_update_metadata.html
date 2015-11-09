@@ -1,0 +1,17 @@
+{% extends 'horizon/common/_modal_form_update_metadata.html' %}
+{% load i18n %}
+{% load url from future %}
+{% block title %}{% trans "Update Image Metadata" %}{% endblock %}
+
+{% block page_header %}
+    {% include "horizon/common/_page_header.html" with title=_("Update Image Metadata") %}
+{% endblock page_header %}
+
+{% block form_action %}{% url 'horizon:admin:images:update_metadata' id %}{% endblock %}
+{% block form_id %}update_image_metadata_form{% endblock %}
+{% block modal-header %}{% trans "Update Metadata" %}{% endblock %}
+
+{% block modal-footer %}
+    <input class="btn btn-primary pull-right" type="submit" onclick="document.getElementById('update_image_metadata_form').submit();" value="{% trans 'Update Image Metadata' %}" />
+    <button type="button" class="btn btn-danger cancel" data-dismiss="modal">{% trans "Cancel" %}</button>&nbsp;&nbsp;
+{% endblock %}

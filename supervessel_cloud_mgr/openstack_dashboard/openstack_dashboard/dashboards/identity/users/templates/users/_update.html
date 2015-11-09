@@ -1,0 +1,37 @@
+{% extends "horizon/common/_modal_form.html" %}
+{% load i18n %}
+{% load url from future %}
+
+{% block form_id %}update_user_form{% endblock %}
+{% block form_action %}{% url 'horizon:identity:users:update' user.id %}{% endblock %}
+
+{% block modal-header %}{% trans "Update User" %}{% endblock %}
+
+{% block modal-body %}
+    <div class="row">
+        <div class="col-sm-6">
+            <fieldset>
+                {% include "horizon/common/_form_fields.html" %}
+            </fieldset>
+        </div>
+        <div class="col-sm-6">
+            <h3>{% trans "Description" %}:</h3>
+            <p>{% trans "Edit the user's details, including the Primary Project and Role." %}</p>
+        </div>
+    </div>
+
+<script type="text/javascript">
+  if (typeof horizon.user !== 'undefined') {
+    horizon.user.init();
+  } else {
+    addHorizonLoadEvent(function() {
+      horizon.user.init();
+    });
+  }
+</script>
+{% endblock %}
+
+{% block modal-footer %}
+    <input class="btn btn-primary pull-right" type="submit" onclick="document.getElementById('update_user_form').submit();" value="{% trans 'Update User' %}" />
+    <button type="button" class="btn btn-danger cancel" data-dismiss="modal">{% trans "Cancel" %}</button>&nbsp;&nbsp;
+{% endblock %}

@@ -1,0 +1,53 @@
+{% extends "auth/base.html" %}
+{% load branding %}
+{% load i18n %}
+
+{% block title %}{% trans "Login" %}{% endblock %}
+
+{% block body_id %}splash{% endblock %}
+
+{% block content %}
+  <div class="row">
+    <div class="col-xs-12 col-sm-12 col-md-7 col-lg-8 hidden-xs hidden-sm">
+      <h1 class="txt-color-red login-header-big">{% site_branding %}  <small>(pre alpha)</small></h1>
+      <div class="hero">
+
+        <div class="pull-left login-desc-box-l">
+          {% comment %}<p>{% trans 'SuperVessel is a non-profit website. Please pay attention to following items before applying services:' %}</p>
+          <ol>
+            <li>{% blocktrans %}<strong class='text-danger'>P2P software is prohibited such as BitTorrent.</strong>We will stop services if any P2P software is found and we have the right to resort to legal claims if systems are damaged by your action.{% endblocktrans %}</li>
+            <li>{% trans 'Please note that you shall be solely responsible for the security of your software, data and other assets.' %}</li>
+            <li>{% blocktrans %}<strong class='text-danger'>Any confidential data are not welcome.</strong>SuperVessel Cloud is not responsible for your confidential data.{% endblocktrans %}</li>
+          </ol>{% endcomment %}
+            <p>
+                Automation of build and test infrastructure is needed to provide efficiencies towards getting open source packages onto the Power Linux platform, and to ensure no regressions of the Power-specific enablement occurs as the community continues to enhance these packages
+            </p>
+        </div>
+
+      </div>
+
+     {% comment %} <div class="row" style="padding-top: -30px;">
+        <div class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <h5 class="about-heading">{% trans "Important Notification: VPN upgrade" %}</h5>
+          <p>
+              {% trans "As part of our continued efforts to enhance user experience, SuperVessel Cloud will be upgrading VPN server. The event will take place during a scheduled maintenance window between Wednesday 24-Jun-2015 11:00 Beijing Time and Wednesday 24-June-2015 13:00 Beijing Time. After the completion of the upgrade，users should replace VPN configuration file to the new one that you can continue to use SuperVessel services." %}
+          </p>
+          <ol>
+            <li>
+                {% trans "For Windows users,copy the new configuration file *.pcf (<a href='https://ptopenlab.com/cloudlabconsole/doc/CRL_IES_Profile_150703.pcf'>https://ptopenlab.com/cloudlabconsole/doc/CRL_IES_Profile_150703.pcf</a>) to VPN client installation folder./Profiles/ ,For example, C:/Program Files (x86)/Cisco Systems/VPN Client/Profiles ,and delete the old configuration file(“CRL IES Profile.pcf”)." %}
+            </li>
+            <li>
+                {% trans "For Mac/Linux users, please refer to Tutorials on SuperVessel Cloud website， <a href='https://services.ptopenlab.com/mediawiki/index.php/VPN%E7%9A%84%E4%BD%BF%E7%94%A8/en'>https://services.ptopenlab.com/mediawiki/index.php/VPN%E7%9A%84%E4%BD%BF%E7%94%A8/en</a>" %}
+            </li>
+          </ol>
+        </div>
+      </div>{% endcomment %}
+
+    </div>
+    <div class="col-xs-12 col-sm-12 col-md-5 col-lg-4">
+      <div class="well no-padding">
+        {% include 'auth/_login.html' %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

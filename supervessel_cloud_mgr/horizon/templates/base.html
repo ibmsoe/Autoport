@@ -1,0 +1,69 @@
+{% load branding i18n %}
+{% load url from future %}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta content='IE=edge' http-equiv='X-UA-Compatible' />
+    <meta content='text/html; charset=utf-8' http-equiv='Content-Type' />
+    {% include "horizon/_custom_meta.html" %}
+    <title>{% block title %}{% endblock %} - {% site_branding %}</title>
+    {% comment %} Load CSS sheets before Javascript  {% endcomment %}
+    {% block css %}
+        {% include "_stylesheets.html" %}
+    {% endblock %}
+    {% include "horizon/_conf.html" %}
+    {% include "horizon/client_side/_script_loader.html" %}
+    {% include "horizon/_custom_head_js.html" %}
+</head>
+<body class="smart-style-1" id="{% block body_id %}{% endblock %}" ng-app='hz'>
+{% block content %}
+    <header id="header">
+        {% include "_header.html" %}
+    </header>
+    <aside id="left-panel">
+        {% include 'horizon/common/_sidebar.html' %}
+    </aside>
+    <div id='main' role="main">
+        <div id="ribbon">
+            <!-- breadcrumb -->
+            <ol class="breadcrumb">
+                <li>
+                    <a href="{% url 'horizon:project:overview:index' %}">{% trans 'Home' %}</a>
+                </li>
+                {% block crumbtitle %}{% endblock %}
+            </ol>
+            <span class="ribbon-button-alignment pull-right"></span>
+        </div>
+        <div id='content'>
+            {% block page_header %}{% endblock %}
+            {% block page_alert %}
+                <div id='divSmallBoxes'></div>
+                {% include "horizon/_messages.html" %}
+            {% endblock %}
+            {% block main %}{% endblock %}
+{#            {% block modal %}#}
+{#                {% include "horizon/_modal_container.html" %}#}
+{#            {% endblock %}#}
+        </div>
+    </div>
+{% endblock %}
+<div class="page-footer">
+    {% block footer %}
+        {% include "horizon/_page_footer.html" %}
+    {% endblock %}
+</div>
+<div id="shortcut">
+    <ul>
+        <li>
+            <a href="{% url 'horizon:project:images:market' %}" class="jarvismetro-tile big-cubes bg-color-blue"> <span class="iconbox"> <i class="fa fa-archive fa-4x"></i> <span style="margin-top: -15px;text-align: center;">{% trans 'Pre-installed compute service' %}</span> </span></a>
+        </li>
+    </ul>
+</div>
+{% block js %}
+    {% include "horizon/_scripts.html" %}
+{% endblock %}
+{% block page-related-js %}
+{% endblock %}
+    <div id="modal_wrapper"></div>
+</body>
+</html>

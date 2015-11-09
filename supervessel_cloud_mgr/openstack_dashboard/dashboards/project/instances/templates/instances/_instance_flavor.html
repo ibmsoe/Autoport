@@ -1,0 +1,13 @@
+{% load i18n %}
+<a href="javascript:void(0);" id="flavor_details_{{ id }}" rel="popover-hover" data-placement="auto" tabindex="0" data-content="
+<table class='table table-bordered'>
+  <tr><th>{% trans 'VCPUs' %}</th><td>{{ vcpus }}</td></tr>
+  <tr><th>{% trans 'RAM' %}</th><td>{{ size_ram }}</td></tr>
+  <tr><th>{% trans 'Size' %}</th><td>{{ size_disk }}</td></tr>
+</table>
+" data-original-title="<h4>{% trans "Flavor Details" %}: {{ name }}</h4>" data-html="true">{{ name }}</a>
+{#<script type="text/javascript" charset="utf-8">#}
+{#$(function ()#}
+{#    { $("#flavor_details_{{ id }}").popover({html:true});#}
+{#});#}
+{#</script>#}

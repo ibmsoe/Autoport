@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Images Market" %}{% endblock %}
+
+{% block crumbtitle %}
+    <li>
+        {% trans "Images Market" %}
+    </li>
+{% endblock crumbtitle %}
+
+{% block main %}
+    <div class="row">
+        {{ table.render }}
+    </div>
+    <script src="{{ STATIC_URL }}dashboard/smartadmin/js/libs/jquery.ellipsis.js"></script>
+    <script type="text/javascript">
+        $('.short_content').ellipsis({
+            row: 1
+        });
+    </script>
+{% endblock %}

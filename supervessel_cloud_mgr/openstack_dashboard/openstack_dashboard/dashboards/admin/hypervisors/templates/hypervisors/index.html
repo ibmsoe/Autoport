@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% load i18n horizon humanize sizeformat %}
+
+{% block title %}{% trans "Hypervisors" %}{% endblock %}
+
+{% block crumbtitle %}
+    <li>
+        {% trans "Admin" %}
+    </li>
+    <li>
+        {% trans "All Hypervisors" %}
+    </li>
+{% endblock crumbtitle %}
+
+{% block main %}
+    <div class="well well-sm">
+        <h3>{% trans "Hypervisor Summary" %}</h3>
+        <hr>
+        <div class="bs-example padding-5">
+        <span class="text">
+            {% trans "VCPU Usage" %}
+            <span class="pull-right">
+                {% blocktrans with used=stats.vcpus_used|intcomma available=stats.vcpus|intcomma %}
+                    <span class="pull-right">{{ used }}/{{ available}}</span>
+                {% endblocktrans %}
+            </span>
+        </span>
+            <div class="progress">
+                <div class="progress-bar bg-color-blue"
+                     data-progress-indicator-flavor
+                     data-quota-limit="{{ stats.vcpus }}"
+                     data-quota-used="{{ stats.vcpus_used }}"
+                     aria-valuetransitiongoal="{% widthratio stats.vcpus_used stats.vcpus 100 %}">
+                </div>
+            </div>
+
+        <span class="text">
+            {% trans "Memory Usage" %}
+            <span class="pull-right">
+                {% blocktrans with used=stats.memory_mb_used|mb_float_format available=stats.memory_mb|mb_float_format %}
+                    <span class="pull-right">{{ used }}/{{ available}}</span>
+                {% endblocktrans %}
+            </span>
+        </span>
+            <div class="progress">
+                <div class="progress-bar bg-color-blue"
+                     data-progress-indicator-flavor
+                     data-quota-limit="{{ stats.memory_mb }}"
+                     data-quota-used="{{ stats.memory_mb_used }}"
+                     aria-valuetransitiongoal="{% widthratio stats.memory_mb_used stats.memory_mb 100 %}">
+                </div>
+            </div>
+
+        <span class="text">
+            {% trans "Disk Usage" %}
+            <span class="pull-right">
+                {% blocktrans with used=stats.local_gb_used|diskgbformat available=stats.local_gb|diskgbformat %}
+                    <span class="pull-right">{{ used }}/{{ available}}</span>
+                {% endblocktrans %}
+            </span>
+        </span>
+            <div class="progress">
+                <div class="progress-bar bg-color-blue"
+                     data-progress-indicator-flavor
+                     data-quota-limit="{{ stats.local_gb }}"
+                     data-quota-used="{{ stats.local_gb_used }}"
+                     aria-valuetransitiongoal="{% widthratio stats.local_gb_used stats.local_gb 100 %}">
+                </div>
+            </div>
+        </div>
+    </div>
+{#    <section id="widget-grid" class="">#}
+{#        <div class="row">#}
+{#            <h2 class="row-seperator-header"><i class="fa fa-plus"></i> {% trans "All Hypervisors" %}</h2>#}
+{##}
+{#            <!-- NEW WIDGET START -->#}
+{#            <article class="col-sm-12 col-md-12 col-lg-12">#}
+{##}
+{#                <!-- Widget ID (each widget will need unique ID)-->#}
+{#                <div class="jarviswidget well" id="wid-id-3" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-togglebutton="false" data-widget-deletebutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-sortable="false">#}
+{#                    <!-- widget options:#}
+{#                    usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">#}
+{##}
+{#                    data-widget-colorbutton="false"#}
+{#                    data-widget-editbutton="false"#}
+{#                    data-widget-togglebutton="false"#}
+{#                    data-widget-deletebutton="false"#}
+{#                    data-widget-fullscreenbutton="false"#}
+{#                    data-widget-custombutton="false"#}
+{#                    data-widget-collapsed="true"#}
+{#                    data-widget-sortable="false"#}
+{##}
+{#                    -->#}
+{#                    <header>#}
+{#                        <span class="widget-icon"> <i class="fa fa-comments"></i> </span>#}
+{#                        <h2>Default Tabs with border </h2>#}
+{##}
+{#                    </header>#}
+{##}
+{#                    <!-- widget div-->#}
+{#                    <div>#}
+{##}
+{#                        <!-- widget edit box -->#}
+{#                        <div class="jarviswidget-editbox">#}
+{#                            <!-- This area used as dropdown edit box -->#}
+{##}
+{#                        </div>#}
+{#                        <!-- end widget edit box -->#}
+{##}
+{#                        <!-- widget content -->#}
+{#                        <div class="widget-body">#}
+{#                            {{ tab_group.render }}#}
+{#                        </div>#}
+{#                    </div>#}
+{#                </div>#}
+{#            </article>#}
+{#        </div>#}
+{#    </section>#}
+    <section id="widget-grid" class="">
+    <div class="row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+            <div class="jarviswidget jarviswidget-color-darken" data-widget-editbutton="false">
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                    <h2>{% trans "All Hypervisors" %} </h2>
+                </header>
+                <div>
+                    <div class="jarviswidget-editbox">
+                    </div>
+                    <div class="widget-body">
+                        {{ tab_group.render }}
+                    </div>
+                </div>
+            </div>
+        </article>
+    </div>
+    </section>
+    <script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
+    <script type="text/javascript" charset="utf-8">
+        $('.progress-bar').progressbar({
+            display_text : 'fill'
+        });
+    </script>
+{% endblock %}

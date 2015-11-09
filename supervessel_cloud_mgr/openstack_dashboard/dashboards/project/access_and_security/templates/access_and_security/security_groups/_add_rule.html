@@ -1,0 +1,87 @@
+{% extends "horizon/common/_modal_form.html" %}
+{% load i18n %}
+{% load url from future %}
+
+{% block form_id %}create_security_group_rule_form{% endblock %}
+{% block form_action %}{% url 'horizon:project:access_and_security:security_groups:add_rule' security_group_id %}{% endblock %}
+
+{% block modal-header %}{% trans "Add Rule" %}{% endblock %}
+
+{% block modal-body %}
+	<div class="row">
+		<div class="col-sm-6">
+			<fieldset>
+                {% include "horizon/common/_form_fields.html" %}
+			</fieldset>
+		</div>
+		<div class="col-sm-6">
+			<h3>{% trans "Description" %}:</h3>
+			<p>{% blocktrans %}Rules define which traffic is allowed to instances assigned to the security group. A security group rule consists of three main parts:{% endblocktrans %}</p>
+			<p><strong>{% trans "Rule" %}</strong>: {% blocktrans %}You can specify the desired rule template or use custom rules, the options are Custom TCP Rule, Custom UDP Rule, or Custom ICMP Rule.{% endblocktrans %}</p>
+			<p><strong>{% trans "Open Port/Port Range" %}</strong>: {% blocktrans %}For TCP and UDP rules you may choose to open either a single port or a range of ports. Selecting the "Port Range" option will provide you with space to provide both the starting and ending ports for the range. For ICMP rules you instead specify an ICMP type and code in the spaces provided.{% endblocktrans %}</p>
+			<p><strong>{% trans "Remote" %}</strong>: {% blocktrans %}You must specify the source of the traffic to be allowed via this rule. You may do so either in the form of an IP address block (CIDR) or via a source group (Security Group). Selecting a security group as the source will allow any other instance in that security group access to any other instance via this rule.{% endblocktrans %}</p>
+		</div>
+	</div>
+{% endblock %}
+
+{% block modal-footer %}
+	<input type="submit"  class="btn btn-primary pull-right" value="{% trans 'Add' %}" />
+    <a class="btn btn-danger cancel">{% trans "Cancel" %}</a>&nbsp;&nbsp;
+{% endblock %}
+
+{% block modal-js %}
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/jquery-validate/jquery.validate.min.js"></script>
+{#<script src="{{ STATIC_URL }}dashboard/smartadmin/js/app.min.js"></script>#}
+<script>
+	function change_display() {
+		var base_type = $('#id_rule_menu').val();
+
+		switch (base_type) {
+			case 'tcp':
+			case 'udp':
+				$("#id_direction, #id_port").closest(".form-group").show();
+				break;
+			default:
+				$("#id_direction, #id_port").closest(".form-group").hide();
+				break;
+		}
+	}
+
+	$(document).ready(function() {
+		$('#id_rule_menu').closest('.form-group').nextAll().hide();
+		change_display();
+	});
+
+	$(document).on('change', '.controls #id_rule_menu', function() {
+		change_display();
+	});
+
+	runAllForms();
+
+	$(function() {
+		// Validation
+		$("#create_security_group_rule_form").validate({
+			// Rules for form validation
+			rules : {
+				port : {
+					required : true,
+					min : 1,
+					max : 65535
+				}
+			},
+
+			// Messages for form validation
+			messages : {
+				port : {
+					required : gettext('Please enter port range(1-65535)')
+				}
+			},
+
+			// Do not change code below
+			errorPlacement : function(error, element) {
+				error.insertAfter(element.parent());
+			}
+		});
+	});
+</script>
+{% endblock %}

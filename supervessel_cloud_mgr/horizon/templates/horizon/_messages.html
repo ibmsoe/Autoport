@@ -1,0 +1,51 @@
+{% load i18n %}
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/notification/SmartNotification.min.js"></script>
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/app.config.js"></script>
+<div class="messages">
+{% for message in messages %}
+  {% if "info" in message.tags %}
+      <script>
+          $.smallBox({
+              title : "{% trans "Info" %}",
+              content : "{{ message }}",
+              color : "#99CCFF",
+              timeout: 8000,
+              icon : "fa fa-info"
+          });
+      </script>
+  {% endif %}
+  {% if "warning" in message.tags %}
+      <script>
+          $.smallBox({
+              title : "{% trans "Warning" %}",
+              content : "{{ message }}",
+              color : "#FFCC99",
+              timeout: 8000,
+              icon : "fa fa-warning"
+          });
+      </script>
+  {% endif %}
+  {% if "success" in message.tags %}
+      <script>
+          $.smallBox({
+              title : "{% trans "Success" %}",
+              content : "{{ message }}",
+              color : "#99CC66",
+              timeout: 8000,
+              icon : "fa fa-check"
+          });
+      </script>
+  {% endif %}
+  {% if "error" in message.tags %}
+      <script>
+          $.smallBox({
+              title : "{% trans 'Error' %}",
+              content : "{{ message }}",
+              color : "#FF6666",
+              timeout: 8000,
+              icon : "fa fa-times"
+          });
+      </script>
+  {% endif %}
+{% endfor %}
+</div>

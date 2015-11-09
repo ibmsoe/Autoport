@@ -1,0 +1,42 @@
+{% extends "horizon/common/_modal_form.html" %}
+{% load i18n %}
+{% load url from future %}
+
+{% block form_id %}launch_market_image{% endblock %}
+{% block form_action %}{% url 'horizon:project:instances:launch_market_image' image.id %}{% endblock %}
+
+{% block modal-header %}{% trans "Launch Market Image" %}{% endblock %}
+
+{% block modal-body %}
+    <div class="row">
+        <div class="col-sm-6">
+            <fieldset>
+                {% include "horizon/common/_form_fields.html" %}
+            </fieldset>
+        </div>
+        <div class="col-sm-6" id="flavor_info">
+            <h3>{% trans "Description:" %}</h3>
+            <p><strong>{% trans "Name" %}</strong>: <span id="flavor_name"></span></p>
+            <p><strong>{% trans "VCPUs" %}</strong>: <span id="flavor_vcpus"></span></p>
+            <p><strong>{% trans "Root Disk" %}</strong>: <span id="flavor_disk"></span> {% trans "GB" %}</p>
+            <p><strong>{% trans "Ephemeral Disk" %}</strong>: <span id="flavor_ephemeral"></span> {% trans "GB" %}</p>
+            <p><strong>{% trans "Total Disk" %}</strong>: <span id="flavor_disk_total"></span> {% trans "GB" %}</p>
+            <p><strong>{% trans "RAM" %}</strong>: <span id="flavor_ram"></span> {% trans "MB" %}</p>
+            <p><strong>{% trans "Need Blue Points" %}</strong>: <span id="flavor_points"></span>&nbsp;/&nbsp;{% trans "Day" %}</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block modal-footer %}
+    <input class="btn btn-primary pull-right" type="submit"  value="{% trans 'Launch' %}" />
+    <button type="button" class="btn btn-danger cancel" data-dismiss="modal">{% trans "Cancel" %}</button>&nbsp;&nbsp;
+    <script type="text/javascript">
+        if(typeof horizon.Quota !== 'undefined') {
+            horizon.Quota.initWithFlavors({{ flavors|safe|default:"{}" }});
+        } else {
+            addHorizonLoadEvent(function() {
+                horizon.Quota.initWithFlavors({{ flavors|safe|default:"{}" }});
+            });
+        }
+    </script>
+{% endblock %}

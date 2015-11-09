@@ -1,0 +1,30 @@
+{% extends "horizon/common/_modal_form.html" %}
+{% load i18n %}
+{% load url from future %}
+
+{% block form_id %}update_image_form{% endblock %}
+{% block form_action %}{% url 'horizon:admin:images_market:update' image.id %}{% endblock %}
+
+{% block modal-header %}{% trans "Update Image" %}{% endblock %}
+
+{% block modal-body %}
+    <div class="row">
+        <fieldset>
+            {% include "horizon/common/_form_fields.html" %}
+        </fieldset>
+    </div>
+{% endblock %}
+
+{% block modal-footer %}
+    <input class="btn btn-primary pull-right" type="submit" onclick="document.getElementById('update_image_form').submit();" value="{% trans 'Update Image' %}" />
+    <button type="button" class="btn btn-danger cancel" data-dismiss="modal">{% trans "Cancel" %}</button>&nbsp;&nbsp;
+{% endblock %}
+
+{% block modal-js %}
+    <script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/ckeditor/ckeditor.js"></script>
+    <script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/bootstrap-tags/bootstrap-tagsinput.min.js"></script>
+    <script type="text/javascript">
+        CKEDITOR.replace( 'details_en', { height: '180px', startupFocus : false} );
+        CKEDITOR.replace( 'details', { height: '180px', startupFocus : false} );
+    </script>
+{% endblock %}

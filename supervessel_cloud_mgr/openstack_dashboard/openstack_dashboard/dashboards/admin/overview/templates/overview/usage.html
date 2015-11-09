@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load i18n %}
+{% block title %}{% trans "Usage Overview" %}{% endblock %}
+
+{% block crumbtitle %}
+  <li>
+      {% trans "Admin" %}
+  </li>
+  <li>
+      {% trans "Overview" %}
+  </li>
+{% endblock crumbtitle %}
+
+{% block main %}
+  {% if monitoring %}
+    <div id="monitoring">
+      <h3>{% trans "Monitoring" %}: </h3>
+      <ul id="external_links">
+        {% for link in monitoring %}
+          <li><a target="_blank" href="{{ link.1 }}">{{ link.0 }}</a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {% if simple_tenant_usage_enabled %}
+    {% include "horizon/common/_usage_summary.html" %}
+    <section id="widget-grid" class="">
+      <div class="row">
+        <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+          <!-- Widget ID (each widget will need unique ID)-->
+          <div class="jarviswidget jarviswidget-color-darken" data-widget-editbutton="false" data-widget-deletebutton="false">
+            <header>
+              <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+              <h2>{% trans "Overview" %} </h2>
+            </header>
+            <div>
+              <div class="jarviswidget-editbox">
+              </div>
+                {{ table.render }}
+            </div>
+          </div>
+        </article>
+      </div>
+    </section>
+  {% endif %}
+  <script type="text/javascript">
+    $(document).ready(function() {
+      $('.table_count').hide();
+      var responsiveHelper_dt_basic = undefined;
+
+      var breakpointDefinition = {
+        tablet : 1024,
+        phone : 480
+      };
+
+      $('#global_usage').dataTable({
+        "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>"+
+        "t"+
+        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+        "autoWidth" : true,
+        "preDrawCallback" : function() {
+          // Initialize the responsive datatables helper once.
+          if (!responsiveHelper_dt_basic) {
+            responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#global_usage'), breakpointDefinition);
+          }
+        },
+        "rowCallback" : function(nRow) {
+          responsiveHelper_dt_basic.createExpandIcon(nRow);
+        },
+        "drawCallback" : function(oSettings) {
+          responsiveHelper_dt_basic.respond();
+        }
+      });
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,164 @@
+{% load i18n horizon humanize %}
+{% load branding %}
+
+{% block help_message %}
+{% endblock %}
+
+<div class="well well-sm" id="selected_accelerator">
+    <h3 class="text-primary">{% trans "Selected Accelerator" %}</h3>
+    <hr>
+    <div class="bs-example padding-5">
+        <p>
+            {% trans "Accelerator Name" %}: <span id="acc_name"></span>
+        </p>
+        <p>
+            {% trans "Vendor" %}: <span id="chip_vendor"></span>
+        </p>
+        <p>
+            {% trans "SN" %}: <span id="chip_sn"></span>
+        </p>
+        <p>
+            {% trans "Need Blue Points" %}: <span id="acc_blue_points"></span>
+        </p>
+        <p>
+            {% trans "Description" %}: <span id="acc_desc"></span>
+        </p>
+    </div>
+</div>
+
+<div class="well well-sm" id="flavor_info">
+    <h3 class="text-primary">{% trans "Flavor Details" %}</h3>
+    <hr>
+    <div class="bs-example padding-5">
+        <p>
+            {% trans "Name" %}: <span id="flavor_name"></span>
+        </p>
+        <p>
+            {% trans "VCPUs" %}: <span id="flavor_vcpus"></span>
+        </p>
+        <p>
+            {% trans "Root Disk" %}: <span id="flavor_disk"></span> {% trans "GB" %}
+        </p>
+        <p>
+            {% trans "Ephemeral Disk" %}: <span id="flavor_ephemeral"></span> {% trans "GB" %}
+        </p>
+        <p>
+            {% trans "Total Disk" %}: <span id="flavor_disk_total"></span> {% trans "GB" %}
+        </p>
+        <p>
+            {% trans "RAM" %}: <span id="flavor_ram"></span> {% trans "MB" %}
+        </p>
+        <p>
+            {% trans "Need Blue Points" %}: <span id="flavor_points"></span>&nbsp;/&nbsp;{% trans "Day" %}
+        </p>
+    </div>
+</div>
+
+<br />
+<div class="well well-sm" id="flavor_status">
+    <h3 class="text-primary">{% trans "Resource Limits" %}</h3>
+    <hr>
+    <div class="bs-example padding-5">
+        <span class="text">
+            {% trans "Number of Instances" %}
+            <span class="pull-right">
+                {% if use_system_quota %}
+                    {% blocktrans with used=usages.totalInstancesUsed|intcomma quota=usages.maxTotalInstances|quotainf|intcomma %}
+                        <span class="pull-right" id="quota_instances_text">{{ used }}/{{ quota }}</span>
+                    {% endblocktrans %}
+                {% else %}
+                    {% blocktrans with used=total_instances_used|intcomma quota=max_total_instances|quotainf|intcomma %}
+                        <span class="pull-right" id="quota_instances_text">{{ used }}/{{ quota }}</span>
+                    {% endblocktrans %}
+                {% endif %}
+            </span>
+        </span>
+        <div class="progress">
+            {% if use_system_quota %}
+            <div id="quota_instances" class="progress-bar bg-color-blue"
+                 data-progress-indicator-flavor
+                 data-quota-limit="{{ usages.maxTotalInstances }}"
+                 data-quota-used="{{ usages.totalInstancesUsed }}"
+                 aria-valuetransitiongoal="{% widthratio usages.totalInstancesUsed usages.maxTotalInstances 100 %}">
+            </div>
+            {% else %}
+                <div id="quota_instances" class="progress-bar bg-color-blue"
+                     data-progress-indicator-flavor
+                     data-quota-limit="{{ max_total_instances }}"
+                     data-quota-used="{{ total_instances_used }}"
+                     aria-valuetransitiongoal="{% widthratio total_instances_used max_total_instances 100 %}">
+                </div>
+            {% endif %}
+        </div>
+
+{#        <span class="text">#}
+{#            {% trans "Number of VCPUs" %}#}
+{#            <span class="pull-right">#}
+{#                {% blocktrans with used=usages.totalCoresUsed|intcomma quota=usages.maxTotalCores|quotainf|intcomma %}#}
+{#                    <span class="pull-right" id="quota_vcpu_text">{{ used }}/{{ quota }}</span>#}
+{#                {% endblocktrans %}#}
+{#            </span>#}
+{#        </span>#}
+{#        <div class="progress">#}
+{#            <div id="quota_vcpus" class="progress-bar bg-color-blue"#}
+{#                 data-progress-indicator-flavor#}
+{#                 data-quota-limit="{{ usages.maxTotalCores }}"#}
+{#                 data-quota-used="{{ usages.totalCoresUsed }}"#}
+{#                 aria-valuetransitiongoal="{% widthratio usages.totalCoresUsed usages.maxTotalCores 100 %}">#}
+{#            </div>#}
+{#        </div>#}
+{##}
+{#        <span class="text">#}
+{#            {% trans "Total RAM" %}#}
+{#            <span class="pull-right">#}
+{#                {% blocktrans with used=usages.totalRAMUsed|intcomma quota=usages.maxTotalRAMSize|quotainf|intcomma %}#}
+{#                    <span class="pull-right" id="quota_ram_text">{{ used }}/{{ quota }}</span>#}
+{#                {% endblocktrans %}#}
+{#            </span>#}
+{#        </span>#}
+{#        <div class="progress">#}
+{#            <div id="quota_ram" class="progress-bar bg-color-blue"#}
+{#                 data-progress-indicator-flavor#}
+{#                 data-quota-limit="{{ usages.maxTotalRAMSize }}"#}
+{#                 data-quota-used="{{ usages.totalRAMUsed }}"#}
+{#                 aria-valuetransitiongoal="{% widthratio usages.totalRAMUsed usages.maxTotalRAMSize 100 %}">#}
+{#            </div>#}
+{#        </div>#}
+    </div>
+</div>
+
+<script src="{{ STATIC_URL }}dashboard/smartadmin/js/plugin/bootstrap-progressbar/bootstrap-progressbar.min.js"></script>
+<script type="text/javascript" charset="utf-8">
+    $('.progress-bar').progressbar({
+        display_text : 'fill'
+    });
+  some_disabled_msg = '{{_("Some flavors not meeting minimum image requirements have been disabled.")|escapejs}}';
+  all_disabled_msg = '{{_("No flavors meet minimum criteria for selected image.")|escapejs}}';
+
+  if(typeof horizon.Quota !== 'undefined') {
+    horizon.Quota.initWithFlavors({{ flavors|safe|default:"{}" }});
+    horizon.Quota.initWithImages({{ images|safe|default:"{}"}}, some_disabled_msg, all_disabled_msg);
+  } else {
+    addHorizonLoadEvent(function() {
+      horizon.Quota.initWithFlavors({{ flavors|safe|default:"{}" }});
+      horizon.Quota.initWithImages({{ images|safe|default:"{}"}}, some_disabled_msg, all_disabled_msg);
+    });
+  }
+    $('.workflow #id_source_type').change();
+    $.get(
+            '{% site_web_root %}/get_resource_count?source_type=kvm',
+            function(data) {
+                if (data.count == 0) {
+                    $("#id_source_type option[value=kvm]").attr('disabled', 'disabled');
+                }
+            }
+    );
+    $.get(
+            '{% site_web_root %}/get_resource_count?source_type=docker',
+            function(data) {
+                if (data.count == 0) {
+                    $("#id_source_type option[value=docker]").attr('disabled', 'disabled');
+                }
+            }
+    );
+</script>

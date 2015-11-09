@@ -1,0 +1,18 @@
+{% load i18n %}
+{% for ip_group, addresses in instance.addresses.items %}
+    {% if instance.addresses.items|length > 1 %}
+    <h4>{{ ip_group }}</h4>
+    {% endif %}
+    <dl>
+        {% for address in addresses %}
+            <dt>
+                {% if address.type == "fixed" %}
+                    {% trans "Private" %}
+                {% elif address.type == "floating" %}
+                    {% trans "Public" %}
+                {% endif %}
+            </dt>
+            <dd>{{ address.addr }}</dd>
+        {% endfor %}
+    </dl>
+{% endfor %}

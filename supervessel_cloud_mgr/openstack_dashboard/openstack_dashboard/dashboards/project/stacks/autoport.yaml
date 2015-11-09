@@ -1,0 +1,313 @@
+heat_template_version: 2013-05-23
+description: A template to create a autoport cluster which has its own net subnet and router.
+
+parameters:
+  # Paramters to define the network topology in stack
+  public_net_id:
+    type: string
+    description: >
+      ID of public network for which floating IP addresses will be allocated
+    # Use the actual public network ID here
+    default: c24ebbf6-8d64-4dd5-b59d-c9a5d66274c0 
+  private_net_name:
+    type: string
+    description: Name of private network to be created
+    default: autoport_network
+  private_subnet_name:
+    type: string
+    description: Name of private network to be created
+    default: autoport_subnet
+  private_net_cidr:
+    type: string
+    description: Private network address (CIDR notation)
+    default: 192.168.1.0/24
+  private_net_gateway:
+    type: string
+    description: Private network gateway address
+    default: 192.168.1.1
+  router_name:
+    type: string
+    description: Name of private network to be created
+    default: autoport_router
+  fixedip_driver:
+    type: string
+    description: Private ip address for driver node
+    default: 192.168.1.109
+  fixedip_master:
+    type: string
+    description: Private ip address for master node
+    default: 192.168.1.110
+  fixedip_slave_r_power:
+    type: string
+    description: Private ip address for rhel power slave node
+    default: 192.168.1.211
+  fixedip_slave_r_x86:
+    type: string
+    description: Private ip address for rhel x86 slave node
+    default: 192.168.1.212
+  fixedip_slave_u_power:
+    type: string
+    description: Private ip address for ubuntu power slave node
+    default: 192.168.1.213
+  fixedip_slave_u_x86:
+    type: string
+    description: Private ip address for ubuntu x86 slave node
+    default: 192.168.1.214
+
+  # Parameter to define Nova instances
+  image_driver:
+    type: string
+    description: Image used for driver node
+    default: 75d4af35-c775-4c81-88b0-0a5b2aab3c7b
+  image_master:
+    type: string
+    description: Image used for master node
+    default: 9604a32b-0e3a-411d-ab7e-2866f56f720b
+  image_slave_r_power:
+    type: string
+    description: Image used for rhel power slave node
+    default: c4f4ff53-aba3-4ef2-8dc5-7c11806acb03
+  image_slave_r_x86:
+    type: string
+    description: Image used for rhel x86 slave node
+    default: af4b15be-a174-4409-82cb-ef20a1839ce4
+  image_slave_u_power:
+    type: string
+    description: Image used for ubuntu power slave node
+    default: d8dd551b-3880-43a6-acd4-a1f9e5af4ebd
+  image_slave_u_x86:
+    type: string
+    description: Image used for ubuntu x86 slave node
+    default: 97645767-4637-4e06-b3c5-108a1204a122
+  flavor_driver:
+    type: string
+    description: flavor used for driver node
+    default: docker.small # use correct flavor as needed
+  flavor_master:
+    type: string
+    description: flavor used for master node
+    default: docker.small
+  flavor_slave:
+    type: string
+    description: flavor used for slave node
+    default: docker.small
+
+  # Parameters about user (Add more parameters if needed)
+  user_name:
+    type: string
+    description: Name of user
+    default: opuser
+
+resources:
+  # driver_server will be the last created node
+  driver_server:
+    type: OS::Nova::Server
+    depends_on: master_server
+    properties:
+      flavor: { get_param: flavor_driver }
+      image: { get_param: image_driver }
+      networks:
+        - port: { get_resource: port_driver }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+           #!/bin/bash
+           echo 'This is the driver server. My internal IP is $INTERNAL_IP' >> /tmp/test_driver.log
+           echo '$USER_NAME'  >> /tmp/test_driver.log
+          params:
+            $INTERNAL_IP: { get_param: fixedip_driver }
+            $USER_NAME: { get_param: user_name }
+
+  # Neutron port for driver server
+  port_driver:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net }
+      fixed_ips:
+        - ip_address: { get_param: fixedip_driver }
+
+  # Neutron floatingip for driver server
+  fip_driver:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net_id }
+      port_id: { get_resource: port_driver }
+
+  master_server:
+    type: OS::Nova::Server
+    depends_on: private_subnet
+    properties:
+      flavor: { get_param: flavor_master }
+      image: { get_param: image_master }
+      networks:
+        - port: { get_resource: port_master }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+           #!/bin/bash
+           echo 'This is the master server. My internal IP is $INTERNAL_IP' >> /tmp/test_master.log
+          params:
+            $INTERNAL_IP: { get_param: fixedip_master}
+
+
+  # Neutron port for master server
+  port_master:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net }
+      fixed_ips:
+        - ip_address: { get_param: fixedip_master }
+
+  # Neutron floatingip for master server
+  fip_master:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net_id }
+      port_id: { get_resource: port_master }
+
+  slave_r_power:
+    type: OS::Nova::Server
+    depends_on: private_subnet
+    properties:
+      flavor: { get_param: flavor_slave }
+      image: { get_param: image_slave_r_power }
+      networks:
+        - port: { get_resource: port_slave_r_power }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+           #!/bin/bash
+           echo 'This is the slave_r_power server. My internal IP is $INTERNAL_IP' >> /tmp/test_slave_r_power.log
+          params:
+            $INTERNAL_IP: { get_param: fixedip_slave_r_power}
+
+  # Neutron port for slave_r_power server
+  port_slave_r_power:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net }
+      fixed_ips:
+        - ip_address: { get_param: fixedip_slave_r_power }
+
+  slave_r_x86:
+    type: OS::Nova::Server
+    depends_on: private_subnet
+    properties:
+      flavor: { get_param: flavor_slave }
+      image: { get_param: image_slave_r_x86 }
+      networks:
+        - port: { get_resource: port_slave_r_x86 }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+           #!/bin/bash
+           echo 'This is the slave_r_x86 server. My internal IP is $INTERNAL_IP' >> /tmp/test_slave_r_x86.log
+          params:
+            $INTERNAL_IP: { get_param: fixedip_slave_r_x86}
+
+  # Neutron port for slave_r_x86 server
+  port_slave_r_x86:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net }
+      fixed_ips:
+        - ip_address: { get_param: fixedip_slave_r_x86 }
+
+  slave_u_power:
+    type: OS::Nova::Server
+    depends_on: private_subnet
+    properties:
+      flavor: { get_param: flavor_slave }
+      image: { get_param: image_slave_u_power }
+      networks:
+        - port: { get_resource: port_slave_u_power }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+           #!/bin/bash
+           echo 'This is the slave_u_power server. My internal IP is $INTERNAL_IP' >> /tmp/test_slave_u_power.log
+          params:
+            $INTERNAL_IP: { get_param: fixedip_slave_u_power}
+
+  # Neutron port for slave_u_power server
+  port_slave_u_power:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net }
+      fixed_ips:
+        - ip_address: { get_param: fixedip_slave_u_power }
+
+  slave_u_x86:
+    type: OS::Nova::Server
+    depends_on: private_subnet
+    properties:
+      flavor: { get_param: flavor_slave }
+      image: { get_param: image_slave_u_x86 }
+      networks:
+        - port: { get_resource: port_slave_u_x86 }
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+           #!/bin/bash
+           echo 'This is the slave_u_x86 server. My internal IP is $INTERNAL_IP' >> /tmp/test_slave_u_x86.log
+          params:
+            $INTERNAL_IP: { get_param: fixedip_slave_u_x86}
+
+  # Neutron port for slave_u_x86 server
+  port_slave_u_x86:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: private_net }
+      fixed_ips:
+        - ip_address: { get_param: fixedip_slave_u_x86 }
+
+
+  # Neutron private net
+  private_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: private_net_name }
+
+  # Neutron private subnet
+  private_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { get_param: private_subnet_name }
+      network_id: { get_resource: private_net }
+      cidr: { get_param: private_net_cidr }
+      gateway_ip: { get_param: private_net_gateway }
+
+  # Neutron router
+  router:
+    type: OS::Neutron::Router
+    properties:
+      name: { get_param: router_name }
+
+  # Neutron router gateway
+  router_gateway:
+    type: OS::Neutron::RouterGateway
+    properties:
+      router_id: { get_resource: router }
+      network_id: { get_param: public_net_id }
+
+  # Neutron router interface
+  router_interface:
+    type: OS::Neutron::RouterInterface
+    properties:
+      router_id: { get_resource: router }
+      subnet_id: { get_resource: private_subnet }
+
+
+outputs:
+  driver_server_floating_ip:
+    value: {get_attr: [fip_driver, floating_ip_address]}
+  master_server_floating_ip:
+    value: {get_attr: [fip_master, floating_ip_address]}
+  username:
+    value: {get_param: user_name}

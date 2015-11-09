@@ -1,0 +1,27 @@
+{% load i18n %}
+<ul class="notification-body">
+    {% for vpn in vpns %}
+    <li>
+		<span>
+			<em class="badge padding-5 no-border-radius bg-color-blueLight pull-left margin-right-5">
+                <i class="fa fa-user fa-fw fa-2x"></i>
+            </em>
+
+            <span>
+                {% trans vpn.region %}<br>
+                {{ vpn.title|safe }}<br>
+                {{ vpn.body|safe }}<br>
+            </span>
+{#                {% if request.user.services_region == "Beijing" %}#}
+{#				{% trans "VPN Account" %}: {{ vpn.name }}<br>#}
+{#				{% trans "Password" %}: {{ vpn.password }}<br>#}
+{#                {% endif %}#}
+{#                {% if request.user.services_region == "HangZhou" %}#}
+{#                    {% if  %}#}
+{#                    <a href="{{ vpn.link }}">{% trans "VPN File (Click to download)" %}</a><br>#}
+{#                {% endif %}#}
+{#				 <br>#}
+		</span>
+    </li>
+    {% endfor %}
+</ul>

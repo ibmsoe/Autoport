@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load i18n sizeformat %}
+{% block title %}{% trans "Instance Details" %}{% endblock %}
+
+{% block crumbtitle %}
+  <li>
+      {% trans "Instance Details: " %} {{ instance.name }}
+  </li>
+{% endblock crumbtitle %}
+
+{% block main %}
+  <section id="widget-grid" class="">
+    <div class="row">
+      <h2 class="row-seperator-header"><i class="fa fa-cloud"></i>&nbsp;&nbsp;{{ instance.name }} </h2>
+
+      <!-- NEW WIDGET START -->
+      <article class="col-sm-12 col-md-12 col-lg-12">
+
+        <!-- Widget ID (each widget will need unique ID)-->
+        <div class="jarviswidget well" id="wid-id-3" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-togglebutton="false" data-widget-deletebutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false" data-widget-sortable="false">
+          <!-- widget options:
+          usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+          data-widget-colorbutton="false"
+          data-widget-editbutton="false"
+          data-widget-togglebutton="false"
+          data-widget-deletebutton="false"
+          data-widget-fullscreenbutton="false"
+          data-widget-custombutton="false"
+          data-widget-collapsed="true"
+          data-widget-sortable="false"
+
+          -->
+          <header>
+            <span class="widget-icon"> <i class="fa fa-comments"></i> </span>
+            <h2>Default Tabs with border </h2>
+
+          </header>
+
+          <!-- widget div-->
+          <div>
+
+            <!-- widget edit box -->
+            <div class="jarviswidget-editbox">
+              <!-- This area used as dropdown edit box -->
+
+            </div>
+            <!-- end widget edit box -->
+
+            <!-- widget content -->
+            <div class="widget-body">
+              {{ tab_group.render }}
+            </div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+{% endblock %}

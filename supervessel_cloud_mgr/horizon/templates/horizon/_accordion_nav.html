@@ -1,0 +1,48 @@
+{% load horizon i18n %}
+{% load url from future %}
+
+<nav>
+<ul>
+    {% for dashboard, panel_info in components %}
+        {% if user|has_permissions:dashboard %}
+            {% if dashboard.supports_tenants and request.user.authorized_tenants or not dashboard.supports_tenants %}
+                {% if dashboard.visible %}
+                    <li {% if current.slug == dashboard.slug %}class="active"{% endif %}>
+                    <a href="#">
+                        <i class="{{ dashboard.icon_class }}"></i>
+                        <span class="menu-item-parent">{{ dashboard.name }}</span>
+                    </a>
+                {% endif %}
+            {% if dashboard.visible %}
+                <ul>
+            {% endif %}
+            {% for heading, panels in panel_info.iteritems %}
+            {% with panels|has_permissions_on_list:user as filtered_panels %}
+                {% if filtered_panels %}
+                    {% for panel in filtered_panels %}
+                        {% if panel.visible %}
+                            <li {% if current.slug == dashboard.slug and current_panel == panel.slug %}class="active"{% endif %}>
+                                <a href="{{ panel.get_absolute_url }}">
+                                    <i class="{{ panel.icon_class }}"></i>
+                                    {% if not dashboard.visible %}<span class="menu-item-parent">{% endif %}
+                                    {{ panel.name }}
+                                    {% if not dashboard.visible %}</span>{% endif %}
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            {% endfor %}
+            {% if dashboard.visible %}
+                </ul>
+            {% endif %}
+            {% if dashboard.visible %}
+                </li>
+            {% endif %}
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+</ul>
+</nav>
+

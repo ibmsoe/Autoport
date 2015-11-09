@@ -1,0 +1,9 @@
+{% extends 'project/instances/_flavors_and_quotas.html' %}
+{% load i18n %}
+
+{% block help_message %}
+    <div class="alert alert-info alert-block">
+        <p>{% blocktrans %}Specify the details for launching an instance.{% endblocktrans %}</p>
+        <p>{% blocktrans %}The chart below shows the resources used by this project in relation to the project's quotas.{% endblocktrans %}</p>
+    </div>
+{% endblock %}
