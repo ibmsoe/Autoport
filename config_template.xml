@@ -188,7 +188,7 @@
 # For example, if KEEPBUILDS=75 and there are 100 builds, it will
 # remove the oldest 25 builds.
 
-KEEPBUILDS=50
+KEEPBUILDS=125
 
 cwd=`pwd`
 cd ..
