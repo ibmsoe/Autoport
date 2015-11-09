@@ -693,6 +693,21 @@ def createJob_common(time, uid, id, tag, node, javaType,
         errorstr = "Programming language not supported - " + repo.language
         return { 'status': "failure", 'error': errorstr }
 
+    try:
+        i = globals.nodeLabels.index(node)
+    except:
+        return { 'status': "failure", 'error': "Invalid build server" }
+
+    hostname = ""
+    ipAddr = ""
+    osDesc = ""
+    try:
+        hostName = globals.nodeDetails[i]['hostname']
+        ipAddr = globals.nodeDetails[i]['ipaddress']
+        osDesc = globals.nodeOSes[i]         # This is formatted O/S Version Platform for UI
+    except:
+        pass
+
     # Read template XML file
     tree = ET.parse("config_template.xml")
     root = tree.getroot()
@@ -750,6 +765,9 @@ def createJob_common(time, uid, id, tag, node, javaType,
                      \"Test Command\": \"" + testCmd + "\",\
                      \"Install Command\": \"" + installCmd + "\",\
                      \"Architecture\": \"" + node + "\",\
+                     \"Hostname\": \"" + hostName + "\",\
+                     \"Ipaddr\": \"" + ipAddr + "\",\
+                     \"OS\": \"" + osDesc + "\",\
                      \"Date\": \"" + timestr + "\" }"
 
     # add parameters information
@@ -760,12 +778,22 @@ def createJob_common(time, uid, id, tag, node, javaType,
         elif i == 2:
             param.text = jobMetadata
         elif i == 3:
-            param.text = selectedEnv
+            param.text = hostName
         elif i == 4:
-            param.text = buildCmd
+            param.text = ipAddr
         elif i == 5:
-            param.text = testCmd
+            param.text = osDesc
         elif i == 6:
+            param.text = selectedEnv
+        elif i == 7:
+            param.text = repo.name
+        elif i == 8:
+            param.text = tag
+        elif i == 9:
+            param.text = buildCmd
+        elif i == 10:
+            param.text = testCmd
+        elif i == 11:
             param.text = installCmd
         i += 1
 

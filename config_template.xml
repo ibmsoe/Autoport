@@ -26,8 +26,33 @@
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
+          <name>HOSTNAME</name>
+          <description>Hostname of build server</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>IPADDR</name>
+          <description>IPADDR of build server</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>OSNAME</name>
+          <description>OS Name Version PLatform of build server</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
           <name>CMDENV</name>
           <description>Calculated environment variables</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PROJECTNAME</name>
+          <description>Project name</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PROJECTVERS</name>
+          <description>Project branch name or release tag</description>
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
@@ -87,37 +112,52 @@
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD1&quot; ]; then
-                 echo &quot;Autoport PATH: $PATH&quot; &gt; build_result.arti;
-                 echo &quot;Autoport ENV:  $CMDENV&quot; &gt;&gt; build_result.arti;
-                 echo &quot;Autoport cmd:  $CMD1&quot; &gt;&gt; build_result.arti;
+                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; build_result.arti;
+                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; build_result.arti;
+                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; build_result.arti;
+                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; build_result.arti;
+                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; build_result.arti;
+                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; build_result.arti;
+                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; build_result.arti;
+                 echo &quot;Autoport CMD:    $CMD1&quot; &gt;&gt; build_result.arti;
                  echo &quot;&quot; &gt;&gt; build_result.arti;
                  echo $CMD1 | tee autoport_build_cmd;
                  chmod a+x autoport_build_cmd;
-                 ./autoport_build_cmd;
+                 ./autoport_build_cmd &gt;&gt; build_result.arti 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD2&quot; ]; then
-                 echo &quot;Autoport PATH: $PATH&quot; &gt; test_result.arti;
-                 echo &quot;Autoport ENV:  $CMDENV&quot; &gt;&gt; test_result.arti;
-                 echo &quot;Autoport cmd:  $CMD2&quot; &gt;&gt; test_result.arti;
+                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; test_result.arti;
+                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; test_result.arti;
+                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; test_result.arti;
+                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; test_result.arti;
+                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; test_result.arti;
+                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; test_result.arti;
+                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; test_result.arti;
+                 echo &quot;Autoport CMD:    $CMD2&quot; &gt;&gt; test_result.arti;
                  echo &quot;&quot; &gt;&gt; test_result.arti;
                  echo $CMD2 | tee autoport_test_cmd;
                  chmod a+x autoport_test_cmd;
-                 ./autoport_test_cmd;
+                 ./autoport_test_cmd &gt;&gt; test_result.arti 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD3&quot; ]; then
-                 echo &quot;Autoport PATH: $PATH&quot; &gt; install_result.arti;
-                 echo &quot;Autoport ENV:  $CMDENV&quot; &gt;&gt; install_result.arti;
-                 echo &quot;Autoport cmd:  $CMD3&quot; &gt;&gt; install_result.arti;
+                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; install_result.arti;
+                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; install_result.arti;
+                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; install_result.arti;
+                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; install_result.arti;
+                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; install_result.arti;
+                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; install_result.arti;
+                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; install_result.arti;
+                 echo &quot;Autoport CMD:    $CMD3&quot; &gt;&gt; install_result.arti;
                  echo &quot;&quot; &gt;&gt; install_result.arti;
                  echo $CMD3 | tee autoport_install_cmd;
                  chmod a+x autoport_install_cmd;
-                 ./autoport_install_cmd;
+                 ./autoport_install_cmd &gt;&gt; install_result.arti 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
       </conditionalbuilders>
@@ -142,8 +182,7 @@
           </logTexts>
           <EscalateStatus>false</EscalateStatus>
           <RunIfJobSuccessful>true</RunIfJobSuccessful>
-          <script>
-#!/bin/bash
+          <script>#!/bin/bash
 # This script keeps the most recent KEEPBUILDS number of builds
 
 # For example, if KEEPBUILDS=75 and there are 100 builds, it will
@@ -159,11 +198,14 @@ echo &quot;Current directory: $cwd&quot;
 
 numBuilds=`ls -crd * | wc -l`
 buildsToRemove=$((numBuilds-$KEEPBUILDS))
+if [ $buildsToRemove -lt 0 ]; then
+    buildsToRemove=0
+fi
 
 echo &quot;Total number of builds: $numBuilds&quot;
 echo &quot;Number of builds to remove: $buildsToRemove&quot;
 
-if [ $buildsToRemove &gt; 0 ]; then
+if [ $buildsToRemove -gt 0 ]; then
     removeList=`ls -crd * | head -n $buildsToRemove`
 
     echo &quot;----- Start removeList ----- &quot;
