@@ -1057,6 +1057,9 @@ def moveArtifacts(jobName, localDir, moverCv=None):
                 try:
                     os.mkdir(localDir)
                     flist = mover.listdir()
+                    if ".autoport-scratch" in flist:
+                        mover.chdir(".autoport-scratch")
+                        flist = mover.listdir()
                     logger.debug("moveArtifacts: found artifacts %s %s" % (jobName, str(flist)))
                     for f in flist:
                         mover.get(f, localDir + f)
