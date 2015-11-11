@@ -1435,18 +1435,13 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
 
         packageData = createJob_SingleSlavePanel_Callback(outDir)
 
-        if packageData:
-            # Check for errors on the build server.  Errors are reflected on a per package basis via the
-            # key Failure_reason.  For example, apt-show-versions <package> errors is captured as
-            # {"Failure_reason": "Could not generate the package data"}.
-            key = "Failure_reason"
-            if key in packageData:
-                failure_reason = packageData[key]
-                returnData = { 'status': "failure", 'error': failure_reason }
-            else:
-                returnData = { 'status': "ok", 'packageData': packageData, 'node': selectedBuildServer }
+        # Check for error when using O/S install commands which is recorded in a key
+        # packageData is [] when the package is not available
+        if packageData and "Failure_reason" in packageData:
+            failure_reason = packageData[key]
+            returnData = { 'status': "failure", 'error': failure_reason }
         else:
-                returnData = { 'status': "failure", 'error': "Did not transfer package file" }
+            returnData = { 'status': "ok", 'packageData': packageData, 'node': selectedBuildServer }
 
     if r.status_code == 400:
         returnData = { 'status': "failure", 'error': "Could not create/trigger the Jenkins job" }

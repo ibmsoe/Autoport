@@ -188,13 +188,12 @@ print json.dumps(final_list)"
 
 case $DISTRIBUTION in
     "UBUNTU")
-       echo "#### Getting a list of all packages matching the filter $PACKAGE_NAME_FILTER. We search for all packages - installed as well as available"
-       echo "#### The command used is using command apt-cache search $PACKAGE_NAME_FILTER | grep $PACKAGE_NAME_FILTER | sed \"s/\"/'/g\" "
+       echo "#### Getting a list of all installed or available packages matching the filter $PACKAGE_NAME_FILTER"
+       echo "#### The command used is apt-cache search $PACKAGE_NAME_FILTER | grep $PACKAGE_NAME_FILTER | sed \"s/\"/'/g\" "
        apt-cache search $PACKAGE_NAME_FILTER | grep -i $PACKAGE_NAME_FILTER | sed "s/\"/'/g"  > AllPackagesInfo.txt # List of all packages matching the filter
 
        # In case package is not found while searching update the repo list and retry searching again.
-       package_search_result=$( tail -n1 AllPackagesInfo.txt )
-       if [ -z "$package_search_result" -o "$package_search_result" = "0" ]; then
+       if [ $? != 0 ] || [ ! -e AllPackagesInfo.txt ] || [ ! -s AllPackagesInfo.txt ]; then
             echo "Package Not found trying to update repo list."
             sudo apt-get update
             # List of all packages matching the filter after updating
@@ -264,12 +263,12 @@ case $DISTRIBUTION in
     ;;
     "RHEL")
         # get search keyword and fetch all the packages matching given keyword, dump the result for later use.
-        echo "#### Getting a list of all packages matching the filter $PACKAGE_NAME_FILTER. We search for all packages - installed as well as available"
+        echo "#### Getting a list of all installed or available packages matching the filter $PACKAGE_NAME_FILTER"
         echo "#### Running yum info *$PACKAGE_NAME_FILTER* "
         sudo yum info "*$PACKAGE_NAME_FILTER*" > AllPackagesInfo.txt
-        package_search_result=$( tail -n1 AllPackagesInfo.txt )
-        # If package not found, updating cache and retrying another time to get package info
-        if [ -z "$package_search_result" -o "$package_search_result" = "0" ]; then
+
+        # In case package is not found while searching update the repo list and retry searching again.
+        if [ $? != 0 ] || [ ! -e AllPackagesInfo.txt ] || [ ! -s AllPackagesInfo.txt ]; then
             echo "Package Not found trying to update repo list."
             sudo yum clean expire-cache
             # List of all packages matching the filter after updating
@@ -419,7 +418,7 @@ case $DISTRIBUTION in
 esac
 
 jenkins_repo_file_name="archive.log"
-echo "#### Fetching list of available source packages"
+echo "#### Fetching list of available tar packages from autoport software repository on Jenkins master"
 available_package_json=''
 type wget
 can_continue=$?
