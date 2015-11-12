@@ -133,7 +133,10 @@ class Batch:
                         batchTestReportFile = open("%s/%s/%s" % (putdir, filename, batchFilePath), 'r')
                         dataFile = batchTestReportFile.readlines()
                         for projectsReport in dataFile:
-                            self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
+                            try:
+                                self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
+                            except Exception as ex:
+                                logger.warning("Error in copying project %s : " % projectsReport.strip() + str(ex))
                         filteredList.append(
                             self.parseBatchReportList(
                                 os.path.join(putdir,filename,batchFilePath),
