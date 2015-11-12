@@ -2489,7 +2489,7 @@ if __name__ == "__main__":
     # in previous run, that were not cleaned up.
     for dirname, dirnames, filenames in os.walk('/tmp/'):
         if dirname.startswith('/tmp/autoport_'):
-            logger.info("Deleting: " + dirname)
+            logger.debug("Deleting: " + dirname)
             shutil.rmtree(dirname, ignore_errors=True)
 
     p = argparse.ArgumentParser()
