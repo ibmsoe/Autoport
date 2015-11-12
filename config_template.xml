@@ -112,52 +112,67 @@
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD1&quot; ]; then
-                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; build_result.arti;
-                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; build_result.arti;
-                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; build_result.arti;
-                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; build_result.arti;
-                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; build_result.arti;
-                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; build_result.arti;
-                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; build_result.arti;
-                 echo &quot;Autoport CMD:    $CMD1&quot; &gt;&gt; build_result.arti;
-                 echo &quot;&quot; &gt;&gt; build_result.arti;
-                 echo $CMD1 | tee autoport_build_cmd;
-                 chmod a+x autoport_build_cmd;
-                 ./autoport_build_cmd &gt;&gt; build_result.arti 2&gt;&amp;1;
+                 if [ ! -d .autoport-scratch ]; then
+                     mkdir .autoport-scratch
+                 fi
+                 echo "*" > .autoport-scratch/.gitignore
+                 ARTI=".autoport-scratch/build_result.arti"
+                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; $ARTI
+                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport CMD:    $CMD1&quot; &gt;&gt; $ARTI
+                 echo &quot;&quot; &gt;&gt; $ARTI
+                 echo $CMD1 | tee .autoport-scratch/autoport_build_cmd;
+                 chmod a+x .autoport-scratch/autoport_build_cmd;
+                 .autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD2&quot; ]; then
-                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; test_result.arti;
-                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; test_result.arti;
-                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; test_result.arti;
-                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; test_result.arti;
-                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; test_result.arti;
-                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; test_result.arti;
-                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; test_result.arti;
-                 echo &quot;Autoport CMD:    $CMD2&quot; &gt;&gt; test_result.arti;
-                 echo &quot;&quot; &gt;&gt; test_result.arti;
-                 echo $CMD2 | tee autoport_test_cmd;
-                 chmod a+x autoport_test_cmd;
-                 ./autoport_test_cmd &gt;&gt; test_result.arti 2&gt;&amp;1;
+                 if [ ! -d .autoport-scratch ]; then
+                     mkdir .autoport-scratch
+                 fi
+                 echo "*" > .autoport-scratch/.gitignore
+                 ARTI=".autoport-scratch/test_result.arti"
+                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; $ARTI
+                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport CMD:    $CMD2&quot; &gt;&gt; $ARTI
+                 echo &quot;&quot; &gt;&gt; $ARTI
+                 echo $CMD2 | tee .autoport-scratch/autoport_test_cmd;
+                 chmod a+x .autoport-scratch/autoport_test_cmd;
+                 .autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD3&quot; ]; then
-                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; install_result.arti;
-                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; install_result.arti;
-                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; install_result.arti;
-                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; install_result.arti;
-                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; install_result.arti;
-                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; install_result.arti;
-                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; install_result.arti;
-                 echo &quot;Autoport CMD:    $CMD3&quot; &gt;&gt; install_result.arti;
-                 echo &quot;&quot; &gt;&gt; install_result.arti;
-                 echo $CMD3 | tee autoport_install_cmd;
-                 chmod a+x autoport_install_cmd;
-                 ./autoport_install_cmd &gt;&gt; install_result.arti 2&gt;&amp;1;
+                 if [ ! -d .autoport-scratch ]; then
+                     mkdir .autoport-scratch
+                 fi
+                 echo "*" > .autoport-scratch/.gitignore
+                 ARTI=".autoport-scratch/install_result.arti"
+                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; $ARTI
+                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport CMD:    $CMD3&quot; &gt;&gt; $ARTI
+                 echo &quot;&quot; &gt;&gt; $ARTI
+                 echo $CMD3 | tee .autoport-scratch/autoport_install_cmd;
+                 chmod a+x .autoport-scratch/autoport_install_cmd;
+                 .autoport-scratch/autoport_install_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
       </conditionalbuilders>
@@ -165,7 +180,7 @@
   </builders>
   <publishers>
     <hudson.tasks.ArtifactArchiver>
-      <artifacts>*.arti</artifacts>
+      <artifacts>.autoport-scratch/*.arti</artifacts>
       <allowEmptyArchive>false</allowEmptyArchive>
       <onlyIfSuccessful>false</onlyIfSuccessful>
       <fingerprint>false</fingerprint>
