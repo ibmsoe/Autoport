@@ -178,6 +178,7 @@ if [ $DISTRIBUTION == "RHEL" ]; then
             done &lt; &lt;(echo -e "$updatePkgs")
             if ! $updateAvailable
             then
+                updateVersion=$installedVersion
                 echo "#### $PACKAGE_NAME is at latest available version"
             fi
         else
