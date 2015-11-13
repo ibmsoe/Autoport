@@ -21,6 +21,7 @@ Install [pip](https://pip.pypa.io/en/latest/installing.html) and then run these 
     pip install paramiko (may also need to install libevent-devel and python-devel)
     pip install threadpool
     pip install diff-match-patch
+    pip install PyYaml
 
 Setup
 ========
