@@ -470,13 +470,11 @@ def inferBuildSteps(listing, repo):
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
                     if strFound:
-                        strFound = appendArtifact(strFound, "test_result.arti")
                         build_info['testOptions'].append(strFound)
                 cmd = lang['grep build']
                 if cmd:
                     strFound = buildFilesParser(readmeStr, cmd, delim)
                     if strFound:
-                        strFound = appendArtifact(strFound, "build_result.arti")
                         build_info['buildOptions'].append(strFound)
                 env = lang['grep env']
                 if env:
@@ -497,22 +495,18 @@ def inferBuildSteps(listing, repo):
                 break
 
         # Add build commands extracted using text analytics
-        text_analytics_suffix = ' >> build_result.arti 2>&1;'
         command = text_analytics_cmds(repo.name, repo.language, grepstack, 'build')
         logger.debug("inferBuildSteps, text_analytics build cmd=%s" % command)
         if command:
-            command = command + text_analytics_suffix
             if globals.useTextAnalytics:
                 build_info['buildOptions'].insert(len(build_info), '[TextAnalytics]' + command)
             else:
                 build_info['buildOptions'].insert(0, '[TextAnalytics]' + command)
 
         # Add build commands extracted using text analytics
-        text_analytics_suffix = ' >> test_result.arti 2>&1;'
         command = text_analytics_cmds(repo.name, repo.language, grepstack, 'test')
         logger.debug("inferBuildSteps, text_analytics test cmd=%s" % command)
         if command:
-            command = command + text_analytics_suffix
             if globals.useTextAnalytics:
                 build_info['testOptions'].insert(len(build_info), '[TextAnalytics]' + command)
             else:
@@ -529,15 +523,6 @@ def inferBuildSteps(listing, repo):
             build_info['selectedEnv'] = build_info['envOptions'][-1]
 
     return build_info
-
-# appendArtifact - Removes trailing semi-colon if present and modifies
-# command to re-direct stdin/stderr to the Jenkins's build artifact
-def appendArtifact(cmd, file):
-    if cmd[-1] == ';':
-        cmd = cmd[:-1]
-    if '>' not in cmd:
-        cmd = cmd + " >> " + file + " 2>&1"
-    return cmd;
 
 # Build Files Parser - Looks for string searchTerm in string fileBuf and then
 # iterates over list of delimiters and finds the one with the smallest index,
