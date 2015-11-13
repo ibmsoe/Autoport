@@ -120,147 +120,151 @@ data_file.truncate(0)
 data_file.seek(0)
 print json.dump(managedPkgList, data_file);"
 
+############################### End Python Script for All JSON packages #############################
+
 set +o noclobber # Allow overwrite of files just in case it is set to off
 
-packageInstalled=false
-updateAvailable=false
-installedVersion="N/A"
-updateVersion="N/A"
+myarch=`uname -m`
+packageCounter=0
+
 echo "#### Searching the list of autoport ManagedPackages"
 echo "#### List of Packages being searched "$PACKAGE_NAME
 
 echo '['>packageListSingleSlave.json
 IFS=, read -a array &lt;&lt;&lt; "$PACKAGE_NAME" # split the csv of PACKAGE_NAME and save it in an array
-
 totalCsvPackages=${#array[@]}
-packageCounter=0
-packageFoundCounter=0
 
 echo "#### Iterating through the list of packages"
-for packageElement in "${array[@]}"
-do
-    PACKAGE_NAME=$packageElement
-    case $DISTRIBUTION in
-        "RHEL")
-            # Step 1. Check if package is installed and retrieve its version if installed.
-            echo "#### Searching for Package "$PACKAGE_NAME" on "$DISTRIBUTION
-            installedVersion=$(rpm -q --queryformat '%{VERSION}:%{ARCH}\n' $PACKAGE_NAME | grep `uname -m`'\|noarch' |awk -F: '{print $1}' )
-            if [ ! -z $installedVersion ]
-            then
-                echo "#### $PACKAGE_NAME is installed. Installed version is $installedVersion"
-                packageInstalled=true
-            elif [ -z $installedVersion ]
-            then
-                echo "#### $PACKAGE_NAME is not installed."
-                installedVersion="N/A"
-            elif [ $? -eg 127 ]
-            then
-                echo "#### command not found"
-            fi
 
-            #Step 2. If package is installed, check for updates else check for its availability
-            if $packageInstalled
+if [ $DISTRIBUTION == "RHEL" ]; then
+
+    installedPkgs="$(rpm -qa --queryformat '%{name} %{version} %{arch}\n')"
+    updatePkgs="$(yum -q check-update)"
+    availablePkgs="$(yum -q list available)"
+
+    for packageElement in "${array[@]}"
+    do
+        packageInstalled=false
+        updateAvailable=false
+        installedVersion="N/A"
+        updateVersion="N/A"
+        PACKAGE_NAME=$packageElement
+
+        # Step 1. Check if package is installed and retrieve its version if installed.
+        echo "#### Searching for Package "$PACKAGE_NAME" on "$DISTRIBUTION
+
+        pkgArch=""
+        while read name version arch; do
+             if [ "$name" == "$PACKAGE_NAME" ]; then
+                echo "#### $PACKAGE_NAME $version $arch is installed"
+                installedVersion="$version"
+                pkgArch="$arch"
+                packageInstalled=true
+                break
+             fi
+        done &lt; &lt;(echo -e "$installedPkgs")
+
+        #Step 2. If package is installed, check for updates else check for its availability
+        if $packageInstalled
+        then
+            while read name version repo; do
+                 if [ "$name" == "$PACKAGE_NAME.$pkgArch" ]; then
+                    # This version has more data than the one above
+                    updateVersion=$version
+                    echo "#### Update for \"$PACKAGE_NAME\" is available with version " $updateVersion
+                    updateAvailable=true
+                    break
+                 fi
+            done &lt; &lt;(echo -e "$updatePkgs")
+            if ! $updateAvailable
             then
-                updatePackageOutput=$(yum -q check-update $PACKAGE_NAME)
-                if [ $? -eq 100 ]   #if updates are available
+                echo "#### $PACKAGE_NAME is at latest available version"
+            fi
+        else
+            echo "#### $PACKAGE_NAME is not installed"
+            while read name version repo; do
+                 if [ "$name" == "$PACKAGE_NAME.$pkgArch" ]; then
+                    # This version has more data than the one above
+                    updateVersion=$version
+                    echo "#### Package \"$PACKAGE_NAME\" is available with Version " $updateVersion
+                    updateAvailable=true
+                    break
+                 fi
+            done &lt; &lt;(echo -e "$availablePkgs")
+            if ! $updateAvailable
+            then
+                echo "#### $PACKAGE_NAME is not available"
+            fi
+        fi
+
+        if [ $packageCounter -eq $((totalCsvPackages - 1)) ]
+        then
+            separator=""
+        else
+            separator=","
+        fi
+        packageCounter=$((packageCounter + 1))
+
+        printf '{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s, "updateVersion":"%s" }%s'\
+           "$PACKAGE_NAME" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$separator" >> packageListSingleSlave.json
+    done
+
+elif [ $DISTRIBUTION == "UBUNTU" ]; then
+
+    for packageElement in "${array[@]}"
+    do
+        packageInstalled=false
+        updateAvailable=false
+        installedVersion="N/A"
+        updateVersion="N/A"
+        PACKAGE_NAME=$packageElement
+
+        # Set variables
+        lineNumber=1
+        echo "#### Searching for Package "$PACKAGE_NAME" on "$DISTRIBUTION
+        apt-cache policy $PACKAGE_NAME > singlePackageInformation.txt
+
+        while read i
+        do
+            i=$( echo $i | tr -d '[[:space:]]') #trim spaces
+            if [ $lineNumber -eq 2 ]    # Installed information #If package is not found, control will never reach here.
+            then
+                i=${i##*:}  #extract version number, occurs after the colon
+                if [ $i != "(none)" ]
                 then
-                    updatePackageOutput=$(echo $updatePackageOutput) #this strips off whitespaces
-                    if [ "${updatePackageOutput}x" != "x" ]
+                    echo "#### $PACKAGE_NAME is installed.  Installed version is $i"
+                    packageInstalled=true
+                    installedVersion=$i
+                fi
+            elif [ $lineNumber -eq 3 ] # Update Available information # If package is not found, control will never reach here.
+                then
+                    i=${i##*:}  #extract version number, occurs after the colon
+                    if [ $i != $installedVersion ]
                     then
-                        updateVersion=${updatePackageOutput#*\ }
-                        updateVersion=${updateVersion%\ *}
                         echo "#### Update for \"$PACKAGE_NAME\" is available with version " $updateVersion
                         updateAvailable=true
-                    fi
-                    elif [ $? -eq 1 ]
-                    then
-                        echo "#### $PACKAGE_NAME latest version is installed."
+                        updateVersion=$i
+                    else
+                        echo "#### $PACKAGE_NAME latest version is installed"
                         updateVersion=$installedVersion
-                        packageFoundCounter=$((packageFoundCounter+1))
-                    fi
-                    else # if package is not installed, check for available version
-                        # strip the 1st line of the output of yum list
-                        availablePackageOutput=$(yum -q list available $PACKAGE_NAME| sed -e '1d')
-                    if [ $? -eq 0 ]
-                    then
-                        availablePackageOutput=$(echo $availablePackageOutput) #this strips off whitespaces
-                    if [ "${availablePackageOutput}x" != "x" ]
-                    then
-                        updateVersion=${availablePackageOutput#*\ }
-                        updateVersion=${updateVersion%\ *}
-                        updateVersion=${updateVersion#*:}
-                        echo "#### Package \"$PACKAGE_NAME\" is available with Version " $updateVersion
-                        updateAvailable=true
-                    fi
-                    elif [ $? -eq 1 ]
-                    then
-                         echo "#### $PACKAGE_NAME not available"
                     fi
                 fi
-                if [ $packageCounter -eq $((totalCsvPackages -1)) ]
-                then
-                    seperator=""
-                else
-                    seperator=","
-                fi
-                packageCounter=$((packageCounter +1))
+                lineNumber=$((lineNumber+1))
+        done &lt; singlePackageInformation.txt
+        rm -f singlePackageInformation.txt
 
-                printf '{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s, "updateVersion":"%s"
-                    }%s' "$PACKAGE_NAME" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$seperator" >> packageListSingleSlave.json
-                ;;
-        "UBUNTU")
-            # Set variables
-            packageInstalled=false
-            updateAvailable=false
-            installedVersion="N/A"
-            updateVersion="N/A"
-            lineNumber=1
-            echo "#### Searching for Package "$PACKAGE_NAME" on "$DISTRIBUTION
-            apt-cache policy $PACKAGE_NAME > singlePackageInformation.txt
+        if [ $packageCounter -eq $((totalCsvPackages - 1)) ]
+        then
+            separator=""
+        else
+            separator=","
+        fi
+        packageCounter=$((packageCounter + 1))
 
-            while read i
-            do
-                 i=$( echo $i | tr -d '[[:space:]]') #trim spaces
-                 if [ $lineNumber -eq 2 ]    # Installed information #If package is not found, control will never reach here.
-                 then
-                    i=${i##*:}  #extract version number, occurs after the colon
-                    if [ $i != "(none)" ]
-                    then
-                        echo "#### $PACKAGE_NAME is installed. Installed version is $i"
-                        packageInstalled=true
-                        installedVersion=$i
-                    fi
-                    elif [ $lineNumber -eq 3 ] # Update Available information # If package is not found, control will never reach here.
-                    then
-                        i=${i##*:}  #extract version number, occurs after the colon
-                        if [ $i != $installedVersion ]
-                        then
-                            echo "#### Update for \"$PACKAGE_NAME\" is available with version " $updateVersion
-                            updateAvailable=true
-                            updateVersion=$i
-                        else
-                            echo "#### $PACKAGE_NAME latest version is installed."
-                            updateVersion=$installedVersion
-                            packageFoundCounter=$((packageFoundCounter+1))
-                        fi
-                    fi
-                    lineNumber=$((lineNumber+1))
-            done &lt; singlePackageInformation.txt
-
-            rm -f singlePackageInformation.txt
-            if [ $packageCounter -eq $((totalCsvPackages -1)) ]
-            then
-                seperator=""
-            else
-                seperator=","
-            fi
-            packageCounter=$((packageCounter +1))
-
-            printf '{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s,"updateVersion":"%s"
-                }%s' "$PACKAGE_NAME" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$seperator" >> packageListSingleSlave.json
-        ;;
-    esac
-done
+        printf '{"packageName":"%s","packageInstalled":%s,"installedVersion":"%s","updateAvailable":%s, "updateVersion":"%s" }%s'\
+           "$PACKAGE_NAME" "$packageInstalled" "$installedVersion" "$updateAvailable" "$updateVersion" "$separator" >> packageListSingleSlave.json
+    done
+fi
 
 echo ']'>>packageListSingleSlave.json
 

@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "5",
+    "sequence": "6",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -211,6 +211,9 @@
                 },
                 {
                     "name": "python-lzo"
+                },
+                {
+                    "name": "python-magic"
                 },
                 {
                     "name": "python-nose"
@@ -432,6 +435,9 @@
                     "name": "python-devel"
                 },
                 {
+                    "name": "python-magic"
+                },
+                {
                     "name": "python-nose"
                 },
                 {
@@ -445,6 +451,9 @@
                 },
                 {
                     "name": "rpm-devel"
+                },
+                {
+                    "name": "rpmrebuild"
                 },
                 {
                     "name": "ruby"
