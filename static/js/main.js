@@ -733,6 +733,8 @@ var batchReportState = {
     },
     reset: function() {
         // reset the Batch Report section to default values.
+        batchReportState.backToBatchResultsCompare();
+        batchReportState.backToBatchList();
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
         batchReportState.fileList = [];
@@ -3140,9 +3142,19 @@ function processBatchTestLogCompare(data, batch_report_obj){
 
         if( keys.length === 3){
             var main_table = document.getElementById("testBatchLogResultsTable");
-            batchName = keys[0];
-            left_arch = data["results"]["left_arch"];
-            right_arch = data["results"]["right_arch"];
+            left_arch = '';
+            right_arch = '';
+            batchName = '';
+            for(var i = 0; i < keys.length; i++){
+                if(keys[i] == 'left_arch'){
+                    left_arch = data["results"][keys[i]];
+                }else if(keys[i] == 'right_arch'){
+                    right_arch = data["results"]["right_arch"];
+                }else{
+                    batchName = keys[i];
+                }
+            }
+
             // First generate all non-header data, once done generate header as the required info about parent batch name will be available after traversing project data.
             for (project in data["results"][batchName]){
                 if (!left_parent_batch){
