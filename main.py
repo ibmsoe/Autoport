@@ -1648,7 +1648,7 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer, cv=None):
 
         packageData = listPackageForSingleSlave_Callback(outDir)
 
-        logger.debug("listPackageForSingleSlave_common: packageData=%s selectedBuildServer=%s" % (str(packageData), selectedBuildServer))
+        logger.debug("listPackageForSingleSlave_common: cnt packageData[]=%s selectedBuildServer=%s" % (str(len(packageData)), selectedBuildServer))
 
         # If present, read the json file and then delete it and its containing folder
         if packageData:
@@ -1821,7 +1821,7 @@ def listManagedPackages():
         callback to handle return value of each thread
         and manipulate it further.
         '''
-        logger.debug("In listCallback, data=%s" % data)
+        logger.debug("In listCallback, status=%s node=%s" % (data['status'], data['node']))
         if data['status'] == 'ok':
             try:
                 i = globals.nodeLabels.index(data['node'])
@@ -1880,6 +1880,8 @@ def listManagedPackages():
                     pkg['removablePackage'] = removablePackage
                     pkg['enableCheckBox'] = enableCheckBox
                     packageList.append(pkg)
+                    logger.debug("listCallback: pkg=%-30s installedVers=%s managedV=%s enableCheckbox=%s" %
+                                 (pkg['pkg_name'], pkg['installedVersion'], pkg['managedPackageVersion'], pkg['enableCheckBox']))
             except KeyError:
                 return json.jsonify(status="failure", error=results['error'] ), 404
 
@@ -1943,7 +1945,7 @@ def listManagedPackages():
         if data:
             listCallback(data)
 
-    logger.debug("listManagedPackages, packages=%s" % packageList)
+    logger.debug("listManagedPackages, cnt packages[]=%s" % str(len(packageList)))
 
     return json.jsonify(status="ok", packages=packageList)
 
