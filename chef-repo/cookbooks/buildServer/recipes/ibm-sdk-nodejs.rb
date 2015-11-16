@@ -6,6 +6,8 @@ arch = node['kernel']['machine']
 
 if node['kernel']['machine'] == 'ppc64le'
   pkg_name = "#{package}#{version}-linux-ppcle64"
+elsif node['kernel']['machine'] == 'x86_64'
+  pkg_name = "#{package}#{version}-linux-x64"
 else
   arch = node['kernel']['machine']
   pkg_name = "#{package}#{version}-linux-#{arch}"

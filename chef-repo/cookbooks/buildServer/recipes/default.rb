@@ -2,7 +2,7 @@
 
 include_recipe 'buildServer::repo_settings'
 include_recipe 'buildServer::buildtools'
-include_recipe 'buildServer::nodejs'
+include_recipe 'buildServer::ibm-sdk-nodejs'
 include_recipe 'buildServer::autoportPackages'
 include_recipe 'buildServer::java'
 include_recipe 'buildServer::ant'

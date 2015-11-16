@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "6",
+    "sequence": "7",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -195,6 +195,15 @@
                     "name": "node-gyp"
                 },
                 {
+                    "name": "nodejs-dev"
+                },
+                {
+                    "name": "nodejs-legacy"
+                },
+                {
+                    "name": "npm"
+                },
+                {
                     "name": "perl"
                 },
                 {
@@ -282,17 +291,12 @@
                     "version": "7.1-3.10"
                 },
                 {
-                    "name": "ibm-1.2.0.5-node-v",
-                    "version": "0.12.7",
-                    "tag": "ibm-sdk-nodejs",
-                    "arch": "ppc64le"
+                    "name": "ibm-4.2.1.0-node-v",
+                    "version": "4.2.1",
+                    "tag": "ibm-sdk-nodejs"
                 },
                 {
                     "name": "maven"
-                },
-                {
-                    "name": "nodejs",
-                    "arch": "x86_64"
                 },
                 {
                     "name": "openjdk-7-jdk",
@@ -507,10 +511,9 @@
                     "version": "7.1-3.10"
                 },
                 {
-                    "name": "ibm-1.2.0.5-node-v",
-                    "version": "0.12.7",
-                    "tag": "ibm-sdk-nodejs",
-                    "arch": "ppc64le"
+                    "name": "ibm-4.2.1.0-node-v",
+                    "version": "4.2.1",
+                    "tag": "ibm-sdk-nodejs"
                 },
                 {
                     "name": "java-1.7.0-openjdk",
@@ -520,10 +523,6 @@
                     "name": "Module-Install",
                     "version": "1.14",
                     "tag": "perl-Module-Install"
-                },
-                {
-                    "name": "nodejs",
-                    "arch": "x86_64"
                 },
                 {
                     "name": "perl",

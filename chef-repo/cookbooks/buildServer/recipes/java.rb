@@ -17,15 +17,15 @@ when 'ubuntu'
     "openjdk-#{version}-jre",
     "openjdk-#{version}-jdk"
   ]
-  java_home = "/usr/lib/jvm/java-1.#{version}.0"
+  java_home = "/usr/lib/jvm/java-#{version}-openjdk-#{arch}"
   opt = '--force-yes'
 when 'redhat'
   java_packages = [
     "java-1.#{version}.0-openjdk",
     "java-1.#{version}.0-openjdk-devel"
   ]
-  java_home = "/usr/lib/jvm/java-#{version}-openjdk-#{arch}"
-   opt =''
+  java_home = "/usr/lib/jvm/java-1.#{version}.0-openjdk"
+  opt =''
 end
 
 if java_packages.any?

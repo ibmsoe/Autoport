@@ -150,9 +150,8 @@ class ChefData:
             name = name
             chefAttrs['buildServer'][type].update({name: version})
         elif type == 'ibm-sdk-nodejs':
-            name = 'ibm-sdk-nodejs'
-            chefAttrs['buildServer'][name].update({'version': version})
-            chefAttrs['buildServer'][attribute].update({'ext': ext})
+            chefAttrs['buildServer'][type] = {'name': name}
+            chefAttrs['buildServer'][type].update({'version': version})
         else:
             attribute = name
             chefAttrs['buildServer'][attribute] = {'version': version}

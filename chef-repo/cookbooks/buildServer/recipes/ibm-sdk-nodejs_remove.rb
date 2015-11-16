@@ -7,6 +7,8 @@ arch = node['kernel']['machine']
 
 if node['kernel']['machine'] == 'ppc64le'
   pkg_name = "#{package}#{version}-linux-ppcle64"
+elsif node['kernel']['machine'] == 'x86_64'
+  pkg_name = "#{package}#{version}-linux-x64"
 else
   arch = node['kernel']['machine']
   pkg_name = "#{package}#{version}-linux-#{arch}"
@@ -28,21 +30,21 @@ end
   end
 end
 
-file "/etc/profile.d/ibm-java.sh" do
+file "/etc/profile.d/ibm-nodejs.sh" do
   action :delete
   only_if "grep -w #{version} /etc/profile.d/ibm-nodejs.sh"
 end
 
-directory "#{install_dir}/#{package}-#{version}" do
+directory "#{install_dir}/#{package}#{version}" do
   action     :delete
   recursive  true
 end
 
-record = "#{package},#{version},ibm-sdk-nodejs,ibm-sdk-nodejs,#{arch},.bin,#{pkg_name}"
+record = "#{package},#{version},ibm-sdk-nodejs,ibm-sdk-nodejs,#{arch},.bin,#{pkg_name}.bin"
 
 buildServer_log package do
   name         package
   log_location node['log_location']
-  log_record   "#{package},#{version},ibm-sdk-nodejs,IBM SDK for Node.js,#{pkg_name}"
+  log_record   record
   action       :remove
 end
