@@ -374,7 +374,7 @@ var batchState = {
 
         config = batchState.batchFile.config;
         if (config['java'] === "IBM Java")
-            javaType = "JAVA_HOME=/opt/ibm/java"
+            javaType = "/etc/profile.d/ibm-java.sh"
 
         packages = batchState.batchFile.packages;
         for (var i = 0; i < buildServers.length; i++) {
@@ -920,7 +920,7 @@ var detailState = {
         }
         else if (selection === "ibm java") {
             detailState.javaType = "IBM Java";
-            detailState.javaTypeOptions = "JAVA_HOME=/opt/ibm/java";
+            detailState.javaTypeOptions = "/etc/profile.d/ibm-java.sh";
         }
     },
     // TODO - this is bad, this will be changed
@@ -932,7 +932,7 @@ var detailState = {
         }
         else if (selection === "ibm java") {
             detailState.generateJavaType = "IBM Java";
-            detailState.generateJavaTypeOptions = "JAVA_HOME=/opt/ibm/java";
+            detailState.generateJavaTypeOptions = "/etc/profile.d/ibm-java.sh";
         }
     },
     changeBuildOptions: function(ev) {

@@ -682,14 +682,13 @@ def uploadBatchFile():
 def createJob_common(time, uid, id, tag, node, javaType,
                      selectedBuild, selectedTest, selectedEnv, artifacts, primaryLang):
 
+    # TODO: Need to add to UI, API, and batch file config
+    javaScriptType = ""
+
     # Get repository
     repo = globals.cache.getRepo(id)
 
-    # TODO: Conditionally continue based on a user interface selection to create
-    # job on Jenkins w/o a build command.  User must manually enter command on Jenkins.
-    # Helps automate porting environment
-
-    if not selectedBuild:
+    if not selectedBuild and not selectedTest:
         errorstr = "Programming language not supported - " + repo.language
         return { 'status': "failure", 'error': errorstr }
 
@@ -708,6 +707,7 @@ def createJob_common(time, uid, id, tag, node, javaType,
     except:
         pass
 
+    logger.debug("In createJob_common, name=%s, tag=%s, javaType=%s, jsType=%s" % (repo.name, tag, javaType, javaScriptType))
     # Read template XML file
     tree = ET.parse("config_template.xml")
     root = tree.getroot()
@@ -749,11 +749,8 @@ def createJob_common(time, uid, id, tag, node, javaType,
     # This is the install shell script that is invoked on the build slave
     installCmd = ""                      # TODO: implement packaging and dependency resolution in batch files
 
+    # TODO: add support for a list of comma separated environment variables.  Today accepts one environment var
     xml_env_command.text = selectedEnv
-
-    # In addition to whatever other environmental variables I need to inject
-    # I should add whether to pick IBM Java or Open JDK
-    xml_env_command.text += javaType + "\n"
 
     # Job metadata as passed to jenkins
     jobMetadataName = "meta.arti"
@@ -784,16 +781,20 @@ def createJob_common(time, uid, id, tag, node, javaType,
         elif i == 5:
             param.text = osDesc
         elif i == 6:
-            param.text = selectedEnv
+            param.text = javaType
         elif i == 7:
-            param.text = repo.name
+            param.text = javaScriptType
         elif i == 8:
-            param.text = tag
+            param.text = repo.html_url
         elif i == 9:
-            param.text = buildCmd
+            param.text = tag
         elif i == 10:
-            param.text = testCmd
+            param.text = selectedEnv
         elif i == 11:
+            param.text = buildCmd
+        elif i == 12:
+            param.text = testCmd
+        elif i == 13:
             param.text = installCmd
         i += 1
 
@@ -1127,7 +1128,7 @@ def runBatchFile ():
         # Parse config data
         javaType = ""
         if fileBuf['config']['java'] == "IBM Java":
-            javaType = "JAVA_HOME=/opt/ibm/java"
+            javaType = "/etc/profile.d/ibm-java.sh"
 
         logger.debug("runBatchFile, javaType=%s node=%s" % (javaType, node))
 

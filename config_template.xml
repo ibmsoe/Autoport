@@ -41,18 +41,28 @@
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>CMDENV</name>
+          <name>JAVATYPE</name>
           <description>Calculated environment variables</description>
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
-          <name>PROJECTNAME</name>
-          <description>Project name</description>
+          <name>JSTYPE</name>
+          <description>Calculated environment variables</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PROJECTURL</name>
+          <description>Project URL</description>
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>PROJECTVERS</name>
           <description>Project branch name or release tag</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PROJENV</name>
+          <description>Environment variables specific to project injected by jenkins plugin</description>
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
@@ -67,7 +77,7 @@
         </hudson.model.StringParameterDefinition>
         <hudson.model.StringParameterDefinition>
           <name>CMD3</name>
-          <description>Command to install the project to resolve a dependency in a batch file or a command to tar the project for packaging</description>
+          <description>Command to install the project to resolve a dependency in a batch file</description>
           <defaultValue></defaultValue>
         </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
@@ -117,15 +127,44 @@
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD1&quot; ]; then
-                 ARTI=".autoport-scratch/build_result.arti"
-                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; $ARTI
-                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport CMD:    $CMD1&quot; &gt;&gt; $ARTI
+                 if [ $JAVATYPE ]; then
+                     echo &quot;Sourcing Java to $JAVATYPE&quot;
+                     sudo chmod a+x $JAVATYPE
+                     LEN=$((${#PATH}+1))
+                     source $JAVATYPE
+                     LAST_PATH=${PATH: $LEN}
+                     PATH=$LAST_PATH:$PATH
+                 fi
+                 if [ $JSTYPE ]; then
+                     echo &quot;Sourcing JavaScript to $JSTYPE&quot;
+                     sudo chmod a+x $JSTYPE
+                     LEN=$((${#PATH}+1))
+                     source $JSTYPE
+                     LAST_NPATH=${PATH: $LEN}
+                     PATH=$LAST_NPATH:$PATH
+                 fi
+                 source /etc/profile
+                 if [ $JAVATYPE ]; then
+                     JAVA_HOME=${LAST_PATH%/bin}
+                 fi
+                 ARTI=&quot;.autoport-scratch/build_result.arti&quot;
+                 echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
+                 echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport CMD:         $CMD1&quot; &gt;&gt; $ARTI
+                 echo &quot;&quot; &gt;&gt; $ARTI
+                 type java &gt;&gt; $ARTI
+                 java -version 2&gt;&gt; $ARTI
+                 echo &quot;&quot; &gt;&gt; $ARTI
+                 type node &gt;&gt; $ARTI
+                 NV=`node --version`
+                 echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
                  echo &quot;&quot; &gt;&gt; $ARTI
                  echo $CMD1 | tee .autoport-scratch/autoport_build_cmd;
                  chmod a+x .autoport-scratch/autoport_build_cmd;
@@ -135,15 +174,44 @@
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD2&quot; ]; then
-                 ARTI=".autoport-scratch/test_result.arti"
-                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; $ARTI
-                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport CMD:    $CMD2&quot; &gt;&gt; $ARTI
+                 if [ $JAVATYPE ]; then
+                     echo &quot;Sourcing Java to $JAVATYPE&quot;
+                     sudo chmod a+x $JAVATYPE
+                     LEN=$((${#PATH}+1))
+                     source $JAVATYPE
+                     LAST_PATH=${PATH: $LEN}
+                     PATH=$LAST_PATH:$PATH
+                 fi
+                 if [ $JSTYPE ]; then
+                     echo &quot;Sourcing JavaScript to $JSTYPE&quot;
+                     sudo chmod a+x $JSTYPE
+                     LEN=$((${#PATH}+1))
+                     source $JSTYPE
+                     LAST_NPATH=${PATH: $LEN}
+                     PATH=$LAST_NPATH:$PATH
+                 fi
+                 source /etc/profile
+                 if [ $JAVATYPE ]; then
+                     JAVA_HOME=${LAST_PATH%/bin}
+                 fi
+                 ARTI=&quot;.autoport-scratch/test_result.arti&quot;
+                 echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
+                 echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport CMD:         $CMD2&quot; &gt;&gt; $ARTI
+                 echo &quot;&quot; &gt;&gt; $ARTI
+                 type java &gt;&gt; $ARTI
+                 java -version 2&gt;&gt; $ARTI
+                 echo &quot;&quot; &gt;&gt; $ARTI
+                 type node &gt;&gt; $ARTI
+                 NV=`node --version`
+                 echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
                  echo &quot;&quot; &gt;&gt; $ARTI
                  echo $CMD2 | tee .autoport-scratch/autoport_test_cmd;
                  chmod a+x .autoport-scratch/autoport_test_cmd;
@@ -153,15 +221,44 @@
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD3&quot; ]; then
-                 ARTI=".autoport-scratch/install_result.arti"
-                 echo &quot;Autoport HOST:   $HOSTNAME&quot; &gt; $ARTI
-                 echo &quot;Autoport IPADDR: $IPADDR&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport O/S:    $OSNAME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PATH:   $PATH&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport ENV:    $CMDENV&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJ:   $PROJECTNAME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport VERS:   $PROJECTVERS&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport CMD:    $CMD3&quot; &gt;&gt; $ARTI
+                 if [ $JAVATYPE ]; then
+                     echo &quot;Sourcing Java to $JAVATYPE&quot;
+                     sudo chmod a+x $JAVATYPE
+                     LEN=$((${#PATH}+1))
+                     source $JAVATYPE
+                     LAST_PATH=${PATH: $LEN}
+                     PATH=$LAST_PATH:$PATH
+                 fi
+                 if [ $JSTYPE ]; then
+                     echo &quot;Sourcing JavaScript to $JSTYPE&quot;
+                     sudo chmod a+x $JSTYPE
+                     LEN=$((${#PATH}+1))
+                     source $JSTYPE
+                     LAST_NPATH=${PATH: $LEN}
+                     PATH=$LAST_NPATH:$PATH
+                 fi
+                 source /etc/profile
+                 if [ $JAVATYPE ]; then
+                     JAVA_HOME=${LAST_PATH%/bin}
+                 fi
+                 ARTI=&quot;.autoport-scratch/install_result.arti&quot;
+                 echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
+                 echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                 echo &quot;Autoport CMD:         $CMD3&quot; &gt;&gt; $ARTI
+                 echo &quot;&quot; &gt;&gt; $ARTI
+                 type java &gt;&gt; $ARTI
+                 java -version 2&gt;&gt; $ARTI
+                 echo &quot;&quot; &gt;&gt; $ARTI
+                 type node &gt;&gt; $ARTI
+                 NV=`node --version`
+                 echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
                  echo &quot;&quot; &gt;&gt; $ARTI
                  echo $CMD3 | tee .autoport-scratch/autoport_install_cmd;
                  chmod a+x .autoport-scratch/autoport_install_cmd;
