@@ -2,6 +2,7 @@ from github import GithubException
 from log import logger
 import globals
 import utils
+import yaml
 
 # General strategy is to create a list of language definitions from which build
 # and test commands are generated.  Each successive definition that is added to
@@ -27,7 +28,7 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
     logger.debug("In text_analytics_cmds, project=%s, searchKey=%s, cnt grepStack[]=%s" % (project, searchKey, str(len(grepStack))))
 
     # List most common build and test commands first
-    commands = ['mvn ', 'ant ', 'npm ', 'grunt ', 'python ', 'py.test ', 'cd ', 
+    commands = ['mvn ', 'ant ', 'npm ', 'grunt ', 'python ', 'py.test ', 'cd ',
                 'gem ', 'rake ', 'build.sh ', 'bootstrap.sh ', 'autogen.sh ',
                 'autoreconf ', 'automake ', 'aclocal ', 'scons ', 'sbt ',
                 'cmake ', 'gradle ', 'bundle ', 'perl ', 'php ']
@@ -36,7 +37,7 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
     # descriptive text, not a build command
     english = ['the', 'a', 'an', 'is', 'are', 'can', 'you', 'of', 'in', 'from',
                'this', 'to', 'that', 'when', 'should', 'might']
-    
+
     retval = []
     for fstr in grepStack:
         build_found = False
@@ -62,7 +63,7 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
 
                     if isText:
                         continue
-                    
+
                     for command in commands:
                                                                     # TODO: validate start of command line
                         if len(line.split(' ')) <= max_words and\
@@ -83,6 +84,33 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
             break          # If you find a build command sequence in one file, don't search other files
 
     return ';'.join(retval)
+
+def interpretTravis(repo, travisFile, travis_def):
+    """
+    Method to interpret the travis control file and fill out the
+    travis_def with appropriate values.
+    """
+    travis_flag = None
+    logger.debug("Processing travis file to fetch build and test commands")
+    travis_data = repo.get_file_contents(travisFile.path).content.decode('base64', 'strict')
+    data = yaml.safe_load(travis_data)
+    if 'script' in data:
+        travis_flag = travisFile
+        if isinstance(data['script'], list):
+            travis_def['test'] = ';'.join(data['script'])
+        else:
+            travis_def['test'] = data['script']
+        logger.debug("interpretTravis: Test command: %s" % (data['script']))
+        if 'language' in data:
+            travis_def['primary lang'] = data['language']
+            logger.debug("interpreTravis: Primary Language: %s" % (data['language']))
+        if 'before_script' in data:
+            if isinstance(data['before_script'], list):
+                travis_def['build'] = ';'.join(data['before_script'])
+            else:
+                travis_def['build'] = data['before_script']
+            logger.debug("interpreTravis: Build command: %s" % (data['before_script']))
+    return travis_flag
 
 def inferBuildSteps(listing, repo):
 
@@ -130,8 +158,8 @@ def inferBuildSteps(listing, repo):
     base_python_def = {
         'build system': "Python",
         'primary lang': "Python",
-        'grep build': "python setup.py build",	# Search readme for this string. If found, use it as build cmd
-        'grep test': "py.test",			# Same for test command. Maybe we can pick up some extra arguments
+        'grep build': "python setup.py build",  # Search readme for this string. If found, use it as build cmd
+        'grep test': "py.test",                 # Same for test command. Maybe we can pick up some extra arguments
         'grep env': "",
         'build' : "if [ -e setup.py ]; then sudo python setup.py install; fi",
         'test' : "py.test",
@@ -144,8 +172,9 @@ def inferBuildSteps(listing, repo):
     base_js_def = {
         'build system': "JavaScript",
         'primary lang': "JavaScript",
-        'grep build': "npm install %s"%(repo.name),	# Search readme for this string. If found, use it as build cmd
-        'grep test': "npm test",			# Same for test command. Maybe we can pick up some extra arguments
+        'grep build': "npm install %s"%(repo.name),     # Search readme for this string. If found, use it as build cmd
+        'grep test': "npm test",                        # Same for test command. Maybe we can pick up some extra arguments
+
         'grep env': "",
         'build' : "if [ -e package.json ]; then npm install; fi",
         'test' : "if [ -e package.json ]; then npm test; fi",
@@ -359,6 +388,24 @@ def inferBuildSteps(listing, repo):
         'success': True }
 
     # This is most favored definition and is appended to the end of the list
+    # Setting default build command to `` in the definition
+    # This would take care that no other language definition
+    # should fill the build command in case we have .travis.yml
+    # present in project.
+    travis_def = {
+        'build system': "travis control file",
+        'primary lang': repo.language,
+        'grep build': "",
+        'grep test': "",
+        'grep env': "",
+        'build': "``",
+        'test' : "",
+        'env' : "",
+        'artifacts': "*.arti",
+        'reason': ".travis.yml",
+        'error': "",
+        'success': True }
+
     buildsh_def = {
         'build system': "custom build script",
         'primary lang': repo.language,
@@ -398,6 +445,7 @@ def inferBuildSteps(listing, repo):
     buildsh = None
     bootstrap = None
     makefile = None
+    travis = None
     for f in listing:
         if f.name == 'pom.xml':
             langlist.append(maven_def)         # If we find specific build files we can improve our commands by grepping readme's
@@ -417,6 +465,9 @@ def inferBuildSteps(listing, repo):
             bootstrap = f
         elif f.name in ('build.sh', 'run_build.sh'):
             buildsh = f
+        elif f.name == '.travis.yml':
+            logger.debug("inferBuildSteps: Travis control file found")
+            travis = interpretTravis(repo, f, travis_def)
         elif any(x in f.name.lower() for x in readmeFiles):
             if f.type == 'file' and f.size != 0:
                 try:
@@ -427,7 +478,8 @@ def inferBuildSteps(listing, repo):
                 except:
                     pass
 
-    # build.sh is favored, because it bridges languages, sets environment variables, ...
+    # Travis YML file take precedence over build.sh, bootstrap.sh, and Makefile.
+    # Next, build.sh is favored, because it bridges languages, sets environment variables, ...
     # Else if only the primary language definition is present, len(langlist) <= 2), push
     # Makefile as it is there for a reason.  Either, the primary language definition is 'C'
     # and we are pushing it again (no harm), or it is another language which does not
@@ -441,7 +493,9 @@ def inferBuildSteps(listing, repo):
     # to determine whether the makefile applies to multiple languages.  For now, we assume
     # that it does.  Later, we can conditionally push it to the lang stack.  TODO: improve
 
-    if buildsh != None:
+    if travis != None:
+        langlist.append(travis_def)
+    elif buildsh != None:
         langlist.append(buildsh_def)
     elif bootstrap != None:
         langlist.append(bootstrap_def)
@@ -529,7 +583,7 @@ def inferBuildSteps(listing, repo):
 # returning the string found between the two indices
 def buildFilesParser(fileBuf, searchTerm, delimeter):
 
-    # Need to prepend "./" in front of these commands as they are part of the project 
+    # Need to prepend "./" in front of these commands as they are part of the project
     localCmds = ['bootstrap.sh', 'autogen.sh', 'build.sh' ]
 
     # Disallow strings containing the following substrings
