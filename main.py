@@ -404,7 +404,7 @@ def search():
 @app.route("/autoport/detail/<int:id>")
 def detail(id, repo=None):
     panel = request.args.get("panel", "")
-
+    version = request.args.get("version", "")
     if panel == "":
         return json.jsonify(status="failure", error="missing panel"), 400
 
@@ -441,6 +441,10 @@ def detail(id, repo=None):
 
     # Get tag-related data
     tags, recentTag = getTags(repo)
+    if version == "recent" and recentTag:
+        useVersion = recentTag
+    else:
+        useVersion = "Current"
 
     repoData = {
         "id": repo.id,
@@ -459,7 +463,7 @@ def detail(id, repo=None):
         "build": build,
         "recentTag": recentTag,
         "tags": tags,
-        "useVersion": "Current"
+        "useVersion": useVersion
     }
     # Send
     return json.jsonify(status="ok", repo=repoData, type="detail", panel=panel)
@@ -495,7 +499,10 @@ def search_repositories():
     q     = request.args.get("q",     "")
     sort  = request.args.get("sort",  "stars")
     order = request.args.get("order", "desc")
-
+    versiontag = request.args.get("version", "")
+    if not versiontag:
+        versiontag = "Current"
+    logger.debug('Search repository: query=' + str(q) + " version="+ str(versiontag))
     # AutoPort parameters
     limit = int(request.args.get("limit", "25"))
     panel = request.args.get("panel", "")
@@ -524,6 +531,7 @@ def search_repositories():
                 globals.cache.cacheRepo(repo)
                 remaining -= 1
                 cnt += 1
+
                 results.append({
                     "id": repo.id,
                     "name": repo.name,
@@ -536,7 +544,8 @@ def search_repositories():
                     "last_update": str(repo.updated_at),
                     "language": repo.language,
                     "description": repo.description,
-                    "classifications": classify(repo)
+                    "classifications": classify(repo),
+                    "useVersion": versiontag
                 })
                 if not remaining:
                     break

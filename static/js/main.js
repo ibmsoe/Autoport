@@ -1630,12 +1630,12 @@ function processSearchResults(data) {
             result.select = function (ev) {
                 var className = $(ev.target).attr('class');
                 if (className === "generateDetailButton btn btn-primary") {
-                    $.getJSON("detail/" + result.id, {panel: "generate"}, showDetail).fail(showDetail);
+                    $.getJSON("detail/" + result.id, {panel: "generate", version: result.useVersion}, showDetail).fail(showDetail);
                     searchState.multiple.ready = false;
                     searchState.multiple.loadingState.loading = true;
                 }
                 else if (className === "singleDetailButton btn btn-primary") {
-                    $.getJSON("detail/" + result.id, {panel: "single"}, showDetail).fail(showDetail);
+                    $.getJSON("detail/" + result.id, {panel: "single", version: result.useVersion}, showDetail).fail(showDetail);
                     searchState.single.ready = false;
                     searchState.single.loadingState.loading = true;
                 }
