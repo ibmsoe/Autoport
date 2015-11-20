@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE suite SYSTEM "http://testng.org/testng-1.0.dtd">
+<suite name="Failed suite [Autoport Smoke Tests]">
+  <parameter name="browser" value="firefox"/>
+  <test name="Install packages on different Servers(failed)">
+    <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_2">
+        <methods>
+          <include name="afterClass"/>
+          <include name="beforeTest"/>
+        </methods>
+      </class> <!-- com.autoport.testcases.BS_UseCase_2 -->
+      <class name="com.autoport.testcases.BS_UseCase_3">
+        <methods>
+          <include name="BS_Install_Package_On_Servers" invocation-numbers="0"/>
+          <include name="afterClass"/>
+          <include name="BS_Install_package_with_different_versions_01"/>
+          <include name="beforeTest"/>
+        </methods>
+      </class> <!-- com.autoport.testcases.BS_UseCase_3 -->
+    </classes>
+  </test> <!-- Install packages on different Servers(failed) -->
+</suite> <!-- Failed suite [Autoport Smoke Tests] -->

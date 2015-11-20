@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="Autoport Smoke Tests">
+  <test name="List Packages from different servers">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_2"/>
+    </classes>
+  </test> <!-- Test -->    
+  <test name="Install packages on different Servers">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_3"/>
+    </classes>
+  </test> <!-- Test --> 
+</suite> <!-- Suite -->
