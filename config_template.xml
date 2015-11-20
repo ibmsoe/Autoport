@@ -102,7 +102,13 @@
     </branches>
     <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
     <submoduleCfg class="list"/>
-    <extensions/>
+    <extensions>
+      <hudson.plugins.git.extensions.impl.CloneOption>
+        <shallow>true</shallow>
+        <reference></reference>
+        <timeout>60</timeout>
+      </hudson.plugins.git.extensions.impl.CloneOption>
+    </extensions>
   </scm>
   <assignedNode></assignedNode>
   <canRoam>false</canRoam>
@@ -121,7 +127,7 @@
                  if [ ! -d .autoport-scratch ]; then
                      mkdir .autoport-scratch
                  fi
-                 echo "*" &gt; .autoport-scratch/.gitignore
+                 echo &quot;*&quot; &gt; .autoport-scratch/.gitignore
                  echo $META_CONTENTS &gt; .autoport-scratch/$META_NAME</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
@@ -288,39 +294,31 @@
           <EscalateStatus>false</EscalateStatus>
           <RunIfJobSuccessful>true</RunIfJobSuccessful>
           <script>#!/bin/bash
-# This script keeps the most recent KEEPBUILDS number of builds
-
-# For example, if KEEPBUILDS=75 and there are 100 builds, it will
-# remove the oldest 25 builds.
-
-KEEPBUILDS=125
-
-cwd=`pwd`
-cd ..
-pwd
-
-echo &quot;Current directory: $cwd&quot;
-
-numBuilds=`ls -crd * | wc -l`
-buildsToRemove=$((numBuilds-$KEEPBUILDS))
-if [ $buildsToRemove -lt 0 ]; then
-    buildsToRemove=0
-fi
-
-echo &quot;Total number of builds: $numBuilds&quot;
-echo &quot;Number of builds to remove: $buildsToRemove&quot;
-
-if [ $buildsToRemove -gt 0 ]; then
-    removeList=`ls -crd * | head -n $buildsToRemove`
-
-    echo &quot;----- Start removeList ----- &quot;
-    for i in $removeList
-    do
-        ls -ld $i
-        sudo rm -rf $i
-    done
-    echo &quot;----- End removeList ----- &quot;
-fi
+             # This script keeps the most recent KEEPBUILDS number of builds
+             # For example, if KEEPBUILDS=75 and there are 100 builds, it will
+             # remove the oldest 25 builds.
+             KEEPBUILDS=125
+             cwd=`pwd`
+             cd ..
+             pwd
+             echo &quot;Current directory: $cwd&quot;
+             numBuilds=`ls -crd * | wc -l`
+             buildsToRemove=$((numBuilds-$KEEPBUILDS))
+             if [ $buildsToRemove -lt 0 ]; then
+                 buildsToRemove=0
+             fi
+             echo &quot;Total number of builds: $numBuilds&quot;
+             echo &quot;Number of builds to remove: $buildsToRemove&quot;
+             if [ $buildsToRemove -gt 0 ]; then
+                 removeList=`ls -crd * | head -n $buildsToRemove`
+                 echo &quot;----- Start removeList ----- &quot;
+                 for i in $removeList
+                 do
+                     ls -ld $i
+                     sudo rm -rf $i
+                 done
+                 echo &quot;----- End removeList ----- &quot;
+             fi
           </script>
         </hudson.plugins.postbuildtask.TaskProperties>
       </tasks>
