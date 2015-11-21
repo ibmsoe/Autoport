@@ -172,9 +172,8 @@ def inferBuildSteps(listing, repo):
     base_js_def = {
         'build system': "JavaScript",
         'primary lang': "JavaScript",
-        'grep build': "npm install %s"%(repo.name),     # Search readme for this string. If found, use it as build cmd
-        'grep test': "npm test",                        # Same for test command. Maybe we can pick up some extra arguments
-
+        'grep build': "",
+        'grep test': "",
         'grep env': "",
         'build' : "if [ -e package.json ]; then npm install; fi",
         'test' : "if [ -e package.json ]; then npm test; fi",
