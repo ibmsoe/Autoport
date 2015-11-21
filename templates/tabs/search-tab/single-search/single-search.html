@@ -133,6 +133,15 @@
 
             <!-- Dropdown box for choosing what kind of java to use. -->
             <div class="dropdown">
+              <button rv-show="detailState.repo.language | isJavaScript" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.javaScriptType } <span class="caret"></span></button>
+              <ul class="dropdown-menu dropdown-menu-right">
+                <li rv-on-click="detailState.selectJavaScriptType"><a>nodejs</a></li>
+                <li rv-on-click="detailState.selectJavaScriptType"><a>IBM SDK for Node.js</a></li>
+              </ul>
+            </div>
+
+            <!-- Dropdown box for choosing what kind of java to use. -->
+            <div class="dropdown">
               <button rv-show="detailState.repo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.javaType } <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right">
                 <li rv-on-click="detailState.selectJavaType"><a>OpenJDK</a></li>

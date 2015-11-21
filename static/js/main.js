@@ -352,6 +352,7 @@ var batchState = {
     // Details member variables and methods
     batchFile: {},                          // content of batch file.  All fields resolved
     javaType: "",                           // Initial value in config section
+    javaScriptType: "",                     // Initial value in config section
     loading: false,                         // parsing batch file.  Size is variable
     showBatchFile: false,                   // draw batch file detail table
     saveBatchFileName: "",                  // user input to save button for new batch file name
@@ -386,7 +387,8 @@ var batchState = {
                 if (build.selectedBuild === "")
                     continue;
 
-                $.post("createJob", {id: package.id, tag: packages.tag, javaType: javaType,
+                $.post("createJob", {id: package.id, tag: packages.tag,
+                       javaType: javaType, javaScriptType: javaScriptType,
                        node: buildServers[i], selectedBuild: build.selectedBuild,
                        selectedTest: build.selectedTest, selectedEnv: build.selectedEnv,
                        artifacts: build.artifacts, primaryLang: build.primaryLang, is_batch_job: true},
@@ -884,13 +886,17 @@ var detailState = {
     repo: null,                                     // Single project search repo data
     generateRepo: null,                             // Multiple project search repo data
     autoSelected: false,                            // Was this repository autoselected from search query?
-    pie: null, // Pie chart
+    pie: null,                                      // Pie chart
     generatePie: null,
-    //TODO - split single and generate out, this repetition is bad
-    javaType: "OpenJDK", // OpenJDK or IBM Java
+    //TODO - split single and generate out, this repetition is bad.  Pertains to two detail menus
+    javaType: "OpenJDK",                            // OpenJDK or IBM Java
     generateJavaType: "OpenJDK",
     javaTypeOptions: "",
     generateJavaTypeOptions: "",
+    generateJavaScriptType: "nodejs",
+    javaScriptType: "nodejs",                       // nodejs or IBM SDK for Node.js
+    javaScriptTypeOptions: "",
+    generateJavaScriptTypeOptions: "",
     backToResults: function(ev) {
         var idName = ev.target.id;
         if (idName === "singleDetailBackButton") {
@@ -923,6 +929,18 @@ var detailState = {
             detailState.javaTypeOptions = "/etc/profile.d/ibm-java.sh";
         }
     },
+    // When the radio button is pressed update the server environment data
+    selectJavaScriptType: function(ev) {
+        var selection = $(ev.target).text().toLowerCase();
+        if (selection === "nodejs") {
+            detailState.javaScriptType = "nodejs";
+            detailState.javaScriptTypeOptions = "";
+        }
+        else if (selection === "ibm sdk for node.js") {
+            detailState.javaScriptType = "IBM SDK for Node.js";
+            detailState.javaScriptTypeOptions = "/etc/profile.d/ibm-nodejs.sh";
+        }
+    },
     // TODO - this is bad, this will be changed
     selectGenerateJavaType: function(ev) {
         var selection = $(ev.target).text().toLowerCase();
@@ -933,6 +951,17 @@ var detailState = {
         else if (selection === "ibm java") {
             detailState.generateJavaType = "IBM Java";
             detailState.generateJavaTypeOptions = "/etc/profile.d/ibm-java.sh";
+        }
+    },
+    selectGenerateJavaScriptType: function(ev) {
+        var selection = $(ev.target).text().toLowerCase();
+        if (selection === "nodejs") {
+            detailState.generateJavaScriptType = "nodejs";
+            detailState.generateJavaScriptTypeOptions = "";
+        }
+        else if (selection === "ibm sdk for node.js") {
+            detailState.generateJavaScriptType = "IBM SDK for Node.js";
+            detailState.generateJavaScriptTypeOptions = "/etc/profile.d/ibm-nodejs.sh";
         }
     },
     changeBuildOptions: function(ev) {
@@ -2360,7 +2389,12 @@ function showDetail(data) {
 
                 for (var i=0; i < buildServers.length; i++) {
                     console.log(detailState.repo.useVersion + " version");
-                    $.post("createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion, javaType: detailState.javaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                    $.post("createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion,
+                           javaType: detailState.javaTypeOptions, javaScriptType: detailState.javaScriptTypeOptions,
+                           node: buildServers[i], selectedBuild: selectedBuild,
+                           selectedTest: selectedTest, selectedEnv: selectedEnv,
+                           artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang},
+                           addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
             detailState.repo.updateVersion = function(e) {
@@ -2395,7 +2429,11 @@ function showDetail(data) {
                 var buildServers = getSelectedValues(el);
 
                 for(var i=0; i < buildServers.length; i++) {
-                    $.post("createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion, javaType: detailState.generateJavaTypeOptions, node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest, selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang}, addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                    $.post("createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion,
+                           javaType: detailState.generateJavaTypeOptions, javaScriptType: detailState.generateJavaScriptTypeOptions,
+                           node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest,
+                           selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang},
+                           addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
             detailState.generateRepo.updateVersion = function(e) {

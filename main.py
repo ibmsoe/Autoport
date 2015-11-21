@@ -688,11 +688,10 @@ def uploadBatchFile():
     return json.jsonify(status="ok")
 
 # Common routine for createJob and runBatchJob
-def createJob_common(time, uid, id, tag, node, javaType,
+def createJob_common(time, uid, id, tag, node, javaType, javaScriptType,
                      selectedBuild, selectedTest, selectedEnv, artifacts, primaryLang):
 
-    # TODO: Need to add to UI, API, and batch file config
-    javaScriptType = ""
+    # TODO: Need to add to JavaScript to batch file config
 
     # Get repository
     repo = globals.cache.getRepo(id)
@@ -867,6 +866,7 @@ def createJob(i_id = None,
               i_tag = None,
               i_node = None,
               i_javaType = None,
+              i_javaScriptType = None,
               i_selectedBuild = None,
               i_selectedTest = None,
               i_selectedEnv = None,
@@ -922,6 +922,16 @@ def createJob(i_id = None,
         else:
             return json.jsonify(status="failure", error="missing java type"), 400
 
+    # Get javaScriptType
+    try:
+        javaScriptType = request.form["javaScriptType"]
+    # defaults to nodejs
+    except KeyError:
+        if i_javaScriptType != None:
+            javaScriptType = i_javaScriptType
+        else:
+            return json.jsonify(status="failure", error="missing javaScript type"), 400
+
     # Get build info
     try:
         selectedBuild = request.form["selectedBuild"]
@@ -969,8 +979,8 @@ def createJob(i_id = None,
         else:
             return json.jsonify(status="failure", error="missing primary language"), 400
 
-    rc = createJob_common(localtime(), uid, id, tag, node, javaType, selectedBuild,
-                          selectedTest, selectedEnv, artifacts, primaryLang)
+    rc = createJob_common(localtime(), uid, id, tag, node, javaType, javaScriptType,
+                          selectedBuild, selectedTest, selectedEnv, artifacts, primaryLang)
 
     try:
         rcstatus = rc['status']
@@ -1139,6 +1149,8 @@ def runBatchFile ():
         if fileBuf['config']['java'] == "IBM Java":
             javaType = "/etc/profile.d/ibm-java.sh"
 
+        javaScriptType = ""
+
         logger.debug("runBatchFile, javaType=%s node=%s" % (javaType, node))
 
         # Create batch results template, stores list of job names associated with batch file
@@ -1177,6 +1189,7 @@ def runBatchFile ():
                       package['tag'],
                       node,
                       javaType,
+                      javaScriptType,
                       package['build']['selectedBuild'],
                       package['build']['selectedTest'],
                       package['build']['selectedEnv'],

@@ -41,6 +41,11 @@ rivets.formatters.isJava = function(value) {
     return value === "Java";
 };
 
+// For showing compiler/sdk options based on language
+rivets.formatters.isJavaScript = function(value) {
+    return value === "JavaScript";
+};
+
 // For displaying NA when no options were found instead of empty textbox
 rivets.formatters.cleanOptionsOutput = function(value) {
     return (value === "" ? "NA" : value);
