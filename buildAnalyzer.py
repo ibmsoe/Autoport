@@ -91,25 +91,25 @@ def interpretTravis(repo, travisFile, travis_def):
     travis_def with appropriate values.
     """
     travis_flag = None
-    logger.debug("Processing travis file to fetch build and test commands")
+    logger.debug("In interpretTravis, project %s" % repo.name)
     travis_data = repo.get_file_contents(travisFile.path).content.decode('base64', 'strict')
     data = yaml.safe_load(travis_data)
     if 'script' in data:
         travis_flag = travisFile
         if isinstance(data['script'], list):
-            travis_def['test'] = ';'.join(data['script'])
+            travis_def['test'] = '; '.join(data['script'])
         else:
             travis_def['test'] = data['script']
-        logger.debug("interpretTravis: Test command: %s" % (data['script']))
-        if 'language' in data:
-            travis_def['primary lang'] = data['language']
-            logger.debug("interpreTravis: Primary Language: %s" % (data['language']))
+        logger.debug("interpretTravis: %s test command: %s" % (repo.name, travis_def['test']))
+        # Keep repo primary language as opposed to Travis primary language unless/until we exploit it in some way
         if 'before_script' in data:
             if isinstance(data['before_script'], list):
-                travis_def['build'] = ';'.join(data['before_script'])
+                travis_def['build'] = '; '.join(data['before_script'])
             else:
                 travis_def['build'] = data['before_script']
-            logger.debug("interpreTravis: Build command: %s" % (data['before_script']))
+        else:
+            travis_def['build'] = "echo ---See test log for travis-style build---"
+        logger.debug("interpretTravis: %s build command: %s" % (repo.name, travis_def['build']))
     return travis_flag
 
 def inferBuildSteps(listing, repo):
@@ -397,7 +397,7 @@ def inferBuildSteps(listing, repo):
         'grep build': "",
         'grep test': "",
         'grep env': "",
-        'build': "``",
+        'build': "",
         'test' : "",
         'env' : "",
         'artifacts': "*.arti",
@@ -465,7 +465,6 @@ def inferBuildSteps(listing, repo):
         elif f.name in ('build.sh', 'run_build.sh'):
             buildsh = f
         elif f.name == '.travis.yml':
-            logger.debug("inferBuildSteps: Travis control file found")
             travis = interpretTravis(repo, f, travis_def)
         elif any(x in f.name.lower() for x in readmeFiles):
             if f.type == 'file' and f.size != 0:
