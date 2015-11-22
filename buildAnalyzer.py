@@ -69,11 +69,11 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
                         if len(line.split(' ')) <= max_words and\
                            lines <= max_lines and\
                            not line[len(line) - 1] == ':':          # command lines don't end with :
-                            if command in line:
+                            if command in line and '$' not in line:
                                 retval.append(utils.clean(line))
                                 lines = lines + 1
                                 break
-                            elif (projectLang == 'C' or projectLang == 'C++' or projectLang == 'Perl') and 'make' in line:
+                            elif (projectLang == 'C' or projectLang == 'C++' or projectLang == 'Perl') and 'make' in line and '$' not in line:
                                 retval.append(utils.clean(line))
                                 lines = lines + 1
                                 break
@@ -90,26 +90,42 @@ def interpretTravis(repo, travisFile, travis_def):
     Method to interpret the travis control file and fill out the
     travis_def with appropriate values.
     """
-    travis_flag = None
+
     logger.debug("In interpretTravis, project %s" % repo.name)
-    travis_data = repo.get_file_contents(travisFile.path).content.decode('base64', 'strict')
-    data = yaml.safe_load(travis_data)
-    if 'script' in data:
-        travis_flag = travisFile
-        if isinstance(data['script'], list):
-            travis_def['test'] = '; '.join(data['script'])
-        else:
-            travis_def['test'] = data['script']
-        logger.debug("interpretTravis: %s test command: %s" % (repo.name, travis_def['test']))
-        # Keep repo primary language as opposed to Travis primary language unless/until we exploit it in some way
-        if 'before_script' in data:
-            if isinstance(data['before_script'], list):
-                travis_def['build'] = '; '.join(data['before_script'])
+
+    travis_flag = None
+    try:
+        travis_data = repo.get_file_contents(travisFile.path).content.decode('base64', 'strict')
+    except Exception as e:
+        logger.debug("interpretTravis: File Error %s" % str(e))
+        travis_data = ""
+
+    if travis_data:
+        try:
+            data = yaml.safe_load(travis_data)
+        except Exception as e:
+            logger.debug("interpretTravis: Yaml Error %s" % str(e))
+            data = ""
+
+        if data and 'script' in data and not any('$' in s for s in data['script']):
+            if isinstance(data['script'], list):
+                travis_def['test'] = '; '.join(data['script'])
             else:
-                travis_def['build'] = data['before_script']
-        else:
+                travis_def['test'] = data['script']
+
             travis_def['build'] = "echo ---See test log for travis-style build---"
-        logger.debug("interpretTravis: %s build command: %s" % (repo.name, travis_def['build']))
+            if 'before_script' in data and not any('$' in s for s in data['before_script']):
+                if isinstance(data['before_script'], list):
+                    travis_def['build'] = '; '.join(data['before_script'])
+                else:
+                    travis_def['build'] = data['before_script']
+
+            # Keep repo.primary lang as reports are tied to it.  Travis has their own defs
+
+            travis_flag = travisFile
+            logger.debug("interpretTravis: %s test command: %s" % (repo.name, travis_def['test']))
+            logger.debug("interpretTravis: %s build command: %s" % (repo.name, travis_def['build']))
+
     return travis_flag
 
 def inferBuildSteps(listing, repo):
@@ -511,58 +527,59 @@ def inferBuildSteps(listing, repo):
         build_info['reason'] = lang['reason']
         build_info['primaryLang'] = lang['primary lang']
 
-    # Check the last element added to the langlist for readme/other important file info
     lang = langlist[-1]
     if lang['build']:
         build_info['buildSystem'] = lang['build system']
-        for readmeStr in grepstack:
-            if readmeStr:
-                delim = ["`", "'", '"', "#", "\n"]                   # delimiters used to denote end of cmd
-                cmd = lang['grep test']
-                if cmd:
-                    strFound = buildFilesParser(readmeStr, cmd, delim)
-                    if strFound:
-                        build_info['testOptions'].append(strFound)
-                cmd = lang['grep build']
-                if cmd:
-                    strFound = buildFilesParser(readmeStr, cmd, delim)
-                    if strFound:
-                        build_info['buildOptions'].append(strFound)
-                env = lang['grep env']
-                if env:
-                    # Look first for 'VAR="' form. eg. VAR="string"
-                    envStr = env + '"'
-                    delim = ['"']                        # delimiters used to denote end of environment variable
-                    strFound = buildFilesParser(readmeStr, envStr, delim)
-                    if strFound:
-                        strFound = strFound + '"'
-                    else:
-                        # Look next for 'VAR=' form. .eg VAR=7
-                        delim = [";", " ", "#", "\n"]    # delimiters used to denote end of environment variable
-                        strFound = buildFilesParser(readmeStr, env, delim)
-                        if strFound.find('"'):           # this case was checked first above.  This is a reject
-                            strFound = ""
-                    if strFound:
-                        build_info['envOptions'].append(strFound)
-                break
+        # Check the last element added to the langlist for readme/other important file info
+        if not travis:
+            for readmeStr in grepstack:
+                if readmeStr:
+                    delim = ["`", "'", '"', "#", "\n"]        # denotes end of cmd
+                    cmd = lang['grep test']
+                    if cmd and cmd.find('$') == -1:
+                        strFound = buildFilesParser(readmeStr, cmd, delim)
+                        if strFound:
+                            build_info['testOptions'].append(strFound)
+                    cmd = lang['grep build']
+                    if cmd and cmd.find('$') == -1:
+                        strFound = buildFilesParser(readmeStr, cmd, delim)
+                        if strFound:
+                            build_info['buildOptions'].append(strFound)
+                    env = lang['grep env']
+                    if env:
+                        # Look first for 'VAR="' form. eg. VAR="string"
+                        envStr = env + '"'
+                        delim = ['"']                        # denotes end of environment variable
+                        strFound = buildFilesParser(readmeStr, envStr, delim)
+                        if strFound:
+                            strFound = strFound + '"'
+                        else:
+                            # Look next for 'VAR=' form. .eg VAR=7
+                            delim = [";", " ", "#", "\n"]    # denotes end of environment variable
+                            strFound = buildFilesParser(readmeStr, env, delim)
+                            if strFound.find('"'):           # This was ruled out above in first check 
+                                strFound = ""                # String should not have embedded quote
+                        if strFound:
+                            build_info['envOptions'].append(strFound)
+                    break
 
-        # Add build commands extracted using text analytics
-        command = text_analytics_cmds(repo.name, repo.language, grepstack, 'build')
-        logger.debug("inferBuildSteps, text_analytics build cmd=%s" % command)
-        if command:
-            if globals.useTextAnalytics:
-                build_info['buildOptions'].insert(len(build_info), '[TextAnalytics]' + command)
-            else:
-                build_info['buildOptions'].insert(0, '[TextAnalytics]' + command)
+            # Add build commands extracted using text analytics
+            command = text_analytics_cmds(repo.name, repo.language, grepstack, 'build')
+            logger.debug("inferBuildSteps, text_analytics build cmd=%s" % command)
+            if command:
+                if globals.useTextAnalytics:
+                    build_info['buildOptions'].insert(len(build_info), '[TextAnalytics]' + command)
+                else:
+                    build_info['buildOptions'].insert(0, '[TextAnalytics]' + command)
 
-        # Add build commands extracted using text analytics
-        command = text_analytics_cmds(repo.name, repo.language, grepstack, 'test')
-        logger.debug("inferBuildSteps, text_analytics test cmd=%s" % command)
-        if command:
-            if globals.useTextAnalytics:
-                build_info['testOptions'].insert(len(build_info), '[TextAnalytics]' + command)
-            else:
-                build_info['testOptions'].insert(0, '[TextAnalytics]' + command)
+            # Add build commands extracted using text analytics
+            command = text_analytics_cmds(repo.name, repo.language, grepstack, 'test')
+            logger.debug("inferBuildSteps, text_analytics test cmd=%s" % command)
+            if command:
+                if globals.useTextAnalytics:
+                    build_info['testOptions'].insert(len(build_info), '[TextAnalytics]' + command)
+                else:
+                    build_info['testOptions'].insert(0, '[TextAnalytics]' + command)
 
     # Make the build, test, and env options of the last added element the default options
     # as those are the most likely to be correct

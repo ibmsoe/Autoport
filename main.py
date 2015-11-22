@@ -1205,6 +1205,8 @@ def runBatchFile ():
     else:
         return json.jsonify(status="failure", error="could not find batch file"), 404
 
+    logger.debug("Leaving runBatchFile, batchName=%s" % batchName)
+
     if submittedJob:
         return json.jsonify(status="ok")
     return json.jsonify(status="failure", error="batch file no project is buildable"), 404
