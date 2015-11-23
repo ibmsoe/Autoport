@@ -387,7 +387,7 @@ var batchState = {
                 if (build.selectedBuild === "")
                     continue;
 
-                $.post("createJob", {id: package.id, tag: packages.tag,
+                $.post("createJob", {id: package.id, tag: package.tag,
                        javaType: javaType, javaScriptType: javaScriptType,
                        node: buildServers[i], selectedBuild: build.selectedBuild,
                        selectedTest: build.selectedTest, selectedEnv: build.selectedEnv,

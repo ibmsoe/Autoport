@@ -15,9 +15,9 @@ def getTags (repo):
     tags.sort(key=tagSortKey, reverse=True)
 
     if (not tags) or (len(tags) < 1):
-        recentTag, tags = "",      ""
+        recentTag, tags = "", ""
     elif len(tags) == 1:
-        recentTag, tags = tags[0], ""
+        recentTag, tags = tags[0], tags[0]
     else:
         recentTag, tags = tags[0], tags[1:]
 

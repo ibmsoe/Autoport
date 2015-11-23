@@ -444,7 +444,7 @@ def detail(id, repo=None):
     if version == "recent" and recentTag:
         useVersion = recentTag
     else:
-        useVersion = "Current"
+        useVersion = "current"
 
     repoData = {
         "id": repo.id,
@@ -501,7 +501,7 @@ def search_repositories():
     order = request.args.get("order", "desc")
     versiontag = request.args.get("version", "")
     if not versiontag:
-        versiontag = "Current"
+        versiontag = "current"
     logger.debug('Search repository: query=' + str(q) + " version="+ str(versiontag))
     # AutoPort parameters
     limit = int(request.args.get("limit", "25"))
@@ -735,12 +735,20 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType,
 
     jobName = globals.localHostName + '.' + str(uid) + '.' + node + '.N-' + repo.name
 
-    if (tag == "") or (tag == "Current"):
+    if tag == "" or tag == "current":
         xml_default_branch.text = "*/" + repo.default_branch
         jobName += ".current"
     else:
-        xml_default_branch.text = "tags/" + tag
-        jobName += "." + tag
+        tags, recentTag = getTags(repo)
+        if tag == "recent" and recentTag:
+            xml_default_branch.text = "tags/" + recentTag
+            jobName += "." + recentTag
+        elif tag in tags:
+            xml_default_branch.text = "tags/" + tag
+            jobName += "." + tag
+        else:
+            msg = "Invalid project %s build tag %s" % (repo.name, tag)
+            return { 'status': "failure", 'error': msg }
 
     # Time job is created.  Parameter to Jenkins.  Blanks allowed
     timestr = strftime("%Y-%m-%d %H:%M:%S", time)
@@ -910,7 +918,7 @@ def createJob(i_id = None,
         if i_tag != None:
             tag = i_tag
         else:
-            tag = "Current"
+            tag = "current"
 
     # Get javaType
     try:

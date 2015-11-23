@@ -364,7 +364,7 @@ class Batch:
             try:
                 tag = package['tag']
             except KeyError:
-                package['tag'] = "Current"
+                package['tag'] = "current"
 
             # Build information is lazily calculated for searches that yield multiple
             # projects to ensure fast searches.
