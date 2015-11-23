@@ -148,8 +148,11 @@ class Project:
         leftDir = self.catalog.getResults(leftBuild, leftRepo)
         rightDir = self.catalog.getResults(rightBuild, rightRepo)
 
-        if (not(leftDir and rightDir)):
-            return {"error": "Result not found", "http_code": 401}
+        if not leftDir:
+            return {"error": leftBuild + "/" + logFile + " not found", "http_code": 401}
+
+        if not rightDir:
+            return {"error": rightBuild + "/" + logFile + " not found", "http_code": 401}
 
         try:
             rightName, rightNode, rightPkg, rightPkgVer, rightDate = self.stripDataFromJobName(rightBuild)

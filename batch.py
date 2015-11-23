@@ -582,8 +582,7 @@ class Batch:
                 final_response[newBatchName][projectName]["left"] = project
                 final_response[newBatchName][projectName]["left_parent_name"] = batchName
                 final_response[newBatchName][projectName]["left_version"] = projectResultPattern.match(project).group(5)
-
-        logger.debug("After adding Left_projects to list: %s " % json.dumps(final_response))
+                logger.debug("getBatchDiffLogResults: leftArch=%s parent_name=%s project=%s" % (leftArch, batchName, project))
 
         for batchName in right_projects:
             newBatchName = batchName.split('.')[0]
@@ -598,22 +597,24 @@ class Batch:
                 final_response[newBatchName][projectName]["right"] = project
                 final_response[newBatchName][projectName]["right_parent_name"] = batchName
                 final_response[newBatchName][projectName]["right_version"] = projectResultPattern.match(project).group(5)
-
-        logger.debug("After adding right_projects to list: %s " % json.dumps(final_response))
+                logger.debug("getBatchDiffLogResults: rightArch=%s parent_name=%s project=%s" % (rightArch, batchName, project))
 
         # We have paired jobs now call project_obj.getDiffLogResult recursively and get data.
         for batchName in final_response:
             for project in final_response[batchName]:
                 if final_response[batchName][project].has_key("left") and final_response[batchName][project].has_key("right"):
-                    final_response[batchName][project]["diff"] = project_obj.getDiffLogResult(                
+                    diffData = project_obj.getDiffLogResult(
                         logfile,
                         final_response[batchName][project]["left"],
                         final_response[batchName][project]["right"],
                         leftRepo,
                         rightRepo
                     )
+                    if diffData.has_key('error'):
+                        logger.debug("getBatchDiffLogResults: skipping project error=%s" % diffData['error'])
+                    else:
+                        final_response[batchName][project]["diff"] = diffData
 
         final_response["left_arch"] = leftArch
         final_response["right_arch"] = rightArch
-        logger.debug("Final data with diff: %s " % json.dumps(final_response))
         return final_response
