@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "8",
+    "sequence": "9",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -284,7 +284,8 @@
                     "name": "ant"
                 },
                 {
-                    "name": "gradle"
+                    "name": "gradle",
+                    "version": "2.9"
                 },
                 {
                     "name": "ibm-java-sdk",
@@ -504,7 +505,7 @@
                 },
                 {
                     "name": "gradle",
-                    "version": "1.4"
+                    "version": "2.9"
                 },
                 {
                     "name": "ibm-java-sdk",
