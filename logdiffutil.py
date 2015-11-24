@@ -5,7 +5,7 @@ def renderline(text, errorWords, packageDict):
 
     for errword in errorWords:
         if errword in text.lower():
-            words = text.lower().split(' ')
+            words = text.lower().strip().split(' ')
             for word in words:
                 if packageDict.has_key(word):
                     text = (text.replace(word,"""<font style=\"background:#f9f900;\">%s</font>"""%(word)))
