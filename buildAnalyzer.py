@@ -38,6 +38,13 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
     english = ['the', 'a', 'an', 'is', 'are', 'can', 'you', 'of', 'in', 'from',
                'this', 'to', 'that', 'when', 'should', 'might']
 
+    # Symbols in commands we don't allow.  Not a proper list.  We have limitations such
+    # as $VAR to prevent expanded environment variables which we don't support yet
+    noContainsStr = '$'
+
+    # Commands don't end with these characters.
+    noEndsWithStr = ':[]().,'
+
     retval = []
     for fstr in grepStack:
         build_found = False
@@ -61,19 +68,21 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
                             isText = True
                             break
 
-                    if isText:
+                    if isText or any(x in line for x in noContainsStr):
                         continue
+
+                    lastChar = line[len(line) - 1]
 
                     for command in commands:
                                                                     # TODO: validate start of command line
                         if len(line.split(' ')) <= max_words and\
                            lines <= max_lines and\
-                           not line[len(line) - 1] == ':':          # command lines don't end with :
-                            if command in line and '$' not in line:
+                           not lastChar in noEndsWithStr:           # Commands don't end with ':[]()'
+                            if command in line:
                                 retval.append(utils.clean(line))
                                 lines = lines + 1
                                 break
-                            elif (projectLang == 'C' or projectLang == 'C++' or projectLang == 'Perl') and 'make' in line and '$' not in line:
+                            elif (projectLang == 'C' or projectLang == 'C++' or projectLang == 'Perl') and 'make' in line:
                                 retval.append(utils.clean(line))
                                 lines = lines + 1
                                 break
@@ -277,7 +286,7 @@ def inferBuildSteps(listing, repo):
         'grep build': "",
         'grep test': "",
         'grep env': "",
-        'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -e build.gradle ]; then gradle -q; fi",
+        'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -e build.gradle ]; then gradle -q build; fi",
         'test': "if [ -e pom.xml ]; then mvn test -fn; elif [ -e build.xml ]; then ant test; elif [ -e build.gradle ]; then gradle -q test; fi",
         'env' : "",
         'artifacts': "*.arti",
