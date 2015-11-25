@@ -5,11 +5,11 @@ def renderline(text, errorWords, packageDict):
 
     for errword in errorWords:
         if errword in text.lower():
-            words = text.lower().strip().split(' ')
+            words = text.strip().split()
             for word in words:
-                if packageDict.has_key(word):
+                if packageDict.has_key(word.lower()):
                     text = (text.replace(word,"""<font style=\"background:#f9f900;\">%s</font>"""%(word)))
-            return ("""<span><font style=\"background:#ff9797;\">%s</font></span>""" % text)
+            return ("""<font style=\"background:#ff9797;\">%s</font>""" % text)
     return text
 
 def getErrorWords(filename):
