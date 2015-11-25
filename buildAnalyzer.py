@@ -286,7 +286,7 @@ def inferBuildSteps(listing, repo):
         'grep build': "",
         'grep test': "",
         'grep env': "",
-        'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -e build.gradle ]; then gradle -q build; fi",
+        'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -x gradlew ]; then ./gradlew build; elif [ -e build.gradle ]; then gradle -q build; fi",
         'test': "if [ -e pom.xml ]; then mvn test -fn; elif [ -e build.xml ]; then ant test; elif [ -e build.gradle ]; then gradle -q test; fi",
         'env' : "",
         'artifacts': "*.arti",
