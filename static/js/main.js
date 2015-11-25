@@ -165,6 +165,9 @@ var searchState = {
                         searchState.single.batchFile.packages[0].name +
                         "-" + String(searchState.single.batchFile.packages.length);
                 }
+                searchState.single.batchFile.config.includeTestCmds = "True";
+                searchState.single.batchFile.config.includeInstallCmds = "False";
+                searchState.single.batchFile.config.javaScriptType = "Node.js";
                 var name = searchState.single.batchFile.config.name;
                 var file = JSON.stringify(batchState.convertToExternal(searchState.single.batchFile),
                     undefined, 2);
@@ -229,6 +232,9 @@ var searchState = {
                           "-" + String(searchState.multiple.batchFile.packages.length);
                   }
                   var name = searchState.multiple.batchFile.config.name;
+                  searchState.multiple.batchFile.config.javaScriptType = "Node.js";
+                  searchState.multiple.batchFile.config.includeTestCmds = "True";
+                  searchState.single.batchFile.config.includeInstallCmds = "False";
                   var file = JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
                       undefined, 2);
                   $.post("uploadBatchFile", {name: name, file: file},
@@ -277,6 +283,7 @@ function clearBatchFile(batchfile) {
         searchState.single.batchFile.config.name = "";
         searchState.single.batchFile.config.owner = "";
         searchState.single.batchFile.config.java = "";
+        searchState.single.batchFile.config.javaScriptType = "Node.js";
         searchState.single.batchFile.packages = [];
         searchState.single.exportReady = false;
         searchState.single.ready = false;
@@ -284,6 +291,7 @@ function clearBatchFile(batchfile) {
         searchState.multiple.batchFile.config.name = "";
         searchState.multiple.batchFile.config.owner = "";
         searchState.multiple.batchFile.config.java = "";
+        searchState.single.batchFile.config.javaScriptType = "Node.js";
         searchState.multiple.batchFile.packages = [];
         searchState.multiple.exportReady = false;
         searchState.multiple.ready = false;
@@ -362,20 +370,32 @@ var batchState = {
         batchState.batchFile = {};
     },
     saveBatch: function(ev) {
+        var batchObj = $('#batchListSelectTable').bootstrapTable('getSelections')[0];
         batchState.saveBatchFileName = $("#saveBatchFileFilter").val();
         batchState.batchFile.config.name = batchState.saveBatchFileName;
-        var file = JSON.stringify(batchState.batchFile, undefined, 2);
-        $.post("uploadBatchFile", {name: batchState.saveBatchFileName, file: file},
+        if(batchState.saveBatchFileName == batchObj.name){
+            var file = JSON.stringify(batchState.batchFile, undefined, 2);
+            $.post("updateBatchFile", {name: batchObj.filename, file: file, location:batchObj.location},
                batchSaveCallback, "json").fail(uploadBatchFileCallback);
+        } else{
+            var file = JSON.stringify(batchState.batchFile, undefined, 2);
+            $.post("uploadBatchFile", {name: batchState.saveBatchFileName, file: file},
+               batchSaveCallback, "json").fail(uploadBatchFileCallback);
+        }
     },
     buildAndTestDetail: function(ev, el) {
         var el = $("#batchBuildServersFromDetails")[0];
         var buildServers = getSelectedValues(el);
         var javaType = "";
+        var javaScriptType = "";
+        batchState.loading = true;
 
         config = batchState.batchFile.config;
         if (config['java'] === "IBM Java")
             javaType = "/etc/profile.d/ibm-java.sh"
+
+        if (config['javaScriptType'] === "IBM SDK for Node.js")
+            javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
 
         packages = batchState.batchFile.packages;
         for (var i = 0; i < buildServers.length; i++) {
@@ -386,30 +406,84 @@ var batchState = {
                 build = package.build;
                 if (build.selectedBuild === "")
                     continue;
+                var testCommand = "";
+                if(batchState.batchFile.config.includeTestCmds == "True"){
+               	    testCommand = build.selectedTest;
+                }
+                var installCommand = "";
+                if(batchState.batchFile.config.includeInstallCmds == "True"){
+               	    installCommand = build.selectedInstall;
+                }
 
-                $.post("createJob", {id: package.id, tag: package.tag,
-                       javaType: javaType, javaScriptType: javaScriptType,
+                $.post("createJob", {id: package.id, tag: packages.tag, javaType: javaType, javaScriptType: javaScriptType,
                        node: buildServers[i], selectedBuild: build.selectedBuild,
-                       selectedTest: build.selectedTest, selectedEnv: build.selectedEnv,
+                       selectedTest: testCommand, selectedInstall:installCommand, selectedEnv: build.selectedEnv,
                        artifacts: build.artifacts, primaryLang: build.primaryLang, is_batch_job: true},
                        addToJenkinsCallback, "json").fail(addToJenkinsCallback);
             }
         }
     },
+    selectNodeJsType: function(ev, el) {
+        var selection = $(ev.target).text().toLowerCase();
+        if (selection === "ibm sdk for node.js") {
+            batchState.batchFile.config.javaScriptType = "IBM SDK for Node.js";
+        }else if(selection === "node.js"){
+            batchState.batchFile.config.javaScriptType = "Node.js";
+        }
+    },
     selectJavaType: function(ev, el) {
         var selection = $(ev.target).text().toLowerCase();
-        if (selection === "open jdk") {
-            batchState.batchFile.config.java = "System default";
+        if (selection === "openjdk") {
+            batchState.batchFile.config.java = "OpenJDK";
         }
         else if (selection === "ibm java") {
             batchState.batchFile.config.java = "IBM Java";
         }
     },
     updateEnviron: function(ev, el) {
-
+        $("#batchCommandsTableContanier").hide();
+        $("#settingsBatchModal1").show();
+        $('#showModifyButton').show();
+        $("#batchBuildCommandBackButton").hide();
     },
     resetEnviron: function(ev, el) {
         batchState.batchFile.config.java = batchState.javaType;
+        batchState.batchFile.config.javaScriptType = "Node.js";
+        $.getJSON("parseBatchFile",
+            {
+                batchName: batchState.selectedBatchFile.filename
+            }, function(data){
+                parseBatchFileCallback(data, batchState);
+            }, "json").fail(function(data){
+                parseBatchFileCallback(data, batchState);
+            }
+        );
+    },
+    displayBatchCommandsTable:function(ev, el) {
+         $("#batchCommandsTableContanier").show();
+         $("#settingsBatchModal1").hide();
+         $('#showModifyButton').hide();
+         $("#batchBuildCommandBackButton").show();
+    },
+    onInstallCheckBoxChanged: function(ev, el) {
+        if($("#batchSettingsInstallCkBox").is(":checked")){
+            batchState.batchFile.config.includeInstallCmds = "True";
+        }else {
+            batchState.batchFile.config.includeInstallCmds = "False";
+        }
+    },
+    onTestCheckBoxChanged: function(ev, el) {
+        if($("#batchSettingsTestCkBox").is(":checked")){
+            batchState.batchFile.config.includeTestCmds = "True";
+        }else {
+            batchState.batchFile.config.includeTestCmds = "False";
+        }
+    },
+    displayBatchSettings: function(ev, el) {
+         $("#batchCommandsTableContanier").hide();
+         $("#settingsBatchModal1").show();
+         $('#showModifyButton').show();
+         $("#batchBuildCommandBackButton").hide();
     },
 
     // Actions for individual batch files
@@ -433,6 +507,10 @@ var batchState = {
         }
     },
     detail: function(ev, el) {
+    	if(batchState.selectedBatchFile.filename== undefined || batchState.selectedBatchFile.filename == ""){
+        	showAlert("Please select batch file");
+        	return false;
+        }
         batchState.loading = true;
         batchState.showBatchFile = false;
         $.getJSON("parseBatchFile",
@@ -2566,6 +2644,7 @@ function batchSaveCallback(data) {
     if (data.status !== "ok") {
         showAlert("", data);
     } else {
+    	showAlert("Batch file saved successfully");
         batchState.fileList.push(batchState.batchFile);
     }
 }
@@ -2601,8 +2680,45 @@ function parseBatchFileCallback(data, batch_obj){
         batch_obj.batchFile = data.results;
         batch_obj.saveBatchFileName = data.results.config.name;
         batch_obj.javaType = data.results.config.java;
+
+        if(data.results.config.javascript!=undefined && data.results.config.javascript!=""){
+            batchState.batchFile.config.javaScriptType = data.results.config.javascript;
+        }else {
+            batchState.batchFile.config.javaScriptType = "Node.js";
+        }
+
+        $("#batchSettingsInstallCkBox").attr('checked', false);
+        $("#batchSettingsTestCkBox").attr('checked', true);
+
+        var buildInstallTable = $('<table border="1" class="table panel panel-default table-hover"></table>').attr({ id: "buildInstallTable" });
+
         // Defined the behaviour for moving packages up/down/remove if batchState object
+        var index = 0;
         data.results.packages.forEach(function(package) {
+            var packageObj = {};
+            packageObj.name = package.name;
+            packageObj.buildCommand = package.build.selectedBuild;
+            packageObj.testCommand = package.build.selectedTest;
+            packageObj.gitURL = package.build.owner_url;
+            packageObj.installCommand = package.build.selectedInstall;
+
+
+            var packageNameRow = $('<tr></tr>').appendTo(buildInstallTable);
+            $('<td></td>').text('Package Name').appendTo(packageNameRow);
+            $('<td></td>').html('<a href="'+package.build.owner_url+'" target="_blank">'+packageObj.name+'</a>').appendTo(packageNameRow);
+
+            var buildCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
+            $('<td></td>').text('Build Command').appendTo(buildCommandRow);
+            $('<td></td>').html('<input type="text" value="'+package.build.selectedBuild+'" onBlur="updateBuildCommand(this.value,\''+index+'\')"/>').appendTo(buildCommandRow);
+
+            var testCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
+            $('<td></td>').text('Test Command').appendTo(testCommandRow);
+            $('<td></td>').html('<input type="text" value="'+package.build.selectedTest+'" onBlur="updateTestCommand(this.value,\''+index+'\')"/>').appendTo(testCommandRow);
+
+            var installCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
+            $('<td></td>').text('Install Command').appendTo(installCommandRow);
+            $('<td></td>').html('<input type="text" value="'+package.build.selectedInstall+'" onBlur="updateInstallCommand(this.value,\''+index+'\')"/>').appendTo(installCommandRow);
+
             package.down = function (ev) {
                 var i = data.results.packages.indexOf(package);
                 if (i < data.results.packages.length - 1) {
@@ -2631,6 +2747,8 @@ function parseBatchFileCallback(data, batch_obj){
                 }
             };
         });
+        $("#batchCommandsTableContanier").html('');
+        buildInstallTable.appendTo("#batchCommandsTableContanier");
     } else {
         showAlert("", data);
     }
@@ -2697,10 +2815,12 @@ function archiveBatchReportsCallback(data) {
 
 function addToJenkinsCallback(data) {
     // TODO - need to take in a list of sjobUrls and hjobUrls and then iterate over the list
+    batchState.loading = false;
     if (data.status === "ok") {
         // Open new windows with the jobs' home pages
         window.open(data.hjobUrl,'_blank');
         percentageState.updateProgressBar();
+        showAlert("Batch job submitted");
     } else {
         showAlert("Bad response from /createJob!", data);
     }
@@ -3004,7 +3124,7 @@ function toggleBatchReportButtons(){
 }
 
 /**
- * This Function will generate Object with data in following 
+ * This Function will generate Object with data in following
  * format which will be used for getting left and right tables.
  * {
     "MEAN-R.562595.2015-09-02-h16-m36-s30": {
@@ -3117,7 +3237,7 @@ function generateOrganizedData(organizedData, data, batch_name, more_info, elemP
 }
 
 /**
- * This function will organize the data in the format 
+ * This function will organize the data in the format
  * which will allow us to show comparison based on following criteria
  * 1. Build slave architecture where job was executed.
  * 2. Project version which was executed on Build slave.
@@ -3462,7 +3582,16 @@ function checkIfBuildAndTestLogCreated(log_comparison_type){
     }
     return true;
 }
+function updateTestCommand(value, key){
+    batchState.batchFile.packages[key].build.selectedTest = value;
+}
 
+function updateBuildCommand(value, key){
+	batchState.batchFile.packages[key].build.selectedInstall = value;
+}
+function updateInstallCommand(value, key){
+    batchState.batchFile.packages[key].build.selectedInstall = value;
+}
 $(document).ready(function() {
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers

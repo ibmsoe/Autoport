@@ -149,6 +149,7 @@ def inferBuildSteps(listing, repo):
         'primaryLang': "",
         'buildOptions': [],
         'testOptions': [],
+        'installOptions': [],
         'envOptions': [],
         'success': False,
         'reason': "primary language unknown",
@@ -167,9 +168,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "",
         'grep build': "",
         'grep test': "",
+        'grep install': "",
         'grep env': "",
         'build': "",
         'test' : "",
+        'install':"",
         'env' : "",
         'artifacts': "",
         'reason': "primary language unknown",
@@ -185,9 +188,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "Python",
         'grep build': "python setup.py build",  # Search readme for this string. If found, use it as build cmd
         'grep test': "py.test",                 # Same for test command. Maybe we can pick up some extra arguments
+        'grep install': "",
         'grep env': "",
         'build' : "if [ -e setup.py ]; then sudo python setup.py install; fi",
         'test' : "py.test",
+        'install':"",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "primary language",
@@ -199,9 +204,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "JavaScript",
         'grep build': "",
         'grep test': "",
+        'grep install': "",
         'grep env': "",
         'build' : "if [ -e package.json ]; then npm install; fi",
         'test' : "if [ -e package.json ]; then npm test; fi",
+        'install':"",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "primary language",
@@ -214,8 +221,10 @@ def inferBuildSteps(listing, repo):
         'grep build': "gem install %s"%(repo.name),
         'grep test': "rake test",
         'grep env': "",
+        'grep install': "",
         'build' : "bundle install; if [ -e Rakefile ]; then rake install; fi",
         'test' : "rake test",
+        'install':"",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "primary language",
@@ -227,9 +236,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "PHP",
         'grep build': "",
         'grep test': "",
+        'grep install': "",
         'grep env': "",
         'build' : "if [ -e composer.json ]; then curl -sS https://getcomposer.org/installer | php; php composer.phar install; fi",
         'test' : "",
+        'install':"",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "primary language",
@@ -241,9 +252,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "Perl",
         'grep build': "",
         'grep test': "make check",
+        'grep install': "",
         'grep env': "",
         'build': "if [ -e Makefile.PL ]; then perl Makefile.PL; fi; make; make install",
         'test' : "make test",
+        'install':"",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "primary language",
@@ -255,10 +268,12 @@ def inferBuildSteps(listing, repo):
         'primary lang': "C",
         'grep build': "",
         'grep test': "make check",
+        'grep install': "",
         'grep env': "CFLAGS=",
         'build': "if [ -e configure.ac ]; then autoreconf -iv; fi; if [ -x configure ]; then ./configure; fi; make",
         # 'build': "if [ -e configure.ac ]; then aclocal; fi; if [ -e Makefile.am ]; then automake --add-missing; fi; if [ -e configure.ac ]; then autoconfig; fi; if [ -x configure ]; then ./configure; fi; make",
         'test' : "make test",
+        'install' : "make install >> install_result.arti 2>&1",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "Primary language",
@@ -270,10 +285,12 @@ def inferBuildSteps(listing, repo):
         'primary lang': "C++",
         'grep build': "",
         'grep test': "make check",
+        'grep install': "",
         'grep env': "CXXFLAGS=",
         'build': "if [ -e configure.ac ]; then autoreconf -iv; fi; if [ -x configure ]; then ./configure; fi; make",
         # 'build': "if [ -e configure.ac ]; then aclocal; fi; if [ -e Makefile.am ]; then automake --add-missing; fi; if [ -e configure.ac ]; then autoconfig; fi; if [ -x configure ]; then ./configure; fi; make",
         'test' : "make test",
+        'install' : "make install >> install_result.arti 2>&1",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "Primary language",
@@ -285,9 +302,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "Java",
         'grep build': "",
         'grep test': "",
+        'grep install': "",
         'grep env': "",
         'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -x gradlew ]; then ./gradlew build; elif [ -e build.gradle ]; then gradle -q build; fi",
         'test': "if [ -e pom.xml ]; then mvn test -fn; elif [ -e build.xml ]; then ant test; elif [ -e build.gradle ]; then gradle -q test; fi",
+        'install':"",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "primary language",
@@ -299,9 +318,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "Scala",
         'grep build': "",
         'grep test': "",
+        'grep install': "",
         'grep env': "",
         'build': "if [ -e sbt ]; then chmod a+x ./sbt; ./sbt clean compile; elif [ -e build.gradle ]; then gradle -q; fi",
         'test': "if [ -e sbt ]; then ./sbt test; elif [ -e build.gradle ]; then gradle -q test; fi",
+        'install': "",
         'env' : "",
         'artifacts': "*.arti ",
         'reason': "primary language",
@@ -318,9 +339,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "Java",
         'grep build': "ant clean",
         'grep test' : "ant test",
+        'grep install': "",
         'grep env': "ANT_OPTS=",
         'build': "ant clean; ant",
         'test': "ant test",
+        'install': "",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "build.xml",
@@ -332,9 +355,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "Java",
         'grep build': "",
         'grep test': "",
+        'grep install': "",
         'grep env': "MAVEN_OPTS=",
         'build': "mvn dependency:list -DexcludeTransitive; mvn clean compile",
         'test' : "mvn test -fn",
+        'install': "",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "pom.xml",
@@ -346,9 +371,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "C++",
         'grep build': "",
         'grep test': "make check",
+        'grep install': "",
         'grep env': "CXXFLAGS=",
         'build': "cmake . ; if [ -x configure ]; then ./configure; fi; make",
         'test' : "make test",
+        'install': "",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "CMakeLists.txt",
@@ -360,9 +387,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "C++",
         'grep build': "",
         'grep test': "",
+        'grep install': "",
         'grep env': "CXXFLAGS=",
         'build': "scons all",
         'test' : "scons test",
+        'install': "",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "SConstruct ",
@@ -374,9 +403,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': "Scala",
         'grep build': "",
         'grep test': "",
+        'grep install': "",
         'grep env': "",
         'build': "sbt clean compile",
         'test' : "sbt test",
+        'install': "",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "build.sbt ",
@@ -388,9 +419,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': repo.language,
         'grep build': "",
         'grep test': "make check",
+        'grep install': "",
         'grep env': "CFLAGS=",
         'build': "if [ -x configure ]; then ./configure; fi; make",
         'test' : "make test",
+        'install' : "make install >> install_result.arti 2>&1",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "Makefile",
@@ -402,9 +435,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': repo.language,
         'grep build': "",
         'grep test': "make check",
+        'grep install': "",
         'grep env': "CFLAGS=",
         'build': "if [ -x bootstrap.sh ]; then ./bootstrap.sh; elif [ -x autogen.sh ]; then ./autogen.sh; fi; if [ -x configure ]; then ./configure; fi; make",
         'test' : "make test",
+        'install': "",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "bootstrap.sh or autogen.sh",
@@ -421,9 +456,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': repo.language,
         'grep build': "",
         'grep test': "",
+        'grep install': "",
         'grep env': "",
         'build': "",
         'test' : "",
+        'install': "",
         'env' : "",
         'artifacts': "*.arti",
         'reason': ".travis.yml",
@@ -435,9 +472,11 @@ def inferBuildSteps(listing, repo):
         'primary lang': repo.language,
         'grep build': "build.sh",
         'grep test': "build.sh check",
+        'grep install': "",
         'grep env': "",
         'build': "./build.sh",
         'test' : "./build.sh",
+        'install': "",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "build.sh",
@@ -531,11 +570,14 @@ def inferBuildSteps(listing, repo):
             build_info['buildOptions'].append(lang['build'])
         if lang['test']:
             build_info['testOptions'].append(lang['test'])
+        if lang['install']:
+            build_info['installOptions'].append(lang['install'])
         if lang['env']:
             build_info['envOptions'].append(lang['env'])
         build_info['reason'] = lang['reason']
         build_info['primaryLang'] = lang['primary lang']
 
+    # Check the last element added to the langlist for readme/other important file info
     lang = langlist[-1]
     if lang['build']:
         build_info['buildSystem'] = lang['build system']
@@ -554,6 +596,11 @@ def inferBuildSteps(listing, repo):
                         strFound = buildFilesParser(readmeStr, cmd, delim)
                         if strFound:
                             build_info['buildOptions'].append(strFound)
+                    cmd = lang['grep install']
+                    if cmd and cmd.find('$') == -1:
+                        strFound = buildFilesParser(readmeStr, cmd, delim)
+                        if strFound:
+                            build_info['installOptions'].append(strFound)
                     env = lang['grep env']
                     if env:
                         # Look first for 'VAR="' form. eg. VAR="string"
@@ -589,6 +636,14 @@ def inferBuildSteps(listing, repo):
                     build_info['testOptions'].insert(len(build_info), '[TextAnalytics]' + command)
                 else:
                     build_info['testOptions'].insert(0, '[TextAnalytics]' + command)
+            # Add install commands extracted using text analytics
+            command = text_analytics_cmds(repo.name, repo.language, grepstack, 'install')
+            logger.debug("inferBuildSteps, text_analytics test cmd=%s" % command)
+            if command:
+                if globals.useTextAnalytics:
+                    build_info['installOptions'].insert(len(build_info), '[TextAnalytics]' + command)
+                else:
+                    build_info['installOptions'].insert(0, '[TextAnalytics]' + command)
 
     # Make the build, test, and env options of the last added element the default options
     # as those are the most likely to be correct
@@ -597,6 +652,8 @@ def inferBuildSteps(listing, repo):
         build_info['selectedBuild'] = build_info['buildOptions'][-1]
         if build_info['testOptions']:
             build_info['selectedTest'] = build_info['testOptions'][-1]
+        if build_info['installOptions']:
+            build_info['selectedInstall'] = build_info['installOptions'][-1]
         if build_info['envOptions']:
             build_info['selectedEnv'] = build_info['envOptions'][-1]
 
