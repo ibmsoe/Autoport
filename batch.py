@@ -387,6 +387,11 @@ class Batch:
                 package['build']['selectedTest'] = ""
 
             try:
+                selectedInstall = package['build']['selectedInstall']
+            except KeyError:
+                package['build']['selectedInstall'] = ""
+
+            try:
                 selectedEnv = package['build']['selectedEnv']
             except KeyError:
                 package['build']['selectedEnv'] = ""
@@ -400,6 +405,12 @@ class Batch:
                 primaryLang = package['build']['primaryLang']
             except KeyError:
                 package['build']['primaryLang'] = ""
+
+            try:
+                repo = globals.cache.getRepo(int(idStr))
+                package['build']['owner_url'] = repo.owner.html_url
+            except Exception as e:
+                package['build']['owner_url'] = ""
 
         return { "status": "ok", "fileBuf": fileBuf }
 
@@ -490,8 +501,8 @@ class Batch:
 
     # Archive Batch Reports Data to GSA
     def archiveBatchReports(self, report):
-        batchReportDir = globals.pathForBatchTestResults + os.path.basename(os.path.dirname(report)) 
-        batchReportName = os.path.basename(report) 
+        batchReportDir = globals.pathForBatchTestResults + os.path.basename(os.path.dirname(report))
+        batchReportName = os.path.basename(report)
         logger.debug("In archiveBatchReports, report=%s batchReportDir=%s batchreportName=%s"
                      % (str(report), batchReportDir, batchReportName))
         try:
@@ -618,3 +629,30 @@ class Batch:
         final_response["left_arch"] = leftArch
         final_response["right_arch"] = rightArch
         return final_response
+
+    # Updates local batch file or archived.
+    # If batch file exists in local / archive already this will overwrite it.
+    def updateBatchFile(self, filePath, fileContent, location):
+        logger.info("In updateBatchFile: filename = %s," + str(filePath))
+        if location=="local":
+            try:
+                batch_detail_file = open(filePath, 'w')
+                batch_detail_file.write(fileContent)
+            except Exception as e:
+                logger.debug("updateBatchFile: Error %s" % str(e))
+                assert(False), str(e)
+            finally:
+                if isinstance(batch_detail_file, file):
+                    batch_detail_file.close();
+        elif location=="gsa":
+            try:
+                filePath = globals.pathForBatchFiles + ntpath.basename(filePath)
+                f = self.ftp_client.open(filePath, 'w')
+                f.write(fileContent)
+            except Exception as e:
+                logger.debug("updateBatchFile: Error %s" % str(e))
+                assert(False), str(e)
+            finally:
+                if isinstance(f, file):
+                    f.close();
+

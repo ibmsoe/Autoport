@@ -687,11 +687,38 @@ def uploadBatchFile():
 
     return json.jsonify(status="ok")
 
+@app.route("/autoport/updateBatchFile", methods=['GET', 'POST'])
+def updateBatchFile():
+
+    # Batch name
+    try:
+        openPath = request.form["name"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing file path"), 400
+
+    # Batch name
+    try:
+        location = request.form["location"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing file location"), 400
+
+    # Batch File content
+    try:
+        fileStr = request.form["file"]
+    except KeyError:
+        return json.jsonify(status="failure", error="missing file data"), 404
+
+    try:
+        batch.updateBatchFile(openPath, fileStr, location)
+    except Exception as e:
+        logger.debug("UpdateBatchFile : error = %s," %str(e))
+        return json.jsonify(status="failure", error=str(e)), 400
+
+    return json.jsonify(status="ok")
+
 # Common routine for createJob and runBatchJob
 def createJob_common(time, uid, id, tag, node, javaType, javaScriptType,
-                     selectedBuild, selectedTest, selectedEnv, artifacts, primaryLang):
-
-    # TODO: Need to add to JavaScript to batch file config
+                     selectedBuild, selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang):
 
     # Get repository
     repo = globals.cache.getRepo(id)
@@ -763,7 +790,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType,
     testCmd = selectedTest
 
     # This is the install shell script that is invoked on the build slave
-    installCmd = ""                      # TODO: implement packaging and dependency resolution in batch files
+    installCmd = selectedInstall
 
     # TODO: add support for a list of comma separated environment variables.  Today accepts one environment var
     xml_env_command.text = selectedEnv
@@ -877,6 +904,7 @@ def createJob(i_id = None,
               i_javaScriptType = None,
               i_selectedBuild = None,
               i_selectedTest = None,
+              i_selectedInstall = None,
               i_selectedEnv = None,
               i_artifacts = None,
               i_primaryLang = None,
@@ -959,6 +987,13 @@ def createJob(i_id = None,
             selectedTest = i_selectedTest
         else:
             return json.jsonify(status="failure", error="missing selected test command"), 400
+    try:
+        selectedInstall =  request.form["selectedInstall"]
+    except KeyError:
+        if i_selectedInstall != None:
+            selectedInstall = i_selectedInstall
+        else:
+            selectedInstall = ""
 
     # Get environment info
     try:
@@ -987,8 +1022,8 @@ def createJob(i_id = None,
         else:
             return json.jsonify(status="failure", error="missing primary language"), 400
 
-    rc = createJob_common(localtime(), uid, id, tag, node, javaType, javaScriptType,
-                          selectedBuild, selectedTest, selectedEnv, artifacts, primaryLang)
+    rc = createJob_common(localtime(), uid, id, tag, node, javaType, javaScriptType, selectedBuild,
+                          selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang)
 
     try:
         rcstatus = rc['status']
@@ -1158,6 +1193,8 @@ def runBatchFile ():
             javaType = "/etc/profile.d/ibm-java.sh"
 
         javaScriptType = ""
+        if fileBuf['config']['javaScriptType'] == "IBM SDK for Node.js":
+            javaType = "/etc/profile.d/ibm-nodejs.sh"
 
         logger.debug("runBatchFile, javaType=%s node=%s" % (javaType, node))
 
@@ -1191,6 +1228,12 @@ def runBatchFile ():
             if selectedBuild == "":
                 continue
 
+            if 'includeTestCmds' in fileBuf['config'] and fileBuf['config']['includeTestCmds'] == 'False':
+                package['build']['selectedTest'] = ""
+
+            if 'includeInstallCmds' in fileBuf['config'] and fileBuf['config']['includeInstallCmds'] == 'False':
+                package['build']['selectedInstall'] = ""
+
             createJob_results = createJob_common(localtime(),
                       uid,
                       package['id'],
@@ -1200,6 +1243,7 @@ def runBatchFile ():
                       javaScriptType,
                       package['build']['selectedBuild'],
                       package['build']['selectedTest'],
+                      package['build']['selectedInstall'],
                       package['build']['selectedEnv'],
                       package['build']['artifacts'],
                       package['build']['primaryLang'])
