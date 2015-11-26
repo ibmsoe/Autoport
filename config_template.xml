@@ -128,7 +128,8 @@
                      mkdir .autoport-scratch
                  fi
                  echo &quot;*&quot; &gt; .autoport-scratch/.gitignore
-                 echo $META_CONTENTS &gt; .autoport-scratch/$META_NAME</command>
+                 echo $META_CONTENTS &gt; .autoport-scratch/$META_NAME
+                 env</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash

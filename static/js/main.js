@@ -2821,7 +2821,7 @@ function addToJenkinsCallback(data) {
         // Open new windows with the jobs' home pages
         window.open(data.hjobUrl,'_blank');
         percentageState.updateProgressBar();
-        showAlert("Batch job submitted");
+        showAlert("Build job submitted");
     } else {
         showAlert("Bad response from /createJob!", data);
     }
