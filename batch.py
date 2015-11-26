@@ -288,12 +288,21 @@ class Batch:
 
         try:
             env = fileBuf['config']['java']
-            if env == "ibm":
+            if env == "IBM Java":
                 environment = "IBM Java"
             else:
                 environment = "OpenJDK"
         except KeyError:
             environment = "OpenJDK"
+
+        try:
+            env = fileBuf['config']['javascript']
+            if env == "IBM SDK for Node.js":
+                environment = environment + " / IBM SDK for Node.js"
+            else:
+                environment = environment + " / Node.js"
+        except KeyError:
+            environment = environment + " / Node.js"
 
         try:
             owner = fileBuf['config']['owner']
@@ -348,7 +357,15 @@ class Batch:
         except KeyError:
             fileBuf['config']['java'] = "OpenJDK"
 
+        try:
+            env = fileBuf['config']['javascript']
+            if env == "":
+                fileBuf['config']['java'] = "Node.js"
+        except KeyError:
+            fileBuf['config']['java'] = "Node.js"
+
         logger.debug("parseBatchFile: file['config']['java']=%s" % fileBuf['config']['java'])
+        logger.debug("parseBatchFile: file['config']['javascript']=%s" % fileBuf['config']['javascript'])
 
         for package in fileBuf['packages']:
             try:

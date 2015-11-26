@@ -304,7 +304,7 @@ def inferBuildSteps(listing, repo):
         'grep test': "",
         'grep install': "",
         'grep env': "",
-        'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -e build.gradle ]; then gradle -q build; fi",
+        'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -x gradlew ]; then ./gradlew build; elif [ -e build.gradle ]; then gradle -q build; fi",
         'test': "if [ -e pom.xml ]; then mvn test -fn; elif [ -e build.xml ]; then ant test; elif [ -e build.gradle ]; then gradle -q test; fi",
         'install':"",
         'env' : "",
@@ -320,7 +320,7 @@ def inferBuildSteps(listing, repo):
         'grep test': "",
         'grep install': "",
         'grep env': "",
-        'build': "if [ -e sbt ]; then chmod a+x ./sbt; ./sbt clean compile; elif [ -e build.gradle ]; then gradle -q; fi",
+        'build': "if [ -e sbt ]; then chmod a+x ./sbt; ./sbt clean compile; elif [ -x gradlew ]; then ./gradlew build; elif [ -e build.gradle ]; then gradle -q build; fi",
         'test': "if [ -e sbt ]; then ./sbt test; elif [ -e build.gradle ]; then gradle -q test; fi",
         'install': "",
         'env' : "",
@@ -628,7 +628,7 @@ def inferBuildSteps(listing, repo):
                 else:
                     build_info['buildOptions'].insert(0, '[TextAnalytics]' + command)
 
-            # Add build commands extracted using text analytics
+            # Add test commands extracted using text analytics
             command = text_analytics_cmds(repo.name, repo.language, grepstack, 'test')
             logger.debug("inferBuildSteps, text_analytics test cmd=%s" % command)
             if command:
@@ -638,7 +638,7 @@ def inferBuildSteps(listing, repo):
                     build_info['testOptions'].insert(0, '[TextAnalytics]' + command)
             # Add install commands extracted using text analytics
             command = text_analytics_cmds(repo.name, repo.language, grepstack, 'install')
-            logger.debug("inferBuildSteps, text_analytics test cmd=%s" % command)
+            logger.debug("inferBuildSteps, text_analytics install cmd=%s" % command)
             if command:
                 if globals.useTextAnalytics:
                     build_info['installOptions'].insert(len(build_info), '[TextAnalytics]' + command)

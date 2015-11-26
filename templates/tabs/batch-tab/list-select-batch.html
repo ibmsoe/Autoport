@@ -145,6 +145,7 @@
           <th>File name</th>
           <th>Owner</th>
           <th>Java</th>
+          <th>JavaScript</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -158,6 +159,9 @@
           </td>
           <td>
             { batchState.batchFile.config.java }
+          </td>
+          <td>
+            { batchState.batchFile.config.javascript }
           </td>
           <td class="col-lg-2">
             <button class="btn btn-primary modalButtonLeft" data-toggle="modal" data-target="#settingsBatchModal">
@@ -232,7 +236,7 @@
                     </ul>
                   </div>
                   <div class="col-md-3 btn-group">
-                      <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { batchState.batchFile.config.javaScriptType } <span class="caret"></span></button>
+                      <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use {batchState.batchFile.config.javascript}<span class="caret"></span></button>
                     <ul class="dropdown-menu">
                       <li rv-on-click="batchState.selectNodeJsType"><a>Node.js</a></li>
                       <li rv-on-click="batchState.selectNodeJsType"><a>IBM SDK for Node.js</a></li>

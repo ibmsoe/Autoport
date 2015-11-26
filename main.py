@@ -1193,10 +1193,10 @@ def runBatchFile ():
             javaType = "/etc/profile.d/ibm-java.sh"
 
         javaScriptType = ""
-        if fileBuf['config']['javaScriptType'] == "IBM SDK for Node.js":
-            javaType = "/etc/profile.d/ibm-nodejs.sh"
+        if fileBuf['config']['javascript'] == "IBM SDK for Node.js":
+            javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
 
-        logger.debug("runBatchFile, javaType=%s node=%s" % (javaType, node))
+        logger.debug("runBatchFile, javaType=%s javaScriptType=%s node=%s" % (javaType, javaScriptType, node))
 
         # Create batch results template, stores list of job names associated with batch file
         # Create a folder of format  <batch_name>.<uuid>

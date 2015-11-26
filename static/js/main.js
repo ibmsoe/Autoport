@@ -134,7 +134,8 @@ var searchState = {
                 config: {
                     name : "",
                     owner : "",
-                    java : ""
+                    java : "",
+                    javascript : ""
                 },
                 packages: []
             },
@@ -167,7 +168,8 @@ var searchState = {
                 }
                 searchState.single.batchFile.config.includeTestCmds = "True";
                 searchState.single.batchFile.config.includeInstallCmds = "False";
-                searchState.single.batchFile.config.javaScriptType = "Node.js";
+                searchState.single.batchFile.config.java = detailState.javaType;
+                searchState.single.batchFile.config.javascript = detailState.javaScriptType;
                 var name = searchState.single.batchFile.config.name;
                 var file = JSON.stringify(batchState.convertToExternal(searchState.single.batchFile),
                     undefined, 2);
@@ -193,7 +195,8 @@ var searchState = {
                   config: {
                       name : "",
                       owner : "",
-                      java : ""
+                      java : "",
+                      javascript : ""
                   },
                   packages: []
               },
@@ -232,9 +235,10 @@ var searchState = {
                           "-" + String(searchState.multiple.batchFile.packages.length);
                   }
                   var name = searchState.multiple.batchFile.config.name;
-                  searchState.multiple.batchFile.config.javaScriptType = "Node.js";
                   searchState.multiple.batchFile.config.includeTestCmds = "True";
-                  searchState.single.batchFile.config.includeInstallCmds = "False";
+                  searchState.multiple.batchFile.config.includeInstallCmds = "False";
+                  searchState.multiple.batchFile.config.java = detailState.generateJavaType;
+                  searchState.multiple.batchFile.config.javascript = detailState.generateJavaScriptType;
                   var file = JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
                       undefined, 2);
                   $.post("uploadBatchFile", {name: name, file: file},
@@ -283,7 +287,7 @@ function clearBatchFile(batchfile) {
         searchState.single.batchFile.config.name = "";
         searchState.single.batchFile.config.owner = "";
         searchState.single.batchFile.config.java = "";
-        searchState.single.batchFile.config.javaScriptType = "Node.js";
+        searchState.single.batchFile.config.javascript = "";
         searchState.single.batchFile.packages = [];
         searchState.single.exportReady = false;
         searchState.single.ready = false;
@@ -291,7 +295,7 @@ function clearBatchFile(batchfile) {
         searchState.multiple.batchFile.config.name = "";
         searchState.multiple.batchFile.config.owner = "";
         searchState.multiple.batchFile.config.java = "";
-        searchState.single.batchFile.config.javaScriptType = "Node.js";
+        searchState.single.batchFile.config.javascript = "";
         searchState.multiple.batchFile.packages = [];
         searchState.multiple.exportReady = false;
         searchState.multiple.ready = false;
@@ -373,11 +377,11 @@ var batchState = {
         var batchObj = $('#batchListSelectTable').bootstrapTable('getSelections')[0];
         batchState.saveBatchFileName = $("#saveBatchFileFilter").val();
         batchState.batchFile.config.name = batchState.saveBatchFileName;
-        if(batchState.saveBatchFileName == batchObj.name){
+        if (batchState.saveBatchFileName == batchObj.name){
             var file = JSON.stringify(batchState.batchFile, undefined, 2);
             $.post("updateBatchFile", {name: batchObj.filename, file: file, location:batchObj.location},
                batchSaveCallback, "json").fail(uploadBatchFileCallback);
-        } else{
+        } else {
             var file = JSON.stringify(batchState.batchFile, undefined, 2);
             $.post("uploadBatchFile", {name: batchState.saveBatchFileName, file: file},
                batchSaveCallback, "json").fail(uploadBatchFileCallback);
@@ -394,7 +398,7 @@ var batchState = {
         if (config['java'] === "IBM Java")
             javaType = "/etc/profile.d/ibm-java.sh"
 
-        if (config['javaScriptType'] === "IBM SDK for Node.js")
+        if (config['javascript'] === "IBM SDK for Node.js")
             javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
 
         packages = batchState.batchFile.packages;
@@ -407,11 +411,11 @@ var batchState = {
                 if (build.selectedBuild === "")
                     continue;
                 var testCommand = "";
-                if(batchState.batchFile.config.includeTestCmds == "True"){
+                if (batchState.batchFile.config.includeTestCmds == "True") {
                	    testCommand = build.selectedTest;
                 }
                 var installCommand = "";
-                if(batchState.batchFile.config.includeInstallCmds == "True"){
+                if (batchState.batchFile.config.includeInstallCmds == "True") {
                	    installCommand = build.selectedInstall;
                 }
 
@@ -426,10 +430,11 @@ var batchState = {
     selectNodeJsType: function(ev, el) {
         var selection = $(ev.target).text().toLowerCase();
         if (selection === "ibm sdk for node.js") {
-            batchState.batchFile.config.javaScriptType = "IBM SDK for Node.js";
-        }else if(selection === "node.js"){
-            batchState.batchFile.config.javaScriptType = "Node.js";
+            batchState.batchFile.config.javascript = "IBM SDK for Node.js";
+        } else if (selection === "node.js"){
+            batchState.batchFile.config.javascript = "Node.js";
         }
+        console.log("selectNodeJsType: setting javascript=", batchState.batchFile.config.javascript)
     },
     selectJavaType: function(ev, el) {
         var selection = $(ev.target).text().toLowerCase();
@@ -439,6 +444,7 @@ var batchState = {
         else if (selection === "ibm java") {
             batchState.batchFile.config.java = "IBM Java";
         }
+        console.log("selectJavaType: setting java=", batchState.batchFile.config.java)
     },
     updateEnviron: function(ev, el) {
         $("#batchCommandsTableContanier").hide();
@@ -448,7 +454,7 @@ var batchState = {
     },
     resetEnviron: function(ev, el) {
         batchState.batchFile.config.java = batchState.javaType;
-        batchState.batchFile.config.javaScriptType = "Node.js";
+        batchState.batchFile.config.javascript = batchState.javaScriptType;
         $.getJSON("parseBatchFile",
             {
                 batchName: batchState.selectedBatchFile.filename
@@ -2506,7 +2512,7 @@ function showDetail(data) {
                 var el = $("#generateBuildServers")[0];
                 var buildServers = getSelectedValues(el);
 
-                for(var i=0; i < buildServers.length; i++) {
+                for (var i=0; i < buildServers.length; i++) {
                     $.post("createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion,
                            javaType: detailState.generateJavaTypeOptions, javaScriptType: detailState.generateJavaScriptTypeOptions,
                            node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest,
@@ -2680,12 +2686,7 @@ function parseBatchFileCallback(data, batch_obj){
         batch_obj.batchFile = data.results;
         batch_obj.saveBatchFileName = data.results.config.name;
         batch_obj.javaType = data.results.config.java;
-
-        if(data.results.config.javascript!=undefined && data.results.config.javascript!=""){
-            batchState.batchFile.config.javaScriptType = data.results.config.javascript;
-        }else {
-            batchState.batchFile.config.javaScriptType = "Node.js";
-        }
+        batch_obj.javaScriptType = data.results.config.javascript;
 
         $("#batchSettingsInstallCkBox").attr('checked', false);
         $("#batchSettingsTestCkBox").attr('checked', true);
