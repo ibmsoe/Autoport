@@ -123,7 +123,6 @@ def getJenkinsNodes():
 
 # Get O/S details for build servers including distribution, release, version, hostname, ...
 # Don't fail as a lot of func is still possible.  Nodes may go offline at any time.
-# TODO - Run with threads in parallel synchronously as caller requires data
 
 def getJenkinsNodeDetails_init():
 
@@ -367,7 +366,6 @@ def search():
 
     try:
         if not repos or repos.totalCount == 0:
-            # TODO - return no results page
             return json.jsonify(status="failure", error="no results"), 418
     except Exception as e:
         return json.jsonify(status="failure", error="Could not contact github!")
@@ -716,9 +714,41 @@ def updateBatchFile():
 
     return json.jsonify(status="ok")
 
+def convertEnv(selectedEnv):
+    # Two types of environment variables: quoted and non-quoted. eg. {N="x", N='x'} and N=n
+
+    if not selectedEnv:
+        return selectedEnv
+
+    # Split by all whitespace, blanks, tabs, and newlines
+    selectedEnv=selectedEnv.split()
+
+    # Splits too much.  We don't want to split by embedded blanks and tabs if var is quoted
+    quoteType = ""
+    new=[]
+    for subString in selectedEnv:
+        if '="' in subString:                                   # Start of quoted variable
+             quoteType = '"'
+             combine = subString
+        elif "='" in subString:                                 # Start of quoted variable
+             quoteType = "'"
+             combine = subString
+        elif quoteType and quoteType in subString[-1]:          # End of quoted variable
+             new.append(combine + ' ' + subString)
+             quoteType = ""
+        elif quoteType:                                         # Mid of quoted variable
+             combine = combine + ' ' + subString
+        else:                                                   # not a quoted variable
+             new.append(subString)
+    new = "\n".join(new)
+
+    logger.debug("convertEnv: env=%s" % new)
+
+    return new
+
 # Common routine for createJob and runBatchJob
-def createJob_common(time, uid, id, tag, node, javaType, javaScriptType,
-                     selectedBuild, selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang):
+def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selectedBuild,
+                     selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang):
 
     # Get repository
     repo = globals.cache.getRepo(id)
@@ -792,23 +822,23 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType,
     # This is the install shell script that is invoked on the build slave
     installCmd = selectedInstall
 
-    # TODO: add support for a list of comma separated environment variables.  Today accepts one environment var
-    xml_env_command.text = selectedEnv
+    # Add environment variables deduced from readme files or provided by user
+    xml_env_command.text = convertEnv(selectedEnv)
 
     # Job metadata as passed to jenkins
     jobMetadataName = "meta.arti"
     jobMetadata = "{ \"Package\": \"" + jobName + "\",\
-                     \"Version\": \"" + tag + "\",\
-                     \"Primary Language\": \"" + primaryLang + "\",\
-                     \"Environment\": \"" + selectedEnv.replace('"', "'") + "\",\
-                     \"Build Command\": \"" + buildCmd + "\",\
-                     \"Test Command\": \"" + testCmd + "\",\
-                     \"Install Command\": \"" + installCmd + "\",\
-                     \"Architecture\": \"" + node + "\",\
-                     \"Hostname\": \"" + hostName + "\",\
-                     \"Ipaddr\": \"" + ipAddr + "\",\
-                     \"OS\": \"" + osDesc + "\",\
-                     \"Date\": \"" + timestr + "\" }"
+        \"Version\": \"" + tag + "\",\
+        \"Primary Language\": \"" + primaryLang + "\",\
+        \"Environment\": \"" + selectedEnv.replace('"', "'") + "\",\
+        \"Build Command\": \"" + buildCmd + "\",\
+        \"Test Command\": \"" + testCmd + "\",\
+        \"Install Command\": \"" + installCmd + "\",\
+        \"Architecture\": \"" + node + "\",\
+        \"Hostname\": \"" + hostName + "\",\
+        \"Ipaddr\": \"" + ipAddr + "\",\
+        \"OS\": \"" + osDesc + "\",\
+        \"Date\": \"" + timestr + "\" }"
 
     # add parameters information
     i = 1
@@ -895,7 +925,6 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType,
 # Create Job - takes a repo id, repo tag, and build node and creates a Jenkins job for it
 # Opens a new tab with a new jenkins job URL on the client side on success,
 # while the current tab stays in the same place.
-# TODO - If job is started through batch file can't select options currently
 @app.route("/autoport/createJob", methods=['GET', 'POST'])
 def createJob(i_id = None,
               i_tag = None,
@@ -913,7 +942,6 @@ def createJob(i_id = None,
     # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
     # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one
     # is found. This should be an extremely rare occurence.
-    # TODO - check to see if job already exists
     uid = randint(globals.minRandom, globals.maxRandom)
 
     # Ensure we have a valid id number as a post argument
@@ -1091,9 +1119,6 @@ def moveArtifacts(jobName, localDir, moverCv=None):
             # If we delete each job after each run, we only care about
             # this first build.  Else we need to parse nextBuildNumber
             # in the parent directory to get build number.
-            #
-            # TODO - Delete Job.  At present, we are producing a unique
-            # name so it is always build 1
             if "1" in flist:
                 artifactsPath = artifactsPath + "1/"
                 mover.chdir(artifactsPath)
@@ -1150,7 +1175,6 @@ def moveArtifacts(jobName, localDir, moverCv=None):
     return outDir
 
 # Run Batch File - takes a batch file name and runs it
-# TODO - fix to provide support for multiple build servers instead of just x86 vs ppcle
 @app.route("/autoport/runBatchFile", methods=["GET", "POST"])
 def runBatchFile ():
     # Get the batch file name from POST
@@ -2252,7 +2276,6 @@ def monitorChefJobs(jobName, sync=False):
     logfile.close()
 
     if jobStatus == 'SUCCESS':
-        # TODO: Delete the build
         if sync == True:
             return "SUCCESS"
     else:

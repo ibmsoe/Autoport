@@ -163,7 +163,7 @@
           <h3>Build steps</h3>
           <small>
             The default options were inferred based on the existence of
-            <strong rv-text="detailState.generateRepo.build.reason"></strong>. When modifying build/test/env options ensure commands/variables are semicolon delimited.
+            <strong rv-text="detailState.generateRepo.build.reason"></strong>. When modifying build and test options ensure commands are semicolon delimited.
           </small>
           <br />
           <div class="dropdown">
@@ -192,6 +192,7 @@
               rv-value="detailState.generateRepo.build.selectedTest | cleanOptionsOutput"/>
           </div>
           <br />
+          <small>Environment variables separated by blanks or newlines applied as-is.</small>
           <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" data-toggle="dropdown">
               Select environment options
@@ -201,8 +202,10 @@
               <li role="presentation" rv-each-tag="detailState.generateRepo.build.envOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeEnvOptions">{ tag }</a></li>
             </ul>
             <br />
-            <input id="generateSelectedEnv" type="text" class="form-control"
-              rv-value="detailState.generateRepo.build.selectedEnv | cleanOptionsOutput"/>
+            <div class="form-group">
+              <textarea id="generateSelectedEnv" class="form-control" rows="1"
+                rv-value="detailState.generateRepo.build.selectedEnv | cleanOptionsOutput"></textarea>
+            </div>
           </div>
         </span>
         <a class="backToResults" rv-hide="detailState.autoSelected" rv-on-click="detailState.backToResults">
