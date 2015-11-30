@@ -171,12 +171,31 @@
           </table>
         </div>
       </div>
-      <a class="backToResults" rv-on-click="projectReportState.backToList">
-        <button type="button" class="btn btn-info">
-        <span class="glyphicon glyphicon-chevron-left"></span>
-        Back to list
-        </button>
-      </a>
+      <br />
+        <div class="row">
+          <div class="col-md-8">
+             <a class="backToResults" rv-on-click="projectReportState.backToList">
+             <button type="button" class="btn btn-info">
+                 <span class="glyphicon glyphicon-chevron-left"></span>
+                 Back to list
+             </button>
+            </a>
+          </div>
+          <div class="col-md-2">
+              <a rv-on-click="projectReportState.compareLogs">
+                   <button type="button" class="btn btn-primary buttonLeft" id="viewBuildLogBtn">
+                   View Build Log
+                  </button>
+              </a>
+          </div>
+          <div class="col-md-2">
+              <a rv-on-click="projectReportState.compareLogs">
+                <button type="button" class="btn btn-primary buttonLeft" id="viewTestLogBtn">
+                 View Test Log
+               </button>
+              </a>
+           </div>
+      </div>
     </div>
 
   </div>

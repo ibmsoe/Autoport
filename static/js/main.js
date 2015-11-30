@@ -413,11 +413,11 @@ var batchState = {
                     continue;
                 var testCommand = "";
                 if (batchState.batchFile.config.includeTestCmds == "True") {
-               	    testCommand = build.selectedTest;
+                    testCommand = build.selectedTest;
                 }
                 var installCommand = "";
                 if (batchState.batchFile.config.includeInstallCmds == "True") {
-               	    installCommand = build.selectedInstall;
+                    installCommand = build.selectedInstall;
                 }
 
                 $.post("createJob", {id: package.id, tag: packages.tag, javaType: javaType, javaScriptType: javaScriptType,
@@ -1521,6 +1521,7 @@ var projectReportState = {
     projects: [],
     projectsTable: null,
     prjTableReady: false,
+    prjCompareSingle: false,
     testHistory: function() { // TODO single project or multiple?
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
         var sel = [];
@@ -1591,22 +1592,54 @@ var projectReportState = {
             $('#resultCompareSelectionAlert').modal();
         }
     },
-    compareLogs: function(ev) {
+    compareLogs: function(ev,item) {
         var logFile = "test_result.arti"
         var buttonID = $(ev.target).attr('id');
-        if (buttonID === "compareBuildLogsBtn")
+        if (buttonID === "compareBuildLogsBtn" || buttonID === "viewBuildLogBtn")
             logFile = "build_result.arti"
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+        projectReportState.selectedProjects = selectedProjects;
+        projectReportState.modalHeader = "Log Compare Results";
         var sel = [];
+        var selectedIndex = 0;
+        var fireCall = false;
+        var  searchByfullname = false;
         for (var i = 0; i < selectedProjects.length; i++){
             sel[i] = selectedProjects[i].fullName;
+            selectedProjects[i].selected = false;
+            if (buttonID === "viewBuildLogBtn" || buttonID === "viewTestLogBtn" )
+                selectedProjects[i].logfile = logFile;
+            if (item.project && item.project.fullName) {
+                if (selectedProjects[i].fullName == item.project.fullName) {
+                    selectedIndex = i;
+                    searchByfullname = true;
+                    item.project.selected = true;
+                    logFile = item.project.logfile;
+                }
+            }
+            else {
+                selectedProjects[0].selected = true;
+            }
         }
-        if (sel.length === 2) {
+        if (buttonID === "viewBuildLogBtn" || buttonID === "viewTestLogBtn" || searchByfullname) {
+            var leftProject = sel[selectedIndex];
+            var rightProject = sel[selectedIndex];
+            var leftRepo = selectedProjects[selectedIndex].repository;
+            var rightRepo = selectedProjects[selectedIndex].repository;
+            fireCall = true;
+            projectReportState.prjCompareSingle = true;
+            projectReportState.modalHeader = "Log Results";
+        }
+        else if (sel.length === 2) {
             var leftProject = sel[0];
             var rightProject = sel[1];
             var leftRepo = selectedProjects[0].repository;
             var rightRepo = selectedProjects[1].repository;
-            //TODO - add loading bar
+            fireCall = true;
+            projectReportState.prjCompareSingle = false;
+            projectReportState.modalHeader = "Log Compare Results";
+        }
+        if (fireCall) {
             projectReportState.prjCompareReady = false;
             projectReportState.prjTableReady = false;
             projectReportState.loadingState.diffLoading = true;
@@ -1957,23 +1990,30 @@ function processLogCompareResults(data) {
     } else {
         var left = data.leftCol;
         var right = data.rightCol;
+
         var headerContent = "<table id=\"logdiffHeader\" >" +
                                  "<th style=\"border:none\">" +
                                       left['log'] + "<br />" +
                                       "[" + left['repo'] + "] " + left['job'] + "<br />" +
                                       left['pkgname'] + "-" + left['pkgver'] + "<br />" +
                                       left['distro'] +
-                                 "</th>" +
-                                 "<th style=\"border:none\">" +
+                                 "</th>" ;
+        if (!projectReportState.prjCompareSingle) {
+            headerContent+= "<th style=\"border:none\">" +
                                       right['log'] + "<br />" +
                                       "[" + right['repo'] + "] " + right['job'] + "<br />" +
                                       right['pkgname'] + "-" + right['pkgver'] + "<br />" +
                                       right['distro'] +
-                                 "</th>" +
-                            "</table>";
+                                 "</th>";
+        }
+
+        headerContent+="</table>";
         $("#logdiffHeader").html(headerContent);
         $("#leftdiff").html(data.results['diff'][left['diffName']]);
-        $("#rightdiff").html(data.results['diff'][right['diffName']]);
+        if (!projectReportState.prjCompareSingle){
+            $("#rightdiff").html(data.results['diff'][right['diffName']]);
+        }
+        projectReportState.diffClass = !projectReportState.prjCompareSingle;
 
         $('#logdiffModal').on('show.bs.modal', function() {
             $('#leftdiff span, #rightdiff span').each(function(index) {

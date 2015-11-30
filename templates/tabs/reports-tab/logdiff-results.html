@@ -2,20 +2,29 @@
   <div class="modal-dialog" style="width: auto;">
     <div class="modal-content">
       <div class="modal-header">
-        <h4 class="modal-title" id="modalLabel">Log Compare Results</h4>
+        <h4 class="modal-title" id="modalLabel">{projectReportState.modalHeader}</h4>
       </div>
-      <div class="modal-body">
+      <div class="row">
+      <div class="col-md-2 modal-body" rv-show="projectReportState.prjCompareSingle">
+          <ul  class="nav nav-pills nav-stacked">
+              <li  rv-each-project="projectReportState.selectedProjects"  rv-class-active="project.selected">
+                  <a rv-on-click="projectReportState.compareLogs">{ project.name } - { project.os }</a>
+              </li>
+          </ul>
+       </div>
+
+      <div class="modal-body" rv-class-col-md-10="projectReportState.prjCompareSingle">
         <div class="attributes modalAttributes">
         <span class="panel panel-primary">
         <div class="panel-heading"><span id="logdiffHeader"></span></div>
         <div class="diffrow">
-            <div class="diffcol">
+            <div rv-class-nodiffcol="projectReportState.prjCompareSingle"  rv-class-diffcol="projectReportState.diffClass">
                 <div id="leftres" style="height: 540px; border: 1px solid #ccc; overflow:scroll;"
                      onscroll="document.getElementById('rightres').scrollTop = this.scrollTop; document.getElementById('rightres').scrollLeft = this.scrollLeft;">
                     <span id="leftdiff"></span>
                 </div>
             </div>
-            <div class="diffcol">
+            <div class="diffcol" rv-hide="projectReportState.prjCompareSingle">
                 <div id="rightres" style="height: 540px; border: 1px solid #ccc; overflow:scroll;"
                      onscroll="document.getElementById('leftres').scrollTop = this.scrollTop; document.getElementById('leftres').scrollLeft = this.scrollLeft;">
                     <span id="rightdiff"></span>
@@ -25,6 +34,8 @@
         </span>
         </div>
       </div>
+  </div>
+
       <div class="modal-footer">
         <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
       </div>

@@ -293,6 +293,12 @@ fieldset[disabled] .form-control {
     float: left;
 }
 
+.nodiffcol {
+    width: calc(100%);
+    height: 100%;
+    float: left;
+}
+
 .no-text-glyphicon {
     margin: 0px;
 }
