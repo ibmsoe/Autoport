@@ -360,9 +360,9 @@ class Batch:
         try:
             env = fileBuf['config']['javascript']
             if env == "":
-                fileBuf['config']['java'] = "Node.js"
+                fileBuf['config']['javascript'] = "Node.js"
         except KeyError:
-            fileBuf['config']['java'] = "Node.js"
+            fileBuf['config']['javascript'] = "Node.js"
 
         logger.debug("parseBatchFile: file['config']['java']=%s" % fileBuf['config']['java'])
         logger.debug("parseBatchFile: file['config']['javascript']=%s" % fileBuf['config']['javascript'])
