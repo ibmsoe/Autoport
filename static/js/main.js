@@ -261,6 +261,7 @@ var searchState = {
                           // GitHub API parameters
                           q:       "stars:>" + searchState.multiple.query.stars +
                                    " forks:>" + searchState.multiple.query.forks +
+                                   " fork:true" +
                                    (searchState.multiple.query.language == "any" ? "" : (" language:" + searchState.multiple.query.language)),
                           sort:    searchState.multiple.query.sort,
 

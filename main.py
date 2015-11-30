@@ -52,7 +52,6 @@ catalog = Catalog()
 batch = Batch(catalog)
 project = Project(catalog)
 sharedData = SharedData()
-chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
 resParser = ResultParser()
 
 # Initialize web application framework
@@ -126,6 +125,9 @@ def getJenkinsNodes():
 
 def getJenkinsNodeDetails_init():
 
+    if not globals.nodeLabels:
+        return
+
     # Empty the global lists
     del globals.nodeDetails[:]
     del globals.nodeUbuntu[:]
@@ -171,6 +173,9 @@ def getJenkinsNodeDetails_init():
 
 @app.route("/autoport/getJenkinsNodeDetails", methods=["POST"])
 def getJenkinsNodeDetails():
+
+    if not globals.nodeLabels:
+        return json.jsonify(status="ok", details=[], ubuntu=[], rhel=[])
 
     try:
         nodeLabels = request.json['nodeLabels']
@@ -356,22 +361,34 @@ def search():
     # Query Github and return a JSON file with results
     results = []
     isFirst = True
-    numResults = maxResults
-    repos = None
 
     try:
-        repos = globals.github.search_repositories(query, **searchArgs)
+        q = "fork:true " + query
+        repos = globals.github.search_repositories(q, **searchArgs)
+        try:
+            numResults = repos.totalCount
+        except:
+            numResults = 0
+        logger.debug('In search, query="%s", numResults=%d' % (q, numResults))
+        if numResults == 0:
+            q = query.strip().split("/")
+            if len(q) == 1 or q[1] == "":       # if '/' not present or last character in string
+                q = "fork:true user:%s" % q[0]
+            else:
+                q = "fork:true repo:%s" % "/".join(q)
+            repos = globals.github.search_repositories(q, **searchArgs)
+            try:
+                numResults = repos.totalCount
+            except:
+                numResults = 0
+            logger.debug('search: retry query="%s", numResults=%d' % (q, numResults))
     except Exception as e:
         return json.jsonify(status="failure", error="Could not contact github: " + str(e)), 503
 
-    try:
-        if not repos or repos.totalCount == 0:
-            return json.jsonify(status="failure", error="no results"), 418
-    except Exception as e:
-        return json.jsonify(status="failure", error="Could not contact github!")
-
-    if repos.totalCount <= maxResults:
-        numResults = repos.totalCount
+    if numResults == 0:
+        return json.jsonify(status="failure", error="No projects found!<br /><br />Either the project "
+                   "does not exist or you don't have access rights to view it.&nbsp;&nbsp;&nbsp;You "
+                   "may specify a different github token via the Settings Menu"), 418
 
     for repo in repos[:numResults]:
         globals.cache.cacheRepo(repo)
@@ -2571,20 +2588,23 @@ def autoportJenkinsInit():
     # should be performed here.  On error, messages are printed to the console
     # and assert(False) is invoked to provide the debug context.
 
-    # Start threads as getJenkinsNodeDetails uses thread pool
-    mover.start(urlparse(globals.jenkinsUrl).hostname, globals.configJenkinsUsername,\
-                globals.configJenkinsKey)
+    if globals.jenkinsUrl:
+        # Start threads as getJenkinsNodeDetails uses thread pool
+        mover.start(urlparse(globals.jenkinsUrl).hostname, globals.configJenkinsUsername,\
+                    globals.configJenkinsKey)
 
-    # Get new jenkins node information
-    globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
-    getJenkinsNodeDetails_init()
+        # Get new jenkins node information
+        globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
+        getJenkinsNodeDetails_init()
 
-    sharedData.connect(urlparse(globals.jenkinsUrl).hostname)
-    sharedData.uploadChefData()
+        sharedData.connect(urlparse(globals.jenkinsUrl).hostname)
+        sharedData.uploadChefData()
+        chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
 
 def autoportUserInit():
-    if globals.hostname and globals.configUsername and globals.configPassword :
-        catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
+    if globals.hostname and globals.configUsername and globals.configPassword:
+        if globals.jenkinsUrl:
+            catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
         batch.connect(globals.hostname, globals.port,
                       globals.configUsername, globals.configPassword)
     # XXX catalog needs a disconnect
