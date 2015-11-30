@@ -97,7 +97,7 @@ case $DISTRIBUTION in
             summary=${line##*   }            # Grab the last field, data after the last  '   ' (three spaces), this is the summary
             updateVersion=$installedVersion
             # Then for the pkg, find the latest version:
-            catOutput=$(cat UpdatesForInstalledPackages.txt | grep $packageName)
+            catOutput=$(cat UpdatesForInstalledPackages.txt | grep "^$packageName")
             if [ "${catOutput}x" != "x" ]; then
                 updateVersion=$(echo $catOutput | awk '{print $2}')   # Grab the second field
                 updateVersion=${updateVersion#*:}
@@ -169,7 +169,7 @@ case $DISTRIBUTION in
                 summary=${line##*  }                                # Grab the last field, data after the last  '  ' (two spaces), this is the installed version
                 updateVersion=$installedVersion
                 # Then for the pkg, find the latest version:
-                catOutput=$(cat UpdatesForInstalledPackages.txt | grep $packageName:)
+                catOutput=$(cat UpdatesForInstalledPackages.txt | grep "^$packageName:")
                 if [ "${catOutput}x" != "x" ];then
                     updateVersion=${catOutput##* }   # Grab the last field, data after the last ' ', this is the latest version
                     updateVersion=${updateVersion#*:}

@@ -230,7 +230,7 @@ elif [ $DISTRIBUTION == "UBUNTU" ]; then
             i=$( echo $i | tr -d '[[:space:]]') #trim spaces
             if [ $lineNumber -eq 2 ]    # Installed information #If package is not found, control will never reach here.
             then
-                i=${i##*:}  #extract version number, occurs after the colon
+                i=${i#*:}  #extract version number, occurs after the colon
                 if [ $i != "(none)" ]
                 then
                     echo "#### $PACKAGE_NAME is installed.  Installed version is $i"
@@ -239,7 +239,7 @@ elif [ $DISTRIBUTION == "UBUNTU" ]; then
                 fi
             elif [ $lineNumber -eq 3 ] # Update Available information # If package is not found, control will never reach here.
                 then
-                    i=${i##*:}  #extract version number, occurs after the colon
+                    i=${i#*:}  #extract version number, occurs after the colon
                     if [ $i != $installedVersion ]
                     then
                         echo "#### Update for \"$PACKAGE_NAME\" is available with version " $updateVersion

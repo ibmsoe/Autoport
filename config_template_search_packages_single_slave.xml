@@ -222,7 +222,7 @@ case $DISTRIBUTION in
                 i=$( echo $i | tr -d '[[:space:]]') #trim spaces
                 if [ $lineNumber -eq 2 ]    # Installed information #If package is not found, control will never reach here.
                 then
-                    i=${i##*:}  #extract version number, occurs after the colon
+                    i=${i#*:}  #extract version number, occurs after the colon
                     if [ $i != "(none)" ]
                     then
                         packageInstalled=true
@@ -230,7 +230,7 @@ case $DISTRIBUTION in
                     fi
                 elif [ $lineNumber -eq 3 ] # Update Available information # If package is not found, control will never reach here.
                 then
-                    i=${i##*:}  #extract version number, occurs after the colon
+                    i=${i#*:}  #extract version number, occurs after the colon
                     if [ $i != $installedVersion ]
                     then
                         updateAvailable=true
