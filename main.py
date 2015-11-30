@@ -755,12 +755,12 @@ def convertEnv(selectedEnv):
              combine=subString
 
         if quoteType and quoteType in subString[-1]:            # Ends in quoted variable
-             if combine != subString:                           # No embedded blanks
+             if combine != subString:                           # Initial assignment above
                  combine = combine + ' ' + subString
              new.append(combine)
              quoteType = ""
         elif quoteType:                                         # Mid of quoted variable
-             if combine != subString:                           # No embedded blanks
+             if combine != subString:                           # Initial assignment above
                  combine = combine + ' ' + subString
         else:                                                   # not a quoted variable
              new.append(subString)

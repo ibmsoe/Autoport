@@ -304,7 +304,7 @@ def inferBuildSteps(listing, repo):
         'grep test': "",
         'grep install': "",
         'grep env': "",
-        'build': "if [ -e pom.xml ]; then mvn clean compile; elif [ -e build.xml ]; then ant; elif [ -x gradlew ]; then ./gradlew build; elif [ -e build.gradle ]; then gradle -q build; fi",
+        'build': "if [ -e pom.xml ]; then mvn compile; elif [ -e build.xml ]; then ant; elif [ -x gradlew ]; then ./gradlew build; elif [ -e build.gradle ]; then gradle -q build; fi",
         'test': "if [ -e pom.xml ]; then mvn test -fn; elif [ -e build.xml ]; then ant test; elif [ -e build.gradle ]; then gradle -q test; fi",
         'install':"",
         'env' : "",
@@ -320,7 +320,7 @@ def inferBuildSteps(listing, repo):
         'grep test': "",
         'grep install': "",
         'grep env': "",
-        'build': "if [ -e sbt ]; then chmod a+x ./sbt; ./sbt clean compile; elif [ -x gradlew ]; then ./gradlew build; elif [ -e build.gradle ]; then gradle -q build; fi",
+        'build': "if [ -e sbt ]; then chmod a+x ./sbt; ./sbt compile; elif [ -x gradlew ]; then ./gradlew build; elif [ -e build.gradle ]; then gradle -q build; fi",
         'test': "if [ -e sbt ]; then ./sbt test; elif [ -e build.gradle ]; then gradle -q test; fi",
         'install': "",
         'env' : "",
@@ -337,13 +337,13 @@ def inferBuildSteps(listing, repo):
     ant_def = {
         'build system': "ant",
         'primary lang': "Java",
-        'grep build': "ant clean",
+        'grep build': "ant build",
         'grep test' : "ant test",
         'grep install': "",
         'grep env': "ANT_OPTS=",
-        'build': "ant clean; ant",
+        'build': "ant compile",
         'test': "ant test",
-        'install': "",
+        'install': "ant publish-local",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "build.xml",
@@ -357,12 +357,28 @@ def inferBuildSteps(listing, repo):
         'grep test': "",
         'grep install': "",
         'grep env': "MAVEN_OPTS=",
-        'build': "mvn dependency:list -DexcludeTransitive; mvn clean compile",
+        'build': "mvn dependency:list -DexcludeTransitive; mvn -DskipTests package",
         'test' : "mvn test -fn",
-        'install': "",
+        'install': "mvn install",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "pom.xml",
+        'error': "",
+        'success': True }
+
+    gradle_def = {
+        'build system': "gradle",
+        'primary lang': "Java",
+        'grep build': "",
+        'grep test': "",
+        'grep install': "",
+        'grep env': "GRADLE_OPTS=",
+        'build': "if [ -x gradlew ]; then ./gradlew build; else gradle -q build; fi",
+        'test' : "gradle -q test",
+        'install': "gradle -q uploadArchives",
+        'env' : "",
+        'artifacts': "*.arti",
+        'reason': "build.gradle",
         'error': "",
         'success': True }
 
@@ -405,7 +421,7 @@ def inferBuildSteps(listing, repo):
         'grep test': "",
         'grep install': "",
         'grep env': "",
-        'build': "sbt clean compile",
+        'build': "sbt compile",
         'test' : "sbt test",
         'install': "",
         'env' : "",
@@ -512,6 +528,8 @@ def inferBuildSteps(listing, repo):
     for f in listing:
         if f.name == 'pom.xml':
             langlist.append(maven_def)         # If we find specific build files we can improve our commands by grepping readme's
+        elif f.name == 'build.gradle':
+            langlist.append(gradle_def)
         elif f.name == 'build.xml':
             langlist.append(ant_def)
         elif f.name == 'CMakeLists.txt':

@@ -388,46 +388,6 @@ var batchState = {
                batchSaveCallback, "json").fail(uploadBatchFileCallback);
         }
     },
-    buildAndTestDetail: function(ev, el) {
-        var el = $("#batchBuildServersFromDetails")[0];
-        var buildServers = getSelectedValues(el);
-        var javaType = "";
-        var javaScriptType = "";
-        batchState.loading = true;
-
-        config = batchState.batchFile.config;
-        if (config['java'] === "IBM Java")
-            javaType = "/etc/profile.d/ibm-java.sh"
-
-        if (config['javascript'] === "IBM SDK for Node.js")
-            javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
-
-        packages = batchState.batchFile.packages;
-        for (var i = 0; i < buildServers.length; i++) {
-            for (var j = 0; j < packages.length; j++) {
-                package = batchState.batchFile.packages[j];
-
-                // Skip projects that can't be built like documentation
-                build = package.build;
-                if (build.selectedBuild === "")
-                    continue;
-                var testCommand = "";
-                if (batchState.batchFile.config.includeTestCmds == "True") {
-                    testCommand = build.selectedTest;
-                }
-                var installCommand = "";
-                if (batchState.batchFile.config.includeInstallCmds == "True") {
-                    installCommand = build.selectedInstall;
-                }
-
-                $.post("createJob", {id: package.id, tag: packages.tag, javaType: javaType, javaScriptType: javaScriptType,
-                       node: buildServers[i], selectedBuild: build.selectedBuild,
-                       selectedTest: testCommand, selectedInstall:installCommand, selectedEnv: build.selectedEnv,
-                       artifacts: build.artifacts, primaryLang: build.primaryLang, is_batch_job: true},
-                       addToJenkinsCallback, "json").fail(addToJenkinsCallback);
-            }
-        }
-    },
     selectNodeJsType: function(ev, el) {
         var selection = $(ev.target).text().toLowerCase();
         if (selection === "ibm sdk for node.js") {

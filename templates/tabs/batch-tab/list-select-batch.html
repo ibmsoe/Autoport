@@ -103,10 +103,18 @@
     <div class="alert alert-success clearfix" rv-show="batchState.showBatchFile">
       <span class="autoSelectedText">
         <div>
-          The following packages will be submitted to be built and tested in order.&nbsp;&nbsp;&nbsp;This allows
-          you to manage package dependencies by including them in the batch file before the package that depends on them and
-          submitting the batch file as a job to be executed on a specific build server.&nbsp;&nbsp;&nbsp;Alternatively,
-          you can install packages on build servers themselves using services provided on the Build Server tab.
+          <small>The Settings Menu below allows you to customize the selected batch file.&nbsp;&nbsp;&nbsp;You
+          can select the build tools to be used and provide project specific build commands and
+          environment variables.&nbsp;&nbsp;&nbsp;By default, the build tools provided by the
+          operating system are used.&nbsp;&nbsp;&nbsp;Use the Settings Menu to specify that IBM
+          tools should be used instead.&nbsp;&nbsp;&nbsp;Also by default, only Build and Test
+          commands are enabled.&nbsp;&nbsp;&nbsp;Some build tools such as 'mvn' support the local
+          installation of build artifacts to manage prerequisites.&nbsp;&nbsp;&nbsp;You can enable
+          the use of build tool install commands as well using the Settings Menu.</small>
+          <br />
+          <br />
+          <small>When you have finished modifying the selected batch file, Save your changes to the
+          named file.&nbsp;&nbsp;&nbsp;You may specify a new file name if you like.</small>
         </div>
         <br />
         <div class="row">
@@ -116,14 +124,6 @@
           <a rv-on-click="batchState.saveBatch">
             <button type="button" class="btn btn-primary">
               Save
-            </button>
-          </a>
-          <select id="batchBuildServersFromDetails" multiple="multiple">
-            <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
-          </select>
-          <a rv-on-click="batchState.buildAndTestDetail">
-            <button type="button" class="btn btn-primary">
-              Build + Test
             </button>
           </a>
         </div>
