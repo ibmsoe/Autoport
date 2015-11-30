@@ -390,12 +390,15 @@ def search():
                    "does not exist or you don't have access rights to view it.&nbsp;&nbsp;&nbsp;You "
                    "may specify a different github token via the Settings Menu"), 418
 
+    if numResults > maxResults:
+        numResults = maxResults
+
     for repo in repos[:numResults]:
         globals.cache.cacheRepo(repo)
         # If this is the top hit, and the name matches exactly, and
         # it has greater than 500 stars, then just assume that's the
         # repo the user is looking for
-        if autoselect and isFirst and repo.name == query and repo.stargazers_count > 500:
+        if autoselect and isFirst and repo.name == query.strip() and repo.stargazers_count > 500:
             return detail(repo.id, repo)
         isFirst = False
         # Otherwise add the repo to the list of results and move on
@@ -738,23 +741,27 @@ def convertEnv(selectedEnv):
         return selectedEnv
 
     # Split by all whitespace, blanks, tabs, and newlines
-    selectedEnv=selectedEnv.split()
+    selectedEnv = selectedEnv.split()
 
     # Splits too much.  We don't want to split by embedded blanks and tabs if var is quoted
     quoteType = ""
     new=[]
     for subString in selectedEnv:
         if '="' in subString:                                   # Start of quoted variable
+             combine=subString
              quoteType = '"'
-             combine = subString
         elif "='" in subString:                                 # Start of quoted variable
              quoteType = "'"
-             combine = subString
-        elif quoteType and quoteType in subString[-1]:          # End of quoted variable
-             new.append(combine + ' ' + subString)
+             combine=subString
+
+        if quoteType and quoteType in subString[-1]:            # Ends in quoted variable
+             if combine != subString:                           # No embedded blanks
+                 combine = combine + ' ' + subString
+             new.append(combine)
              quoteType = ""
         elif quoteType:                                         # Mid of quoted variable
-             combine = combine + ' ' + subString
+             if combine != subString:                           # No embedded blanks
+                 combine = combine + ' ' + subString
         else:                                                   # not a quoted variable
              new.append(subString)
     new = "\n".join(new)
