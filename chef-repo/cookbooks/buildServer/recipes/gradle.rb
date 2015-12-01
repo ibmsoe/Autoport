@@ -31,4 +31,11 @@ else
       gradle_home: gradle_basedir
     )
   end
+
+  buildServer_log 'gradle' do
+    name         'gradle'
+    log_location node['log_location']
+    log_record   "gradle"
+    action       :remove
+  end
 end

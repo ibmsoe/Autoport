@@ -112,6 +112,7 @@ for pkg in managedPkgList:
             pkg['updateVersion'] = updatePkg['updateVersion']
             pkg['packageExt'] = updatePkg['packageExt']
             pkg['installableExt'] = updatePkg['packageExt']
+            pkg['packageType'] = updatePkg['packageType']
 
     if pkg['updateVersion'] == '0':
         pkg['updateVersion'] = 'N/A'

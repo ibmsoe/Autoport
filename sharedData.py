@@ -641,8 +641,8 @@ class SharedData:
             # the extension of updated version of the archive selected for installation.
             if 'installableExt' in pkgData:
                 extension = pkgData['installableExt']
-            elif 'packageExt' in pkgData:
-                extension = pkgData['packageExt']
+            elif 'extension' in pkgData:
+                extension = pkgData['extension']
             distro = pkgData['distro']
             arch = pkgData['arch']
             packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
@@ -692,8 +692,8 @@ class SharedData:
                 extension = ''
                 if 'removableExt' in pkgData:
                     extension = pkgData['removableExt']
-                elif 'packageExt' in pkgData:
-                    extension = pkgData['packageExt']
+                elif 'extension' in pkgData:
+                    extension = pkgData['extension']
                 if pkgData['removable'] == 'No':
                   continue
                 if sharedRuntime['distro'] == distro:

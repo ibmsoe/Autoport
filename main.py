@@ -51,6 +51,7 @@ maxResults = 10
 catalog = Catalog()
 batch = Batch(catalog)
 project = Project(catalog)
+chefData = ChefData()
 sharedData = SharedData()
 chefData = ChefData()
 resParser = ResultParser()
@@ -1982,7 +1983,8 @@ def listManagedPackages():
                             if LooseVersion(pkg['updateVersion']) > LooseVersion(pkg['installedVersion']):
                                 isAddable = True
 
-                        if managedV != "N/A" and ('updateVersion' in pkg and pkg['updateVersion'] and \
+                        if (('installedVersion' in pkg and pkg['installedVersion'] and pkg['installedVersion'] == "N/A") \
+                               and managedV != "N/A") and ('updateVersion' in pkg and pkg['updateVersion'] and \
                                               pkg['updateVersion'] != "N/A"):
                             if LooseVersion(pkg['updateVersion']) > LooseVersion(managedV):
                                 isAddable = True

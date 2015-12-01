@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "9",
+    "sequence": "10",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -49,9 +49,6 @@
                 },
                 {
                     "name": "git"
-                },
-                {
-                    "name": "gradle"
                 },
                 {
                     "name": "gyp"
