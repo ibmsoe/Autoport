@@ -2947,6 +2947,11 @@ function listManagedPackagesCallback(data) {
     jenkinsState.loadingState.managedPackageListLoading = false;
     if (data.status === "ok") {
         $("#manageRuntime").show();
+        if($('#packageFilter_Multiple').val() == ""){
+            $("#multiServerPackageListTable thead tr th:nth-child(5) div:nth-child(1)").text("Available Version");
+        }else{
+            $("#multiServerPackageListTable thead tr th:nth-child(5) div:nth-child(1)").text("Latest Version");
+        }
         jenkinsState.managedPackageList = data.packages;
         jenkinsState.managedPackageTableReady = true;
         $('#multiServerPackageListTable').bootstrapTable('load', jenkinsState.managedPackageList);
