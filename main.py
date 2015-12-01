@@ -51,6 +51,7 @@ maxResults = 10
 catalog = Catalog()
 batch = Batch(catalog)
 project = Project(catalog)
+chefData = ChefData()
 sharedData = SharedData()
 resParser = ResultParser()
 
@@ -1981,7 +1982,8 @@ def listManagedPackages():
                             if LooseVersion(pkg['updateVersion']) > LooseVersion(pkg['installedVersion']):
                                 isAddable = True
 
-                        if managedV != "N/A" and ('updateVersion' in pkg and pkg['updateVersion'] and \
+                        if (('installedVersion' in pkg and pkg['installedVersion'] and pkg['installedVersion'] == "N/A") \
+                               and managedV != "N/A") and ('updateVersion' in pkg and pkg['updateVersion'] and \
                                               pkg['updateVersion'] != "N/A"):
                             if LooseVersion(pkg['updateVersion']) > LooseVersion(managedV):
                                 isAddable = True
@@ -2606,7 +2608,7 @@ def autoportJenkinsInit():
 
         sharedData.connect(urlparse(globals.jenkinsUrl).hostname)
         sharedData.uploadChefData()
-        chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
+        chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
 
 def autoportUserInit():
     if globals.hostname and globals.configUsername and globals.configPassword:

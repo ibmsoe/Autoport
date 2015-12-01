@@ -32,4 +32,12 @@ else
       ant_home: ant_basedir
     )
   end
+
+  buildServer_log "apache-ant" do
+    name         "apache-ant"
+    log_location node['log_location']
+    log_record   "apache-ant"
+    action       :remove
+  end
+
 end

@@ -16,4 +16,11 @@ else
     action :upgrade
     options opt
   end
+  
+  buildServer_log 'scala' do
+    name         'scala'
+    log_location node['log_location']
+    log_record   "scala"
+    action       :remove
+  end
 end

@@ -32,4 +32,12 @@ else
       maven_home: maven_basedir
     )
   end
+
+  
+  buildServer_log "apache-maven" do
+    name         "apache-maven"
+    log_location node['log_location']
+    log_record   "apache-maven"
+    action       :remove
+ end
 end

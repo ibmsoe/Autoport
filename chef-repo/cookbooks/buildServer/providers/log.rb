@@ -56,7 +56,7 @@ action :remove do
     block do
       regex_string  = Regexp.new(Regexp.quote(new_resource.log_record))
       file = Chef::Util::FileEdit.new("#{new_resource.log_location}/archive.log")
-      file.search_file_delete(regex_string)
+      file.search_file_delete(/^#{regex_string}.*$/)
       file.write_file
     end
     only_if "grep -w '#{new_resource.log_record}' #{new_resource.log_location}/archive.log"

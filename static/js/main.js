@@ -474,9 +474,9 @@ var batchState = {
         }
     },
     detail: function(ev, el) {
-    	if(batchState.selectedBatchFile.filename== undefined || batchState.selectedBatchFile.filename == ""){
-        	showAlert("Please select batch file");
-        	return false;
+	if(batchState.selectedBatchFile.filename== undefined || batchState.selectedBatchFile.filename == ""){
+            showAlert("Please select batch file");
+            return false;
         }
         batchState.loading = true;
         batchState.showBatchFile = false;
@@ -1180,6 +1180,7 @@ var jenkinsState = {
         jenkinsState.singleSlavePackageTableReady = false;
         jenkinsState.loadingState.packageListLoading = true;
         jenkinsState.selectedSingleSlavePackage = [];
+        $("#singleSlaveListBtn").addClass("disabled");
         $("#singlePanelInstallBtn").addClass("disabled");
         $("#singlePanelRemoveBtn").addClass("disabled");
         $.getJSON("listPackageForSingleSlave",
@@ -1262,6 +1263,7 @@ var jenkinsState = {
             if (selectedPackageList [selectedPkg].package_tagname != undefined)
                 package_tagname = selectedPackageList [selectedPkg].package_tagname;
             jenkinsState.loadingState.packageActionLoading = true;
+            jenkinsState.singleSlavePackageTableReady = false;
             $.getJSON("managePackageForSingleSlave",
             {
                 package_name: selectedPackageList [selectedPkg].packageName,
@@ -1291,23 +1293,45 @@ var jenkinsState = {
 
     serverGroup: "",                   // Takes value All or UBUNTU or RHEL depending on the "List x" button clicked. Variable to be used during Synch operation.
     listManagedPackages: function(ev) {
-        jenkinsState.managedPackageTableReady = false;
-        jenkinsState.loadingState.managedPackageListLoading = true;
-        jenkinsState.selectedMultiSlavePackage = [];
         var id = ev.target.id;
+        jenkinsState.selectedMultiSlavePackage = [];
         jenkinsState.serverGroup = "All";
+        jenkinsState.managedPackageTableReady = false;
         $("#addToManagedList").addClass("disabled");
         $("#removeFromManagedList").addClass("disabled");
         buildServersToSync = [];
         if (id === "mlRHEL") {
-            jenkinsState.serverGroup = "RHEL";
-            buildServersToSync = jenkinsState.nodeRHEL;
+            if (jenkinsState.nodeRHEL.length == 0) {
+                showAlert("No RHEL build servers available");
+                return false;
+            } else {
+                jenkinsState.serverGroup = "RHEL";
+                buildServersToSync = jenkinsState.nodeRHEL;
+            }
         } else if (id === "mlUbuntu") {
-            jenkinsState.serverGroup = "UBUNTU";
-            buildServersToSync = jenkinsState.nodeUbuntu;
+            if (jenkinsState.nodeUbuntu.length == 0) {
+                showAlert("No Ubuntu build servers available");
+                return false;
+            } else {
+                jenkinsState.serverGroup = "UBUNTU";
+                buildServersToSync = jenkinsState.nodeUbuntu;
+            }
         } else {
-            buildServersToSync = jenkinsState.nodeLabels;
+            if (jenkinsState.nodeRHEL.length == 0 && jenkinsState.nodeUbuntu.length == 0) {
+                showAlert("No build slaves available");
+                return false;
+            } else {
+                jenkinsState.serverGroup = "All";
+                buildServersToSync = jenkinsState.nodeLabels;
+            }
         }
+        $("#mlRHEL").addClass("disabled");
+        $("#mlUbuntu").addClass("disabled");
+        $("#mlAll").addClass("disabled");
+        jenkinsState.managedPackageTableReady = false;
+        $("#addToManagedList").addClass("disabled");
+        $("#removeFromManagedList").addClass("disabled");
+        jenkinsState.loadingState.managedPackageListLoading = true;
         buildServerJsonObj = [];
         for(var  buildIndex in  buildServersToSync){
             var buildServObj = buildServersToSync[buildIndex];
@@ -1370,7 +1394,7 @@ var jenkinsState = {
         if(message != "") {
             var confRes = confirm(message);
             if(!confRes){
-                return "[]";
+                return [];
             }
         }
         return packageListObj;
@@ -2892,7 +2916,6 @@ function updateDropdownsWithNodeDetails(){
     $('#batchBuildServers').multiselect('deselect', jenkinsState.nodeLabels);
     $('#batchBuildServers+div>button>span').text('Build Servers');
     $('#batchBuildServers+div>button').addClass('btn btn-primary');
-
 }
 
 function listPackageForSingleSlaveCallback(data) {
@@ -2905,6 +2928,7 @@ function listPackageForSingleSlaveCallback(data) {
     } else {
         showAlert("Error!", data);
     }
+    $("#singleSlaveListBtn").removeClass("disabled");
 }
 
 function managePackageForSingleSlaveCallback(data) {
@@ -2949,10 +2973,13 @@ function listManagedPackagesCallback(data) {
         $("#manageRuntime").show();
         jenkinsState.managedPackageList = data.packages;
         jenkinsState.managedPackageTableReady = true;
-        $('#multiServerPackageListTable').bootstrapTable('load', jenkinsState.managedPackageList);
+        $("#multiServerPackageListTable").bootstrapTable('load', jenkinsState.managedPackageList);
     } else {
         showAlert("Error!", data);
     }
+     $("#mlRHEL").removeClass("disabled");
+     $("#mlUbuntu").removeClass("disabled");
+     $("#mlAll").removeClass("disabled");
 }
 
 function editManagedListCallback(data) {
