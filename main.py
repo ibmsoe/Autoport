@@ -283,7 +283,7 @@ def settings():
             mover.resetConnection()
 
             # Initialize globals, mover threads, and Chef master
-            autoportJenkinsInit()
+            autoportJenkinsInit(globals.jenkinsUrl, globals.configJenkinsUsername, globals.configJenkinsKey)
 
             # Initialize catalog
             # XXX Why is this accessing Jenkins?
@@ -306,7 +306,7 @@ def settings():
     try:
         if hostname != globals.hostname or configUsername != globals.configUsername or configPassword != globals.configPassword:
             logger.info("Applying user parameters")
-            autoportUserInit()
+            autoportUserInit(globals.hostname,globals.jenkinsUrl,globals.configUsername,globals.configPassword)
 
     except Exception as e :
         logger.warning("settings: Archive parameters Error=%s" % (str(e)))
@@ -2590,31 +2590,31 @@ def getBatchTestDetails():
     else:
         return json.jsonify(status=batchDetails['status'], results = batchDetails)
 
-def autoportJenkinsInit():
+def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
     # This is called before starting the flask application.  It is responsible
     # for performing initial setup of the Jenkins master.  Only required items
     # should be performed here.  On error, messages are printed to the console
     # and assert(False) is invoked to provide the debug context.
-
-    if globals.jenkinsUrl:
+    if jenkinsUrl:
         # Start threads as getJenkinsNodeDetails uses thread pool
-        mover.start(urlparse(globals.jenkinsUrl).hostname, globals.configJenkinsUsername,\
-                    globals.configJenkinsKey)
+        mover.start(urlparse(jenkinsUrl).hostname, jenkinsUsername, jenkinsKey)
 
         # Get new jenkins node information
         globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
         getJenkinsNodeDetails_init()
 
-        sharedData.connect(urlparse(globals.jenkinsUrl).hostname)
+        sharedData.connect(urlparse(jenkinsUrl).hostname)
         sharedData.uploadChefData()
         chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
 
-def autoportUserInit():
-    if globals.hostname and globals.configUsername and globals.configPassword:
-        if globals.jenkinsUrl:
-            catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
-        batch.connect(globals.hostname, globals.port,
-                      globals.configUsername, globals.configPassword)
+def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
+    if hostname and configUsername and configPassword :
+        if globals.gsaConnected:
+            catalog.close()
+            batch.disconnect()
+        if jenkinsUrl:
+            catalog.connect(hostname, urlparse(jenkinsUrl).hostname, archiveUser=configUsername, archivePassword=configPassword)
+        batch.connect(hostname, globals.port, archiveUser=configUsername, archivePassword=configPassword)
     # XXX catalog needs a disconnect
 
 if __name__ == "__main__":
@@ -2643,8 +2643,8 @@ if __name__ == "__main__":
     if args.allocBuildServers:
         globals.allocBuildServers = args.allocBuildServers
 
-    autoportJenkinsInit()
-    autoportUserInit()
+    autoportJenkinsInit(globals.jenkinsUrl, globals.configJenkinsUsername, globals.configJenkinsKey)
+    autoportUserInit(globals.hostname,globals.jenkinsUrl,globals.configUsername,globals.configPassword)
 
     hostname = "127.0.0.1"
     if args.public:

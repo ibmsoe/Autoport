@@ -339,6 +339,7 @@ var batchState = {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
+        $('#batch_file_archive').addClass('disabled');
         $.getJSON("listBatchFiles/local", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
@@ -346,6 +347,8 @@ var batchState = {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
+        $('#batch_file_archive').addClass('disabled');
+        $('#batch_file_archive').hide();
         $.getJSON("listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
@@ -353,6 +356,8 @@ var batchState = {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
+        $('#batch_file_archive').addClass('disabled');
+        $('#batch_file_archive').show();
         $.getJSON("listBatchFiles/all", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
@@ -509,6 +514,10 @@ var batchState = {
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
     },
     archive: function(ev, el) {
+    	if($('#batchListSelectTable').bootstrapTable('getSelections').length<1){
+        	showAlert("Please select one batch file to archive");
+        	return false;
+        }
         batchState.loading = true;
         $.post("archiveBatchFile", {filename: batchState.selectedBatchFile.filename},
             archiveBatchFileCallback, "json").fail(archiveBatchFileCallback);
@@ -3706,6 +3715,19 @@ $(document).ready(function() {
         data: []
     });
     $('#singleServerPackageListTable').on('check.bs.table', function (e, row) {
+        jenkinsState.selectedSingleSlavePackage = row;
+        var selectedPackages = $('#singleServerPackageListTable').bootstrapTable('getSelections');
+        if(selectedPackages.length === 0) {
+            $("#singlePanelInstallBtn").addClass("disabled");
+            $("#singlePanelRemoveBtn").addClass("disabled");
+            jenkinsState.selectedSingleSlavePackage = [];
+        }
+        else {
+            $("#singlePanelInstallBtn").removeClass("disabled");
+            $("#singlePanelRemoveBtn").removeClass("disabled");
+        }
+    });
+     $('#singleServerPackageListTable').on('uncheck.bs.table', function (e, row) {
         jenkinsState.selectedSingleSlavePackage = row;
         var selectedPackages = $('#singleServerPackageListTable').bootstrapTable('getSelections');
         if(selectedPackages.length === 0) {
