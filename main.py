@@ -52,6 +52,7 @@ catalog = Catalog()
 batch = Batch(catalog)
 project = Project(catalog)
 sharedData = SharedData()
+chefData = ChefData()
 resParser = ResultParser()
 
 # Initialize web application framework
@@ -2606,7 +2607,7 @@ def autoportJenkinsInit():
 
         sharedData.connect(urlparse(globals.jenkinsUrl).hostname)
         sharedData.uploadChefData()
-        chefData = ChefData(urlparse(globals.jenkinsUrl).hostname)
+        chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
 
 def autoportUserInit():
     if globals.hostname and globals.configUsername and globals.configPassword:

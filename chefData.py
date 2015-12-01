@@ -3,8 +3,7 @@ from flask import json
 from collections import OrderedDict
 
 class ChefData:
-    def __init__(self, repoHost):
-        self.__repo_hostname = repoHost + ":90"
+    def __init__(self):
         self.__repo_name = 'autoport_repo'
         self.__localDataDir = globals.localPathForConfig
         self.__logDir = globals.localTarRepoLocation
