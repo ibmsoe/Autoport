@@ -78,7 +78,7 @@
           <div class="dropdown buttonRight">
 
             <!-- Dropdown box for choosing what kind of javaScript to use. -->
-            <div class="input-group-btn">
+            <div class="dropdown">
               <button rv-show="detailState.generateRepo.language | isJavaScript" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.generateJavaScriptType } <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right" role="menu">
                 <li rv-on-click="detailState.selectGenerateJavaScriptType"><a>nodejs</a></li>
@@ -87,7 +87,7 @@
             </div>
 
             <!-- Dropdown box for choosing what kind of java to use. -->
-            <div class="input-group-btn">
+            <div class="dropdown">
               <button rv-show="detailState.generateRepo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.generateJavaType } <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right" role="menu">
                 <li rv-on-click="detailState.selectGenerateJavaType"><a>Open JDK</a></li>
