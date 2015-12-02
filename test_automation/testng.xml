@@ -1,15 +1,118 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<suite name="Autoport Smoke Tests">
-  <test name="List Packages from different servers">
-  <parameter name="browser" value="firefox"/>
-    <classes>
-      <class name="com.autoport.testcases.BS_UseCase_2"/>
-    </classes>
-  </test> <!-- Test -->    
-  <test name="Install packages on different Servers">
-  <parameter name="browser" value="firefox"/>
-    <classes>
-      <class name="com.autoport.testcases.BS_UseCase_3"/>
-    </classes>
-  </test> <!-- Test --> 
-</suite> <!-- Suite -->
+<suite name="Autoport Smoke Tests" parallel="false">
+
+	<test name="Launching of AutoPort Tool">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.SCH_Use_Case_1" />
+		</classes>
+	</test>
+
+	<test name="Configuring options on Settings button">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.SCH_Use_Case_2" />
+		</classes>
+	</test>
+
+	<test name="Hide Help Button Toggle">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.SCH_Use_Case_3" />
+		</classes>
+	</test>
+
+	<test name="Searching for a single project">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.SCH_Use_Case_4" />
+		</classes>
+	</test>
+
+	<test name="Creating Batch File after single project search">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.SCH_Use_Case_5" />
+		</classes>
+	</test>
+
+	<test name="Building and Testing package post single project search">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.SCH_Use_Case_6" />
+		</classes>
+	</test>
+
+	<test name="Searching for most commonly used Projects">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.SCH_Use_Case_7" />
+		</classes>
+	</test>
+
+	<test name="Creating Batch File after most commonly used projects search">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.SCH_Use_Case_8" />
+		</classes>
+	</test>
+
+	<test
+		name="Building and Testing package post most commonly used project search">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.SCH_Use_Case_9" />
+		</classes>
+	</test>
+
+<!-- 	<test name="Verify Batch Jobs Tab content">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.BJ_Use_Case_001" />
+		</classes>
+	</test>
+
+	<test name="Importing saved Batch File">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.BJ_Use_Case_002" />
+		</classes>
+	</test>
+
+	<test name="Search or List local/archived/all batch files">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.BJ_Use_Case_003" />
+		</classes>
+	</test>
+
+	<test
+		name="Managing and performing operations for local/archived/all batch files">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.BJ_Use_Case_004" />
+		</classes>
+	</test>
+
+	<test name="Build and Test a packages under batch file">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.BJ_Use_Case_005" />
+		</classes>
+	</test> -->
+
+	 <test name="List Packages from different servers">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.BS_UseCase_2" />
+		</classes>
+	</test>
+
+	<test name="Install packages on different Servers">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.BS_UseCase_3" />
+		</classes>
+	</test>
+
+</suite> 
