@@ -2654,6 +2654,6 @@ if __name__ == "__main__":
     print "You may use your browser now - http://%s:5000/autoport/" % (hostname)
 
     if args.public:
-        app.run(debug = args.debug, host='0.0.0.0')
+        app.run(threaded=True, host='0.0.0.0')
     else:
         app.run(debug = args.debug)

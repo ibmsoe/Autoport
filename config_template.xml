@@ -154,6 +154,7 @@
                  if [ $JAVATYPE ]; then
                      JAVA_HOME=${LAST_PATH%/bin}
                  fi
+                 export JAVA_HOME
                  ARTI=&quot;.autoport-scratch/build_result.arti&quot;
                  echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                  echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
@@ -201,6 +202,7 @@
                  if [ $JAVATYPE ]; then
                      JAVA_HOME=${LAST_PATH%/bin}
                  fi
+                 export JAVA_HOME
                  ARTI=&quot;.autoport-scratch/test_result.arti&quot;
                  echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                  echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
@@ -248,6 +250,7 @@
                  if [ $JAVATYPE ]; then
                      JAVA_HOME=${LAST_PATH%/bin}
                  fi
+                 export JAVA_HOME
                  ARTI=&quot;.autoport-scratch/install_result.arti&quot;
                  echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                  echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
