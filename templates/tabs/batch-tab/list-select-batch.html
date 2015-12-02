@@ -262,18 +262,24 @@
                 <div class="col-md-12">
                     <label class="github">Enable install:</label>
                     <input type="checkbox" id="batchSettingsInstallCkBox" rv-on-change="batchState.onInstallCheckBoxChanged">
-                  </div>              
+                  </div>
                 </div>
+                <div class="row">
+                <div class="col-md-12">
+                    <label class="github">Owner:</label>
+                    <input type="text" id="batchSettingsOwner" rv-value="batchState.batchFile.config.owner" rv-on-change="batchState.onBatchSettingsOwnerChange">
+                </div>
+               </div>
               </div>
              </div>
-            
+ 
               <!-- Dropdown box for choosing what kind of JavaScript to use. -->
               <!-- Dropdown box for choosing what kind of Python to use. -->
            <div class='modal-body' style="display:none" id="batchCommandsTableContanier">
           </div>
 
           <div class="modal-footer">
-            
+ 
             <a href="#" class="btn btn-primary pull-left" style="display:none" rv-on-click="batchState.displayBatchSettings" id="batchBuildCommandBackButton"><span class="glyphicon glyphicon-chevron-left"></span> Back</a>
             <button type="button" id="showModifyButton" rv-on-click="batchState.displayBatchCommandsTable" class="btn btn-primary">Show/Modify Commands</button>            
             <button rv-on-click="batchState.resetEnviron" type="button"

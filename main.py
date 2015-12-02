@@ -1211,11 +1211,11 @@ def runBatchFile ():
 
     # Get the batch file name from POST
     try:
-        node = request.form["node"]
+        nodeCSV = request.form["nodeCSV"]
     except KeyError:
         return json.jsonify(status="failure", error="missing buildServer argument"), 400
 
-    logger.debug("In runBatchFile, batchName=%s, node=%s" % (batchName, node))
+    logger.debug("In runBatchFile, batchName=%s, nodeCSV=%s" % (batchName, nodeCSV))
 
     submittedJob = False
     if batchName != "":
@@ -1246,7 +1246,7 @@ def runBatchFile ():
         if fileBuf['config']['javascript'] == "IBM SDK for Node.js":
             javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
 
-        logger.debug("runBatchFile, javaType=%s javaScriptType=%s node=%s" % (javaType, javaScriptType, node))
+        logger.debug("runBatchFile, javaType=%s javaScriptType=%s nodeCSV=%s" % (javaType, javaScriptType, nodeCSV))
 
         # Create batch results template, stores list of job names associated with batch file
         # Create a folder of format  <batch_name>.<uuid>
@@ -1269,40 +1269,41 @@ def runBatchFile ():
             newBatchName = globals.localPathForBatchTestResults + ntpath.basename(batchName)
 
         f = open(newBatchName, 'a+')
+        nodeList = nodeCSV.split(',')
+        for node in nodeList:
+            # Parse package data
+            for package in fileBuf['packages']:
 
-        # Parse package data
-        for package in fileBuf['packages']:
+                # if a project can't be built, skip it. Top N may not be buildable - documentation
+                selectedBuild = package['build']['selectedBuild']
+                if selectedBuild == "":
+                    continue
 
-            # if a project can't be built, skip it. Top N may not be buildable - documentation
-            selectedBuild = package['build']['selectedBuild']
-            if selectedBuild == "":
-                continue
+                if 'includeTestCmds' in fileBuf['config'] and fileBuf['config']['includeTestCmds'] == 'False':
+                    package['build']['selectedTest'] = ""
 
-            if 'includeTestCmds' in fileBuf['config'] and fileBuf['config']['includeTestCmds'] == 'False':
-                package['build']['selectedTest'] = ""
+                if 'includeInstallCmds' in fileBuf['config'] and fileBuf['config']['includeInstallCmds'] == 'False':
+                    package['build']['selectedInstall'] = ""
+ 
+                createJob_results = createJob_common(localtime(),
+                          uid,
+                          package['id'],
+                          package['tag'],
+                          node,
+                          javaType,
+                          javaScriptType,
+                          package['build']['selectedBuild'],
+                          package['build']['selectedTest'],
+                          package['build']['selectedInstall'],
+                          package['build']['selectedEnv'],
+                          package['build']['artifacts'],
+                          package['build']['primaryLang'])
+                submittedJob = True
 
-            if 'includeInstallCmds' in fileBuf['config'] and fileBuf['config']['includeInstallCmds'] == 'False':
-                package['build']['selectedInstall'] = ""
-
-            createJob_results = createJob_common(localtime(),
-                      uid,
-                      package['id'],
-                      package['tag'],
-                      node,
-                      javaType,
-                      javaScriptType,
-                      package['build']['selectedBuild'],
-                      package['build']['selectedTest'],
-                      package['build']['selectedInstall'],
-                      package['build']['selectedEnv'],
-                      package['build']['artifacts'],
-                      package['build']['primaryLang'])
-            submittedJob = True
-
-            try:
-                f.write(createJob_results['artifactFolder'] + "\n")
-            except KeyError:
-                pass
+                try:
+                    f.write(createJob_results['artifactFolder'] + "\n")
+                except KeyError:
+                    pass
         f.close()
     else:
         return json.jsonify(status="failure", error="could not find batch file"), 404
