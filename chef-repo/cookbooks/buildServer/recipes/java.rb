@@ -8,7 +8,7 @@ arch = ''
 if node['kernel']['machine'] == 'x86_64'
   arch = 'amd64'
 elsif node['kernel']['machine'] == 'ppc64le'
-  arch = 'ppc64le'
+  arch = 'ppc64el'
 end
 
 case node['platform']
