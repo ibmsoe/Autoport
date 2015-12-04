@@ -22,20 +22,31 @@ public class BS_UseCase_1 {
 	 @BeforeTest
 	  public void beforeTest(String browser) throws Exception {
 		 
+		 //String browser = "firefox";		 
 		 functions = new CommonFunctions();
 		 functions.launchBrowser(browser);
-		 driver = functions.driver;		 
+		 
+		 driver = functions.driver; 
 		 homePage = functions.homePage;
 		 buildServerTab = functions.buildServerTab;
-		 fluentWait = functions.fluentWait;
+		 
+		 functions.openAutoport();
+		 
+		 homePage.clickBuildServerTab();
 	  }
 	 
 	 @Test(priority=0)
-	 public void openListInstallSingleSoftwarSection(){
+	 public void BS_View_Jenkins_Status() throws Exception{
 		 
-		 driver.get("http://10.233.188.49:5601/autoport/");
-		  
-		 homePage.clickBuildServerTab();  
+		 buildServerTab.goTo_ShowJenkinsStatusSection();
+		 
+		 buildServerTab.verifyJenkinsPageUrl("http://soe-test1.aus.stglabs.ibm.com:8080");
+		 
+		 buildServerTab.clickCheckProgressBtn();
+		 
+		 buildServerTab.verifyJenkinsStatus();
+		 
+		 buildServerTab.VerifyProgressBar();		  
 	 }
 	 
 	 @AfterTest

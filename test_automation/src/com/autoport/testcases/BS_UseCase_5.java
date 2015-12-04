@@ -1,10 +1,8 @@
 package com.autoport.testcases;
 
-import java.util.concurrent.TimeUnit;
-
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.FluentWait;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Parameters;
@@ -40,15 +38,51 @@ public class BS_UseCase_5 {
 	 @Test (priority=0, dataProvider = "buildServers")
 	  public void BS_Uninstall_Package_On_Servers(String buildServer, String packagename) throws Exception{
 		  
+		  buildServerTab.enterPackageToSearch(packagename); 
 		  
+		  buildServerTab.selectBuildServer(buildServer);
+		  
+		  buildServerTab.clickListBtn();
+		  
+		  buildServerTab.verifyInstallRemoveButtons("disabled");
+		  
+		  buildServerTab.selectPackageToUninstall();
+		  
+		  buildServerTab.verifyInstallRemoveButtons("enabled");
+		  
+		  buildServerTab.clickRemoveButtonToUninstall();
+		  
+		  buildServerTab.verifyUninstallationSuccessPopUp(packagename);		  
+		  
+		  buildServerTab.enterPackageToSearch(packagename); 
+			 
+		  buildServerTab.selectBuildServer(buildServer);
+		  
+		  buildServerTab.clickListBtn();
+		  
+		  buildServerTab.verifyInstalledVersionIsNA(packagename);
 		  
 		  
 	  }
 	 
-	 @Test (priority=0, dataProvider = "buildServers")
-	  public void BS_Uninstall_Not_Installed_Package_01(String buildServer, String packagename) throws Exception{
+	 @Test
+	  public void BS_Uninstall_Not_Installed_Package() throws Exception{
 		  
-		 		  
+		  buildServerTab.enterPackageToSearch("python-bson"); 
+		  
+		  buildServerTab.selectBuildServer("ppcle-ubuntu");
+		  
+		  buildServerTab.clickListBtn();
+		  
+		  buildServerTab.verifyInstallRemoveButtons("disabled");
+		  
+		  buildServerTab.selectPackageToUninstall();
+		  
+		  buildServerTab.verifyInstallRemoveButtons("enabled");
+		  
+		  buildServerTab.clickRemoveButtonToUninstall();
+		  
+		  buildServerTab.verifyPkgNotInstalledMessage();
 		  
 	  }
 	 
@@ -56,6 +90,17 @@ public class BS_UseCase_5 {
 	  
 	  public static Object[][] listBuildServers() { 
 	 
-		  return new Object[][] {{"ppcle-ubuntu" ,"python-bson"},{"x86-ubuntu" ,"python-bson"}};	 
+		  return new Object[][] {
+				  {"ppcle-ubuntu" ,"python-bson"},
+				  {"x86-ubuntu" ,"python-bson"}, 
+				  {"x86-64-rhel" ,"apache-ant"}, 
+				  {"ppc64le-rhel" ,"apache-ant"}
+				  };	 
 	  }	
+	 
+	 @AfterTest
+	  public void afterClass() {
+		  
+		  driver.quit();
+	  }
 }

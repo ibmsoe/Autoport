@@ -95,7 +95,23 @@ public class CommonFunctions {
 		  
 		 buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
 		  
-		 buildServerTab.clickmanageSingleSlaveButtonToOpen();	
+		 buildServerTab.clicListInstallRemoveSoftwareBtnToOpen();	
+	}
+	
+	public void goTo_ListInstallUsingManagedServicesSection(){
+		
+		 homePage.clickBuildServerTab();
+		  
+		 buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
+		  
+		 buildServerTab.clickListInstallRemoveSoftwareUsingManagedServicesBtnToOpen();	
+	}
+	
+	public void goTo_UploadPackageToRepositorySection(){
+		
+		 homePage.clickBuildServerTab();	 
+		  
+		 buildServerTab.clickuploadPackagesToRepositoryBtn();	
 	}
 
 }
