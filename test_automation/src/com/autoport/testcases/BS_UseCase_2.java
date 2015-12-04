@@ -67,7 +67,12 @@ public class BS_UseCase_2{
 	  @DataProvider(name = "buildServers")	  
 	  public static Object[][] listBuildServers() { 
 	 
-		  return new Object[][] {{"ppcle-ubuntu" ,"python-bson"}, {"x86-ubuntu" ,"python-bson"}};
+		  return new Object[][] {
+				  {"ppcle-ubuntu" ,"python-bson"},
+				  {"x86-ubuntu" ,"python-bson"}, 
+				  {"x86-64-rhel" ,"apache-ant"}, 
+				  {"ppc64le-rhel" ,"apache-ant"}
+				  };
 	  }	
 	
 	  @AfterTest

@@ -100,19 +100,70 @@
 			<class name="com.autoport.testcases.BJ_Use_Case_005" />
 		</classes>
 	</test> -->
-
-	 <test name="List Packages from different servers">
-		<parameter name="browser" value="firefox" />
-		<classes>
-			<class name="com.autoport.testcases.BS_UseCase_2" />
-		</classes>
-	</test>
-
-	<test name="Install packages on different Servers">
-		<parameter name="browser" value="firefox" />
-		<classes>
-			<class name="com.autoport.testcases.BS_UseCase_3" />
-		</classes>
-	</test>
-
+	
+	<test name="View Jenkins Status and Check Progress">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_1"/>
+    </classes>
+  </test> <!-- Test --> 
+  
+  <test name="List the packages as per build servers.">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_2"/>
+    </classes>
+  </test> <!-- Test -->    
+  
+  <test name="Installing the package on build servers.">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_3"/>
+    </classes>
+  </test> <!-- Test --> 
+  
+  <test name="Updating the package on Build Servers">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_4"/>
+    </classes>
+  </test> <!-- Test --> 
+  
+  <test name="Uninstalling the package from build servers">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_5"/>
+    </classes>
+  </test> <!-- Test --> 
+  
+  <test name="List the packages Packages on RHEL/Ubuntu Servers">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_6"/>
+    </classes>
+  </test> <!-- Test --> 
+  
+  <test name="Manage (Add/Remove) the packages.">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_7"/>
+    </classes>
+  </test> <!-- Test --> 
+  
+  <test name="Running synch on nodes.">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_8"/>
+    </classes>
+  </test>
+  
+  <test name="Uploading an archive package (tar/zip/rpm/Deb)">
+  <parameter name="browser" value="firefox"/>
+    <classes>
+      <class name="com.autoport.testcases.BS_UseCase_9"/>
+    </classes>
+  </test> <!-- Test --> 
 </suite> 
+
+
+

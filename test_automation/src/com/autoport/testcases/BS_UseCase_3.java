@@ -1,7 +1,5 @@
 package com.autoport.testcases;
-import java.util.concurrent.TimeUnit;
 
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.testng.annotations.*;
@@ -19,10 +17,10 @@ public class BS_UseCase_3{
 	HomePage homePage;
 	BuildServersTab buildServerTab;
 	
-	 @Parameters({"browser"})
+	 //@Parameters({"browser"})
 	 @BeforeTest
-	  public void beforeTest(String browser) throws Exception {
-		 //String browser = "firefox";
+	  public void beforeTest() throws Exception {
+		 String browser = "firefox";
 		 functions = new CommonFunctions();
 		 functions.launchBrowser(browser);	
 		 
@@ -63,7 +61,7 @@ public class BS_UseCase_3{
 	  }
 	  
 	  @Test (priority=1)
-	  public void BS_Install_Already_Installed_Package_01() throws Exception{
+	  public void BS_Install_Already_Installed_Package() throws Exception{
 		  
 		  buildServerTab.selectBuildServer("ppcle-ubuntu");
 		  
@@ -79,7 +77,7 @@ public class BS_UseCase_3{
 	  }	  
 	  
 	  @Test (priority=2)
-	  public void BS_Install_package_with_different_versions_01() throws Exception{
+	  public void BS_Install_package_with_different_versions() throws Exception{
 		  
 		  buildServerTab.enterPackageToSearch("apache-ant"); 
 		  
@@ -92,13 +90,28 @@ public class BS_UseCase_3{
 		  buildServerTab.clickInstallUpdateBtn();
 		  
 		  buildServerTab.verifyTwoVersionMessage("apache-ant", firstVersion);
+		  
+		  buildServerTab.verifyInstallationSuccessPopUp("apache-ant");		  
+		  
+		  buildServerTab.enterPackageToSearch("apache-ant"); 
+			 
+		  buildServerTab.selectBuildServer("ppcle-ubuntu");
+		  
+		  buildServerTab.clickListBtn();
+		  
+		  buildServerTab.verifyInstalledVersionIsNotNA("apache-ant");
+		  
 	  }
 	  
-	  @DataProvider(name = "buildServers")
-	  
+	  @DataProvider(name = "buildServers")	  
 	  public static Object[][] listBuildServers() { 
 	 
-		  return new Object[][] {{"ppcle-ubuntu" ,"python-bson"},{"x86-ubuntu" ,"python-bson"}};	 
+		  return new Object[][] {
+				  {"ppcle-ubuntu" ,"python-bson"},
+				  {"x86-ubuntu" ,"python-bson"}, 
+				  {"x86-64-rhel" ,"apache-ant"},
+				  {"ppc64le-rhel" ,"apache-ant"}
+				  };	 
 	  }	
 	
 	  @AfterTest

@@ -1,10 +1,8 @@
 package com.autoport.testcases;
 
-import java.util.concurrent.TimeUnit;
-
-import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.support.ui.FluentWait;
+import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
@@ -33,26 +31,77 @@ public class BS_UseCase_7 {
 		 buildServerTab = functions.buildServerTab;
 		 
 		 functions.openAutoport();
-		 functions.goTo_ListInstallSingleSoftwarSection();	
+		 functions.goTo_ListInstallUsingManagedServicesSection();	
 	  }
 	 
 	 @Test(priority=0)
-	  public void BS_Add_Package_To_Managed_List_RHEL_Server_01() throws Exception{ 
+	  public void BS_Add_Package_To_Managed_List_RHEL_Server() throws Exception{ 
+		 
+		 buildServerTab.enterPackageToSearchUsingManagedServices("apache-ant");
+		 
+		 buildServerTab.clickListRhelBtn();
+		 
+		 String version =  buildServerTab.selectPackageToAddRemove("apache-ant");
+		 
+		 buildServerTab.clickAddToManagedListBtn();
+		 
+		 buildServerTab.verifyAndAcceptAddPopup("apache-ant", version);
+		 
+		 buildServerTab.verifyPkgAddSuccessMessage();
+	  }
+	 
+	 @Test(priority=1)
+	  public void BS_Add_Package_To_Managed_List_Ubuntu_Server() throws Exception{ 
+		 
+		 buildServerTab.enterPackageToSearchUsingManagedServices("apache-ant");
+		 
+		 buildServerTab.clickListUbuntuBtn();
+		 
+		 String version =  buildServerTab.selectPackageToAddRemove("apache-ant");
+		 
+		 buildServerTab.clickAddToManagedListBtn();
+		 
+		 buildServerTab.verifyAndAcceptAddPopup("apache-ant", version);
+		 
+		 buildServerTab.verifyPkgAddSuccessMessage();
 		  
 	  }
 	 
-	 @Test(priority=0)
-	  public void BS_Add_Package_To_Managed_List_Ubuntu_Server_01() throws Exception{ 
+	  @Test(priority=2)
+	  public void BS_Remove_Package_from_Managed_List_RHEL_Server() throws Exception{ 
 		  
+		  buildServerTab.enterPackageToSearchUsingManagedServices("apache-ant");
+			 
+			 buildServerTab.clickListRhelBtn();
+			 
+			 String version =  buildServerTab.selectPackageToAddRemove("apache-ant");
+			 
+			 buildServerTab.clickremoveFromManagedListBtn();
+			 
+			 buildServerTab.verifyAndAcceptAddPopup("apache-ant", version);
+			 
+			 buildServerTab.verifyPkgRemoveSuccessMessage();
 	  }
 	 
-	  @Test(priority=0)
-	  public void BS_Remove_Package_from_Managed_List_RHEL_Server_01() throws Exception{ 
+	 @Test(priority=3)
+	  public void BS_Remove_Package_from_Managed_List_Ubuntu_Server() throws Exception{ 
 		  
+		 buildServerTab.enterPackageToSearchUsingManagedServices("");
+		 
+		 buildServerTab.clickListUbuntuBtn();
+		 
+		 String version =  buildServerTab.selectPackageToAddRemove("apache-ant");
+		 
+		 buildServerTab.clickremoveFromManagedListBtn();
+		 
+		 buildServerTab.verifyAndAcceptAddPopup("apache-ant", version);
+		 
+		 buildServerTab.verifyPkgRemoveSuccessMessage();
 	  }
 	 
-	 @Test(priority=0)
-	  public void BS_Remove_Package_from_Managed_List_Ubuntu_Server_01() throws Exception{ 
+	 @AfterTest
+	  public void afterClass() {
 		  
+		  driver.quit();
 	  }
 }
