@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "10",
+    "sequence": "11",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -93,6 +93,9 @@
                     "name": "libfile-remove-perl"
                 },
                 {
+                    "name": "libflac-dev"
+                },
+                {
                     "name": "libgflags-dev"
                 },
                 {
@@ -129,6 +132,9 @@
                     "name": "libncurses5-dev"
                 },
                 {
+                    "name": "libopenal-dev"
+                },
+                {
                     "name": "libpath-tiny-perl"
                 },
                 {
@@ -156,7 +162,16 @@
                     "name": "libtool"
                 },
                 {
+                    "name": "libudev-dev"
+                },
+                {
                     "name": "libuv-dev"
+                },
+                {
+                    "name": "libvorbis-dev"
+                },
+                {
+                    "name": "libxcb-image0-dev"
                 },
                 {
                     "name": "libxi-dev"
@@ -228,6 +243,9 @@
                     "name": "python-protobuf"
                 },
                 {
+                    "name": "python-software-properties"
+                },
+                {
                     "name": "python-py"
                 },
                 {
@@ -259,6 +277,9 @@
                 },
                 {
                     "name": "scons"
+                },
+                {
+                    "name": "software-properties-common"
                 },
                 {
                     "name": "snappy"
@@ -350,6 +371,9 @@
                     "name": "expat-devel"
                 },
                 {
+                    "name": "flac-devel"
+                },
+                {
                     "name": "flex"
                 },
                 {
@@ -389,7 +413,13 @@
                     "name": "libevent-devel"
                 },
                 {
+                    "name": "libgudev1-devel"
+                },
+                {
                     "name": "libtool"
+                },
+                {
+                    "name": "libvorbis-devel"
                 },
                 {
                     "name": "libyaml-devel"
