@@ -736,7 +736,7 @@ def updateBatchFile():
 
     return json.jsonify(status="ok")
 
-def convertEnv(selectedEnv):
+def convertEnv(repo, selectedEnv):
     # Two types of environment variables: quoted and non-quoted. eg. {N="x", N='x'} and N=n
 
     if not selectedEnv:
@@ -768,7 +768,7 @@ def convertEnv(selectedEnv):
              new.append(subString)
     new = "\n".join(new)
 
-    logger.debug("convertEnv: env=%s" % new)
+    logger.debug("convertEnv: proj=%s, env=%s" % (repo.name, new))
 
     return new
 
@@ -780,7 +780,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
     repo = globals.cache.getRepo(id)
 
     if not selectedBuild and not selectedTest:
-        errorstr = "Programming language not supported - " + repo.language
+        errorstr = "Project %s cannot be built.\n\nReason: primary programming language (%s) is not supported!" % (repo.name, repo.language)
         return { 'status': "failure", 'error': errorstr }
 
     try:
@@ -818,7 +818,9 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
 
     jobName = globals.localHostName + '.' + str(uid) + '.' + node + '.N-' + repo.name
 
-    if tag == "" or tag == "current":
+    logger.debug("createJob_common: jobName=%s" % jobName)
+
+    if tag == "" or tag == "current" or tag == "Current":                     # Current is legacy
         xml_default_branch.text = "*/" + repo.default_branch
         jobName += ".current"
     else:
@@ -830,6 +832,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
             xml_default_branch.text = "tags/" + tag
             jobName += "." + tag
         else:
+            logger.debug("createJob_common: Error invalid tag=%s" % tag)
             msg = "Invalid project %s build tag %s" % (repo.name, tag)
             return { 'status': "failure", 'error': msg }
 
@@ -849,7 +852,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
     installCmd = selectedInstall
 
     # Add environment variables deduced from readme files or provided by user
-    xml_env_command.text = convertEnv(selectedEnv)
+    xml_env_command.text = convertEnv(repo, selectedEnv)
 
     # Job metadata as passed to jenkins
     jobMetadataName = "meta.arti"
@@ -1246,7 +1249,7 @@ def runBatchFile ():
         if fileBuf['config']['javascript'] == "IBM SDK for Node.js":
             javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
 
-        logger.debug("runBatchFile, javaType=%s javaScriptType=%s nodeCSV=%s" % (javaType, javaScriptType, nodeCSV))
+        logger.debug("runBatchFile: javaType=%s javaScriptType=%s nodeCSV=%s" % (javaType, javaScriptType, nodeCSV))
 
         # Create batch results template, stores list of job names associated with batch file
         # Create a folder of format  <batch_name>.<uuid>
@@ -1276,10 +1279,17 @@ def runBatchFile ():
 
                 # if a project can't be built, skip it. Top N may not be buildable - documentation
                 selectedBuild = package['build']['selectedBuild']
-                if selectedBuild == "":
+                selectedTest = package['build']['selectedTest']
+                if selectedBuild == "" and selectedTest == "":
                     continue
 
-                if 'includeTestCmds' in fileBuf['config'] and fileBuf['config']['includeTestCmds'] == 'False':
+                # If build info is derived from a travis.yaml file, then both build and test
+                # need to be run if specified as 'selectedBuild' is devoted to dependencies and
+                # 'selectedTest' is devoted to the named project.  The latter includes both
+                # build and test commands as provided by travis.yaml file.
+                selectedEnv = package['build']['selectedEnv']
+                if (not selectedEnv or "TRAVIS_OS_NAME=" not in selectedEnv) and\
+                   'includeTestCmds' in fileBuf['config'] and fileBuf['config']['includeTestCmds'] == 'False':
                     package['build']['selectedTest'] = ""
 
                 if 'includeInstallCmds' in fileBuf['config'] and fileBuf['config']['includeInstallCmds'] == 'False':
