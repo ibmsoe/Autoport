@@ -451,6 +451,11 @@ var batchState = {
             batchState.batchFile.config.includeTestCmds = "False";
         }
     },
+    onBatchSettingsOwnerChange:function(ev, el) {
+        if($('#batchSettingsOwner').val() != ""){
+            batchState.batchFile.config.owner = $('#batchSettingsOwner').val();
+        }
+    },
     displayBatchSettings: function(ev, el) {
          $("#batchCommandsTableContanier").hide();
          $("#settingsBatchModal1").show();
@@ -463,19 +468,23 @@ var batchState = {
         batchState.loading = true;
         var servers = document.getElementById('batchBuildServers'),
             options = servers.getElementsByTagName('option'),
-            selectedServers = [];
+            selectedServers = "";
             for (var i=options.length; i--;) {
-                if (options[i].selected) selectedServers.push(options[i].value)
+                if (options[i].selected){
+               	    if(selectedServers == ""){
+                        selectedServers = options[i].value;
+                    }else{
+                        selectedServers = selectedServers+","+options[i].value;
+                    }
+                }
             }
-        if (selectedServers.length == 0){
-            $.post("runBatchFile", {batchName: batchState.selectedBatchFile.filename,
-                node: undefined}, runBatchFileCallback, "json").fail(runBatchFileCallback);
+        if (selectedServers == ""){
+            showAlert("Please select atleast one build server");
+            return false;
         }
         else{
-            for (var i = 0; i < selectedServers.length; i++){
-                $.post("runBatchFile", {batchName: batchState.selectedBatchFile.filename,
-                    node: selectedServers[i]}, runBatchFileCallback, "json").fail(runBatchFileCallback);
-            }
+            $.post("runBatchFile", {batchName: batchState.selectedBatchFile.filename,
+                nodeCSV: selectedServers}, runBatchFileCallback, "json").fail(runBatchFileCallback);
         }
     },
     detail: function(ev, el) {
@@ -2744,15 +2753,19 @@ function parseBatchFileCallback(data, batch_obj){
 
             var buildCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Build Command').appendTo(buildCommandRow);
-            $('<td></td>').html('<input type="text" value="'+package.build.selectedBuild+'" onBlur="updateBuildCommand(this.value,\''+index+'\')"/>').appendTo(buildCommandRow);
+            $('<td></td>').html('<input type="text" style="width:350px;" value="'+package.build.selectedBuild+'" onBlur="updateBuildCommand(this.value,\''+index+'\')"/>').appendTo(buildCommandRow);
 
             var testCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Test Command').appendTo(testCommandRow);
-            $('<td></td>').html('<input type="text" value="'+package.build.selectedTest+'" onBlur="updateTestCommand(this.value,\''+index+'\')"/>').appendTo(testCommandRow);
+            $('<td></td>').html('<input type="text" style="width:350px;" value="'+package.build.selectedTest+'" onBlur="updateTestCommand(this.value,\''+index+'\')"/>').appendTo(testCommandRow);
 
             var installCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Install Command').appendTo(installCommandRow);
-            $('<td></td>').html('<input type="text" value="'+package.build.selectedInstall+'" onBlur="updateInstallCommand(this.value,\''+index+'\')"/>').appendTo(installCommandRow);
+            $('<td></td>').html('<input type="text" style="width:350px;" value="'+package.build.selectedInstall+'" onBlur="updateInstallCommand(this.value,\''+index+'\')"/>').appendTo(installCommandRow);
+
+            var envCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
+            $('<td></td>').html('<span>Environment Variable </span><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Environment variables separated by blanks or newlines applied as-is" ></span>').appendTo(envCommandRow);
+            $('<td></td>').html('<textarea style="width:350px;height:60px" value="'+package.build.selectedEnv+'" onBlur="updateEnvVariable(this.value,\''+index+'\')">'+package.build.selectedEnv+'</textarea>').appendTo(envCommandRow);
 
             package.down = function (ev) {
                 var i = data.results.packages.indexOf(package);
@@ -3635,6 +3648,11 @@ function updateBuildCommand(value, key){
 function updateInstallCommand(value, key){
     batchState.batchFile.packages[key].build.selectedInstall = value;
 }
+
+function updateEnvVariable(value, key){
+    batchState.batchFile.packages[key].build.selectedEnv = value;
+}
+
 $(document).ready(function() {
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers
