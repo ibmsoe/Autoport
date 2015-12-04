@@ -82,7 +82,8 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
                                 retval.append(utils.clean(line))
                                 lines = lines + 1
                                 break
-                            elif (projectLang == 'C' or projectLang == 'C++' or projectLang == 'Perl') and 'make' in line:
+                            elif (projectLang == 'C' or projectLang == 'C++' or projectLang == 'Perl') and\
+                                 'make' in line:
                                 retval.append(utils.clean(line))
                                 lines = lines + 1
                                 break
@@ -94,13 +95,115 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
 
     return ';'.join(retval)
 
+
+def eliminateDupEnv(env):
+    """
+    Method to eliminate duplicate environment variables
+    This is patterned after convertEnv()
+    """
+
+    # Split by all whitespace, blanks, tabs, and newlines
+    envList = env.split()
+
+    # Splits too much.  We don't want to split by embedded blanks and tabs if var is quoted
+    quoteType = ""
+    newEnv=[]
+    for subString in envList:
+        if '="' in subString:                                  # Start of quoted variable
+            combine=subString
+            quoteType = '"'
+            n = subString.find('="')
+            key = subString[:n]
+        elif "='" in subString:                                # Start of quoted variable
+            quoteType = "'"
+            combine=subString
+            n = subString.find("='")
+            key = subString[:n]
+        else:
+            n = subString.find("=")
+            key = subString[:n]
+
+        if quoteType and quoteType in subString[-1]:           # Ends in quoted variable
+            if combine != subString:                           # Initial assignment above
+                combine = combine + ' ' + subString
+            if key not in newEnv:
+                newEnv.append(combine)
+            quoteType = ""
+        elif quoteType:                                        # Mid of quoted variable
+            if combine != subString:                           # Initial assignment above
+                combine = combine + ' ' + subString
+        elif key + "=" not in " ".join(newEnv):                # not a quoted variable
+            newEnv.append(subString)
+
+    newEnv = " ".join(newEnv)
+    return newEnv
+
+def selectTravisMatrix(repo, matrix):
+    """
+    Method to select a matrix entry of environment variables.  Only one entry in
+    matrix is chosen as each line is intended for a unique build.  Try to choose
+    the line that best fits our supported platforms
+    """
+
+    linuxEnv = ""
+    lessEnv = ""
+
+    compilers = ['gcc', 'clang', 'autotools', 'make', 'cmake', 'scons', 'sbt']
+    restrict = ['android', 'arm', 'ia32', 'macos', 'osx', 'x86-64', 'x64', 'ppc']
+    lessRestrict = ['android', 'arm', 'ia32', 'macos', 'osx']
+
+    # TravisCI processes include and exclude sections to determine builds
+
+    if 'include' in matrix:
+        matrix = matrix['include']
+
+    for platform in matrix:
+
+        # Environment is selected based on operating system type
+        if 'os' in platform and 'env' in platform:
+            if platform['os'].lower() != 'linux':
+                continue
+            linuxEnv = platform['env']
+        # Environment is based on some other selection like compiler
+        elif 'compiler' in platform and 'env' in platform:
+            if platform['compiler'].lower() not in compilers:
+                continue
+            linuxEnv = platform['env']
+        elif 'os' not in platform and 'exclude' not in platform:
+            linuxEnv = platform
+
+        if not isinstance(linuxEnv, list) and not isinstance(linuxEnv, basestring):
+            continue
+
+        logger.debug("selectTravisMatrix: proj=%s env=%s" % (repo.name, linuxEnv))
+
+        # Convert it to a string for comparisons below
+        if isinstance(linuxEnv, list):
+            try:
+                linuxEnv = ' '.join(linuxEnv)
+            except:
+                linuxEnv = ""
+
+        if not any(x in linuxEnv.lower() for x in restrict):
+            break
+        if not any(x in linuxEnv.lower() for x in lessRestrict):
+            lessEnv = linuxEnv
+        linuxEnv = ""
+
+    if not linuxEnv:
+        linuxEnv = lessEnv
+
+    logger.debug("selectTravisMatrix: proj=%s selectedEnv=%s" % (repo.name, linuxEnv))
+
+    return linuxEnv
+
 def interpretTravis(repo, travisFile, travis_def):
     """
     Method to interpret the travis control file and fill out the
     travis_def with appropriate values.
     """
 
-    logger.debug("In interpretTravis, project %s" % repo.name)
+    logger.debug("In interpretTravis, proj=%s" % repo.name)
 
     travis_flag = None
     try:
@@ -116,24 +219,111 @@ def interpretTravis(repo, travisFile, travis_def):
             logger.debug("interpretTravis: Yaml Error %s" % str(e))
             data = ""
 
-        if data and 'script' in data and not any('$' in s for s in data['script']):
-            if isinstance(data['script'], list):
-                travis_def['test'] = '; '.join(data['script'])
-            else:
-                travis_def['test'] = data['script']
+        if data and 'script' in data:
+            # Get general environment variables first
+            generalEnv = ""
+            if 'env' in data:
+                logger.debug("interpretTravis: proj=%s env=%s" % (repo.name, data['env']))
 
-            travis_def['build'] = "echo ---See test log for travis-style build---"
-            if 'before_script' in data and not any('$' in s for s in data['before_script']):
-                if isinstance(data['before_script'], list):
-                    travis_def['build'] = '; '.join(data['before_script'])
+                if isinstance(data['env'], dict):
+                    dictEnv = data['env']
+                    if dictEnv.has_key('global'):
+                        generalEnv = dictEnv['global']
+                        try:
+                            # Join them.  They are meant to be applied to each
+                            # row in a matrix and are common to all builds
+                            if isinstance(generalEnv, list):
+                                generalEnv = ' '.join(generalEnv)
+                        except:
+                            generalEnv = ""
+                    if dictEnv.has_key('matrix'):
+                        linuxEnv = selectTravisMatrix(repo, dictEnv['matrix'])
+                        # Add linuxEnv to generalEnv if it is non-empty
+                        if generalEnv and linuxEnv:
+                            generalEnv = generalEnv + " " + linuxEnv
+                        elif linuxEnv:
+                            generalEnv = linuxEnv
+                elif isinstance(data['env'], list):
+                    generalEnv = ' '.join(data['env'])
                 else:
-                    travis_def['build'] = data['before_script']
+                    generalEnv = data['env']
+
+                logger.debug("interpretTravis: proj=%s generalEnv=%s" % (repo.name, generalEnv))
+
+            # Add in distro specific environment variables
+            linuxEnv = ""
+            if 'matrix' in data:
+                linuxEnv = selectTravisMatrix(repo, data['matrix'])
+
+            # Combine general and linux specific environment variables
+            if generalEnv and linuxEnv:
+                generalEnv = generalEnv + " " + linuxEnv
+            elif linuxEnv:
+                generalEnv = linuxEnv
+
+            # Add TravisCI control variables that apply for our builds
+            generalEnv = 'TRAVIS_OS_NAME="linux" ' + generalEnv
+
+            # Eliminate duplicate entries
+            travis_def['env'] = eliminateDupEnv(generalEnv)
+
+            # Add autoport build command which comes from yaml before_install and install
+            nonprivileged = ['cd ', 'mkdir ', 'if ', 'sudo ', 'source ', 'true',
+                             'export ', 'ln ', 'cp ', 'wget ']
+            if 'before_install' in data:
+                if isinstance(data['before_install'], list):
+                    newCmds = []
+                    for cmd in data['before_install']:
+                        if not any(x in cmd for x in nonprivileged):
+                           newCmds.append('sudo ' + cmd)
+                        else:
+                           newCmds.append(cmd)
+                    travis_def['build'] = '; '.join(newCmds)
+                else:
+                    cmd = data['before_install']
+                    if not any(x in cmd for x in nonprivileged):
+                        travis_def['build'] = 'sudo ' + cmd
+                    else:
+                        travis_def['build'] = cmd
+            if 'install' in data:
+                if isinstance(data['install'], list):
+                    newCmds = []
+                    for cmd in data['install']:
+                        if not any(x in cmd for x in nonprivileged):
+                           newCmds.append('sudo ' + cmd)
+                        else:
+                           newCmds.append(cmd)
+                    travis_def['build'] = '; '.join(newCmds)
+                else:
+                    cmd = data['install']
+                    if not any(x in cmd for x in nonprivileged):
+                        travis_def['build'] = 'sudo ' + cmd
+                    else:
+                        travis_def['build'] = cmd
+            if not travis_def['build']:
+                travis_def['build'] = "echo ---See test log for travis-style build---"
+
+            # Add autoport test command which comes from yaml before_script and script
+            if 'before_script' in data:
+                if isinstance(data['before_script'], list):
+                    travis_def['test'] = '; '.join(data['before_script'])
+                else:
+                    travis_def['test'] = data['before_script']
+            if isinstance(data['script'], list):
+                cmd = '; '.join(data['script'])
+            else:
+                cmd = data['script']
+            if travis_def['test']:
+                travis_def['test'] = travis_def['test'] + '; ' + cmd
+            else:
+                travis_def['test'] = cmd
 
             # Keep repo.primary lang as reports are tied to it.  Travis has their own defs
 
             travis_flag = travisFile
-            logger.debug("interpretTravis: %s test command: %s" % (repo.name, travis_def['test']))
-            logger.debug("interpretTravis: %s build command: %s" % (repo.name, travis_def['build']))
+            logger.debug("interpretTravis: proj=%s env: %s" % (repo.name, travis_def['env']))
+            logger.debug("interpretTravis: proj=%s build command: %s" % (repo.name, travis_def['build']))
+            logger.debug("interpretTravis: proj=%s test command: %s" % (repo.name, travis_def['test']))
 
     return travis_flag
 
@@ -273,7 +463,7 @@ def inferBuildSteps(listing, repo):
         'build': "if [ -e configure.ac ]; then autoreconf -iv; fi; if [ -x configure ]; then ./configure; fi; make",
         # 'build': "if [ -e configure.ac ]; then aclocal; fi; if [ -e Makefile.am ]; then automake --add-missing; fi; if [ -e configure.ac ]; then autoconfig; fi; if [ -x configure ]; then ./configure; fi; make",
         'test' : "make test",
-        'install' : "make install >> install_result.arti 2>&1",
+        'install' : "sudo make install",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "Primary language",
@@ -290,7 +480,7 @@ def inferBuildSteps(listing, repo):
         'build': "if [ -e configure.ac ]; then autoreconf -iv; fi; if [ -x configure ]; then ./configure; fi; make",
         # 'build': "if [ -e configure.ac ]; then aclocal; fi; if [ -e Makefile.am ]; then automake --add-missing; fi; if [ -e configure.ac ]; then autoconfig; fi; if [ -x configure ]; then ./configure; fi; make",
         'test' : "make test",
-        'install' : "make install >> install_result.arti 2>&1",
+        'install' : "sudo make install",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "Primary language",
@@ -439,7 +629,7 @@ def inferBuildSteps(listing, repo):
         'grep env': "CFLAGS=",
         'build': "if [ -x configure ]; then ./configure; fi; make",
         'test' : "make test",
-        'install' : "make install >> install_result.arti 2>&1",
+        'install' : "sudo make install",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "Makefile",
@@ -455,7 +645,7 @@ def inferBuildSteps(listing, repo):
         'grep env': "CFLAGS=",
         'build': "if [ -x bootstrap.sh ]; then ./bootstrap.sh; elif [ -x autogen.sh ]; then ./autogen.sh; fi; if [ -x configure ]; then ./configure; fi; make",
         'test' : "make test",
-        'install': "",
+        'install': "sudo make install",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "bootstrap.sh or autogen.sh",
@@ -491,8 +681,8 @@ def inferBuildSteps(listing, repo):
         'grep install': "",
         'grep env': "",
         'build': "./build.sh",
-        'test' : "./build.sh",
-        'install': "",
+        'test' : "./build.sh test",
+        'install': "sudo ./build.sh install",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "build.sh",
@@ -534,7 +724,7 @@ def inferBuildSteps(listing, repo):
             langlist.append(ant_def)
         elif f.name == 'CMakeLists.txt':
             langlist.append(cmake_def)
-        elif f.name == 'SConstruct':
+        elif f.name in ('SConstruct', 'Sconstruct', 'sconstruct'):
             langlist.append(scons_def)
         elif f.name == 'build.sbt':
             langlist.append(sbt_def)
