@@ -59,7 +59,6 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
             if build_found and\
                idx - build_line_number < proximity_threshold:
                 if len(line):
-                    # TODO: Remove, limit, or put under globals.text_analytics before GA
                     logger.debug("text_analytics_cmds, idx=%s scanning line=%s" % (str(idx), line))
 
                     isText = False
@@ -690,7 +689,7 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    logger.debug("In inferBuildSteps, name=%s, primary lang=%s" % (repo.name, repo.language))
+    logger.debug("In inferBuildSteps, proj=%s, primary lang=%s" % (repo.name, repo.language))
 
     # Fix base empty definition in case it is returned
     if repo.language:
@@ -745,7 +744,7 @@ def inferBuildSteps(listing, repo):
                     fstr = repo.get_file_contents(f.path).content.decode('base64', 'strict')
                     if fstr != "":
                         grepstack.insert(0, fstr)
-                        logger.debug("inferBuildSteps, grepfile=%s" % f.name)
+                        logger.debug("inferBuildSteps: proj=%s, grepfile=%s" % (repo.name, f.name))
                 except:
                     pass
 
@@ -828,31 +827,34 @@ def inferBuildSteps(listing, repo):
                             build_info['envOptions'].append(strFound)
                     break
 
-            # Add build commands extracted using text analytics
-            command = text_analytics_cmds(repo.name, repo.language, grepstack, 'build')
-            logger.debug("inferBuildSteps, text_analytics build cmd=%s" % command)
-            if command:
-                if globals.useTextAnalytics:
-                    build_info['buildOptions'].insert(len(build_info), '[TextAnalytics]' + command)
-                else:
-                    build_info['buildOptions'].insert(0, '[TextAnalytics]' + command)
+            # Text analytics is deactivated until there is significant progress.  It can
+            # still be enabled via the settings menu, but the recommendation is always
+            # put last.  This effectively hides it but allows continued development.
+            if globals.useTextAnalytics:
+                # Add build commands extracted using text analytics
+                command = text_analytics_cmds(repo.name, repo.language, grepstack, 'build')
+                if command:
+#                   if globals.useTextAnalytics:
+                    if False:
+                        build_info['buildOptions'].insert(len(build_info), '[TextAnalytics]' + command)
+                    else:
+                        build_info['buildOptions'].insert(0, '[TextAnalytics]' + command)
 
-            # Add test commands extracted using text analytics
-            command = text_analytics_cmds(repo.name, repo.language, grepstack, 'test')
-            logger.debug("inferBuildSteps, text_analytics test cmd=%s" % command)
-            if command:
-                if globals.useTextAnalytics:
-                    build_info['testOptions'].insert(len(build_info), '[TextAnalytics]' + command)
-                else:
-                    build_info['testOptions'].insert(0, '[TextAnalytics]' + command)
-            # Add install commands extracted using text analytics
-            command = text_analytics_cmds(repo.name, repo.language, grepstack, 'install')
-            logger.debug("inferBuildSteps, text_analytics install cmd=%s" % command)
-            if command:
-                if globals.useTextAnalytics:
-                    build_info['installOptions'].insert(len(build_info), '[TextAnalytics]' + command)
-                else:
-                    build_info['installOptions'].insert(0, '[TextAnalytics]' + command)
+                # Add test commands extracted using text analytics
+                command = text_analytics_cmds(repo.name, repo.language, grepstack, 'test')
+                if command:
+#                   if globals.useTextAnalytics:
+                    if False:
+                        build_info['testOptions'].insert(len(build_info), '[TextAnalytics]' + command)
+                    else:
+                        build_info['testOptions'].insert(0, '[TextAnalytics]' + command)
+                # Add install commands extracted using text analytics
+                if command:
+#                   if globals.useTextAnalytics:
+                    if False:
+                        build_info['installOptions'].insert(len(build_info), '[TextAnalytics]' + command)
+                    else:
+                        build_info['installOptions'].insert(0, '[TextAnalytics]' + command)
 
     # Make the build, test, and env options of the last added element the default options
     # as those are the most likely to be correct
@@ -865,6 +867,11 @@ def inferBuildSteps(listing, repo):
             build_info['selectedInstall'] = build_info['installOptions'][-1]
         if build_info['envOptions']:
             build_info['selectedEnv'] = build_info['envOptions'][-1]
+
+    logger.debug("Leaving inferBuildSteps, proj=%s, env=%s" % (repo.name, build_info['selectedEnv']))
+    logger.debug("Leaving inferBuildSteps, proj=%s, build cmd=%s" % (repo.name, build_info['selectedBuild']))
+    logger.debug("Leaving inferBuildSteps, proj=%s, test cmd=%s" % (repo.name, build_info['selectedTest']))
+    logger.debug("Leaving inferBuildSteps, proj=%s, install cmd=%s" % (repo.name, build_info['selectedInstall']))
 
     return build_info
 
