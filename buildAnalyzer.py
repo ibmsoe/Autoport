@@ -337,15 +337,16 @@ def inferBuildSteps(listing, repo):
     build_info = {
         'buildSystem': "",
         'primaryLang': "",
+        'envOptions': [],
         'buildOptions': [],
         'testOptions': [],
         'installOptions': [],
-        'envOptions': [],
         'success': False,
         'reason': "primary language unknown",
+        'selectedEnv': "",
         'selectedBuild': "",
         'selectedTest': "",
-        'selectedEnv': "",
+        'selectedInstall': "",
         'artifacts': "*.arti"
     }
 

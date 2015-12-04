@@ -1322,7 +1322,10 @@ def runBatchFile ():
 
     if submittedJob:
         return json.jsonify(status="ok")
-    return json.jsonify(status="failure", error="batch file no project is buildable"), 404
+
+    logger.debug("runBatch Error: No project buildable in batch file (%s)!" % batchName)
+
+    return json.jsonify(status="failure", error="Autoport does not know how to build any project in the Batch File!"), 404
 
 @app.route("/autoport/getBatchResults", methods=["GET", "POST"])
 def getBatchResults():
