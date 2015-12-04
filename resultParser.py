@@ -102,12 +102,7 @@ class ResultParser:
                 metadata = json.load(f)
                 f.close
             buildsys = metadata.get('Primary Language','')
-            if buildsys == 'Python':
-                result.append(self.PythonBuildSummary(filedir+'/test_result.arti'))
-            elif buildsys == 'JavaScript':
-                result.append(self.JavaScriptBuildSummary(filedir + '/test_result.arti'))
-            else:
-                result.append(self.MavenBuildSummary(filedir+'/test_result.arti'))
+            result.append(self.resultParser(filedir+'/test_result.arti'))
         left_r = result[0]
         right_r = result[1]
 
@@ -419,3 +414,262 @@ class ResultParser:
         res['duration'] = totals['duration']
         res['results']  = {}
         return res
+
+    def resultParser(self, logFile):
+        """
+        This method parses the log file which contains the result data, process the output summary and returns
+        the results in JSON format
+        Args:
+            logFile(str): Absolute path with name of the log file to parse.
+        Returns:
+            JSON containing test result data.
+        """
+        totals = {
+            "total": 0,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "duration": 0,
+            "results": {}
+        }
+        primaryLanguage = self.getPrimaryLanguageFromMeta(logFile)
+        if primaryLanguage:
+            resultPatterns = self.getResultPattern(primaryLanguage)
+        else:
+            return totals
+
+        try:
+            with open(logFile) as resultFile:
+                resultFileData = resultFile.readlines()
+                for line in resultFileData:
+                    resultRegExList = resultPatterns.get('regex_list', None)
+                    for regEx in resultRegExList:
+                        resultMatch = regEx.match(line)
+                        if type(resultMatch) == type(re.match("", "")):
+                            # Control reaching here indicates primary language is one of the supported
+                            # Also it means that the line in file we are looking at contains test result summary that we want
+
+                            # Now split the summary lines based on delimiters to get the data required.
+                            # Not using regular expression for fetching data, as using it will not allow a generalized method
+                            # instead split string and fetch key value from it.
+                            delimiterOne = resultPatterns.get('delimiterOne', ',')
+                            delimiterTwo = resultPatterns.get('delimiterTwo', ' ')
+                            infoFragments = line.split(delimiterOne)
+                            totals = self.fillTotalArray(infoFragments, delimiterTwo, totals)
+        except IOError as file_error:
+            logger.warning("resultParser:: Error: File with name %s not found." % str(file_error))
+        return totals
+
+    def fillTotalArray(self, infoFragments, delimiter, totals):
+        """
+        This method updates the JSON test result data, based on data extracted from the test result log file.
+        Args:
+            infoFragments(list): Raw test summary key-value pair list.
+            delimiter(str): used for separating key-value from infoFragments elements.
+            totals(dict): final dictionary to be updated and returned.
+        """
+
+        keywordsToLookFor = ['test', 'tests', 'failed', 'passed', 'assertion', 'assertions', 'failures', 'errors', 'skips', 'skipped', 'total']
+        def whichKeyword(value):
+            """
+            This method accepts a keyword and returns closest matching keyword which will be returned in final response
+            Args:
+                value(str): input string to check for
+            Returns:
+                translated keyword for response
+            """
+            if value in ['test', 'tests', 'total']:
+                keywordToUse = 'total'
+            elif value in ['failed', 'failures', 'failure']:
+                keywordToUse = 'failures'
+            elif value in ['skips', 'skipped']:
+                keywordToUse = 'skipped'
+            else:
+                keywordToUse = value
+            return keywordToUse
+
+        def isStringInt(value):
+            """
+            This method checks if the given value is int or not and return True/False accordingly.
+            Args:
+                value(mixed): input string to check for
+            Returns:
+                Boolean indicating given value is integer or not.
+            """
+            try:
+                int(value)
+                return True
+            except:
+                return False
+
+        def setKeyVal(keyValPair, totals):
+            """
+            This method finds the integer value and deduce its key, thereby updating the totals info with the key value.
+            example:
+                1) a string "[info] Passed: : Total 1" on splitting can contain following elements:
+                ['[info]', 'Passed:', ':', 'Total', '1']
+
+                2) a string "[info] Passed: : 1 Total" on splitting can contain following elements:
+                ['[info]', 'Passed:', ':', '1', 'Total']
+
+                So in order to figure out the correct key in generalized form, we need to check if there is another
+                element after the numeric element or not.
+
+                If numeric element is not the last element it means key is the last element, else key is the second last
+                element.
+            Args:
+                keyValPair(list): List of all the words obtained from output summary string
+                totals(dict): final dictionary to be updated and returned.
+            Returns:
+                dictionary with required test result data.
+            """
+            counter = 0
+            for i in keyValPair:
+                sanitizedValue = re.sub(r'([^\s\w]|_)+', '', i)
+                if isStringInt(sanitizedValue):
+                    if counter+1 > len(keyValPair):
+                        sanitizedKey = re.sub(r'([^\s\w]|_)+', '', keyValPair[counter-1].lower())
+                    else:
+                        sanitizedKey = re.sub(r'([^\s\w]|_)+', '', keyValPair[counter+1].lower())
+                    totals[whichKeyword(sanitizedKey)] = int(sanitizedValue)
+                    return None
+                counter = counter + 1
+            return None
+
+        for i in infoFragments:
+            keyValPair = i.strip().split(delimiter)
+            if len(keyValPair) == 2:
+                if isStringInt(keyValPair[0]):
+                    keyToUse = re.sub(r'([^\s\w]|_)+', '', keyValPair[1].strip())
+                    # intentionally substituting any thing other than word, instead of replacing anything other than digit.
+                    # reason being there can be some alphanumeric string which is not what is required.
+                    ValueToUse = re.sub(r'([^\w]|)+', '', keyValPair[0])
+                else:
+                    keyToUse = re.sub(r'([^\s\w]|_)+', '', keyValPair[0].strip())
+                    # intentionally substituting any thing other than word, instead of replacing anything other than digit.
+                    # reason being there can be some alphanumeric string which is not what is required.
+                    ValueToUse = re.sub(r'([^\w]|)+', '', keyValPair[1])
+                keyword = filter(lambda x: x in keyToUse.lower(), keywordsToLookFor)
+                if len(keyword):
+                    totals[whichKeyword(keyword[0])] = int(ValueToUse)
+            else:
+                setKeyVal(keyValPair, totals)
+
+        if int(totals['total']) == 0:
+            totals['total'] = sum([val for val in totals.values() if isStringInt(val)])
+
+        return totals
+
+    def getPrimaryLanguageFromMeta(self, logFileName):
+        """
+        This method fetches primary language from the meta file based on given project test result file.
+        Args:
+            logFileName: Test result absolute path with file name.
+        Returns:
+            primary language based on meta file, if meta file not found it returns None
+        """
+        metaFileName = '%s/%s' % (logFileName[:logFileName.rfind('/')], 'meta.arti')
+        try:
+            with open(metaFileName) as metaFile:
+                metaFileData = json.load(metaFile)
+                return metaFileData.get("Primary Language", None)
+        except AttributeError as metaDataError:
+            logger.warning("getPrimaryLanguageFromMeta:: Error: File does not contain JSON Data, while reading fails with error: %s" % str(metaDataError))
+        except IOError as fileNotAvailable:
+            logger.warning("getPrimaryLanguageFromMeta:: Error: %s" , str(fileNotAvailable))
+
+        return None
+
+    def getResultPattern(self, primaryLanguage):
+        """
+        This method returns the set of regular expression for identifying the test result summary line from the
+        result log.
+        Args:
+            primaryLanguage(str): language used for building and executing test for the package.
+        Returns:
+            A dict containing list of regular expression and the delimiters to use for fetching results.
+        """
+        # Following are some sample test log summaries for some supported languages.
+        # Python:
+        #    1 failed, 1 passed in 0.12 seconds
+        #
+        # Ruby:
+        #    1 tests, 1 assertions, 0 failures, 0 errors, 0 skips
+        #
+        # PHP:
+        #    Tests: 1, Assertions: 1, Failures: 1, Skipped: 1.
+        #
+        # Scala:
+        #    [info] Passed: : Total 1, Failed 0, Errors 0, Passed 1, Skipped 0
+        resultPattern = {
+            'Python' : {
+                'regex_list': [
+                    re.compile(r'(.)*(\d+) (\w+), (\d+) (\w+)(\w*)(.*)')
+                ],
+                'delimiterOne': ',',
+                'delimiterTwo': ' '
+                },
+            'Ruby' : {
+                'regex_list': [
+                   re.compile(r'(\d+) (\w+), (\d+) (\w+), (\d+) (\w+), (\d+) (\w+), (\d+) (\w*)')
+                 ],
+                'delimiterOne': ',',
+                'delimiterTwo': ' '
+            },
+            'PHP': {
+                'regex_list': [
+                    re.compile(r'(\w*): (\d*), (\w+): (\d*), (\w+): (\d*), (\w+): (\d*)'),
+                    re.compile(r'(\w*) \((\d+) (\w+), (\d+) (\w+)\)')
+                 ],
+                'delimiterOne': ',',
+                'delimiterTwo': ':'
+            },
+            'Scala': {
+                'regex_list': [
+                     re.compile(r'(\[\w+\]) (\w+): : (\w+) (\d*), (\w+) (\d*), (\w+) (\d*), (\w+) (\d*), (\w+) (\d*)')
+                 ],
+                'delimiterOne': ',',
+                'delimiterTwo': ':'
+            },
+            'JavaScript': {
+                'regex_list': [
+                    re.compile(r'(\d+) tests, (\d+) assertions, (\d+) failures'),
+                    re.compile(r'# fail (\d+)'),
+                    re.compile(r'(\d+) test passed \((\d+) total\)'),
+                    re.compile(r'\s+(\d+)\).+'),
+                    re.compile(r'\s+(\d+) passing \((\d+[s|ms])\)')
+                ],
+                'delimiterOne': ',',
+                'delimiterTwo': ' '
+            },
+            'Perl': {
+                'regex_list': [
+                    re.compile(r'')
+                 ],
+                'delimiterOne': ' ',
+                'delimiterTwo': ' '
+            },
+            'C': {
+                'regex_list': [
+                    re.compile(r'')
+                 ],
+                'delimiterOne': ' ',
+                'delimiterTwo': ' '
+            },
+            'C++': {
+                'regex_list': [
+                    re.compile(r'')
+                 ],
+                'delimiterOne': ' ',
+                'delimiterTwo': ' '
+            },
+            'Java': {
+                'regex_list': [
+                    re.compile(r'Tests run: (\d*), Failures: (\d*), Errors: (\d*), Skipped: (\d*), Time elapsed: (\d*\.?\d*) sec[ \<\<\< FAILURE\!]?')
+                 ],
+                'delimiterOne': ',',
+                'delimiterTwo': ':'
+            }
+        }
+
+        return resultPattern.get(primaryLanguage, None)

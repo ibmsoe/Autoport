@@ -34,7 +34,7 @@ class Project:
             resultDir = self.catalog.getResults(projectName, repo)
             try:
                 if resultDir and os.path.isfile(resultDir+"/test_result.arti"):
-                    res = self.resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+                    res = self.resParser.resultParser(resultDir+"/test_result.arti")
             except Exception as ex:
                 logger.debug("In getTestDetail, Project %s failed with error \"%s\"" % (projectName, str(ex)))
         except Exception as ex:
