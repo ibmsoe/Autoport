@@ -173,6 +173,7 @@ def selectTravisMatrix(repo, matrix):
             linuxEnv = platform
 
         if not isinstance(linuxEnv, list) and not isinstance(linuxEnv, basestring):
+            linuxEnv = ""
             continue
 
         logger.debug("selectTravisMatrix: proj=%s env=%s" % (repo.name, linuxEnv))
