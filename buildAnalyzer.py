@@ -332,6 +332,13 @@ def inferBuildSteps(listing, repo):
     if not listing or not repo:
         return { 'success': False, 'error': "Github I/O error" }
 
+    # Projects are not necessarily code. eg. lapack
+    primaryLang = repo.language
+    if not primaryLang:
+        primaryLang = "N/A"
+
+    logger.debug("In inferBuildSteps, proj=%s, lang=%s, url=%s" % (repo.name, primaryLang, repo.html_url))
+
     # Gather all possible build, test, and environment options
     # This is what gets returned
     build_info = {
@@ -342,7 +349,7 @@ def inferBuildSteps(listing, repo):
         'testOptions': [],
         'installOptions': [],
         'success': False,
-        'reason': "primary language unknown",
+        'reason': "Primary language unknown",
         'selectedEnv': "",
         'selectedBuild': "",
         'selectedTest': "",
@@ -366,8 +373,8 @@ def inferBuildSteps(listing, repo):
         'install':"",
         'env' : "",
         'artifacts': "",
-        'reason': "primary language unknown",
-        'error': "primary language unknown",
+        'reason': "Primary language unknown",
+        'error': "Primary language unknown",
         'success': False }
 
     # These are the base lang definitions. They should cover the top two or
@@ -386,7 +393,7 @@ def inferBuildSteps(listing, repo):
         'install':"",
         'env' : "",
         'artifacts': "*.arti",
-        'reason': "primary language",
+        'reason': "Primary language",
         'error': "",
         'success': True }
 
@@ -402,7 +409,7 @@ def inferBuildSteps(listing, repo):
         'install':"",
         'env' : "",
         'artifacts': "*.arti",
-        'reason': "primary language",
+        'reason': "Primary language",
         'error': "",
         'success': True }
 
@@ -418,7 +425,7 @@ def inferBuildSteps(listing, repo):
         'install':"",
         'env' : "",
         'artifacts': "*.arti",
-        'reason': "primary language",
+        'reason': "Primary language",
         'error': "",
         'success': True }
 
@@ -434,7 +441,7 @@ def inferBuildSteps(listing, repo):
         'install':"",
         'env' : "",
         'artifacts': "*.arti",
-        'reason': "primary language",
+        'reason': "Primary language",
         'error': "",
         'success': True }
 
@@ -450,7 +457,7 @@ def inferBuildSteps(listing, repo):
         'install':"",
         'env' : "",
         'artifacts': "*.arti",
-        'reason': "primary language",
+        'reason': "Primary language",
         'error': "",
         'success': True }
 
@@ -500,7 +507,7 @@ def inferBuildSteps(listing, repo):
         'install':"",
         'env' : "",
         'artifacts': "*.arti",
-        'reason': "primary language",
+        'reason': "Primary language",
         'error': "",
         'success': True }
 
@@ -516,11 +523,11 @@ def inferBuildSteps(listing, repo):
         'install': "",
         'env' : "",
         'artifacts': "*.arti ",
-        'reason': "primary language",
+        'reason': "Primary language",
         'error': "",
         'success': True }
 
-    supported_langs = [ base_python_def,base_js_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_cxx_def, base_java_def, base_scala_def ]
+    supported_langs = [ base_python_def, base_js_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_cxx_def, base_java_def, base_scala_def ]
 
     # These definitions are added based on the presense of a specific build file.  We can
     # simply the command line provided by the base definition and grep for project and build
@@ -623,7 +630,7 @@ def inferBuildSteps(listing, repo):
 
     c_def = {
         'build system': "make",
-        'primary lang': repo.language,
+        'primary lang': primaryLang,
         'grep build': "",
         'grep test': "make check",
         'grep install': "",
@@ -639,7 +646,7 @@ def inferBuildSteps(listing, repo):
 
     bootstrap_def = {
         'build system': "make",
-        'primary lang': repo.language,
+        'primary lang': primaryLang,
         'grep build': "",
         'grep test': "make check",
         'grep install': "",
@@ -660,7 +667,7 @@ def inferBuildSteps(listing, repo):
     # present in project.
     travis_def = {
         'build system': "travis control file",
-        'primary lang': repo.language,
+        'primary lang': primaryLang,
         'grep build': "",
         'grep test': "",
         'grep install': "",
@@ -676,7 +683,7 @@ def inferBuildSteps(listing, repo):
 
     buildsh_def = {
         'build system': "custom build script",
-        'primary lang': repo.language,
+        'primary lang': primaryLang,
         'grep build': "build.sh",
         'grep test': "build.sh check",
         'grep install': "",
@@ -690,18 +697,14 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    logger.debug("In inferBuildSteps, proj=%s, primary lang=%s" % (repo.name, repo.language))
-
-    # Fix base empty definition in case it is returned
-    if repo.language:
-        base_empty_def['primary lang'] = repo.language
+    base_empty_def['primary lang'] = primaryLang
 
     # Append empty language definition to list
     langlist = [ base_empty_def ]
 
     # Push primary language
     for lang in supported_langs:
-        if lang['primary lang'] == repo.language:
+        if lang['primary lang'] == primaryLang:
             langlist.append(lang)
 
     # Add build system specific definitions to language list based on the presense
@@ -833,7 +836,7 @@ def inferBuildSteps(listing, repo):
             # put last.  This effectively hides it but allows continued development.
             if globals.useTextAnalytics:
                 # Add build commands extracted using text analytics
-                command = text_analytics_cmds(repo.name, repo.language, grepstack, 'build')
+                command = text_analytics_cmds(repo.name, primaryLang, grepstack, 'build')
                 if command:
 #                   if globals.useTextAnalytics:
                     if False:
@@ -842,7 +845,7 @@ def inferBuildSteps(listing, repo):
                         build_info['buildOptions'].insert(0, '[TextAnalytics]' + command)
 
                 # Add test commands extracted using text analytics
-                command = text_analytics_cmds(repo.name, repo.language, grepstack, 'test')
+                command = text_analytics_cmds(repo.name, primaryLang, grepstack, 'test')
                 if command:
 #                   if globals.useTextAnalytics:
                     if False:

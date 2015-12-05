@@ -47,7 +47,7 @@ def classify(repo):
     return {
         'stars': star(repo.stargazers_count),
         'forks': fork(repo.forks_count),
-        'language': lang(repo.language),
+        'language': lang(repo.language if repo.language else "N/A"),
         'size': size(repo.size),
         'date': date(daysSinceLastUpdate)
     }

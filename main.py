@@ -414,7 +414,7 @@ def search():
             "url": repo.html_url,
             "size_kb": repo.size,
             "last_update": str(repo.updated_at),
-            "language": repo.language,
+            "language": repo.language if repo.language else "N/A",
             "description": repo.description,
             "classifications": classify(repo)
         })
@@ -476,7 +476,7 @@ def detail(id, repo=None):
         "url": repo.html_url,
         "size_kb": repo.size,
         "last_update": str(repo.updated_at),
-        "language": repo.language,
+        "language": repo.language if repo.language else "N/A",
         "languages": transformed_languages,
         "description": repo.description,
         "classifications": classify(repo),
@@ -562,7 +562,7 @@ def search_repositories():
                     "url": repo.html_url,
                     "size_kb": repo.size,
                     "last_update": str(repo.updated_at),
-                    "language": repo.language,
+                    "language": repo.language if repo.language else "N/A",
                     "description": repo.description,
                     "classifications": classify(repo),
                     "useVersion": versiontag
@@ -920,6 +920,8 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
         proxies=NO_PROXY
     )
 
+    logger.debug("createJob_common: jenkins job post proj=%s, rc=%d" % (repo.name, r.status_code))
+
     if r.status_code == 200:
 
         # Success, send the jenkins job and start it right away.
@@ -934,6 +936,8 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
         # local directory for build artifacts.  No colons allowed for windows compatibility
         timestr = strftime("%Y-%m-%d-h%H-m%M-s%S", time)
         artifactFolder = jobName + "." + timestr
+
+        logger.debug("createJob_common: moveArtifacts queue proj=%s" % repo.name)
 
         # Split off a thread to transfer job results upon job completion to localDir
         localDir = globals.localPathForTestResults + jobName + "." + timestr + "/"
