@@ -8,6 +8,7 @@ arch          = node['kernel']['machine']
 execute "Uninstalling ibm nodejs" do
   cwd   uninstall_dir
   command "./uninstall -i silent"
+  ignore_failure true
   only_if { File.exist?("#{uninstall_dir}/uninstall") }
 end
 
@@ -18,17 +19,20 @@ end
 ].each do |file|
   file file do
     action :delete
+    ignore_failure true
   end
 end
 
 file "/etc/profile.d/ibm-java.sh" do
   action :delete
+  ignore_failure true
   only_if "grep -w #{version} /etc/profile.d/ibm-java.sh"
 end
 
 directory "#{install_dir}/#{java_package}" do
   action     :delete
   recursive  true
+  ignore_failure true
 end
 
 record = "ibm-java-sdk,#{version},ibm-java-sdk,\
@@ -39,4 +43,5 @@ buildServer_log 'ibm-java-sdk' do
   log_location node['log_location']
   log_record   record
   action       :remove
+  ignore_failure true
 end

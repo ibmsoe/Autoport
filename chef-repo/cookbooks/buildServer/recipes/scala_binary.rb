@@ -17,6 +17,7 @@ remote_file "#{archive_dir}/#{scala_pkg}#{ext}" do
   group 'root'
   action :create
   mode '0644'
+  ignore_failure true
 end
 
 execute "Extracting scala #{version}" do
@@ -26,7 +27,9 @@ execute "Extracting scala #{version}" do
   command <<-EOD
     #{CommandBuilder.command(ext, run_context)} #{archive_dir}/#{scala_pkg}#{ext}
   EOD
+  ignore_failure true
   creates "#{install_dir}/#{scala_pkg}"
+  only_if { File.exist?("#{archive_dir}/#{scala_pkg}#{ext}") }
 end
 
 template '/etc/profile.d/scala.sh' do
@@ -37,6 +40,8 @@ template '/etc/profile.d/scala.sh' do
   variables(
     scala_home: scala_home
   )
+  ignore_failure true
+  only_if {  Dir.exist?(scala_home) }
 end
 
 buildServer_log 'scala' do
@@ -44,4 +49,6 @@ buildServer_log 'scala' do
   log_location node['log_location']
   log_record   "scala,#{version},scala_binary,scala,#{arch},#{ext},#{scala_pkg}#{ext}"
   action       :add
+  ignore_failure true
+  only_if {  Dir.exist?(scala_home) }
 end

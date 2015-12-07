@@ -20,6 +20,7 @@ else
   package 'gradle' do
     action :upgrade
     options opt
+    ignore_failure true
   end
 
   template '/etc/profile.d/gradle.sh' do
@@ -30,6 +31,8 @@ else
     variables(
       gradle_home: gradle_basedir
     )
+    ignore_failure true
+    only_if Dir.exist?(gradle_basedir)
   end
 
   buildServer_log 'gradle' do
@@ -37,5 +40,7 @@ else
     log_location node['log_location']
     log_record   "gradle"
     action       :remove
+    ignore_failure true
+    only_if Dir.exist?(gradle_basedir)
   end
 end

@@ -20,6 +20,7 @@ remote_file "#{archive_dir}/#{ant_pkg}-bin#{ext}" do
   group 'root'
   action :create
   mode '0644'
+  ignore_failure true
 end
 
 execute "Extracting ant #{version}" do
@@ -29,7 +30,9 @@ execute "Extracting ant #{version}" do
   command <<-EOD
     #{CommandBuilder.command(ext, run_context)} #{archive_dir}/#{ant_pkg}-bin#{ext}
   EOD
+  ignore_failure true
   creates "#{install_dir}/#{ant_pkg}"
+  only_if { File.exist?("#{archive_dir}/#{ant_pkg}-bin#{ext}") }
 end
 
 template '/etc/profile.d/ant.sh' do
@@ -40,6 +43,8 @@ template '/etc/profile.d/ant.sh' do
   variables(
     ant_home: ant_home
   )
+  ignore_failure true
+  only_if { Dir.exist?(ant_home) }
 end
 
 buildServer_log "apache-ant" do
@@ -47,4 +52,6 @@ buildServer_log "apache-ant" do
   log_location node['log_location']
   log_record   "apache-ant,#{version},ant_binary,ant,#{arch},#{ext},#{ant_pkg}-bin#{ext}"
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?(ant_home) }
 end

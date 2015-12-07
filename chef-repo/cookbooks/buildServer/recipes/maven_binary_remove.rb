@@ -9,15 +9,18 @@ arch          = node['kernel']['machine']
 
 file "#{archive_dir}/#{maven_pkg}-bin#{ext}" do
    action :delete
+   ignore_failure true
 end
 
 directory "#{install_dir}/#{maven_pkg}" do
   action :delete
   recursive  true
+  ignore_failure true
 end
 
 file "/etc/profile.d/maven.sh" do
   action :delete
+  ignore_failure true
   only_if "grep -w #{version} /etc/profile.d/maven.sh"
 end
 
@@ -27,5 +30,6 @@ buildServer_log "apache-maven" do
   name         "apache-maven"
   log_location node['log_location']
   log_record   record
+  ignore_failure true
   action       :remove
 end

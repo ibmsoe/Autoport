@@ -11,6 +11,7 @@ directory "Creating install directory for ibm-java" do
   owner 'root'
   group 'root'
   mode  '0755'
+  ignore_failure true
 end
 
 remote_file "#{install_dir}/#{java_package}-#{arch}-archive.bin" do
@@ -19,6 +20,7 @@ remote_file "#{install_dir}/#{java_package}-#{arch}-archive.bin" do
   group 'root'
   action :create
   mode '0777'
+  ignore_failure true
 end
 
 template "#{install_dir}/ibm-java-installer.properties" do
@@ -30,17 +32,21 @@ template "#{install_dir}/ibm-java-installer.properties" do
   variables(
     install_dir:"#{install_dir}/#{java_package}"
   )
+  ignore_failure true
+  only_if { File.exist?("#{install_dir}/#{java_package}-#{arch}-archive.bin") }
 end
 
 execute "Executing Java Binary" do
   cwd     install_dir
   command "./#{java_package}-#{arch}-archive.bin \
-          -f ./ibm-java-installer.properties -i silent 1>ibm-java-log 2>&1"
+    -f ./ibm-java-installer.properties -i silent 1>ibm-java-log 2>&1"
   environment(
      '_JAVA_OPTIONS' => '-Dlax.debug.level=3 -Dlax.debug.all=true',
      'LAX_DEBUG' => '1'
-    )
+  )
   creates "#{install_dir}/#{java_package}"
+  ignore_failure true
+  only_if { File.exist?("#{install_dir}/#{java_package}-#{arch}-archive.bin") }
 end
 
 template '/etc/profile.d/ibm-java.sh' do
@@ -51,14 +57,17 @@ template '/etc/profile.d/ibm-java.sh' do
   variables(
     java_home:"#{install_dir}/#{java_package}"
   )
+  ignore_failure true
+  only_if { Dir.exist?("#{install_dir}/#{java_package}") }
 end
 
-record = "ibm-java-sdk,#{version},ibm-java-sdk,\
-ibm-java-sdk,#{arch},.bin,#{java_package}-#{arch}-archive.bin"
+record = "ibm-java-sdk,#{version},ibm-java-sdk,ibm-java-sdk,#{arch},.bin,#{java_package}-#{arch}-archive.bin"
 
 buildServer_log 'ibm-java-sdk' do
   name         'ibm-java-sdk'
   log_location node['log_location']
   log_record   record
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?("#{install_dir}/#{java_package}") }
 end

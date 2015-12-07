@@ -16,6 +16,7 @@ action :install do
     owner 'root'
     group 'root'
     action :create
+    ignore_failure true
   end
 
   remote_file "#{archive_location}/#{archive_name}" do
@@ -24,6 +25,7 @@ action :install do
     group 'root'
     mode '0775'
     action :create
+    ignore_failure true
   end
 
   execute "Extracting #{archive_name} package" do
@@ -31,7 +33,9 @@ action :install do
     group 'root'
     cwd extract_location
     command "tar -xvf #{archive_location}/#{archive_name}"
-    not_if   { ::File.exist?("#{extract_location}/#{name}") }
+    only_if { ! ::File.exist?("#{extract_location}/#{name}") &&
+              ::File.exist?("#{archive_location}/#{archive_name}") }
+    ignore_failure true
   end
 
   execute "Changing ownership of #{name}" do
@@ -41,6 +45,8 @@ action :install do
     command <<-EOH
       chown -R root:root #{name}
     EOH
+    ignore_failure true
+    only_if { ::Dir.exist?("#{extract_location}/#{name}") }
   end
 
   bash "Install python package #{name}" do
@@ -48,9 +54,11 @@ action :install do
     group 'root'
     cwd "#{extract_location}/#{name}"
     code <<-EOH
-        python setup.py build
-        python setup.py install
-      EOH
+      python setup.py build
+      python setup.py install
+    EOH
+    ignore_failure true
+    only_if { ::Dir.exist?("#{extract_location}/#{name}") }
   end
   new_resource.updated_by_last_action(true)
 end

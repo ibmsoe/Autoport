@@ -10,16 +10,19 @@ arch           = node['kernel']['machine']
 
 file "#{archive_dir}/#{protobuf_pkg}#{ext}" do
   action :delete
+  ignore_failure true
 end
 
 directory "#{source_dir}/#{protobuf_pkg}" do
   action :delete
   recursive true
   notifies :delete, "file[#{install_prefix}/bin/protoc]", :immediately
+  ignore_failure true
 end
 
 file "#{install_prefix}/bin/protoc" do
   action :nothing
+  ignore_failure true
 end
 
 record = "protobuf,#{version},protobuf_source,protobuf,#{arch},#{ext},#{protobuf_pkg}#{ext}"
@@ -28,4 +31,5 @@ buildServer_log "protobuf" do
   log_location node['log_location']
   log_record   record
   action       :remove
+  ignore_failure true
 end

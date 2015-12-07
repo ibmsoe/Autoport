@@ -4,6 +4,7 @@
 
 include_recipe 'buildServer::perl'
 arch = node['kernel']['machine']
+extract_location = node['buildServer']['perl']['extract_location']
 
 if node['buildServer']['perl_modules'].any?
 
@@ -15,6 +16,7 @@ if node['buildServer']['perl_modules'].any?
       extract_location node['buildServer']['perl']['extract_location']
       perl_prefix_dir node['buildServer']['perl']['prefix_dir']
       repo_location node['buildServer']['repo_url']
+      ignore_failure true
       action :install
     end
 
@@ -24,6 +26,8 @@ if node['buildServer']['perl_modules'].any?
       log_location node['log_location']
       log_record   record
       action       :add
+      ignore_failure true
+      only_if { Dir.exist?("#{extract_location}/#{pkg}-#{version}") }
     end
   end
 end

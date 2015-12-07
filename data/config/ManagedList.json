@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "11",
+    "sequence": "12",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -195,9 +195,6 @@
                     "name": "make"
                 },
                 {
-                    "name": "maven"
-                },
-                {
                     "name": "mesa-common-dev"
                 },
                 {
@@ -315,7 +312,9 @@
                     "tag": "ibm-sdk-nodejs"
                 },
                 {
-                    "name": "maven"
+                    "name": "apache-maven",
+                    "version": "3.3.3",
+                    "tag": "maven"
                 },
                 {
                     "name": "openjdk-7-jdk",
@@ -521,7 +520,7 @@
                 },
                 {
                     "name": "apache-maven",
-                    "version": "3.0.5",
+                    "version": "3.3.3",
                     "tag": "maven"
                 },
                 {

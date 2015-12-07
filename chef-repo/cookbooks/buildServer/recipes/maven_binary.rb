@@ -20,16 +20,19 @@ remote_file "#{archive_dir}/#{maven_pkg}-bin#{ext}" do
   group 'root'
   action :create
   mode '0644'
+  ignore_failure true
 end
 
-execute "Extracting ant #{version}" do
+execute "Extracting maven #{version}" do
   cwd install_dir
   user 'root'
   group 'root'
   command <<-EOD
     #{CommandBuilder.command(ext, run_context)} #{archive_dir}/#{maven_pkg}-bin#{ext}
   EOD
+  ignore_failure true
   creates "#{install_dir}/#{maven_pkg}"
+  only_if { File.exist?("#{archive_dir}/#{maven_pkg}-bin#{ext}") }
 end
 
 template '/etc/profile.d/maven.sh' do
@@ -40,13 +43,16 @@ template '/etc/profile.d/maven.sh' do
   variables(
     maven_home: maven_home
   )
+  ignore_failure true
+  only_if { Dir.exist?(maven_home) }
 end
 
 record = "apache-maven,#{version},maven_binary,maven,#{arch},#{ext},#{maven_pkg}-bin#{ext}"
-
 buildServer_log "apache-maven" do
   name         "apache-maven"
   log_location node['log_location']
   log_record   record
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?(maven_home) }
 end

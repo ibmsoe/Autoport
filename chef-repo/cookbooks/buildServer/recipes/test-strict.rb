@@ -5,6 +5,7 @@ include_recipe 'buildServer::perl'
 
 arch = node['kernel']['machine']
 ts_version = node['buildServer']['Test-Strict']['version']
+extract_location = node['buildServer']['perl']['extract_location']
 
 {
   'Test-Strict' => ts_version
@@ -16,6 +17,7 @@ ts_version = node['buildServer']['Test-Strict']['version']
     perl_prefix_dir node['buildServer']['perl']['prefix_dir']
     repo_location node['buildServer']['repo_url']
     action :install
+    ignore_failure true
   end
 end
 
@@ -30,9 +32,11 @@ end
 
 
 buildServer_log 'Test-Strict' do
-  name         'Test-Strict'
+  name         "Test-Strict"
   log_location node['log_location']
   log_record   record
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?("#{extract_location}/Test-Strict-#{ts_version}") }
 end
 

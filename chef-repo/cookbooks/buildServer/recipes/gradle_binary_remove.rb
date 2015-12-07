@@ -11,6 +11,7 @@ arch         = node['kernel']['machine']
 
 link gradle_home do
   action :delete
+  ignore_failure true
 end
 
 [
@@ -19,15 +20,18 @@ end
   directory pkg do
     action :delete
     recursive true
+    ignore_failure true
   end
 end
 
 file "#{archive_dir}/#{gradle_pkg}" do
   action :delete
+  ignore_failure true
 end
 
 file '/etc/profile.d/gradle.sh' do
   action :delete
+  ignore_failure true
   only_if "grep -w #{version} /etc/profile.d/gradle.sh"
 end
 
@@ -36,4 +40,5 @@ buildServer_log 'gradle' do
   log_location node['log_location']
   log_record   "gradle,#{version},gradle_binary,gradle,#{arch},#{ext},#{gradle_pkg}"
   action       :remove
+  ignore_failure true
 end

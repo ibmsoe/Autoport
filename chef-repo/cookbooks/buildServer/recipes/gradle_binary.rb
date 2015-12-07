@@ -24,6 +24,7 @@ include_recipe 'buildServer::java'
     owner 'root'
     group 'root'
     action :create
+    ignore_failure true
   end
 end
 
@@ -32,6 +33,7 @@ remote_file "#{archive_dir}/#{gradle_pkg}" do
   owner 'root'
   group 'root'
   action :create
+  ignore_failure true
 end
 
 bash 'Extracting the archive' do
@@ -41,6 +43,8 @@ bash 'Extracting the archive' do
     #{CommandBuilder.command(ext, run_context)} #{archive_dir}/#{gradle_pkg}
   EOD
   creates "#{install_path}/gradle-#{version}/bin/gradle"
+  ignore_failure true
+  only_if { File.exist?("#{archive_dir}/#{gradle_pkg}") }
 end
 
 template '/etc/profile.d/gradle.sh' do
@@ -51,6 +55,8 @@ template '/etc/profile.d/gradle.sh' do
   variables(
     gradle_home: "#{install_path}/gradle-#{version}"
   )
+  ignore_failure true
+  only_if { Dir.exist?("#{install_path}/gradle-#{version}") }
 end
 
 buildServer_log 'gradle' do
@@ -58,4 +64,6 @@ buildServer_log 'gradle' do
   log_location node['log_location']
   log_record   "gradle,#{version},gradle_binary,gradle,#{arch},#{ext},#{gradle_pkg}"
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?("#{install_path}/gradle-#{version}") }
 end

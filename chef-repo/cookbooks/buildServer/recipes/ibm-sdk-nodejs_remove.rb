@@ -17,6 +17,7 @@ end
 execute "Uninstalling ibm nodejs" do
   cwd   uninstall_dir
   command "./uninstall -i silent"
+  ignore_failure true
   only_if { File.exist?("#{uninstall_dir}/uninstall") }
 end
 
@@ -27,17 +28,20 @@ end
 ].each do |file|
   file file do
     action :delete
+    ignore_failure true
   end
 end
 
 file "/etc/profile.d/ibm-nodejs.sh" do
   action :delete
+  ignore_failure true
   only_if "grep -w #{version} /etc/profile.d/ibm-nodejs.sh"
 end
 
 directory "#{install_dir}/#{package}#{version}" do
   action     :delete
   recursive  true
+  ignore_failure true
 end
 
 record = "#{package},#{version},ibm-sdk-nodejs,ibm-sdk-nodejs,#{arch},.bin,#{pkg_name}.bin"
@@ -47,4 +51,5 @@ buildServer_log package do
   log_location node['log_location']
   log_record   record
   action       :remove
+  ignore_failure true
 end
