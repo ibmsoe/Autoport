@@ -101,21 +101,23 @@ def eliminateDupEnv(env):
     This is patterned after convertEnv()
     """
 
+    if not env:
+        return env
+
     # Split by all whitespace, blanks, tabs, and newlines
     envList = env.split()
 
     # Splits too much.  We don't want to split by embedded blanks and tabs if var is quoted
     quoteType = ""
+    combine = ""
     newEnv=[]
     for subString in envList:
         if '="' in subString:                                  # Start of quoted variable
-            combine=subString
             quoteType = '"'
             n = subString.find('="')
             key = subString[:n]
         elif "='" in subString:                                # Start of quoted variable
             quoteType = "'"
-            combine=subString
             n = subString.find("='")
             key = subString[:n]
         else:
@@ -123,14 +125,19 @@ def eliminateDupEnv(env):
             key = subString[:n]
 
         if quoteType and quoteType in subString[-1]:           # Ends in quoted variable
-            if combine != subString:                           # Initial assignment above
-                combine = combine + ' ' + subString
             if key not in newEnv:
+                if combine:
+                    combine = combine + ' ' + subString
+                else:
+                    combine = subString
                 newEnv.append(combine)
             quoteType = ""
+            combine = ""
         elif quoteType:                                        # Mid of quoted variable
-            if combine != subString:                           # Initial assignment above
+            if combine:
                 combine = combine + ' ' + subString
+            else:
+                combine = subString
         elif key + "=" not in " ".join(newEnv):                # not a quoted variable
             newEnv.append(subString)
 
@@ -219,7 +226,7 @@ def interpretTravis(repo, travisFile, travis_def):
             logger.debug("interpretTravis: Yaml Error %s" % str(e))
             data = ""
 
-        if data and 'script' in data:
+        if data and 'script' in data and data['script']:
             # Get general environment variables first
             generalEnv = ""
             if 'env' in data:
@@ -270,14 +277,14 @@ def interpretTravis(repo, travisFile, travis_def):
             # Add autoport build command which comes from yaml before_install and install
             nonprivileged = ['cd ', 'mkdir ', 'if ', 'sudo ', 'source ', 'true',
                              'export ', 'ln ', 'cp ', 'wget ']
-            if 'before_install' in data:
+            if 'before_install' in data and data['before_install']:
                 if isinstance(data['before_install'], list):
                     newCmds = []
                     for cmd in data['before_install']:
                         if not any(x in cmd for x in nonprivileged):
-                           newCmds.append('sudo ' + cmd)
+                            newCmds.append('sudo ' + cmd)
                         else:
-                           newCmds.append(cmd)
+                            newCmds.append(cmd)
                     travis_def['build'] = '; '.join(newCmds)
                 else:
                     cmd = data['before_install']
@@ -285,14 +292,14 @@ def interpretTravis(repo, travisFile, travis_def):
                         travis_def['build'] = 'sudo ' + cmd
                     else:
                         travis_def['build'] = cmd
-            if 'install' in data:
+            if 'install' in data and data['install']:
                 if isinstance(data['install'], list):
                     newCmds = []
                     for cmd in data['install']:
                         if not any(x in cmd for x in nonprivileged):
-                           newCmds.append('sudo ' + cmd)
+                            newCmds.append('sudo ' + cmd)
                         else:
-                           newCmds.append(cmd)
+                            newCmds.append(cmd)
                     travis_def['build'] = '; '.join(newCmds)
                 else:
                     cmd = data['install']
@@ -304,7 +311,7 @@ def interpretTravis(repo, travisFile, travis_def):
                 travis_def['build'] = "echo ---See test log for travis-style build---"
 
             # Add autoport test command which comes from yaml before_script and script
-            if 'before_script' in data:
+            if 'before_script' in data and data['before_script']:
                 if isinstance(data['before_script'], list):
                     travis_def['test'] = '; '.join(data['before_script'])
                 else:
@@ -743,7 +750,7 @@ def inferBuildSteps(listing, repo):
         elif f.name == '.travis.yml':
             travis = interpretTravis(repo, f, travis_def)
         elif any(x in f.name.lower() for x in readmeFiles):
-            if f.type == 'file' and f.size != 0:
+            if f.type == 'file' and f.size != 0 and not travis:
                 try:
                     fstr = repo.get_file_contents(f.path).content.decode('base64', 'strict')
                     if fstr != "":

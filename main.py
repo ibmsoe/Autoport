@@ -737,7 +737,15 @@ def updateBatchFile():
     return json.jsonify(status="ok")
 
 def convertEnv(repo, selectedEnv):
-    # Two types of environment variables: quoted and non-quoted. eg. {N="x", N='x'} and N=n
+    '''
+    Method to convert environment variables into a format that is accepted by the jenkins
+    plugin EnvInject.  The plugin utilizes a dictionary format "K"="Y" so the environment
+    variable cannot be expressed with double quotes.  Environment variables are expressed
+    one per line in the form Name=Value does not need a double quote to deliniate Value.
+    This is not documented by the plugin, but it is evident in the plugin's url output of
+    injected environment variables of a failed job - spark.  Input variables of the form
+    N=X, N="X", or N='-dX -dy="cr"' are converted on output to N=X, N=X, and N='-dX -dy=cr'.
+    '''
 
     if not selectedEnv:
         return selectedEnv
@@ -747,25 +755,38 @@ def convertEnv(repo, selectedEnv):
 
     # Splits too much.  We don't want to split by embedded blanks and tabs if var is quoted
     quoteType = ""
+    combine = ""
     new=[]
     for subString in selectedEnv:
         if '="' in subString:                                   # Start of quoted variable
-             combine=subString
-             quoteType = '"'
+            quoteType = '"'
         elif "='" in subString:                                 # Start of quoted variable
-             quoteType = "'"
-             combine=subString
+            quoteType = "'"
 
         if quoteType and quoteType in subString[-1]:            # Ends in quoted variable
-             if combine != subString:                           # Initial assignment above
-                 combine = combine + ' ' + subString
-             new.append(combine)
-             quoteType = ""
+            if quoteType == "'":
+                subString = subString.replace('"', "'")
+            else:
+                subString = subString.replace('"', "")
+            if combine:
+                combine = combine + ' ' + subString
+            else:
+                combine = subString
+            new.append(combine)
+            quoteType = ""
+            combine = ""
         elif quoteType:                                         # Mid of quoted variable
-             if combine != subString:                           # Initial assignment above
-                 combine = combine + ' ' + subString
+            if quoteType == "'":
+                subString = subString.replace('"', "'")
+            else:
+                subString = subString.replace('"', "")
+            if combine:
+                combine = combine + ' ' + subString
+            else:
+                combine = subString
         else:                                                   # not a quoted variable
-             new.append(subString)
+            new.append(subString)
+
     new = "\n".join(new)
 
     logger.debug("convertEnv: proj=%s, env=%s" % (repo.name, new))
@@ -799,6 +820,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
         pass
 
     logger.debug("In createJob_common, name=%s, tag=%s, javaType=%s, jsType=%s" % (repo.name, tag, javaType, javaScriptType))
+
     # Read template XML file
     tree = ET.parse("config_template.xml")
     root = tree.getroot()
@@ -851,15 +873,23 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
     # This is the install shell script that is invoked on the build slave
     installCmd = selectedInstall
 
-    # Add environment variables deduced from readme files or provided by user
-    xml_env_command.text = convertEnv(repo, selectedEnv)
+    # Format environment variables deduced from readme files or provided by user
+    selectedEnv = convertEnv(repo, selectedEnv)
 
-    # Job metadata as passed to jenkins
+    xml_env_command.text = selectedEnv
+
+    # selectedEnv has been reformatted above for a jenkins plugin and is no longer
+    # usable from the command line, so make selectedEnv a comma separated list,
+    # so that one can tell where each environment variable is supposed to end
+    # MAVEN_OPTS=-Xmx2g -XX:MaxPermSize=512M, JAVA_TOOL_OPTIONS=-Dos.arch=ppc64le
+    selectedEnv = selectedEnv.replace('\n', ', ')
+
+    # Job metadata provides information for reporting purposes
     jobMetadataName = "meta.arti"
     jobMetadata = "{ \"Package\": \"" + jobName + "\",\
         \"Version\": \"" + tag + "\",\
         \"Primary Language\": \"" + primaryLang + "\",\
-        \"Environment\": \"" + selectedEnv.replace('"', "'") + "\",\
+        \"Environment\": \"" + selectedEnv + "\",\
         \"Build Command\": \"" + buildCmd + "\",\
         \"Test Command\": \"" + testCmd + "\",\
         \"Install Command\": \"" + installCmd + "\",\
