@@ -2539,7 +2539,7 @@ def getTestHistory():
                 resultDir = catalog.getResults(prj['fullName'], prj['repository'])
                 try:
                     if resultDir and os.path.isfile(resultDir + "/test_result.arti"):
-                        prjRes = resParser.MavenBuildSummary(resultDir + "/test_result.arti")
+                        prjRes = resParser.resultParser(resultDir + "/test_result.arti")
                     else:
                         continue
                 except BaseException as e:
@@ -2572,7 +2572,7 @@ def getTestDetail():
         resultDir = catalog.getResults(projectName, repo)
         try:
             if resultDir and os.path.isfile(resultDir+"/test_result.arti"):
-                res = resParser.MavenBuildSummary(resultDir+"/test_result.arti")
+                res = resParser.resultParser(resultDir+"/test_result.arti")
             else:
                 return json.jsonify(status="failure", error="build failed, no test results"), 500
         except BaseException as e:
