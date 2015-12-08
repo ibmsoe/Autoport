@@ -1,5 +1,6 @@
 import re
 import globals
+from log import logger
 
 # Get list of tag names
 def getTags (repo):
@@ -19,7 +20,9 @@ def getTags (repo):
     elif len(tags) == 1:
         recentTag, tags = tags[0], tags[0]
     else:
-        recentTag, tags = tags[0], tags[1:]
+        recentTag, tags = tags[0], tags[0:]
+
+    logger.debug("Leaving getTags, recent=%s tags[0..10]=%s" % (recentTag, str(tags[:10])))
 
     return (tags, recentTag)
 
