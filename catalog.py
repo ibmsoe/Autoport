@@ -116,6 +116,7 @@ class Catalog:
                              'repository': repo,
                              'completed': date,
                              'server': nodeLabel})
+        logger.debug("Leaving listJobResults: results[0..3]=%s" % str(results[:3]))
         return results
 
     def listLocalJobResults(self, filt):

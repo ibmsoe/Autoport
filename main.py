@@ -2435,24 +2435,36 @@ def getTestResults():
     try:
         rightname = resultPattern.match(rightbuild).group(2)
     except AttributeError:
-        return json.jsonify(status="failure", error="Invalid test result name" + rightbuild), 402
+        return json.jsonify(status="failure", error="Invalid test result name " + rightbuild), 402
 
     try:
         leftname = resultPattern.match(leftbuild).group(2)
     except AttributeError:
-        return json.jsonify(status="failure", error="Invalid test result name" + leftbuild), 403
+        return json.jsonify(status="failure", error="Invalid test result name " + leftbuild), 403
 
     try:
         res = resParser.ResBuildCompare(leftname, leftdir, rightname, rightdir)
     except BaseException as e:
+        logger.debug("getTestResults: failed resBuildCompare")
         return json.jsonify(status="failure", error=str(e)), 500
 
     lf = open(leftdir+"/meta.arti")
+    try:
+        leftmeta = json.load(lf)
+    except Exception as e:
+        logger.debug("getTestResults: leftbuild json Error=%s" % str(e))
+        return json.jsonify(status="failure", error="Corrupted meta data name " + leftbuild), 404
+    finally:
+        lf.close()
+
     rf = open(rightdir+"/meta.arti")
-    leftmeta = json.load(lf)
-    rightmeta = json.load(rf)
-    lf.close()
-    rf.close()
+    try:
+        rightmeta = json.load(rf)
+    except Exception as e:
+        logger.debug("getTestResults: json rightbuild Error=%s" % str(e))
+        return json.jsonify(status="failure", error="Invalid test result name " + rightbuild), 405
+    finally:
+        lf.close()
 
     catalog.cleanTmp()
     return json.jsonify(status = "ok",
@@ -2515,6 +2527,8 @@ def getTestHistory():
     # projects = { <job 1> : <job 1's repo>, <job 2> : <job 2's repo>, ... }
     # The key name is always a project.  The value of the key is "gsa" or "local"
 
+    logger.debug("In getTestHistory, projects=%s" % projects)
+
     out = []
     repoType = ""
     projectNames = []
@@ -2531,6 +2545,8 @@ def getTestHistory():
         elif projects[name] != repoType:
             repoType = "all"
 
+    logger.debug("getTestHistory: repoType=%s, projectNames=%s" % (repoType, str(projectNames)))
+
     jobRes = catalog.listJobResults(repoType, "")
     for projectName in projectNames:
         prjOut = []
@@ -2543,15 +2559,22 @@ def getTestHistory():
                     else:
                         continue
                 except BaseException as e:
+                    logger.debug("getTestHistory: Error=%s" % str(e))
                     continue
                 f = open(resultDir + "/meta.arti")
-                meta = json.load(f)
-                f.close()
+                try:
+                    meta = json.load(f)
+                except Exception as e:
+                    logger.debug("getTestHistory: json Error=%s" % str(e))
+                    continue
+                finally:
+                    f.close()
                 prjOut.append({
                     "name": prj['fullName'],
                     "repository": prj['repository'],
                     "project": meta,
                     "results": prjRes})
+                logger.debug("getTestHistory: name=%s, results=%s" % (prj['fullName'], prjres))
         out.append({
             "name": "Test results for project " + projectName[0] + "-" + projectName[1],
             "results": prjOut
@@ -2566,6 +2589,7 @@ def getTestHistory():
 @app.route("/autoport/getTestDetail", methods=["POST"])
 def getTestDetail():
     projects = request.json['projects']
+    logger.debug("In getTestDetail, projects=%s" % projects)
     out = []
     for projectName in projects:
         repo = projects[projectName]
@@ -2578,9 +2602,14 @@ def getTestDetail():
         except BaseException as e:
             return json.jsonify(status="failure", error=str(e)), 500
 
-        f = open(resultDir+"/meta.arti")
-        meta = json.load(f)
-        f.close()
+        f = open(resultDir + "/meta.arti")
+        try:
+            meta = json.load(f)
+        except Exception as e:
+            logger.debug("getTestDetail: json Error=%s" % str(e))
+            continue
+        finally:
+            f.close()
 
         # Validate that the directory looks like a test result
         p = resultPattern.match(projectName)
@@ -2592,6 +2621,7 @@ def getTestDetail():
 
         out.append({ "job": projectName, "pkg" : pkg, "ver": ver,
                      "results": res, "project": meta, "repository": repo })
+        logger.debug("getTestDetail: name=%s, results=%s" % (projectName, res))
     catalog.cleanTmp()
     return json.jsonify(status = "ok", results = out)
 
