@@ -736,7 +736,7 @@ def updateBatchFile():
 
     return json.jsonify(status="ok")
 
-def convertEnv(repo, selectedEnv):
+def convertEnvJenkins(repo, selectedEnv):
     '''
     Method to convert environment variables into a format that is accepted by the jenkins
     plugin EnvInject.  The plugin utilizes a dictionary format "K"="Y" so the environment
@@ -789,9 +789,34 @@ def convertEnv(repo, selectedEnv):
 
     new = "\n".join(new)
 
-    logger.debug("convertEnv: proj=%s, env=%s" % (repo.name, new))
+    logger.debug("convertEnvJenkins: proj=%s, env=%s" % (repo.name, new))
 
     return new
+
+def convertbuildInfoJson(env, buildCmd, testCmd, installCmd):
+    '''
+    Method to convert parameters to "key": "value" pairs
+    Embedded double quotes have to be converted to single quotes.
+    This information only.
+    '''
+
+    if env:
+        # Env has already been reformated for jenkins and includes newlines between
+        # individual environment variables.  Substitute newline character for comma, blank
+        # so that one can tell where each environment variable is supposed to end.
+        # "K"="MAVEN_OPTS=-Xmx2g -XX:MaxPermSize=512M, JAVA_TOOL_OPTIONS=-Dos.arch=ppc64le"
+        env = env.replace('\n', ', ')
+
+    if buildCmd:
+        buildCmd = buildCmd.replace('"', "'")
+
+    if testCmd:
+        testCmd = testCmd.replace('"', "'")
+
+    if installCmd:
+        installCmd = installCmd.replace('"', "'")
+
+    return env, buildCmd, testCmd, installCmd
 
 # Common routine for createJob and runBatchJob
 def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selectedBuild,
@@ -854,7 +879,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
             xml_default_branch.text = "tags/" + tag
             jobName += "." + tag
         else:
-            logger.debug("createJob_common: Error invalid tag=%s" % tag)
+            logger.debug("createJob_common: Error invalid proj=%s, tag=%s" % (repo.name, tag))
             msg = "Invalid project %s build tag %s" % (repo.name, tag)
             return { 'status': "failure", 'error': msg }
 
@@ -874,15 +899,12 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
     installCmd = selectedInstall
 
     # Format environment variables deduced from readme files or provided by user
-    selectedEnv = convertEnv(repo, selectedEnv)
-
+    selectedEnv = convertEnvJenkins(repo, selectedEnv)
     xml_env_command.text = selectedEnv
 
-    # selectedEnv has been reformatted above for a jenkins plugin and is no longer
-    # usable from the command line, so make selectedEnv a comma separated list,
-    # so that one can tell where each environment variable is supposed to end
-    # MAVEN_OPTS=-Xmx2g -XX:MaxPermSize=512M, JAVA_TOOL_OPTIONS=-Dos.arch=ppc64le
-    selectedEnv = selectedEnv.replace('\n', ', ')
+    # Format commands and environment variables for json files
+    selectedEnv, buildCmd, testCmd, installCmd = convertbuildInfoJson(
+                   selectedEnv, buildCmd, testCmd, installCmd)
 
     # Job metadata provides information for reporting purposes
     jobMetadataName = "meta.arti"

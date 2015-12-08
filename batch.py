@@ -37,7 +37,7 @@ class Batch:
         except paramiko.SSHException:
             pass                  # error message already displayed in catalog.py
         except IOError as e:
-            logger.warning("batch connect exception=" + str(e))
+            logger.warning("batch connect Error=" + str(e))
 
     def listBatchFiles(self, repoType, filt):
         logger.debug("In listBatchFiles: repoType=%s filt=%s" % (repoType, filt))
@@ -50,7 +50,7 @@ class Batch:
                 res = res + self.listGSABatchFiles(filt)
         except Exception as e:
             assert(False), str(e)
-        logger.debug("Leaving listBatchFiles: res=" + str(res))
+        logger.debug("Leaving listBatchFiles: res[%d]" % len(res))
         return res
 
     def listLocalBatchFiles(self, filt):
@@ -97,7 +97,7 @@ class Batch:
         except Exception as e:
             assert(False), str(e)
 
-        logger.debug("Leaving listBatchReports: reportData=" + str(reportData))
+        logger.debug("Leaving listBatchReports: reportData[%d]" % len(reportData))
         return reportData
 
     def listLocalBatchReports(self, filt):
@@ -136,7 +136,7 @@ class Batch:
                             try:
                                 self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
                             except Exception as ex:
-                                logger.warning("Error in copying project %s : " % projectsReport.strip() + str(ex))
+                                logger.warning("listGSABatchReports: Error in copying project %s" % projectsReport.strip() + str(ex))
                         filteredList.append(
                             self.parseBatchReportList(
                                 os.path.join(putdir,filename,batchFilePath),
@@ -145,7 +145,7 @@ class Batch:
                             )
                         )
                     except Exception as ex:
-                        logger.warning("listGSABatchReports Error: " + str(ex))
+                        logger.warning("listGSABatchReports: Error %s" % str(ex))
                     finally:
                         if isinstance(batchTestReportFile, file):
                             batchTestReportFile.close()
@@ -153,7 +153,7 @@ class Batch:
         except AttributeError:
             assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         except Exception as e:
-            logger.warning("In listGSABatchReports Error: "+ str(e))
+            logger.warning("listGSABatchReports: Error %s" % str(e))
             assert(False), str(e)
         return filteredList
 
@@ -259,7 +259,7 @@ class Batch:
             if os.path.exists('%s%s/%s' % (project_path, jobName.strip(), 'build_result.arti')):
                 build_logs += 1
 
-        logger.debug("Leaving getLocalBuildAndTestLogs, Count jobNames[]=%s build_logs=%s test_logs=%s" %
+        logger.debug("Leaving getLocalBuildAndTestLogs, Count jobNames[%d] build_logs=%s test_logs=%s" %
                      (len(jobNames), build_logs, test_logs))
         return {'build_logs': build_logs, 'test_logs': test_logs}
 
@@ -323,7 +323,7 @@ class Batch:
         try:
             fileBuf = json.load(f)
         except ValueError, ex:
-            logger.warning("parseBatchFile error: " + str(ex))
+            logger.warning("parseBatchFile: Error " + str(ex))
             f.close()
             return {"error": "Could not read file" + filename }
         f.close()
@@ -436,7 +436,7 @@ class Batch:
         try:
             self.ftp_client.close()
         except Exception as e:
-            logger.warning("disconnect error: " +  str(e))
+            logger.warning("disconnect: Error " +  str(e))
 
     # @TODO Below code for getting Batch Test Details and other functionality is in progress.
     def getBatchTestDetails(self, batchList, catalog):
@@ -487,7 +487,7 @@ class Batch:
                             projects[filename].extend([i.strip() for i in batchFile.readlines()])
                             batchFile.close()
         except Exception as ex:
-            logger.warning("getLocalProjectForGivenBatch error: " +  str(ex))
+            logger.warning("getLocalProjectForGivenBatch: Error " +  str(ex))
 
         return projects
 
@@ -514,7 +514,7 @@ class Batch:
                     # Batch report removal from GSA
                     project.removeDirFromGSA(self.ssh_client, os.path.dirname(filepath))
             except IOError as e:
-                logger.warning("Can't remove directory" + name + ": " + str(e))
+                logger.warning("removeBatchReportsData: Can't remove directory " + name + ": " + str(e))
 
     # Archive Batch Reports Data to GSA
     def archiveBatchReports(self, report):
@@ -538,7 +538,7 @@ class Batch:
             shutil.rmtree(os.path.dirname(report))
             return "Success"
         except IOError as e:
-            logger.warning("Can't push " + batchReportName + ": exception=" + str(e))
+            logger.warning("archiveBatchReports: Can't push " + batchReportName + ": Error=" + str(e))
             return "Failed - " + str(e)
 
     # Recursively download a full directory, since paramiko won't walk
@@ -650,7 +650,7 @@ class Batch:
     # Updates local batch file or archived.
     # If batch file exists in local / archive already this will overwrite it.
     def updateBatchFile(self, filePath, fileContent, location):
-        logger.info("In updateBatchFile: filename = %s," + str(filePath))
+        logger.debug("In updateBatchFile, filename = %s" % str(filePath))
         if location=="local":
             try:
                 batch_detail_file = open(filePath, 'w')
