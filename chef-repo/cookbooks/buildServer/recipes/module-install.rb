@@ -5,20 +5,6 @@ include_recipe 'buildServer::perl'
 
 arch = node['kernel']['machine']
 
-{
-  'File-Remove'    => node['buildServer']['File-Remove']['version'],
-  'Module-Install' => node['buildServer']['Module-Install']['version']
-}.each do |pkg, version|
-  buildServer_perlPackage "#{pkg}-#{version}" do
-    archive_name "#{pkg}-#{version}.tar.gz"
-    archive_location node['buildServer']['download_location']
-    extract_location node['buildServer']['perl']['extract_location']
-    perl_prefix_dir node['buildServer']['perl']['prefix_dir']
-    repo_location node['buildServer']['repo_url']
-    action :install
-   end
-end
-
 case node['platform']
   when 'ubuntu'
     tag = {
@@ -34,21 +20,29 @@ end
 
 fr_version = node['buildServer']['File-Remove']['version']
 mi_version = node['buildServer']['Module-Install']['version']
+extract_location = node['buildServer']['perl']['extract_location']
 
 {
- 'File-Remove' => "File-Remove,#{fr_version},\
-perl_modules,#{tag['File-Remove']},\
-#{arch},.tar.gz,File-Remove-#{fr_version}.tar.gz" ,
+  'File-Remove'    => [ fr_version,  tag['File-Remove'] ], 
+  'Module-Install' => [ mi_version, tag['Module-Install'] ]
+}.each do |pkg, detail|
+  buildServer_perlPackage "#{pkg}-#{detail[0]}" do
+    archive_name "#{pkg}-#{detail[0]}.tar.gz"
+    archive_location node['buildServer']['download_location']
+    extract_location node['buildServer']['perl']['extract_location']
+    perl_prefix_dir node['buildServer']['perl']['prefix_dir']
+    repo_location node['buildServer']['repo_url']
+    action :install
+    ignore_failure true
+   end
 
- 'Module-Install' => "Module-Install,#{mi_version},\
-perl_modules,#{tag['Module-Install']},\
-#{arch},.tar.gz,Module-Install-#{mi_version}.tar.gz"
-
-}.each do |name, log_record|
-  buildServer_log name do
-    name         name
+  log_record = "#{pkg},#{detail[0]},perl_modules,#{detail[1]},#{arch},.tar.gz,#{pkg}-#{detail[0]}.tar.gz"
+  buildServer_log pkg do
+    name         pkg
     log_location node['log_location']
     log_record   log_record
     action       :add
+    ignore_failure true
+    only_if { Dir.exist?("#{extract_location}/#{pkg}-#{detail[0]}") }
   end
 end

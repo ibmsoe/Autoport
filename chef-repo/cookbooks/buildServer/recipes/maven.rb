@@ -21,6 +21,7 @@ else
   package 'maven' do
     action :upgrade
     options opt
+    ignore_failure true
   end
 
   template '/etc/profile.d/maven.sh' do
@@ -31,13 +32,16 @@ else
     variables(
       maven_home: maven_basedir
     )
+    ignore_failure true
+    only_if { Dir.exist?(maven_basedir) }
   end
 
-  
   buildServer_log "apache-maven" do
     name         "apache-maven"
     log_location node['log_location']
     log_record   "apache-maven"
     action       :remove
- end
+    ignore_failure true
+    only_if { Dir.exist?(maven_basedir) }
+  end
 end

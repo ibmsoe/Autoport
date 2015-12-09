@@ -12,7 +12,6 @@ src_install = node['buildServer']['apache-ant']['source_install']
 if src_install == 'true'
   include_recipe 'buildServer::ant_binary'
 else
-
   opt = ''
   opt = '--force-yes' if node['platform'] == 'ubuntu'
 
@@ -21,6 +20,7 @@ else
   package 'ant' do
     action :upgrade
     options opt
+    ignore_failure true
   end
 
   template '/etc/profile.d/ant.sh' do
@@ -31,6 +31,8 @@ else
     variables(
       ant_home: ant_basedir
     )
+    ignore_failure true
+    only_if { Dir.exist?(ant_basedir) }
   end
 
   buildServer_log "apache-ant" do
@@ -38,6 +40,7 @@ else
     log_location node['log_location']
     log_record   "apache-ant"
     action       :remove
+    ignore_failure true
+    only_if { Dir.exist?(ant_basedir) }
   end
-
 end

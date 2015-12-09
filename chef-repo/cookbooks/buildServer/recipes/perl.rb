@@ -14,6 +14,7 @@ directory prefix_dir do
   owner 'root'
   group 'root'
   action :create
+  ignore_failure true
 end
 
 remote_file "#{download_loc}/#{perl_package}" do
@@ -22,6 +23,7 @@ remote_file "#{download_loc}/#{perl_package}" do
   group 'root'
   mode '444'
   action :create
+  ignore_failure true
 end
 
 execute 'Extracting perl package' do
@@ -29,7 +31,9 @@ execute 'Extracting perl package' do
   group 'root'
   cwd   '/opt'
   command "tar -xvf #{download_loc}/#{perl_package}"
-  not_if   { File.exist?(install_path) }
+  only_if { ! File.exist?(install_path) &&
+            File.exist?("#{download_loc}/#{perl_package}") }
+  ignore_failure true
 end
 
 execute 'Changing ownership of perl' do
@@ -39,6 +43,8 @@ execute 'Changing ownership of perl' do
   command <<-EOH
     chown -R root:root perl-#{version}
   EOH
+  ignore_failure true
+  only_if { Dir.exist?("/opt/perl-#{version}") }
 end
 
 bash 'Configuring and Installating Perl' do
@@ -47,9 +53,11 @@ bash 'Configuring and Installating Perl' do
   cwd "/opt/perl-#{version}"
   code <<-EOH
     ./Configure -des -Dprefix=#{prefix_dir}
-    make && make install
+     make && make install
   EOH
-  not_if { File.exist?(install_path) }
+  only_if { ! File.exist?(install_path)  &&
+            Dir.exist?("/opt/perl-#{version}") }
+  ignore_failure true
 end
 
 template '/etc/profile.d/perl.sh' do
@@ -60,6 +68,8 @@ template '/etc/profile.d/perl.sh' do
   variables(
     perl_home: "#{prefix_dir}/bin"
   )
+  ignore_failure true
+  only_if { Dir.exist?("/opt/perl-#{version}") }
 end
 
 buildServer_log "perl_source" do
@@ -67,4 +77,6 @@ buildServer_log "perl_source" do
   log_location node['log_location']
   log_record   "perl,#{version},perl_source,perl,#{arch},#{ext},#{perl_package}"
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?("/opt/perl-#{version}") }
 end

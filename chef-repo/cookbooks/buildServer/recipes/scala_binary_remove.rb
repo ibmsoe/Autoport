@@ -9,16 +9,19 @@ arch          = node['kernel']['machine']
 
 file "#{archive_dir}/#{scala_pkg}#{ext}" do
   action :delete
+  ignore_failure true
 end
 
 directory "#{install_dir}/#{scala_pkg}" do
   action :delete
   recursive true
+  ignore_failure true
 end
 
 file '/etc/profile.d/scala.sh' do
   action :delete
   only_if "grep -w #{version} /etc/profile.d/scala.sh"
+  ignore_failure true
 end
 
 buildServer_log 'scala' do
@@ -26,4 +29,5 @@ buildServer_log 'scala' do
   log_location node['log_location']
   log_record   "scala,#{version},scala_binary,scala,#{arch},#{ext},#{scala_pkg}#{ext}"
   action       :remove
+  ignore_failure true
 end

@@ -17,6 +17,7 @@ remote_file "#{archive_dir}/#{protobuf_pkg}#{ext}" do
   group 'root'
   action :create
   mode '0644'
+  ignore_failure true
 end
 
 execute "Extracting protobuf #{version}" do
@@ -24,7 +25,9 @@ execute "Extracting protobuf #{version}" do
   command <<-EOD
     #{CommandBuilder.command(ext, run_context)} #{archive_dir}/#{protobuf_pkg}#{ext}
   EOD
+  ignore_failure true
   creates "#{source_dir}/#{protobuf_pkg}"
+  only_if { File.exist?("#{archive_dir}/#{protobuf_pkg}#{ext}") }
 end
 
 execute "Building profobuf #{version}" do
@@ -33,11 +36,15 @@ execute "Building profobuf #{version}" do
   creates "#{install_prefix}/bin/protoc"
   action :run
   notifies :run, 'execute[ldconfig]', :immediately
+  ignore_failure true
+  only_if { Dir.exist?("#{source_dir}/#{protobuf_pkg}") }
 end
 
 execute 'ldconfig' do
   command 'ldconfig'
   action :nothing
+  ignore_failure true
+  only_if { Dir.exist?("#{source_dir}/#{protobuf_pkg}") }
 end
 
 record = "protobuf,#{version},protobuf_source,protobuf,#{arch},#{ext},#{protobuf_pkg}#{ext}"
@@ -46,4 +53,6 @@ buildServer_log "protobuf" do
   log_location node['log_location']
   log_record   record
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?("#{source_dir}/#{protobuf_pkg}") }
 end

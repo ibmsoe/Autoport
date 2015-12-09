@@ -5,6 +5,7 @@ include_recipe 'buildServer::perl'
 
 arch = node['kernel']['machine']
 yt_version = node['buildServer']['YAML-Tiny']['version']
+extract_location = node['buildServer']['perl']['extract_location']
 
 {
   'YAML-Tiny' => yt_version
@@ -16,6 +17,7 @@ yt_version = node['buildServer']['YAML-Tiny']['version']
     perl_prefix_dir node['buildServer']['perl']['prefix_dir']
     repo_location node['buildServer']['repo_url']
     action :install
+    ignore_failure true
   end
 end
 
@@ -33,4 +35,6 @@ buildServer_log 'YAML-Tiny' do
   log_location node['log_location']
   log_record   record
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?("#{extract_location}/YAML-Tiny-#{yt_version}") }
 end

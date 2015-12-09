@@ -5,12 +5,15 @@
 if node['kernel']['machine'] == 'x86_64'
   case node['platform']
   when 'ubuntu'
-    package 'build-essential'
+    package 'build-essential' do
+      ignore_failure true
+    end
   when 'redhat'
     yum_cmd = 'yum groupinstall'
     execute 'Installing development tools' do
       command "#{yum_cmd} 'Development Tools' -y"
       not_if "#{yum_cmd} installed | grep 'Development Tools'"
+      ignore_failure true
     end
   end
 end

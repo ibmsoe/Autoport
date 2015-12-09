@@ -33,6 +33,7 @@ if java_packages.any?
     package pkg do
       action :install
       options opt
+      ignore_failure true
     end
   end
 
@@ -44,5 +45,7 @@ if java_packages.any?
     variables(
       java_home: java_home
     )
+    only_if { Dir.exist?(java_home) }
+    ignore_failure true
   end
 end

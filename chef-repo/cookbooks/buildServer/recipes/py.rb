@@ -3,6 +3,7 @@
 
 py_version = node['buildServer']['py']['version']
 arch       = node['kernel']['machine']
+extract_location = node['buildServer']['python']['extract_location']
 
 {
   'py'    => py_version
@@ -13,6 +14,7 @@ arch       = node['kernel']['machine']
       extract_location node['buildServer']['python']['extract_location']
       repo_url node['buildServer']['repo_url']
       action :install
+      ignore_failure true
    end
 end
 
@@ -23,4 +25,6 @@ buildServer_log "py" do
   log_location node['log_location']
   log_record   record
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?("#{extract_location}/py-#{py_version}") }
 end

@@ -22,6 +22,7 @@ action :add do
       owner  'root'
       group  'root'
       action :create
+      ignore_failure true
     end
   end
 
@@ -30,6 +31,7 @@ action :add do
     group  'root'
     mode   '644'
     action :create_if_missing
+    ignore_failure true
   end
 
   ruby_block "Creating source install log entry for #{new_resource.name}" do
@@ -40,11 +42,13 @@ action :add do
       file.insert_line_if_no_match(regex_string, new_resource.log_record)
       file.write_file
     end
+    ignore_failure true
     not_if "grep -w '#{new_resource.log_record}' #{new_resource.log_location}/archive.log"
   end
 
   execute "Removing blank lines" do
     command "sed -i '/^$/d' #{new_resource.log_location}/archive.log"
+    ignore_failure true
   end
 
   new_resource.updated_by_last_action(true)
@@ -59,11 +63,13 @@ action :remove do
       file.search_file_delete(/^#{regex_string}.*$/)
       file.write_file
     end
+    ignore_failure true
     only_if "grep -w '#{new_resource.log_record}' #{new_resource.log_location}/archive.log"
   end
 
   execute "Removing blank lines" do
     command "sed -i '/^$/d' #{new_resource.log_location}/archive.log"
+    ignore_failure true
   end
 
   new_resource.updated_by_last_action(true)

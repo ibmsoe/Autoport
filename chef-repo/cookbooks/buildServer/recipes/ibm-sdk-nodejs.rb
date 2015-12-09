@@ -19,6 +19,7 @@ directory "Creating install directory for ibm-nodejs" do
   owner 'root'
   group 'root'
   mode  '0755'
+  ignore_failure true
 end
 
 remote_file "#{install_dir}/#{pkg_name}.bin" do
@@ -27,6 +28,7 @@ remote_file "#{install_dir}/#{pkg_name}.bin" do
   group 'root'
   action :create
   mode '0777'
+  ignore_failure true
 end
 
 template "#{install_dir}/ibm-nodejs-installer.properties" do
@@ -38,6 +40,8 @@ template "#{install_dir}/ibm-nodejs-installer.properties" do
   variables(
     install_dir: "#{install_dir}/#{package}#{version}"
   )
+  ignore_failure true
+  only_if { File.exist?("#{install_dir}/#{pkg_name}.bin") }
 end
 
 execute "Executing ibm nodejs sdk binary" do
@@ -47,7 +51,9 @@ execute "Executing ibm nodejs sdk binary" do
      '_JAVA_OPTIONS' => '-Dlax.debug.level=3 -Dlax.debug.all=true',
      'LAX_DEBUG' => '1'
     )
+  ignore_failure true
   creates "#{install_dir}/#{package}#{version}"
+  only_if { File.exist?("#{install_dir}/#{pkg_name}.bin") }
 end
 
 template '/etc/profile.d/ibm-nodejs.sh' do
@@ -56,8 +62,10 @@ template '/etc/profile.d/ibm-nodejs.sh' do
   source 'ibm-nodejs.sh.erb'
   mode '0644'
   variables(
-    install_dir:"#{install_dir}/#{package}#{version}"
+    install_dir: "#{install_dir}/#{package}#{version}"
   )
+ ignore_failure true
+ only_if { Dir.exist?("#{install_dir}/#{package}#{version}") }
 end
 
 record = "#{package},#{version},ibm-sdk-nodejs,ibm-sdk-nodejs,#{arch},.bin,#{pkg_name}.bin"
@@ -66,4 +74,6 @@ buildServer_log package do
   log_location node['log_location']
   log_record   record
   action       :add
+  ignore_failure true
+  only_if { Dir.exist?("#{install_dir}/#{package}#{version}") }
 end

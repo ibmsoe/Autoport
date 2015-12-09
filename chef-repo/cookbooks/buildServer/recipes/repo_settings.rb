@@ -30,4 +30,5 @@ template "#{file_path}/#{repo_file}" do
     osrelease: node['lsb']['codename'],
     platform_version: node['platform_version'],
   )
+  ignore_failure true
 end

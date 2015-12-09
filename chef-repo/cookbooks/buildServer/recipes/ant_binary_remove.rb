@@ -9,16 +9,19 @@ arch          = node['kernel']['machine']
 
 file "#{archive_dir}/#{ant_pkg}-bin#{ext}" do
    action :delete
+   ignore_failure true
 end
 
 directory "#{install_dir}/#{ant_pkg}" do
   action     :delete
   recursive  true
+  ignore_failure true
 end
 
 file "/etc/profile.d/ant.sh" do
   action :delete
   only_if "grep -w #{version} /etc/profile.d/ant.sh"
+  ignore_failure true
 end
 
 buildServer_log "apache-ant" do
@@ -26,4 +29,5 @@ buildServer_log "apache-ant" do
   log_location node['log_location']
   log_record   "apache-ant,#{version},ant_binary,ant,#{arch},#{ext},#{ant_pkg}-bin#{ext}"
   action       :remove
+  ignore_failure true
 end
