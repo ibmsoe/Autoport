@@ -3653,6 +3653,12 @@ function updateEnvVariable(value, key){
     batchState.batchFile.packages[key].build.selectedEnv = value;
 }
 
+function CustomDateSorter(date1, date2){
+    var dateObj1 = new Date(date1);
+    var dateObj2 = new Date(date2);
+    return dateObj1 - dateObj2
+}
+
 $(document).ready(function() {
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers
