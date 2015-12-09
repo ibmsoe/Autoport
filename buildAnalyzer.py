@@ -277,6 +277,8 @@ def interpretTravis(repo, travisFile, travis_def):
             # Add autoport build command which comes from yaml before_install and install
             nonprivileged = ['cd ', 'mkdir ', 'if ', 'sudo ', 'source ', 'true',
                              'export ', 'ln ', 'cp ', 'wget ']
+
+            beforeInstall = ""
             if 'before_install' in data and data['before_install']:
                 if isinstance(data['before_install'], list):
                     newCmds = []
@@ -285,13 +287,14 @@ def interpretTravis(repo, travisFile, travis_def):
                             newCmds.append('sudo ' + cmd)
                         else:
                             newCmds.append(cmd)
-                    travis_def['build'] = '; '.join(newCmds)
+                    beforeInstall = '; '.join(newCmds)
                 else:
                     cmd = data['before_install']
                     if not any(x in cmd for x in nonprivileged):
-                        travis_def['build'] = 'sudo ' + cmd
+                        beforeInstall = 'sudo ' + cmd
                     else:
-                        travis_def['build'] = cmd
+                        beforeInstall = cmd
+            install = ""
             if 'install' in data and data['install']:
                 if isinstance(data['install'], list):
                     newCmds = []
@@ -300,22 +303,34 @@ def interpretTravis(repo, travisFile, travis_def):
                             newCmds.append('sudo ' + cmd)
                         else:
                             newCmds.append(cmd)
-                    travis_def['build'] = '; '.join(newCmds)
+                    install = '; '.join(newCmds)
                 else:
                     cmd = data['install']
                     if not any(x in cmd for x in nonprivileged):
-                        travis_def['build'] = 'sudo ' + cmd
+                        install = 'sudo ' + cmd
                     else:
-                        travis_def['build'] = cmd
-            if not travis_def['build']:
-                travis_def['build'] = "echo ---See test log for travis-style build---"
+                        install = cmd
+
+            if beforeInstall and install:
+                travis_def['build'] = beforeInstall + '; ' + install
+            elif beforeInstall:
+                travis_def['build'] = beforeInstall
+            else:
+                travis_def['build'] = install
 
             # Add autoport test command which comes from yaml before_script and script
+            beforeScript = ""
             if 'before_script' in data and data['before_script']:
                 if isinstance(data['before_script'], list):
-                    travis_def['test'] = '; '.join(data['before_script'])
+                    beforeScript = '; '.join(data['before_script'])
                 else:
-                    travis_def['test'] = data['before_script']
+                    beforeScript = data['before_script']
+
+            if not travis_def['build'] and beforeScript:
+                travis_def['build'] = beforeScript
+            elif beforeScript:
+                travis_def['test'] = beforeScript
+
             if isinstance(data['script'], list):
                 cmd = '; '.join(data['script'])
             else:
@@ -324,6 +339,13 @@ def interpretTravis(repo, travisFile, travis_def):
                 travis_def['test'] = travis_def['test'] + '; ' + cmd
             else:
                 travis_def['test'] = cmd
+
+            # If there is only one command, specify it as build.  A test command
+            # may be generated based on the stack of commands that are independently
+            # produced by the framework via non-travis based rules
+            if not travis_def['build']:
+                travis_def['build'] = travis_def['test']
+                travis_def['test'] = ""
 
             # Keep repo.primary lang as reports are tied to it.  Travis has their own defs
 
