@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "12",
+    "sequence": "13",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -100,6 +100,9 @@
                 },
                 {
                     "name": "libglu1-mesa-dev"
+                },
+                {
+                    "name": "libgoogle-glog-dev"
                 },
                 {
                     "name": "libgsl0-dev"
