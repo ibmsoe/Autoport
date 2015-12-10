@@ -234,9 +234,9 @@ afuse, automounting file system implemented in user-space using FUSE
 agave, colorscheme designer for the GNOME desktop
 agda, dependently typed functional programming language
 agda-bin, commandline interface to Agda
-agda-mode, dependently typed functional programming language ¡ª emacs mode
+agda-mode, dependently typed functional programming language ï¿½ï¿½ emacs mode
 agda-stdlib, standard library for Agda
-agda-stdlib-doc, standard library for Agda ¡ª documentation
+agda-stdlib-doc, standard library for Agda ï¿½ï¿½ documentation
 agedu, Unix utility for tracking down wasted disk space
 agenda.app, Calendar manager for GNUstep
 aggregate, ipv4 cidr prefix aggregator
@@ -3030,7 +3030,7 @@ cpp11-migrate-3.5, Tool to convert C++98 and C++03 code to C++11
 cppcheck, tool for static C/C++ code analysis
 cpphs, Simplified cpp-a-like preprocessor for Haskell
 cppo, cpp for OCaml
-cpputest, C/C++ based unit test framework ¡ª main package
+cpputest, C/C++ based unit test framework ï¿½ï¿½ main package
 cpqarrayd, monitoring tool for HP (Compaq) SmartArray controllers
 cproto, utilities to generate C function prototypes from C source code
 cpu, a console based LDAP user management tool
@@ -3575,9 +3575,9 @@ defendguin, defender clone with penguins
 defendguin-data, Data files for defendguin
 dehydra, Scriptable static analysis tool for C and C++
 deja-dup (30.0-0ubuntu4), Back up your files
-deja-dup-backend-cloudfiles, Rackspace Cloudfiles support for D¨¦j¨¤ Dup
-deja-dup-backend-gvfs (30.0-0ubuntu4), Remote server support for D¨¦j¨¤ Dup
-deja-dup-backend-s3, Amazon S3 support for D¨¦j¨¤ Dup
+deja-dup-backend-cloudfiles, Rackspace Cloudfiles support for Dï¿½ï¿½jï¿½ï¿½ Dup
+deja-dup-backend-gvfs (30.0-0ubuntu4), Remote server support for Dï¿½ï¿½jï¿½ï¿½ Dup
+deja-dup-backend-s3, Amazon S3 support for Dï¿½ï¿½jï¿½ï¿½ Dup
 dejagnu (1.5-3build1), framework for running test suites on software tools
 delaboratory, unique image postprocessing application
 dell-dup, A firmware-tools plugin for Dell DUP images
@@ -5304,8 +5304,8 @@ feel++-doc, A library for the finite element method
 feh, imlib2 based image viewer
 feisty-session-splashes, Feisty Session Splashes
 feisty-wallpapers, Feisty Wallpapers
-felix-latin, F¨¦lix Gaffiot's Latin-French dictionary - viewer
-felix-latin-data, F¨¦lix Gaffiot's Latin-French dictionary - data
+felix-latin, Fï¿½ï¿½lix Gaffiot's Latin-French dictionary - viewer
+felix-latin-data, Fï¿½ï¿½lix Gaffiot's Latin-French dictionary - data
 felix-main, Execution environment for OSGi Felix Framework
 fence-agents, Fence Agents for Red Hat Cluster
 fenics, Automated Solution of Differential Equations
@@ -5733,9 +5733,9 @@ fonts-arphic-gbsn00lp (2.11-13), "AR PL SungtiL GB" Chinese TrueType font by Arp
 fonts-arphic-gkai00mp (2.11-13), "AR PL KaitiM GB" Chinese TrueType font by Arphic Technology
 fonts-arphic-ukai (0.2.20080216.2-4ubuntu2), "AR PL UKai" Chinese Unicode TrueType font collection Kaiti style
 fonts-arphic-uming (0.2.20080216.2-7ubuntu2), "AR PL UMing" Chinese Unicode TrueType font collection Mingti style
-fonts-averia-gwf, Aver¨ªa GWF font family
-fonts-averia-sans-gwf, Aver¨ªa Sans GWF font family
-fonts-averia-serif-gwf, Aver¨ªa Serif GWF font family
+fonts-averia-gwf, Averï¿½ï¿½a GWF font family
+fonts-averia-sans-gwf, Averï¿½ï¿½a Sans GWF font family
+fonts-averia-serif-gwf, Averï¿½ï¿½a Serif GWF font family
 fonts-baekmuk, Baekmuk series Korean fonts
 fonts-beng-extra, TrueType fonts for Bengali language
 fonts-beteckna, geometric Futura-like sans-serif TrueType font
@@ -5775,7 +5775,7 @@ fonts-dzongkha, TrueType fonts for Dzongkha language
 fonts-ebgaramond, EB Garamond OpenType fonts
 fonts-ebgaramond-extra, EB Garamond Initials and TrueType fonts
 fonts-ecolier-court, cursive roman font with small descenders
-fonts-ecolier-lignes-court, cursive roman font (with r¨¦glure Sey¨¨s and small descenders)
+fonts-ecolier-lignes-court, cursive roman font (with rï¿½ï¿½glure Seyï¿½ï¿½s and small descenders)
 fonts-eeyek, Eeyek TrueType font for Meetei Mayek script
 fonts-evertype-conakry, smart Graphite font for N'Ko
 fonts-f500, Wipeout 3 Font
@@ -5791,7 +5791,7 @@ fonts-gargi, OpenType Devanagari font
 fonts-gfs-artemisia, greek font (Times Greek-like)
 fonts-gfs-baskerville, ancient Greek font revival
 fonts-gfs-bodoni-classic, smart greek typeface revival
-fonts-gfs-complutum, ancient Greek font revival from the University of Alcal¨¢, Spain
+fonts-gfs-complutum, ancient Greek font revival from the University of Alcalï¿½ï¿½, Spain
 fonts-gfs-didot, greek font family (Didot revival)
 fonts-gfs-didot-classic, greek font family (Classic Didot revival)
 fonts-gfs-gazis, ancient Greek font (Byzantine cursive hand style)
@@ -8272,7 +8272,7 @@ golang-mux-dev, URL router and dispatcher
 golang-nzaat-dev, Go implementation of the NZAAT hash algorithm
 golang-openldap-dev, OpenLDAP client integration for Go, using cgo
 golang-pb-dev, Simple progress bar for console programs
-golang-pq-dev, pure Go postgres driver for Go¡¯s database/sql package
+golang-pq-dev, pure Go postgres driver for Goï¿½ï¿½s database/sql package
 golang-pretty-dev, Pretty printing for go values
 golang-pty-dev, Go package for using unix pseudo-terminals
 golang-src, Go programming language compiler - source files
@@ -8674,7 +8674,7 @@ gstreamer0.10-gnomevfs, GStreamer plugin for GnomeVFS
 gstreamer0.10-gnonlin, non-linear editing module for GStreamer
 gstreamer0.10-gnonlin-dbg, non-linear editing module for GStreamer
 gstreamer0.10-gnonlin-doc, GStreamer documentation for the non-linear editing module
-gstreamer0.10-hplugins, Holosc¨®pio plugins for GStreamer
+gstreamer0.10-hplugins, Holoscï¿½ï¿½pio plugins for GStreamer
 gstreamer0.10-nice (0.1.4-1), ICE library (GStreamer 0.10 plugin)
 gstreamer0.10-packagekit, GStreamer plugin to install codecs using PackageKit
 gstreamer0.10-plugins-bad, GStreamer plugins from the "bad" set
@@ -9387,7 +9387,7 @@ hunspell-ne (1:4.2.1-0ubuntu1), Nepali dictionary for hunspell
 hunspell-ro (1:4.2.1-0ubuntu1), Romanian dictionary for hunspell
 hunspell-ru (20120501-1), Russian dictionary for hunspell
 hunspell-ru, myspell-ru
-hunspell-se (1.0~beta6.20081222-1.2), North S¨¢mi Hunspell dictionary
+hunspell-se (1.0~beta6.20081222-1.2), North Sï¿½ï¿½mi Hunspell dictionary
 hunspell-sh (1:3.3.0-2ubuntu3), Serbian (Latin) dictionary for hunspell
 hunspell-sr (1:4.2.1-0ubuntu1), Serbian (Cyrillic) dictionary for hunspell
 hunspell-sv-se (1.51-1), Swedish (SE) dictionary for hunspell
@@ -9831,7 +9831,7 @@ inetutils-traceroute, trace the IPv4 route to another host
 inews, inn2-inews, inn
 infernal, inference of RNA secondary structural alignments
 infernal-dbg, debug information for infernal
-infernal-doc, inference of RNA secondary structural alignments ¨C documentation
+infernal-doc, inference of RNA secondary structural alignments ï¿½C documentation
 infiniband-diags, InfiniBand diagnostic programs
 infinoted, dedicated server for infinote-based collaborative editing
 infinoted-0.5, dedicated server for infinote-based collaborative editing (transitional)
@@ -11998,7 +11998,7 @@ lbcd, Return system load via UDP for remote load balancers
 lbdb (0.38ubuntu1), Little Brother's DataBase for the mutt mail reader
 lbreakout2, ball-and-paddle game with nice graphics
 lbreakout2-data, ball-and-paddle game with nice graphics (DATA FILES)
-lbt, converts from LTL formulas to B¨¹chi automata
+lbt, converts from LTL formulas to Bï¿½ï¿½chi automata
 lbzip2, fast, multi-threaded bzip2 utility
 lcab, create cabinet (.cab) archives
 lcalc, program for calculating with L-functions
@@ -14827,7 +14827,7 @@ libcppunit-dev (1.13.1-2ubuntu1), Unit Testing Library for C++
 libcppunit-doc (1.13.1-2ubuntu1), Unit Testing Library for C++
 libcppunit-subunit-dev (0.0.18-0ubuntu7), SubunitTestProgressListener for CPPUnit - Development headers
 libcppunit-subunit0 (0.0.18-0ubuntu7), SubunitTestProgressListener for CPPUnit - C++ shared library
-libcpputest-dev, C/C++ based unit test framework ¡ª headers and static libraries
+libcpputest-dev, C/C++ based unit test framework ï¿½ï¿½ headers and static libraries
 libcps-perl, module to manage flow of control in Continuation Passing Style
 libcpufreq-dev, development files to deal with the cpufreq Linux kernel feature
 libcpufreq0, shared library to deal with the cpufreq Linux kernel feature
@@ -15605,7 +15605,7 @@ libdevel-lexalias-perl (0.05-1build1), Perl module that provides alias lexical v
 libdevel-nytprof-perl, Perl statement and subroutine code profiler
 libdevel-overrideglobalrequire-perl, module to safely override CORE::GLOBAL::require
 libdevel-partialdump-perl (0.17-1), Perl module to dump subroutine parameters concisely
-libdevel-patchperl-perl, Perl module to patch perl source ¨¤ la Devel::PPPort's buildperl.pl
+libdevel-patchperl-perl, Perl module to patch perl source ï¿½ï¿½ la Devel::PPPort's buildperl.pl
 libdevel-pragma-perl, helper functions for developers of lexical pragmas
 libdevel-profile-perl, a Perl code profiler
 libdevel-ptkdb-perl, Perl debugger using a Tk GUI
@@ -16625,7 +16625,7 @@ libfile-listing-perl (6.04-1), module to parse directory listings
 libfile-localizenewlines-perl, Perl module to localize the newlines for one or more files
 libfile-mimeinfo-perl (0.22-1), Perl module to determine file types
 libfile-mmagic-perl, Perl module to guess file type
-libfile-mmagic-xs-perl, Perl module to guess file type (¨¤ la mod_mime_magic)
+libfile-mmagic-xs-perl, Perl module to guess file type (ï¿½ï¿½ la mod_mime_magic)
 libfile-modified-perl, checks intelligently if files have changed
 libfile-ncopy-perl, module for file copying like cp
 libfile-next-perl, file-finding iterator
@@ -16764,8 +16764,8 @@ libfloat-coq, Coq library on floating-point arithmetic
 libflorist-dbg, POSIX.5 Ada interface to operating system services
 libflorist2011, POSIX.5 Ada interface to operating system services
 libflorist2011-dev, POSIX.5 Ada interface to operating system services
-libflowcanvas-dev, interactive widget for ¡°boxes and lines¡± environments - header files
-libflowcanvas5, interactive widget for ¡°boxes and lines¡± environments
+libflowcanvas-dev, interactive widget for ï¿½ï¿½boxes and linesï¿½ï¿½ environments - header files
+libflowcanvas5, interactive widget for ï¿½ï¿½boxes and linesï¿½ï¿½ environments
 libfltk-cairo1.3, Fast Light Toolkit - Cairo rendering layer support
 libfltk-dev, libfltk1.3-dev, libfltk1.1-dev
 libfltk-forms1.3, Fast Light Toolkit - Forms compatibility layer support
@@ -27736,7 +27736,7 @@ libnss-db (2.2.3pre1-5build3), NSS module for using Berkeley Databases as a nami
 libnss-dns-udeb (2.19-0ubuntu6), Embedded GNU C Library: NSS helper for DNS - udeb
 libnss-extrausers, nss module to have an additional passwd, shadow and group file
 libnss-files-udeb (2.19-0ubuntu6), Embedded GNU C Library: NSS helper for files - udeb
-libnss-gw-name, nss module that names the current gateway¡¯s IP address
+libnss-gw-name, nss module that names the current gatewayï¿½ï¿½s IP address
 libnss-ldap (264-2.2ubuntu4), NSS module for using LDAP as a naming service
 libnss-ldap, libnss-ldapd
 libnss-ldapd, NSS module for using LDAP as a naming service
@@ -34055,24 +34055,24 @@ libxi6-udeb (2:1.7.1.901-1ubuntu1), X11 Input extension library
 libxine-dev, xine video player library ? development packages
 libxine-doc, libxine2-doc, libxine1-doc
 libxine-xvdr, libxine2-xvdr
-libxine1, xine video/media player library ¨C meta-package
+libxine1, xine video/media player library ï¿½C meta-package
 libxine1-all-plugins, xine video/media player library ? meta package for all plugins
 libxine1-bin, xine video/media player library ? binary files
 libxine1-console, libaa/libcaca/framebuffer/directfb related plugins for libxine1
 libxine1-dbg, debug symbols for libxine1
-libxine1-doc, xine video player library ¨C documentation files
+libxine1-doc, xine video player library ï¿½C documentation files
 libxine1-ffmpeg, MPEG-related plugins for libxine1
 libxine1-gnome, GNOME-related plugins for libxine1
 libxine1-misc-plugins, Input, audio output and post plugins for libxine1
 libxine1-plugins, xine video/media player library ? meta package for common plugins
 libxine1-x, X desktop video output plugins for libxine1
-libxine2, xine media player library ¨C meta-package
+libxine2, xine media player library ï¿½C meta-package
 libxine2-all-plugins, xine video/media player library ? meta-package for all plugins
-libxine2-bin, xine video/media player library ¨C binary files
+libxine2-bin, xine video/media player library ï¿½C binary files
 libxine2-console, libaa/libcaca/framebuffer/directfb related plugins for libxine2
 libxine2-dbg, debug symbols for libxine2
-libxine2-dev, xine video player library ¨C development packages
-libxine2-doc, xine video player library ¨C documentation files
+libxine2-dev, xine video player library ï¿½C development packages
+libxine2-doc, xine video player library ï¿½C documentation files
 libxine2-ffmpeg, MPEG-related plugins for libxine2
 libxine2-gnome, GNOME-related plugins for libxine2
 libxine2-misc-plugins, Input, audio output and post plugins for libxine2
@@ -35830,7 +35830,7 @@ lubuntu-software-center, Utility for browsing, installing, removing applications
 luciole, Image per Image capture tool for movie animations
 luckybackup, rsync-based GUI data backup utility
 luckybackup-data, rsync-based GUI data backup utility (data files)
-ludevit, converter from standard Slovak into the L. ?t¨²r version
+ludevit, converter from standard Slovak into the L. ?tï¿½ï¿½r version
 lugaru, transitional dummy package
 lugaru-data, transitional dummy package
 luminance-hdr, graphical user interface providing a workflow for HDR imaging
@@ -41495,7 +41495,7 @@ python-couchdb, library for working with Apache CouchDB
 python-couchdbkit, Trying to improve couchdb experience in Python
 python-couleur, tool to play around with ANSI features in a unix terminal
 python-coverage (3.7.1+dfsg.1-1ubuntu2), code coverage tool for Python 2
-python-coverage-dbg (3.7.1+dfsg.1-1ubuntu2), code coverage tool for Python 2 ¨C debug library
+python-coverage-dbg (3.7.1+dfsg.1-1ubuntu2), code coverage tool for Python 2 ï¿½C debug library
 python-coverage-test-runner, fail Python program unit tests unless they test everything
 python-cpl, Control pipeline recipes from the European Southern Observatory
 python-cqmf2, enterprise messaging system - Python CQMF2 bindings
@@ -42678,9 +42678,9 @@ python-pycountry (0.14.1+ds1-3build1), ISO databases accessible from Python
 python-pycparser, C parser in Python
 python-pycryptopp, Python wrappers for the Crypto++ library
 python-pycryptopp-dbg, Python wrappers for the Crypto++ library (debug extension)
-python-pycuda, Python module to access Nvidia¡®s CUDA parallel computation API
-python-pycuda-dbg, Python module to access Nvidia¡®s CUDA API (debug extensions)
-python-pycuda-doc, module to access Nvidia¡®s CUDA computation API (documentation)
+python-pycuda, Python module to access Nvidiaï¿½ï¿½s CUDA parallel computation API
+python-pycuda-dbg, Python module to access Nvidiaï¿½ï¿½s CUDA API (debug extensions)
+python-pycuda-doc, module to access Nvidiaï¿½ï¿½s CUDA computation API (documentation)
 python-pycurl (7.19.3-0ubuntu3), Python bindings to libcurl
 python-pycurl-dbg (7.19.3-0ubuntu3), Python bindings to libcurl (debug extension)
 python-pydds, bridge double dummy solver - Python extension
@@ -44310,7 +44310,7 @@ python3-configglue (1.1.2-0ubuntu2), Glues together optparse.OptionParser and Co
 python3-construct, powerful declarative parser (and builder) for binary data
 python3-cookiecutter, create projects from project templates (Python 3 module)
 python3-coverage (3.7.1+dfsg.1-1ubuntu2), code coverage tool for Python 3
-python3-coverage-dbg (3.7.1+dfsg.1-1ubuntu2), code coverage tool for Python 3 ¨C debug library
+python3-coverage-dbg (3.7.1+dfsg.1-1ubuntu2), code coverage tool for Python 3 ï¿½C debug library
 python3-cracklib, Python3 bindings for password checker library cracklib2
 python3-crcmod, CRC Generator - python 3.x
 python3-crypto (2.6.1-4build1), cryptographic algorithms and protocols for Python 3
@@ -44579,8 +44579,8 @@ python3-pyatspi2, Transitional package for assistive technology Python3 bindings
 python3-pyaudio, Python3 bindings for PortAudio v19
 python3-pycangjie, Python wrapper to libcangjie
 python3-pycparser, C parser in Python 3
-python3-pycuda, Python 3 module to access Nvidia¡®s CUDA parallel computation API
-python3-pycuda-dbg, Python 3 module to access Nvidia¡®s CUDA API (debug extensions)
+python3-pycuda, Python 3 module to access Nvidiaï¿½ï¿½s CUDA parallel computation API
+python3-pycuda-dbg, Python 3 module to access Nvidiaï¿½ï¿½s CUDA API (debug extensions)
 python3-pycurl (7.19.3-0ubuntu3), Python 3 bindings to libcurl
 python3-pycurl-dbg (7.19.3-0ubuntu3), Python 3 bindings to libcurl (debug extension)
 python3-pyfits, Python3 module for reading, writing, and manipulating FITS files
@@ -46961,10 +46961,10 @@ sarg, squid analysis report generator
 sash, Stand-alone shell
 sasl2-bin (2.1.25.dfsg1-17build1), Cyrus SASL - administration programs for SASL users database
 sass-elisp, Emacs Lisp mode for the Sass markup language
-sat-xmpp-core, Salut ¨¤ Toi XMPP-based communication and sharing tool (core)
-sat-xmpp-jp, Salut ¨¤ Toi XMPP-based communication and sharing tool (command-line interface)
-sat-xmpp-primitivus, Salut ¨¤ Toi XMPP-based communication and sharing tool (console interface)
-sat-xmpp-wix, Salut ¨¤ Toi XMPP-based communication and sharing tool (desktop interface)
+sat-xmpp-core, Salut ï¿½ï¿½ Toi XMPP-based communication and sharing tool (core)
+sat-xmpp-jp, Salut ï¿½ï¿½ Toi XMPP-based communication and sharing tool (command-line interface)
+sat-xmpp-primitivus, Salut ï¿½ï¿½ Toi XMPP-based communication and sharing tool (console interface)
+sat-xmpp-wix, Salut ï¿½ï¿½ Toi XMPP-based communication and sharing tool (desktop interface)
 sat4j, Efficient library of SAT solvers in Java
 sata-modules, sata-modules-3.13.0-24-generic-di
 sata-modules-3.13.0-24-generic-di (3.13.0-24.46), SATA storage support
@@ -48122,7 +48122,7 @@ stardict-plugin-espeak, International dictionary - eSpeak TTS plugin
 stardict-plugin-festival, International dictionary - Festival TTS plugin
 stardict-plugin-spell, International dictionary - spell plugin
 stardict-tools, dictionary conversion tools of stardict
-stardict-xmlittre, French Littr¨¦ dictionary for stardict
+stardict-xmlittre, French Littrï¿½ï¿½ dictionary for stardict
 starfighter, 2D scrolling shooter game
 starfighter-data, 2D scrolling shooter game -- data files
 starfish, xstarfish
@@ -48319,7 +48319,7 @@ sugar-artwork-0.96, Sugar graphical shell - artwork
 sugar-artwork-0.98, Sugar graphical shell - artwork
 sugar-browse-activity, web browsing activity for the Sugar graphical shell
 sugar-calculate-activity, calculate activity for the Sugar graphical shell
-sugar-connect-activity, collaborative activity ¨¤ la Connect Four
+sugar-connect-activity, collaborative activity ï¿½ï¿½ la Connect Four
 sugar-emulator, sugar-emulator-0.96, sugar-emulator-0.98
 sugar-emulator-0.96, Sugar graphical shell - emulator
 sugar-emulator-0.98, Sugar graphical shell - emulator
@@ -49467,7 +49467,7 @@ totem-plugins (3.10.1-1ubuntu4), Plugins for the Totem media player
 totem-plugins-dvb-daemon, totem plugin for gnome-dvb-daemon
 totem-plugins-extra, Extra plugins for the Totem media player
 touchegg, Multitouch gesture recognizer
-touchegg-dbg, debugging symbols for Touch¨¦gg
+touchegg-dbg, debugging symbols for Touchï¿½ï¿½gg
 tourney-manager, perl interface to run chess engine tournaments
 tovid, tools for creating video DVDs, VCDs, and SVCDs
 tovidgui, tools for creating video DVDs, VCDs, and SVCDs - tovid GUI
@@ -55850,4 +55850,5 @@ netconfig, a text-based tool for simple configuration of ethernet devices.
 netdump, client setup for network kernel message logging and crash dumps   
 netdump-server, server for network kernel crash dumps       
 netpbm-devel, development tools for programs which will use the netpbm libraries.   
-newt-devel             
+newt-devel, the header files and libraries necessary for developing applications which use newt
+glog, c++ implementation of the google logging module
