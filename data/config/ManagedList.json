@@ -57,6 +57,9 @@
                     "name": "g++"
                 },
                 {
+                    "name": "javacc"
+                },
+                {
                     "name": "libantlr-dev"
                 },
                 {
@@ -114,10 +117,19 @@
                     "name": "libiberty-dev"
                 },
                 {
+                    "name": "libjavacc-maven-plugin-java"
+                },
+                {
                     "name": "libjemalloc-dev"
                 },
                 {
                     "name": "libjpeg-dev"
+                },
+                {
+                    "name": "liblua5.1-dev"
+                },
+                {
+                    "name": "liblua5.2-dev"
                 },
                 {
                     "name": "liblz4-dev"
@@ -180,6 +192,9 @@
                     "name": "libxi-dev"
                 },
                 {
+                    "name": "libxml2-dev"
+                },
+                {
                     "name": "libxrandr-dev"
                 },
                 {
@@ -222,6 +237,9 @@
                     "name": "pkg-config"
                 },
                 {
+                    "name": "policycoreutils"
+                },
+                {
                     "name": "python"
                 },
                 {
@@ -229,6 +247,9 @@
                 },
                 {
                     "name": "python-clang-3.6"
+                },
+                {
+                    "name": "python-libxml2"
                 },
                 {
                     "name": "python-lzo"
@@ -244,6 +265,9 @@
                 },
                 {
                     "name": "python-software-properties"
+                },
+                {
+                    "name": "python-support"
                 },
                 {
                     "name": "python-py"
@@ -268,6 +292,9 @@
                 },
                 {
                     "name": "ruby"
+                },
+                {
+                    "name": "ruby-libxml"
                 },
                 {
                     "name": "sbt"
@@ -397,6 +424,9 @@
                     "name": "java-1.7.0-openjdk-devel"
                 },
                 {
+                    "name": "javacc"
+                },
+                {
                     "name": "libcap-devel"
                 },
                 {
@@ -424,7 +454,16 @@
                     "name": "libvorbis-devel"
                 },
                 {
+                    "name": "libxml2-devel"
+                },
+                {
+                    "name": "libxml2-python"
+                },
+                {
                     "name": "libyaml-devel"
+                },
+                {
+                    "name": "lua-devel"
                 },
                 {
                     "name": "lzo-devel"

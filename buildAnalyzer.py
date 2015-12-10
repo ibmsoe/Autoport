@@ -275,22 +275,20 @@ def interpretTravis(repo, travisFile, travis_def):
             travis_def['env'] = eliminateDupEnv(generalEnv)
 
             # Add autoport build command which comes from yaml before_install and install
-            nonprivileged = ['cd ', 'mkdir ', 'if ', 'sudo ', 'source ', 'true',
-                             'export ', 'ln ', 'cp ', 'wget ']
-
+            privileged = ['apt', 'dpkg', 'yum', 'rpm', 'install']
             beforeInstall = ""
             if 'before_install' in data and data['before_install']:
                 if isinstance(data['before_install'], list):
                     newCmds = []
                     for cmd in data['before_install']:
-                        if not any(x in cmd for x in nonprivileged):
+                        if any(x in cmd for x in privileged) and not 'sudo' in cmd:
                             newCmds.append('sudo ' + cmd)
                         else:
                             newCmds.append(cmd)
                     beforeInstall = '; '.join(newCmds)
                 else:
                     cmd = data['before_install']
-                    if not any(x in cmd for x in nonprivileged):
+                    if any(x in cmd for x in privileged) and not 'sudo' in cmd:
                         beforeInstall = 'sudo ' + cmd
                     else:
                         beforeInstall = cmd
@@ -299,14 +297,14 @@ def interpretTravis(repo, travisFile, travis_def):
                 if isinstance(data['install'], list):
                     newCmds = []
                     for cmd in data['install']:
-                        if not any(x in cmd for x in nonprivileged):
+                        if any(x in cmd for x in privileged) and not 'sudo' in cmd:
                             newCmds.append('sudo ' + cmd)
                         else:
                             newCmds.append(cmd)
                     install = '; '.join(newCmds)
                 else:
                     cmd = data['install']
-                    if not any(x in cmd for x in nonprivileged):
+                    if any(x in cmd for x in privileged) and not 'sudo' in cmd:
                         install = 'sudo ' + cmd
                     else:
                         install = cmd
@@ -481,9 +479,9 @@ def inferBuildSteps(listing, repo):
         'grep test': "make check",
         'grep install': "",
         'grep env': "",
-        'build': "if [ -e Makefile.PL ]; then perl Makefile.PL; fi; make; make install",
+        'build': "if [ -e Makefile.PL ]; then perl Makefile.PL; fi; make",
         'test' : "make test",
-        'install':"",
+        'install':"make install",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "Primary language",
@@ -568,7 +566,7 @@ def inferBuildSteps(listing, repo):
         'grep test' : "ant test",
         'grep install': "",
         'grep env': "ANT_OPTS=",
-        'build': "ant compile",
+        'build': "ant",
         'test': "ant test",
         'install': "ant publish-local",
         'env' : "",

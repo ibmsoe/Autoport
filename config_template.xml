@@ -134,6 +134,45 @@
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD1&quot; ]; then
+                 if [ -x /usr/bin/yum ]; then
+                     function apt-cache() {
+                         echo "WARNING apt-cache $* in autoport command needs to be replaced for RHEL"
+                     }
+                     function apt-get() {
+                         echo "WARNING apt-get $* in autoport command needs to be replaced for RHEL"
+                     }
+                     function aptitude() {
+                         echo "WARNING aptitude $* in autoport command needs to be replaced for RHEL"
+                     }
+                     function dpkg() {
+                         echo "WARNING dpkg $* in autoport command needs to be replaced for RHEL"
+                     }
+                     function add-apt-repository() {
+                         echo "WARNING add-apt-repository $* in autoport command needs to be replaced for RHEL"
+                     }
+                     function synaptic() {
+                         echo "WARNING synaptic $* in autoport command needs to be replaced for RHEL"
+                     }
+                     function sudo() {
+                         case $1 in
+                         "dpkg")
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced for RHEL"
+                             ;;
+                         "add-apt"*)
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced for RHEL"
+                             ;;
+                         "apt"*)
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced for RHEL"
+                             ;;
+                         "synaptic")
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced for RHEL"
+                             ;;
+                         *)
+                             /usr/bin/sudo $*
+                             ;;
+                         esac
+                    }
+                 fi
                  if [ $JAVATYPE ]; then
                      echo &quot;Sourcing Java to $JAVATYPE&quot;
                      sudo chmod a+x $JAVATYPE
@@ -176,12 +215,51 @@
                  echo &quot;&quot; &gt;&gt; $ARTI
                  echo $CMD1 | tee .autoport-scratch/autoport_build_cmd;
                  chmod a+x .autoport-scratch/autoport_build_cmd;
-                 ./.autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                 source .autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD2&quot; ]; then
+                 if [ -x /usr/bin/yum ]; then
+                     function apt-cache() {
+                         echo "WARNING apt-cache $* in autoport command needs to be replaced"
+                     }
+                     function apt-get() {
+                         echo "WARNING apt-get $* in autoport command needs to be replaced"
+                     }
+                     function aptitude() {
+                         echo "WARNING aptitude $* in autoport command needs to be replaced"
+                     }
+                     function dpkg() {
+                         echo "WARNING dpkg $* in autoport command needs to be replaced"
+                     }
+                     function add-apt-repository() {
+                         echo "WARNING add-apt-repository $* in autoport command needs to be replaced"
+                     }
+                     function synaptic() {
+                         echo "WARNING synaptic $* in autoport command needs to be replaced"
+                     }
+                     function sudo() {
+                         case $1 in
+                         "dpkg")
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                             ;;
+                         "add-apt"*)
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                             ;;
+                         "apt"*)
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                             ;;
+                         "synaptic")
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                             ;;
+                         *)
+                             /usr/bin/sudo $*
+                             ;;
+                         esac
+                    }
+                 fi
                  if [ $JAVATYPE ]; then
                      echo &quot;Sourcing Java to $JAVATYPE&quot;
                      sudo chmod a+x $JAVATYPE
@@ -224,12 +302,51 @@
                  echo &quot;&quot; &gt;&gt; $ARTI
                  echo $CMD2 | tee .autoport-scratch/autoport_test_cmd;
                  chmod a+x .autoport-scratch/autoport_test_cmd;
-                 ./.autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                 source .autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD3&quot; ]; then
+                 if [ -x /usr/bin/yum ]; then
+                     function apt-cache() {
+                         echo "WARNING apt-cache $* in autoport command needs to be replaced"
+                     }
+                     function apt-get() {
+                         echo "WARNING apt-get $* in autoport command needs to be replaced"
+                     }
+                     function aptitude() {
+                         echo "WARNING aptitude $* in autoport command needs to be replaced"
+                     }
+                     function dpkg() {
+                         echo "WARNING dpkg $* in autoport command needs to be replaced"
+                     }
+                     function add-apt-repository() {
+                         echo "WARNING add-apt-repository $* in autoport command needs to be replaced"
+                     }
+                     function synaptic() {
+                         echo "WARNING synaptic $* in autoport command needs to be replaced"
+                     }
+                     function sudo() {
+                         case $1 in
+                         "dpkg")
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                             ;;
+                         "add-apt"*)
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                             ;;
+                         "apt"*)
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                             ;;
+                         "synaptic")
+                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                             ;;
+                         *)
+                             /usr/bin/sudo $*
+                             ;;
+                         esac
+                    }
+                 fi
                  if [ $JAVATYPE ]; then
                      echo &quot;Sourcing Java to $JAVATYPE&quot;
                      sudo chmod a+x $JAVATYPE
@@ -272,7 +389,7 @@
                  echo &quot;&quot; &gt;&gt; $ARTI
                  echo $CMD3 | tee .autoport-scratch/autoport_install_cmd;
                  chmod a+x .autoport-scratch/autoport_install_cmd;
-                 ./.autoport-scratch/autoport_install_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                 source .autoport-scratch/autoport_install_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
       </conditionalbuilders>
