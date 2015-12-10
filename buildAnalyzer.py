@@ -38,6 +38,9 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
     english = ['the', 'a', 'an', 'is', 'are', 'can', 'you', 'of', 'in', 'from',
                'this', 'to', 'that', 'when', 'should', 'might']
 
+    # Symbols used as prompts
+    promptsStr = '$#>%'
+    
     # Symbols in commands we don't allow.  Not a proper list.  We have limitations such
     # as $VAR to prevent expanded environment variables which we don't support yet
     noContainsStr = '$'
@@ -72,6 +75,10 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
 
                     lastChar = line[len(line) - 1]
 
+                    # check for command prompt symbols at beginning of line
+                    if line.lstrip()[0] in promptsStr:
+                        line = line.lstrip()[1:].lstrip()
+                    
                     for command in commands:
                                                                     # TODO: validate start of command line
                         if len(line.split(' ')) <= max_words and\
