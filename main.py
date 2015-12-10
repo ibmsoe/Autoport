@@ -2063,6 +2063,9 @@ def listManagedPackages():
                            ( managedV != "N/A" or pkg['updateVersion'] and pkg['updateVersion'] != "N/A") :
                             isAddable = True
 
+                        if ('updateVersion' in pkg and pkg['updateVersion'] and pkg['updateVersion'] == managedV):
+                            isAddable = False
+
                         if removablePackage == "Yes":
                            # User will be allowed to remove a package if the package is removable and is installed
                             if 'installedVersion' in pkg and pkg['installedVersion'] and \
