@@ -297,9 +297,9 @@ def interpretTravis(repo, travisFile, travis_def):
                         cmd = cmdline.split()[0]
                         if any(x in cmdline for x in privileged) and\
                            'sudo' not in cmdline and cmd not in dontAddSudo:
-                            newCmds.append('sudo ' + cmd)
+                            newCmds.append('sudo ' + cmdline)
                         else:
-                            newCmds.append(cmd)
+                            newCmds.append(cmdline)
                     beforeInstall = '; '.join(newCmds)
                 else:
                     cmdline = data['before_install']
@@ -309,6 +309,9 @@ def interpretTravis(repo, travisFile, travis_def):
                         beforeInstall = 'sudo ' + cmdline
                     else:
                         beforeInstall = cmdline
+
+            logger.debug("interpretTravis: proj=%s beforeInstall=%s" % (repo.name, beforeInstall))
+
             install = ""
             if 'install' in data and data['install']:
                 if isinstance(data['install'], list):
@@ -323,12 +326,17 @@ def interpretTravis(repo, travisFile, travis_def):
                     install = '; '.join(newCmds)
                 else:
                     cmdline = data['install']
+                    logger.debug("interpretTravis: proj=%s cmdline=%s" % (repo.name, cmdline))
+
                     cmd = cmdline.split()[0]
+                    logger.debug("interpretTravis: proj=%s cmd=%s" % (repo.name, cmd))
                     if any(x in cmdline for x in privileged) and\
                        'sudo' not in cmdline and cmd not in dontAddSudo:
                         install = 'sudo ' + cmdline
                     else:
                         install = cmdline
+
+            logger.debug("interpretTravis: proj=%s install=%s" % (repo.name, install))
 
             if beforeInstall and install:
                 travis_def['build'] = beforeInstall + '; ' + install
