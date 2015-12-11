@@ -1,6 +1,8 @@
 # This recipe would be responsible for installing perl modules
-# uploaded via autoport application. Each perl module uploaded, is
-# expected in tar.gz format and would be installed via source/build method.
+# uploaded via autoport application. Each perl module uploaded
+# would be installed via source/build method.
+
+Chef::Recipe.send(:include, ArchiveLog)
 
 include_recipe 'buildServer::perl'
 arch = node['kernel']['machine']
@@ -9,9 +11,9 @@ extract_location = node['buildServer']['perl']['extract_location']
 if node['buildServer']['perl_modules'].any?
 
   node['buildServer']['perl_modules'].each do |pkg, version|
-
+    ext = ArchiveLog.getExtension(pkg, version)
     buildServer_perlPackage "#{pkg}-#{version}" do
-      archive_name "#{pkg}-#{version}.tar.gz"
+      archive_name "#{pkg}-#{version}#{ext}"
       archive_location node['buildServer']['download_location']
       extract_location node['buildServer']['perl']['extract_location']
       perl_prefix_dir node['buildServer']['perl']['prefix_dir']
@@ -20,7 +22,7 @@ if node['buildServer']['perl_modules'].any?
       action :install
     end
 
-    record = "#{pkg},#{version},perl_modules,#{pkg},#{arch},.tar.gz,#{pkg}-#{version}.tar.gz"
+    record = "#{pkg},#{version},perl_modules,#{pkg},#{arch},#{ext},#{pkg}-#{version}#{ext}"
     buildServer_log pkg do
       name         pkg
       log_location node['log_location']

@@ -3,6 +3,8 @@
 # This recipe also sets ant_home and sets default path variable for ant.
 
 Chef::Recipe.send(:include, CommandBuilder)
+Chef::Recipe.send(:include, ArchiveLog)
+
 include_recipe 'buildServer::java'
 
 version       = node['buildServer']['apache-ant']['version']
@@ -13,6 +15,10 @@ archive_dir   = node['buildServer']['download_location']
 ant_home      = "#{install_dir}/#{ant_pkg}"
 repo_url      = node['buildServer']['repo_url']
 arch          = node['kernel']['machine']
+
+if ext.empty?
+  ext = ArchiveLog.getExtension('apache-ant', version)
+end
 
 remote_file "#{archive_dir}/#{ant_pkg}-bin#{ext}" do
   source "#{repo_url}/archives/#{ant_pkg}-bin#{ext}"

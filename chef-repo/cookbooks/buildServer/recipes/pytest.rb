@@ -1,25 +1,28 @@
 # Installs python module "pytest" using source and build method.
-# source to be built is hosted at autoport_repo in tar.gz archive format.
+# source to be built is hosted at autoport_repo.
+
+Chef::Recipe.send(:include, ArchiveLog)
 
 pytest_ver = node['buildServer']['pytest']['version']
+pytest_ext = node['buildServer']['pytest']['ext']
 arch       = node['kernel']['machine']
 extract_location = node['buildServer']['python']['extract_location']
 
-{
-  'pytest'    => pytest_ver
-}.each do |pkg, version|
-  buildServer_pythonPackage "#{pkg}-#{version}" do
-    archive_name "#{pkg}-#{version}.tar.gz"
-    archive_location node['buildServer']['download_location']
-    extract_location node['buildServer']['python']['extract_location']
-    repo_url node['buildServer']['repo_url']
-    action :install
-    ignore_failure true
-  end
+if pytest_ext.empty?
+  pytest_ext = ArchiveLog.getExtension('pytest', pytest_ver)
 end
 
-record = "pytest,#{pytest_ver},python_modules,python-pytest,#{arch},.tar.gz,\
-pytest-#{pytest_ver}.tar.gz"
+buildServer_pythonPackage "pytest-#{pytest_ver}" do
+  archive_name "pytest-#{pytest_ver}#{pytest_ext}"
+  archive_location node['buildServer']['download_location']
+  extract_location node['buildServer']['python']['extract_location']
+  repo_url node['buildServer']['repo_url']
+  action :install
+  ignore_failure true
+end
+
+record = "pytest,#{pytest_ver},python_modules,python-pytest,#{arch},#{pytest_ext},\
+pytest-#{pytest_ver}#{pytest_ext}"
 
 buildServer_log "pytest" do
   name         "pytest"

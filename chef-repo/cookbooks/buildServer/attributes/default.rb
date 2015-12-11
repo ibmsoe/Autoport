@@ -35,7 +35,7 @@ default['buildServer']['download_location'] =  Chef::Config[:file_cache_path]
 default['buildServer']['protobuf']['version'] = '2.6.1'
 default['buildServer']['protobuf']['install_prefix'] = '/usr/local'
 default['buildServer']['protobuf']['source_dir'] = '/opt'
-default['buildServer']['protobuf']['ext'] = '.tar.gz'
+default['buildServer']['protobuf']['ext'] = ''
 
 # Attributes for java
 default['buildServer']['java']['version'] = '7'
@@ -48,19 +48,19 @@ default['buildServer']['ibm-java-sdk']['install_dir'] = '/opt/ibm'
 default['buildServer']['apache-ant']['source_install'] = 'false'
 default['buildServer']['apache-ant']['version'] = '1.9.6'
 default['buildServer']['apache-ant']['install_dir'] = '/opt'
-default['buildServer']['apache-ant']['ext'] = '.zip'
+default['buildServer']['apache-ant']['ext'] = ''
 
 # Attributes for apache-maven
 default['buildServer']['apache-maven']['source_install'] = 'false'
 default['buildServer']['apache-maven']['version'] = '3.0.5'
 default['buildServer']['apache-maven']['install_dir'] = '/opt'
-default['buildServer']['apache-maven']['ext'] = '.tar.gz'
+default['buildServer']['apache-maven']['ext'] = ''
 
 # Attributes for gradle
 default['buildServer']['gradle']['source_install'] = 'false'
 default['buildServer']['gradle']['version'] = '1.12'
 default['buildServer']['gradle']['install_dir'] = '/opt'
-default['buildServer']['gradle']['ext'] = '.zip'
+default['buildServer']['gradle']['ext'] = ''
 
 # Attributes for ibm-nodejs
 default['buildServer']['ibm-sdk-nodejs']['version'] = '0.12.7'
@@ -71,19 +71,24 @@ default['buildServer']['ibm-sdk-nodejs']['install_dir'] = '/opt/ibm'
 default['buildServer']['scala']['source_install'] = 'false'
 default['buildServer']['scala']['version'] = '2.9.2'
 default['buildServer']['scala']['install_dir'] = '/opt'
-default['buildServer']['scala']['ext'] = '.tgz'
+default['buildServer']['scala']['ext'] = ''
 
 # Attributes for perl and perl modules
 default['buildServer']['perl']['version'] = '5.20.2'
-default['buildServer']['perl']['ext'] = '.tar.gz'
+default['buildServer']['perl']['ext'] = ''
 default['buildServer']['perl']['extract_location'] = '/opt/perl_modules'
 default['buildServer']['perl']['prefix_dir'] = '/usr/local/perl'
 default['buildServer']['perl_modules']= {}
 default['buildServer']['YAML-Tiny']['version']      = '1.64'
+default['buildServer']['YAML-Tiny']['ext']          = ''
 default['buildServer']['Test-Strict']['version']    = '0.26'
+default['buildServer']['Test-Strict']['ext']        = ''
 default['buildServer']['Strict-Perl']['version']    = '2014.10'
+default['buildServer']['Strict-Perl']['ext']        = ''
 default['buildServer']['File-Remove']['version']    = '1.52'
+default['buildServer']['File-Remove']['ext']        = ''
 default['buildServer']['Module-Install']['version'] = '1.14'
+default['buildServer']['Module-Install']['ext']     = ''
 
 
 # Attributes for python and python modules
@@ -91,7 +96,9 @@ default['buildServer']['python']['extract_location']  = '/opt/python_modules'
 default['buildServer']['python_modules']= {}
 # Attributes specific for each python module
 default['buildServer']['py']['version']      = '1.4.26'
+default['buildServer']['py']['ext']          = ''
 default['buildServer']['pytest']['version']  = '2.6.4'
+default['buildServer']['pytest']['ext']      = ''
 
 # Attributes for userpackages
 default['buildServer']['userpackages']={}

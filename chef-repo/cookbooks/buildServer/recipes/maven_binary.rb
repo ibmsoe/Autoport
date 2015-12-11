@@ -4,6 +4,7 @@
 
 include_recipe 'buildServer::java'
 Chef::Recipe.send(:include, CommandBuilder)
+Chef::Recipe.send(:include, ArchiveLog)
 
 version       = node['buildServer']['apache-maven']['version']
 install_dir   = node['buildServer']['apache-maven']['install_dir']
@@ -13,6 +14,10 @@ archive_dir   = node['buildServer']['download_location']
 maven_home    = "#{install_dir}/#{maven_pkg}"
 repo_url      = node['buildServer']['repo_url']
 arch          = node['kernel']['machine']
+
+if ext.empty?
+  ext = ArchiveLog.getExtension('apache-maven', version)
+end
 
 remote_file "#{archive_dir}/#{maven_pkg}-bin#{ext}" do
   source "#{repo_url}/archives/#{maven_pkg}-bin#{ext}"

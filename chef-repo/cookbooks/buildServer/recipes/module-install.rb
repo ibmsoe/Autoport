@@ -1,5 +1,7 @@
 # Installs perl module "file-remove" and "module-install" using source and build method.
-# source to be built is hosted at autoport_repo in tar.gz archive format.
+# source to be built is hosted at autoport_repo.
+
+Chef::Recipe.send(:include, ArchiveLog)
 
 include_recipe 'buildServer::perl'
 
@@ -19,15 +21,22 @@ case node['platform']
 end
 
 fr_version = node['buildServer']['File-Remove']['version']
+fr_ext = node['buildServer']['File-Remove']['ext']
 mi_version = node['buildServer']['Module-Install']['version']
+mi_ext = node['buildServer']['Module-Install']['ext']
 extract_location = node['buildServer']['perl']['extract_location']
 
 {
-  'File-Remove'    => [ fr_version,  tag['File-Remove'] ], 
-  'Module-Install' => [ mi_version, tag['Module-Install'] ]
+  'File-Remove'    => [ fr_version,  tag['File-Remove'], fr_ext ], 
+  'Module-Install' => [ mi_version, tag['Module-Install'], mi_ext ]
 }.each do |pkg, detail|
+  
+  if detail[2].empty?
+    detail[2] = ArchiveLog.getExtension(pkg, detail[0])
+  end
+
   buildServer_perlPackage "#{pkg}-#{detail[0]}" do
-    archive_name "#{pkg}-#{detail[0]}.tar.gz"
+    archive_name "#{pkg}-#{detail[0]}#{detail[2]}"
     archive_location node['buildServer']['download_location']
     extract_location node['buildServer']['perl']['extract_location']
     perl_prefix_dir node['buildServer']['perl']['prefix_dir']
@@ -36,7 +45,7 @@ extract_location = node['buildServer']['perl']['extract_location']
     ignore_failure true
    end
 
-  log_record = "#{pkg},#{detail[0]},perl_modules,#{detail[1]},#{arch},.tar.gz,#{pkg}-#{detail[0]}.tar.gz"
+  log_record = "#{pkg},#{detail[0]},perl_modules,#{detail[1]},#{arch},#{detail[2]},#{pkg}-#{detail[0]}#{detail[2]}"
   buildServer_log pkg do
     name         pkg
     log_location node['log_location']
