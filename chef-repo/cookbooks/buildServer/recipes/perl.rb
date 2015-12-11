@@ -1,13 +1,20 @@
 # Installs perl based on the version supplied and sets it as default perl version to be used.
 
+Chef::Recipe.send(:include, ArchiveLog)
+
 version      = node['buildServer']['perl']['version']
 install_path = "#{node['buildServer']['perl']['prefix_dir']}/bin/perl#{version}"
 ext          = node['buildServer']['perl']['ext']
-perl_package = "perl-#{version}#{ext}"
 repo_url     = node['buildServer']['repo_url']
 download_loc = node['buildServer']['download_location']
 prefix_dir   = node['buildServer']['perl']['prefix_dir']
 arch         = node['kernel']['machine']
+
+if ext.empty?
+  ext = ArchiveLog.getExtension('perl', version)
+end
+
+perl_package = "perl-#{version}#{ext}"
 
 directory prefix_dir do
   mode '0755'

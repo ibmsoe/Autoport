@@ -1,6 +1,7 @@
 # Installs protobuf using source/build method, using the tarball maintained in autoport_repo.
 
 Chef::Recipe.send(:include, CommandBuilder)
+Chef::Recipe.send(:include, ArchiveLog)
 
 version        = node['buildServer']['protobuf']['version']
 source_dir     = node['buildServer']['protobuf']['source_dir']
@@ -10,6 +11,10 @@ protobuf_pkg   = "protobuf-#{version}"
 ext            = node['buildServer']['protobuf']['ext']
 archive_dir    = node['buildServer']['download_location']
 arch           = node['kernel']['machine']
+
+if ext.empty?
+  ext = ArchiveLog.getExtension('protobuf', version)
+end
 
 remote_file "#{archive_dir}/#{protobuf_pkg}#{ext}" do
   source "#{repo_url}/archives/#{protobuf_pkg}#{ext}"

@@ -3,15 +3,21 @@
 # This recipe also sets gradle_home and sets default path variable for gradle.
 
 Chef::Recipe.send(:include, CommandBuilder)
+Chef::Recipe.send(:include, ArchiveLog)
 
 version      = node['buildServer']['gradle']['version']
 install_dir  = node['buildServer']['gradle']['install_dir']
 install_path = "#{install_dir}/packages/gradle"
 ext          = node['buildServer']['gradle']['ext']
-gradle_pkg   = "gradle-#{version}-bin#{ext}"
 archive_dir  = node['buildServer']['download_location']
 repo_url     = node['buildServer']['repo_url']
 arch         = node['kernel']['machine']
+
+if ext.empty?
+  ext = ArchiveLog.getExtension('gradle', version)
+end
+
+gradle_pkg   = "gradle-#{version}-bin#{ext}"
 
 include_recipe 'buildServer::java'
 

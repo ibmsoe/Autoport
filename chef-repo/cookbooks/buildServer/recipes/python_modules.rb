@@ -1,15 +1,17 @@
 # This recipe would be responsible for installing python modules
-# uploaded via autoport application. Each perl module uploaded is
-# expected in tar.gz format and would be installed via source/build method.
+# uploaded via autoport application. Each perl module uploaded
+# would be installed via source/build method.
+
+Chef::Recipe.send(:include, ArchiveLog)
 
 arch = node['kernel']['machine']
 extract_location = node['buildServer']['python']['extract_location']
 
 if node['buildServer']['python_modules'].any?
   node['buildServer']['python_modules'].each do |pkg, version|
-
+    ext = ArchiveLog.getExtension(pkg, version)
     buildServer_pythonPackage "#{pkg}-#{version}" do
-      archive_name "#{pkg}-#{version}.tar.gz"
+      archive_name "#{pkg}-#{version}#{ext}"
       archive_location node['buildServer']['download_location']
       extract_location node['buildServer']['python']['extract_location']
       repo_url node['buildServer']['repo_url']
@@ -17,7 +19,7 @@ if node['buildServer']['python_modules'].any?
       ignore_failure true
     end
 
-    record = "#{pkg},#{version},python_modules,#{pkg},#{arch},.tar.gz,#{pkg}-#{version}.tar.gz"
+    record = "#{pkg},#{version},python_modules,#{pkg},#{arch},#{ext},#{pkg}-#{version}#{ext}"
 
     buildServer_log pkg do
       name         pkg

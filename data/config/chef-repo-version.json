@@ -1,7 +1,7 @@
 {
     "comment": "This is autoport data.  IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "9",
+    "sequence": "10",
     "name": "chef-repo-version.json",
-    "cook-version": "0.1.8"
+    "cook-version": "0.1.9"
 }

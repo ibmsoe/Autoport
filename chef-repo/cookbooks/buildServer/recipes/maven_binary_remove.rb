@@ -1,11 +1,17 @@
 # Recipe would uninstall/remove maven package installed via binary source.
 
+Chef::Recipe.send(:include, ArchiveLog)
+
 version       = node['buildServer']['apache-maven']['version']
 install_dir   = node['buildServer']['apache-maven']['install_dir']
 maven_pkg     = "apache-maven-#{version}"
 ext           = node['buildServer']['apache-maven']['ext']
 archive_dir   = node['buildServer']['download_location']
 arch          = node['kernel']['machine']
+
+if ext.empty?
+  ext = ArchiveLog.getExtension('apache-maven', version)
+end
 
 file "#{archive_dir}/#{maven_pkg}-bin#{ext}" do
    action :delete

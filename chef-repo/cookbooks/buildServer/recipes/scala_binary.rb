@@ -1,6 +1,7 @@
 # Install scala using tarball hosted over autoport_repo.
 
 Chef::Recipe.send(:include, CommandBuilder)
+Chef::Recipe.send(:include, ArchiveLog)
 
 version       = node['buildServer']['scala']['version']
 install_dir   = node['buildServer']['scala']['install_dir']
@@ -10,6 +11,10 @@ scala_home    = "#{install_dir}/#{scala_pkg}"
 ext           = node['buildServer']['scala']['ext']
 repo_url      = node['buildServer']['repo_url']
 arch          = node['kernel']['machine']
+
+if ext.empty?
+  ext = ArchiveLog.getExtension('scala', version)
+end
 
 remote_file "#{archive_dir}/#{scala_pkg}#{ext}" do
   source "#{repo_url}/archives/#{scala_pkg}#{ext}"

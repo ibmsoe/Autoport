@@ -1,33 +1,36 @@
 # Installs perl module "yaml-tiny" using source and build method.
-# source to be built is hosted at autoport_repo in tar.gz archive format.
+# source to be built is hosted at autoport_repo .
+
+Chef::Recipe.send(:include, ArchiveLog)
 
 include_recipe 'buildServer::perl'
 
 arch = node['kernel']['machine']
 yt_version = node['buildServer']['YAML-Tiny']['version']
+yt_ext = node['buildServer']['YAML-Tiny']['ext']
 extract_location = node['buildServer']['perl']['extract_location']
 
-{
-  'YAML-Tiny' => yt_version
-}.each do |pkg, version|
-  buildServer_perlPackage "#{pkg}-#{version}" do
-    archive_name "#{pkg}-#{version}.tar.gz"
-    archive_location node['buildServer']['download_location']
-    extract_location node['buildServer']['perl']['extract_location']
-    perl_prefix_dir node['buildServer']['perl']['prefix_dir']
-    repo_location node['buildServer']['repo_url']
-    action :install
-    ignore_failure true
-  end
+if yt_ext.empty?
+  yt_ext = ArchiveLog.getExtension('YAML-Tiny', yt_version)
+end
+
+buildServer_perlPackage "YAML-Tiny-#{yt_version}" do
+  archive_name "YAML-Tiny-#{yt_version}#{yt_ext}"
+  archive_location node['buildServer']['download_location']
+  extract_location node['buildServer']['perl']['extract_location']
+  perl_prefix_dir node['buildServer']['perl']['prefix_dir']
+  repo_location node['buildServer']['repo_url']
+  action :install
+  ignore_failure true
 end
 
 case node['platform']
   when 'ubuntu'
     record = "YAML-Tiny,#{yt_version},perl_modules,libyaml-tiny-perl,\
-#{arch},.tar.gz,YAML-Tiny-#{yt_version}.tar.gz"
+#{arch},#{yt_ext},YAML-Tiny-#{yt_version}#{yt_ext}"
   when 'redhat'
     record = "YAML-Tiny,#{yt_version},perl_modules,perl-yaml-tiny,\
-#{arch},.tar.gz,YAML-Tiny-#{yt_version}.tar.gz"
+#{arch},#{yt_ext},YAML-Tiny-#{yt_version}#{yt_ext}"
 end
 
 buildServer_log 'YAML-Tiny' do

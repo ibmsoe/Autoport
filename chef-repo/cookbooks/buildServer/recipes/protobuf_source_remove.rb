@@ -1,5 +1,7 @@
 # Recipe would uninstall/remove protobuf package installed via source.
 
+Chef::Recipe.send(:include, ArchiveLog)
+
 version        = node['buildServer']['protobuf']['version']
 source_dir     = node['buildServer']['protobuf']['source_dir']
 install_prefix = node['buildServer']['protobuf']['install_prefix']
@@ -7,6 +9,10 @@ protobuf_pkg   = "protobuf-#{version}"
 ext            = node['buildServer']['protobuf']['ext']
 archive_dir    = node['buildServer']['download_location']
 arch           = node['kernel']['machine']
+
+if ext.empty?
+  ext = ArchiveLog.getExtension('protobuf', version)
+end
 
 file "#{archive_dir}/#{protobuf_pkg}#{ext}" do
   action :delete
