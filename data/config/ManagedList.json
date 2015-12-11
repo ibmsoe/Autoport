@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "13",
+    "sequence": "14",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -58,6 +58,9 @@
                 },
                 {
                     "name": "javacc"
+                },
+                {
+                    "name": "libaio-dev"
                 },
                 {
                     "name": "libantlr-dev"
@@ -145,6 +148,9 @@
                 },
                 {
                     "name": "libncurses5-dev"
+                },
+                {
+                    "name": "libnotify-dev"
                 },
                 {
                     "name": "libopenal-dev"
@@ -259,6 +265,12 @@
                 },
                 {
                     "name": "python-nose"
+                },
+                {
+                    "name": "python-numpy"
+                },
+                {
+                    "name": "python-pip"
                 },
                 {
                     "name": "python-protobuf"
@@ -427,6 +439,9 @@
                     "name": "javacc"
                 },
                 {
+                    "name": "libaio-devel"
+                },
+                {
                     "name": "libcap-devel"
                 },
                 {
@@ -446,6 +461,9 @@
                 },
                 {
                     "name": "libgudev1-devel"
+                },
+                {
+                    "name": "libnotify-devel"
                 },
                 {
                     "name": "libtool"
@@ -487,6 +505,9 @@
                     "name": "ncurses-devel"
                 },
                 {
+                    "name": "numpy"
+                },
+                {
                     "name": "openjpeg-devel"
                 },
                 {
@@ -512,6 +533,9 @@
                 },
                 {
                     "name": "python-nose"
+                },
+                {
+                    "name": "python-pip"
                 },
                 {
                     "name": "python-py"

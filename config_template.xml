@@ -134,262 +134,391 @@
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD1&quot; ]; then
-                 if [ -x /usr/bin/yum ]; then
-                     function apt-cache() {
-                         echo "WARNING apt-cache $* in autoport command needs to be replaced for RHEL"
-                     }
-                     function apt-get() {
-                         echo "WARNING apt-get $* in autoport command needs to be replaced for RHEL"
-                     }
-                     function aptitude() {
-                         echo "WARNING aptitude $* in autoport command needs to be replaced for RHEL"
-                     }
-                     function dpkg() {
-                         echo "WARNING dpkg $* in autoport command needs to be replaced for RHEL"
-                     }
-                     function add-apt-repository() {
-                         echo "WARNING add-apt-repository $* in autoport command needs to be replaced for RHEL"
-                     }
-                     function synaptic() {
-                         echo "WARNING synaptic $* in autoport command needs to be replaced for RHEL"
-                     }
-                     function sudo() {
-                         case $1 in
-                         "dpkg")
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced for RHEL"
-                             ;;
-                         "add-apt"*)
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced for RHEL"
-                             ;;
-                         "apt"*)
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced for RHEL"
-                             ;;
-                         "synaptic")
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced for RHEL"
-                             ;;
-                         *)
-                             /usr/bin/sudo $*
-                             ;;
-                         esac
-                    }
-                 fi
-                 if [ $JAVATYPE ]; then
-                     echo &quot;Sourcing Java to $JAVATYPE&quot;
-                     sudo chmod a+x $JAVATYPE
-                     LEN=$((${#PATH}+1))
-                     source $JAVATYPE
-                     LAST_PATH=${PATH: $LEN}
-                     PATH=$LAST_PATH:$PATH
-                 fi
-                 if [ $JSTYPE ]; then
-                     echo &quot;Sourcing JavaScript to $JSTYPE&quot;
-                     sudo chmod a+x $JSTYPE
-                     LEN=$((${#PATH}+1))
-                     source $JSTYPE
-                     LAST_NPATH=${PATH: $LEN}
-                     PATH=$LAST_NPATH:$PATH
-                 fi
-                 source /etc/profile
-                 if [ $JAVATYPE ]; then
-                     JAVA_HOME=${LAST_PATH%/bin}
-                 fi
-                 export JAVA_HOME
-                 ARTI=&quot;.autoport-scratch/build_result.arti&quot;
-                 echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
-                 echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport CMD:         $CMD1&quot; &gt;&gt; $ARTI
-                 echo &quot;&quot; &gt;&gt; $ARTI
-                 type java &gt;&gt; $ARTI
-                 java -version 2&gt;&gt; $ARTI
-                 echo &quot;&quot; &gt;&gt; $ARTI
-                 type node &gt;&gt; $ARTI
-                 NV=`node --version`
-                 echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
-                 echo &quot;&quot; &gt;&gt; $ARTI
-                 echo $CMD1 | tee .autoport-scratch/autoport_build_cmd;
-                 chmod a+x .autoport-scratch/autoport_build_cmd;
-                 source .autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                  if [ -x /usr/bin/yum ]; then
+                      function add-apt-repository() {
+                          echo "WARNING add-apt-repository $* in autoport command needs to be replaced for RHEL"
+                      }
+                      function apt-cache() {
+                          echo "WARNING apt-cache $* in autoport command needs to be replaced for RHEL"
+                      }
+                      function apt-get() {
+                          echo "WARNING apt-get $* in autoport command needs to be replaced for RHEL"
+                      }
+                      function aptitude() {
+                          echo "WARNING aptitude $* in autoport command needs to be replaced for RHEL"
+                      }
+                      function dpkg() {
+                          echo "WARNING dpkg $* in autoport command needs to be replaced for RHEL"
+                      }
+                      function synaptic() {
+                          echo "WARNING synaptic $* in autoport command needs to be replaced for RHEL"
+                      }
+                      function sudo() {
+                          rc=0
+                          args=$@
+                          cmd=${args%% *}
+                          rest=""
+                          if [ "$cmd" != "$args" ]; then
+                              rest=${args#$cmd }
+                          fi
+                          case $cmd in
+                          "dpkg")
+                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              ;;
+                          "apt"*)
+                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              ;;
+                          "add-apt"*)
+                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              ;;
+                          *)
+                              /usr/bin/sudo $cmd $rest
+                              rc=$?
+                              ;;
+                          esac
+                          return $rc
+                      }
+                  fi
+                  function travis_retry() {
+                      args=$@
+                      cmd=${args%% *}
+                      rest=""
+                      if [ "$cmd" != "$args" ]; then
+                          rest=${args#$cmd }
+                      fi
+                      i=0
+                      while [ $i -lt 3 ]; do
+                          if [ $cmd == "sudo" ]; then
+                              sudo $rest
+                          else
+                              command $cmd $rest
+                          fi
+                          rc=$?
+                          if [ "$rc" -eq "0" ]; then
+                              break;
+                          fi
+                          i=$((i+1))
+                      done
+                      return $rc
+                  }
+                  function travis_wait() {
+                      args=$@
+                      cmd=${args%% *}
+                      rest=""
+                      if [ "$cmd" != "$args" ]; then
+                          rest=${args#$cmd }
+                      fi
+                      if [ $cmd == "sudo" ]; then
+                          sudo $rest
+                      else
+                          command $cmd $rest
+                      fi
+                      rc=$?
+                      return $rc
+                  }
+                  if [ $JAVATYPE ]; then
+                      echo &quot;Sourcing Java to $JAVATYPE&quot;
+                      sudo chmod a+x $JAVATYPE
+                      LEN=$((${#PATH}+1))
+                      source $JAVATYPE
+                      LAST_PATH=${PATH: $LEN}
+                      PATH=$LAST_PATH:$PATH
+                  fi
+                  if [ $JSTYPE ]; then
+                      echo &quot;Sourcing JavaScript to $JSTYPE&quot;
+                      sudo chmod a+x $JSTYPE
+                      LEN=$((${#PATH}+1))
+                      source $JSTYPE
+                      LAST_NPATH=${PATH: $LEN}
+                      PATH=$LAST_NPATH:$PATH
+                  fi
+                  source /etc/profile
+                  if [ $JAVATYPE ]; then
+                      JAVA_HOME=${LAST_PATH%/bin}
+                  fi
+                  export JAVA_HOME
+                  ARTI=&quot;.autoport-scratch/build_result.arti&quot;
+                  echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
+                  echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport CMD:         $CMD1&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type java &gt;&gt; $ARTI
+                  java -version 2&gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type node &gt;&gt; $ARTI
+                  NV=`node --version`
+                  echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  echo $CMD1 | tee .autoport-scratch/autoport_build_cmd;
+                  chmod a+x .autoport-scratch/autoport_build_cmd;
+                  source .autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD2&quot; ]; then
-                 if [ -x /usr/bin/yum ]; then
-                     function apt-cache() {
-                         echo "WARNING apt-cache $* in autoport command needs to be replaced"
-                     }
-                     function apt-get() {
-                         echo "WARNING apt-get $* in autoport command needs to be replaced"
-                     }
-                     function aptitude() {
-                         echo "WARNING aptitude $* in autoport command needs to be replaced"
-                     }
-                     function dpkg() {
-                         echo "WARNING dpkg $* in autoport command needs to be replaced"
-                     }
-                     function add-apt-repository() {
-                         echo "WARNING add-apt-repository $* in autoport command needs to be replaced"
-                     }
-                     function synaptic() {
-                         echo "WARNING synaptic $* in autoport command needs to be replaced"
-                     }
-                     function sudo() {
-                         case $1 in
-                         "dpkg")
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                             ;;
-                         "add-apt"*)
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                             ;;
-                         "apt"*)
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                             ;;
-                         "synaptic")
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                             ;;
-                         *)
-                             /usr/bin/sudo $*
-                             ;;
-                         esac
-                    }
-                 fi
-                 if [ $JAVATYPE ]; then
-                     echo &quot;Sourcing Java to $JAVATYPE&quot;
-                     sudo chmod a+x $JAVATYPE
-                     LEN=$((${#PATH}+1))
-                     source $JAVATYPE
-                     LAST_PATH=${PATH: $LEN}
-                     PATH=$LAST_PATH:$PATH
-                 fi
-                 if [ $JSTYPE ]; then
-                     echo &quot;Sourcing JavaScript to $JSTYPE&quot;
-                     sudo chmod a+x $JSTYPE
-                     LEN=$((${#PATH}+1))
-                     source $JSTYPE
-                     LAST_NPATH=${PATH: $LEN}
-                     PATH=$LAST_NPATH:$PATH
-                 fi
-                 source /etc/profile
-                 if [ $JAVATYPE ]; then
-                     JAVA_HOME=${LAST_PATH%/bin}
-                 fi
-                 export JAVA_HOME
-                 ARTI=&quot;.autoport-scratch/test_result.arti&quot;
-                 echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
-                 echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport CMD:         $CMD2&quot; &gt;&gt; $ARTI
-                 echo &quot;&quot; &gt;&gt; $ARTI
-                 type java &gt;&gt; $ARTI
-                 java -version 2&gt;&gt; $ARTI
-                 echo &quot;&quot; &gt;&gt; $ARTI
-                 type node &gt;&gt; $ARTI
-                 NV=`node --version`
-                 echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
-                 echo &quot;&quot; &gt;&gt; $ARTI
-                 echo $CMD2 | tee .autoport-scratch/autoport_test_cmd;
-                 chmod a+x .autoport-scratch/autoport_test_cmd;
-                 source .autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                  if [ -x /usr/bin/yum ]; then
+                      function add-apt-repository() {
+                          echo "WARNING add-apt-repository $* in autoport command needs to be replaced"
+                      }
+                      function apt-cache() {
+                          echo "WARNING apt-cache $* in autoport command needs to be replaced"
+                      }
+                      function apt-get() {
+                          echo "WARNING apt-get $* in autoport command needs to be replaced"
+                      }
+                      function aptitude() {
+                          echo "WARNING aptitude $* in autoport command needs to be replaced"
+                      }
+                      function dpkg() {
+                          echo "WARNING dpkg $* in autoport command needs to be replaced"
+                      }
+                      function synaptic() {
+                          echo "WARNING synaptic $* in autoport command needs to be replaced"
+                      }
+                      function sudo() {
+                          rc=0
+                          args=$@
+                          cmd=${args%% *}
+                          rest=""
+                          if [ "$cmd" != "$args" ]; then
+                              rest=${args#$cmd }
+                          fi
+                          case $cmd in
+                          "dpkg")
+                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              ;;
+                          "apt"*)
+                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              ;;
+                          "add-apt"*)
+                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              ;;
+                          *)
+                              /usr/bin/sudo $cmd $rest
+                              rc=$?
+                              ;;
+                          esac
+                          return $rc
+                      }
+                  fi
+                  function travis_retry() {
+                      args=$@
+                      cmd=${args%% *}
+                      rest=""
+                      if [ "$cmd" != "$args" ]; then
+                          rest=${args#$cmd }
+                      fi
+                      i=0
+                      while [ $i -lt 3 ]; do
+                          if [ $cmd == "sudo" ]; then
+                              sudo $rest
+                          else
+                              command $cmd $rest
+                          fi
+                          rc=$?
+                          if [ "$rc" -eq "0" ]; then
+                              break;
+                          fi
+                          i=$((i+1))
+                      done
+                      return $rc
+                  }
+                  function travis_wait() {
+                      args=$@
+                      cmd=${args%% *}
+                      rest=""
+                      if [ "$cmd" != "$args" ]; then
+                          rest=${args#$cmd }
+                      fi
+                      if [ $cmd == "sudo" ]; then
+                          sudo $rest
+                      else
+                          command $cmd $rest
+                      fi
+                      rc=$?
+                      return $rc
+                  }
+                  if [ $JAVATYPE ]; then
+                      echo &quot;Sourcing Java to $JAVATYPE&quot;
+                      sudo chmod a+x $JAVATYPE
+                      LEN=$((${#PATH}+1))
+                      source $JAVATYPE
+                      LAST_PATH=${PATH: $LEN}
+                      PATH=$LAST_PATH:$PATH
+                  fi
+                  if [ $JSTYPE ]; then
+                      echo &quot;Sourcing JavaScript to $JSTYPE&quot;
+                      sudo chmod a+x $JSTYPE
+                      LEN=$((${#PATH}+1))
+                      source $JSTYPE
+                      LAST_NPATH=${PATH: $LEN}
+                      PATH=$LAST_NPATH:$PATH
+                  fi
+                  source /etc/profile
+                  if [ $JAVATYPE ]; then
+                      JAVA_HOME=${LAST_PATH%/bin}
+                  fi
+                  export JAVA_HOME
+                  ARTI=&quot;.autoport-scratch/test_result.arti&quot;
+                  echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
+                  echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport CMD:         $CMD2&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type java &gt;&gt; $ARTI
+                  java -version 2&gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type node &gt;&gt; $ARTI
+                  NV=`node --version`
+                  echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  echo $CMD2 | tee .autoport-scratch/autoport_test_cmd;
+                  chmod a+x .autoport-scratch/autoport_test_cmd;
+                  source .autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD3&quot; ]; then
-                 if [ -x /usr/bin/yum ]; then
-                     function apt-cache() {
-                         echo "WARNING apt-cache $* in autoport command needs to be replaced"
-                     }
-                     function apt-get() {
-                         echo "WARNING apt-get $* in autoport command needs to be replaced"
-                     }
-                     function aptitude() {
-                         echo "WARNING aptitude $* in autoport command needs to be replaced"
-                     }
-                     function dpkg() {
-                         echo "WARNING dpkg $* in autoport command needs to be replaced"
-                     }
-                     function add-apt-repository() {
-                         echo "WARNING add-apt-repository $* in autoport command needs to be replaced"
-                     }
-                     function synaptic() {
-                         echo "WARNING synaptic $* in autoport command needs to be replaced"
-                     }
-                     function sudo() {
-                         case $1 in
-                         "dpkg")
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                             ;;
-                         "add-apt"*)
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                             ;;
-                         "apt"*)
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                             ;;
-                         "synaptic")
-                             echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                             ;;
-                         *)
-                             /usr/bin/sudo $*
-                             ;;
-                         esac
-                    }
-                 fi
-                 if [ $JAVATYPE ]; then
-                     echo &quot;Sourcing Java to $JAVATYPE&quot;
-                     sudo chmod a+x $JAVATYPE
-                     LEN=$((${#PATH}+1))
-                     source $JAVATYPE
-                     LAST_PATH=${PATH: $LEN}
-                     PATH=$LAST_PATH:$PATH
-                 fi
-                 if [ $JSTYPE ]; then
-                     echo &quot;Sourcing JavaScript to $JSTYPE&quot;
-                     sudo chmod a+x $JSTYPE
-                     LEN=$((${#PATH}+1))
-                     source $JSTYPE
-                     LAST_NPATH=${PATH: $LEN}
-                     PATH=$LAST_NPATH:$PATH
-                 fi
-                 source /etc/profile
-                 if [ $JAVATYPE ]; then
-                     JAVA_HOME=${LAST_PATH%/bin}
-                 fi
-                 export JAVA_HOME
-                 ARTI=&quot;.autoport-scratch/install_result.arti&quot;
-                 echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
-                 echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
-                 echo &quot;Autoport CMD:         $CMD3&quot; &gt;&gt; $ARTI
-                 echo &quot;&quot; &gt;&gt; $ARTI
-                 type java &gt;&gt; $ARTI
-                 java -version 2&gt;&gt; $ARTI
-                 echo &quot;&quot; &gt;&gt; $ARTI
-                 type node &gt;&gt; $ARTI
-                 NV=`node --version`
-                 echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
-                 echo &quot;&quot; &gt;&gt; $ARTI
-                 echo $CMD3 | tee .autoport-scratch/autoport_install_cmd;
-                 chmod a+x .autoport-scratch/autoport_install_cmd;
-                 source .autoport-scratch/autoport_install_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                  if [ -x /usr/bin/yum ]; then
+                      function add-apt-repository() {
+                          echo "WARNING add-apt-repository $* in autoport command needs to be replaced"
+                      }
+                      function apt-cache() {
+                          echo "WARNING apt-cache $* in autoport command needs to be replaced"
+                      }
+                      function apt-get() {
+                          echo "WARNING apt-get $* in autoport command needs to be replaced"
+                      }
+                      function aptitude() {
+                          echo "WARNING aptitude $* in autoport command needs to be replaced"
+                      }
+                      function dpkg() {
+                          echo "WARNING dpkg $* in autoport command needs to be replaced"
+                      }
+                      function synaptic() {
+                          echo "WARNING synaptic $* in autoport command needs to be replaced"
+                      }
+                      function sudo() {
+                          rc=0
+                          args=$@
+                          cmd=${args%% *}
+                          rest=""
+                          if [ "$cmd" != "$args" ]; then
+                              rest=${args#$cmd }
+                          fi
+                          case $cmd in
+                          "dpkg")
+                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              ;;
+                          "apt"*)
+                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              ;;
+                          "add-apt"*)
+                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              ;;
+                          *)
+                              /usr/bin/sudo $cmd $rest
+                              rc=$?
+                              ;;
+                          esac
+                          return $rc
+                      }
+                  fi
+                  function travis_retry() {
+                      args=$@
+                      cmd=${args%% *}
+                      rest=""
+                      if [ "$cmd" != "$args" ]; then
+                          rest=${args#$cmd }
+                      fi
+                      i=0
+                      while [ $i -lt 3 ]; do
+                          if [ $cmd == "sudo" ]; then
+                              sudo $rest
+                          else
+                              command $cmd $rest
+                          fi
+                          rc=$?
+                          if [ "$rc" -eq "0" ]; then
+                              break;
+                          fi
+                          i=$((i+1))
+                      done
+                      return $rc
+                  }
+                  function travis_wait() {
+                      args=$@
+                      cmd=${args%% *}
+                      rest=""
+                      if [ "$cmd" != "$args" ]; then
+                          rest=${args#$cmd }
+                      fi
+                      if [ $cmd == "sudo" ]; then
+                          sudo $rest
+                      else
+                          command $cmd $rest
+                      fi
+                      rc=$?
+                      return $rc
+                  }
+                  if [ $JAVATYPE ]; then
+                      echo &quot;Sourcing Java to $JAVATYPE&quot;
+                      sudo chmod a+x $JAVATYPE
+                      LEN=$((${#PATH}+1))
+                      source $JAVATYPE
+                      LAST_PATH=${PATH: $LEN}
+                      PATH=$LAST_PATH:$PATH
+                  fi
+                  if [ $JSTYPE ]; then
+                      echo &quot;Sourcing JavaScript to $JSTYPE&quot;
+                      sudo chmod a+x $JSTYPE
+                      LEN=$((${#PATH}+1))
+                      source $JSTYPE
+                       LAST_NPATH=${PATH: $LEN}
+                      PATH=$LAST_NPATH:$PATH
+                  fi
+                  source /etc/profile
+                  if [ $JAVATYPE ]; then
+                      JAVA_HOME=${LAST_PATH%/bin}
+                  fi
+                  export JAVA_HOME
+                  ARTI=&quot;.autoport-scratch/install_result.arti&quot;
+                  echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
+                  echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport CMD:         $CMD3&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type java &gt;&gt; $ARTI
+                  java -version 2&gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type node &gt;&gt; $ARTI
+                  NV=`node --version`
+                  echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  echo $CMD3 | tee .autoport-scratch/autoport_install_cmd;
+                  chmod a+x .autoport-scratch/autoport_install_cmd;
+                  source .autoport-scratch/autoport_install_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
               fi</command>
         </hudson.tasks.Shell>
       </conditionalbuilders>

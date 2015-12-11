@@ -276,45 +276,55 @@ def interpretTravis(repo, travisFile, travis_def):
                 generalEnv = linuxEnv
 
             # Add TravisCI control variables that apply for our builds
-            generalEnv = 'TRAVIS_OS_NAME="linux" ' + generalEnv
+            generalEnv = "TRAVIS_OS_NAME='linux' PLATFORM='linux' " + generalEnv
 
             # Eliminate duplicate entries
             travis_def['env'] = eliminateDupEnv(generalEnv)
 
             # Add autoport build command which comes from yaml before_install and install
             privileged = ['apt', 'dpkg', 'yum', 'rpm', 'install']
+            dontAddSudo = [ 'if ', 'then ', 'elif', 'else ', 'fi ',
+                            'for ', 'while ', 'do ', 'done ', 'true ', 'false ' ]
             beforeInstall = ""
             if 'before_install' in data and data['before_install']:
                 if isinstance(data['before_install'], list):
                     newCmds = []
-                    for cmd in data['before_install']:
-                        if any(x in cmd for x in privileged) and not 'sudo' in cmd:
+                    for cmdline in data['before_install']:
+                        cmd = cmdline.split()[0]
+                        if any(x in cmdline for x in privileged) and\
+                           'sudo' not in cmdline and cmd not in dontAddSudo:
                             newCmds.append('sudo ' + cmd)
                         else:
                             newCmds.append(cmd)
                     beforeInstall = '; '.join(newCmds)
                 else:
-                    cmd = data['before_install']
-                    if any(x in cmd for x in privileged) and not 'sudo' in cmd:
-                        beforeInstall = 'sudo ' + cmd
+                    cmdline = data['before_install']
+                    cmd = cmdline.split()[0]
+                    if any(x in cmdline for x in privileged) and\
+                       'sudo' not in cmdline and cmd not in dontAddSudo:
+                        beforeInstall = 'sudo ' + cmdline
                     else:
-                        beforeInstall = cmd
+                        beforeInstall = cmdline
             install = ""
             if 'install' in data and data['install']:
                 if isinstance(data['install'], list):
                     newCmds = []
-                    for cmd in data['install']:
-                        if any(x in cmd for x in privileged) and not 'sudo' in cmd:
-                            newCmds.append('sudo ' + cmd)
+                    for cmdline in data['install']:
+                        cmd = cmdline.split()[0]
+                        if any(x in cmdline for x in privileged) and\
+                           'sudo' not in cmdline and cmd not in dontAddSudo:
+                            newCmds.append('sudo ' + cmdline)
                         else:
-                            newCmds.append(cmd)
+                            newCmds.append(cmdline)
                     install = '; '.join(newCmds)
                 else:
-                    cmd = data['install']
-                    if any(x in cmd for x in privileged) and not 'sudo' in cmd:
-                        install = 'sudo ' + cmd
+                    cmdline = data['install']
+                    cmd = cmdline.split()[0]
+                    if any(x in cmdline for x in privileged) and\
+                       'sudo' not in cmdline and cmd not in dontAddSudo:
+                        install = 'sudo ' + cmdline
                     else:
-                        install = cmd
+                        install = cmdline
 
             if beforeInstall and install:
                 travis_def['build'] = beforeInstall + '; ' + install
@@ -337,13 +347,13 @@ def interpretTravis(repo, travisFile, travis_def):
                 travis_def['test'] = beforeScript
 
             if isinstance(data['script'], list):
-                cmd = '; '.join(data['script'])
+                cmdline = '; '.join(data['script'])
             else:
-                cmd = data['script']
+                cmdline = data['script']
             if travis_def['test']:
-                travis_def['test'] = travis_def['test'] + '; ' + cmd
+                travis_def['test'] = travis_def['test'] + '; ' + cmdline
             else:
-                travis_def['test'] = cmd
+                travis_def['test'] = cmdline
 
             # If there is only one command, specify it as build.  A test command
             # may be generated based on the stack of commands that are independently
