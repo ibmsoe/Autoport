@@ -1378,6 +1378,8 @@ def runBatchFile ():
 
     if submittedJob:
         return json.jsonify(status="ok")
+    else:
+        shutil.rmtree(batchDirName, ignore_errors=True)
 
     logger.debug("runBatch Error: No project buildable in batch file (%s)!" % batchName)
 

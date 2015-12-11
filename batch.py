@@ -110,10 +110,12 @@ class Batch:
                     logger.debug("absoluteFilePath=" + absoluteFilePath)
                     if not filt or filt in filename.lower():
                         if filename != ".gitignore":
-                            filteredList.append(self.parseBatchReportList(
+                            parsedResult = self.parseBatchReportList(
                                 absoluteFilePath,
                                 "local"
-                            ))
+                            )
+                            if parsedResult:
+                                filteredList.append(parsedResult)
         except IOError:
             assert(False), "Please provide valid local batch files path in settings menu!"
         return filteredList
@@ -137,13 +139,13 @@ class Batch:
                                 self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
                             except Exception as ex:
                                 logger.warning("listGSABatchReports: Error in copying project %s" % projectsReport.strip() + str(ex))
-                        filteredList.append(
-                            self.parseBatchReportList(
-                                os.path.join(putdir,filename,batchFilePath),
-                                "gsa",
-                                putdir
-                            )
+                        parsedResult = self.parseBatchReportList(
+                            os.path.join(putdir,filename,batchFilePath),
+                            "gsa",
+                            putdir
                         )
+                        if parsedResult:
+                            filteredList.append(parsedResult)
                     except Exception as ex:
                         logger.warning("listGSABatchReports: Error %s" % str(ex))
                     finally:
@@ -223,6 +225,10 @@ class Batch:
             if len(jobNames):
                 # All the jobs will be for same build server, hence only checking for the first entry
                 buildServer = projectResultPattern.match(jobNames[0]).group(3)
+
+            if not project_count and not buildServer:
+                logger.debug("Skipping batchFile: \"%s\" as there is no build server or projects in the batch.", filename)
+                return None
 
             return_data.update({
                 "batch_name": batchName,
