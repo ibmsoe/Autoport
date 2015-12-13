@@ -1889,13 +1889,14 @@ function removeProjectsCallback(data){
 }
 
 function removeBatchReportsCallback(data){
+    console.log("In removeBatchReportsCallback, data=", data);
     if (data.status != "ok") {
         showAlert("Error:", data);
     } else{
         showAlert("Deleted Successfully !");
-        if (batchReportState.compareRepo == "local") {
+        if (batchReportState.listingRepo == "local") {
             batchReportState.listLocalBatch();
-        } else if (batchReportState.compareRepo == "archived") {
+        } else if (batchReportState.listingRepo == "archived") {
             batchReportState.listGSABatch();
         } else {
             batchReportState.listAllBatch();

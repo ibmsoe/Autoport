@@ -126,19 +126,23 @@ class Batch:
             self.ftp_client.chdir(globals.pathForBatchTestResults)
             flist = self.ftp_client.listdir()
             for filename in sorted(flist):
+                logger.debug("listGSABatchReports: file=%s" % filename)
                 if not filt or filt in filename.lower():
                     try:
                         putdir = tempfile.mkdtemp(prefix="autoport_")
                         self.catalog.newTmpDirectoryAdded(putdir)
-                        self.copyRemoteDirToLocal(globals.pathForBatchTestResults + "/" +filename, putdir)
+                        self.copyRemoteDirToLocal(globals.pathForBatchTestResults + "/" + filename, putdir)
                         batchFilePath = os.listdir(putdir + "/" + filename)[0]
+                        logger.debug("listGSABatchReports: batchFilePath=%s" % batchFilePath)
                         batchTestReportFile = open("%s/%s/%s" % (putdir, filename, batchFilePath), 'r')
                         dataFile = batchTestReportFile.readlines()
                         for projectsReport in dataFile:
+                            logger.debug("listGSABatchReports: projectsReport=%s" % projectsReport)
                             try:
                                 self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
                             except Exception as ex:
-                                logger.warning("listGSABatchReports: Error in copying project %s" % projectsReport.strip() + str(ex))
+                                # Project results may be missing
+                                logger.debug("listGSABatchReports: Error in copying project %s" % projectsReport.strip() + str(ex))
                         parsedResult = self.parseBatchReportList(
                             os.path.join(putdir,filename,batchFilePath),
                             "gsa",
@@ -499,15 +503,17 @@ class Batch:
 
     # Remove Batch Reports Data from local or GSA
     def removeBatchReportsData(self, reports, catalog):
+        logger.debug("In removeBatchReportsData, reports[%d]" % len(reports))
         project = Project(catalog)
         for name in reports.keys():
             try:
                 if reports[name] == "local":
+                    logger.debug("removeBatchReportsData: local filepath=%s" % name)
                     shutil.rmtree(os.path.dirname(name))
                 else:
                     filepath = globals.pathForBatchTestResults + \
                                os.path.basename(os.path.dirname(name)) + "/" + os.path.basename(name)
-                    logger.debug("In removeBatchReportsData, filepath=%s" % (filepath))
+                    logger.debug("removeBatchReportsData: archive filepath=%s" % (filepath))
                     projects = {}
                     batchTestReportFile = self.ftp_client.open(filepath,'r')
                     dataFile = batchTestReportFile.readlines()
@@ -520,7 +526,13 @@ class Batch:
                     # Batch report removal from GSA
                     project.removeDirFromGSA(self.ssh_client, os.path.dirname(filepath))
             except IOError as e:
-                logger.warning("removeBatchReportsData: Can't remove directory " + name + ": " + str(e))
+                logger.debug("removeBatchReportsData: Error %s" % str(e))
+            except Exception as e:
+                # Ignore this error as it related to the pending removal of the parent directory.  When
+                # the last file in the directory is removed, the parent directory is automatically removed.
+                # Then, rmtree tries to remove the parent directory again but it has already been removed
+                pass
+        logger.debug("Leaving removeBatchReportsData")
 
     # Archive Batch Reports Data to GSA
     def archiveBatchReports(self, report):

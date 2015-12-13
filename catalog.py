@@ -272,7 +272,7 @@ class Catalog:
                     self.__archiveFtpClient.unlink(remoteBuildPath + '/' + file)
                 self.__archiveFtpClient.rmdir(remoteBuildPath)
             except IOError as e:
-                logger.warning("Can't remove directory " + remoteBuildPath + " : " + str(e))
+                logger.debug("Can't remove directory " + remoteBuildPath + " : " + str(e))
 
         return status, errors, alreadyThere
 

@@ -987,18 +987,10 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
 
         # local directory for build artifacts.  No colons allowed for windows compatibility
         timestr = strftime("%Y-%m-%d-h%H-m%M-s%S", time)
-        artifactFolder = jobName + "." + timestr
-
-        logger.debug("createJob_common: moveArtifacts queue proj=%s" % repo.name)
-
-        # Split off a thread to transfer job results upon job completion to localDir
-        localDir = globals.localPathForTestResults + jobName + "." + timestr + "/"
-        args = [((jobName, localDir), {})]
-        threadRequests = makeRequests(moveArtifacts, args)
-        [globals.threadPool.putRequest(req) for req in threadRequests]
+        artifactFolder = jobName + "." + timestr + "/"
 
         # Stays on the same page, after creating a new jenkins job.
-        return { 'status': "ok", 'sjobUrl': startJobUrl, 'hjobUrl': homeJobUrl,
+        return { 'status': "ok", 'jobName': jobName, 'sjobUrl': startJobUrl, 'hjobUrl': homeJobUrl,
                  'jobFolder': jobFolder, 'artifactFolder': artifactFolder }
 
     if r.status_code == 400:
@@ -1140,16 +1132,32 @@ def createJob(i_id = None,
 
     try:
         rcstatus = rc['status']
+    except KeyError:
+        return json.jsonify(status='failure', error="Failed to launch a Jenkins job"), 401
+
+    try:
+        jobName = rc['jobName']
+    except KeyError:
+        jobName = ""
+
+    try:
+        # Queue the job to the mover so that its build artifacts are transferred to this server
+        if rcstatus == 'ok' and not jobName:
+            localDir = globals.localPathForTestResults + rc['artifactsFolder']
+            args = [((rc['jobName'], localDir), {})]
+            threadRequests = makeRequests(moveArtifacts, args)
+            [globals.threadPool.putRequest(req) for req in threadRequests]
+            return json.jsonify(status="ok", sjobUrl=rc['sjobUrl'], hjobUrl=rc['hjobUrl'])
+
         rcerror = rc['error']
         try:
             return json.jsonify(status=rcstatus, error=rcerror), rc['rstatus']
         except KeyError:
-            return json.jsonify(status=rcstatus, error=rcerror)
-    except KeyError:
-        # Stays on the same page, after creating a new jenkins job.
-        # return json.jsonify(status="ok", rc.sjobUrl=startJobUrl, rc.hjobUrl=homeJobUrl)
-        return json.jsonify(status="ok", sjobUrl=rc['sjobUrl'], hjobUrl=rc['hjobUrl'])
+            return json.jsonify(status=rcstatus, error=rcerror), 402
 
+    except Exception as e:
+        logger.debug("createJob: jobName=%s, Error %s" % (jobName, str(e)))
+        return json.jsonify(status='failure', error="Failed to launch a Jenkins job for project %s" % jobName), 403
 
 # Polls the Jenkins master to see when a job has completed and moves artifacts over to local
 # storage once/if they are available
@@ -1259,98 +1267,212 @@ def moveArtifacts(jobName, localDir, moverCv=None):
 
     return outDir
 
+# Like MoveArtifacts except it is designed to return immediately if a job is not completed.
+def moveArtifactsTry(jobName, localDir):
+    logger.debug("In moveArtifactsTry, job=%s localDir=%s" % (jobName, localDir))
+    outDir = ""
+    checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
+
+    building = True
+    for x in range(0, 3):
+        try:
+            requestInfo = requests.get(checkBuildUrl)
+            if requestInfo.status_code == 200:
+                buildInfo = json.loads(requestInfo.text)
+                building = buildInfo['building']
+                break
+            sleep(3)
+        except ValueError:
+            # Assume it is queued
+            break
+    if building:
+        logger.debug("Leaving moveArtifactsTry, job=%s" % jobName)
+        return outDir
+
+    # Grab the build artifacts through ftp if build was successful
+    artifactsPath = globals.artifactsPathPrefix + jobName + "/builds/"
+    try:
+        mover.chdir(artifactsPath)
+
+        flist = mover.listdir()
+
+        # 1 is a sym link to the first build for that job.
+        # If we delete each job after each run, we only care about
+        # this first build.  Else we need to parse nextBuildNumber
+        # in the parent directory to get build number.
+        if "1" not in flist:
+            logger.debug("Leaving moveArtifactsTry, build not complete job=%s" % jobName)
+            return OutDir
+
+        logger.debug("moveArtifactsTry: build complete job=%s" % jobName)
+        artifactsPath = artifactsPath + "1/"
+        mover.chdir(artifactsPath)
+
+        # Now loop trying to get the build artifacts.  Artifact files
+        # appear to be written after the artifact parent directory and
+        # the artifact directory up to ten seconds after its parent.
+        # There we will place the sleep at the end of the loop as opposed
+        # to the top of the loop.  If artifacts are not copied, then we
+        # can move the sleep upfront but preliminary testing indicates
+        # that this will work.
+        for i in range(4):
+            flist = mover.listdir()
+
+            if "archive" in flist:
+                artifactsPath = artifactsPath + "archive/"
+                mover.chdir(artifactsPath)
+
+                try:
+                    os.mkdir(localDir)
+                    flist = mover.listdir()
+                    if ".autoport-scratch" in flist:
+                        mover.chdir(".autoport-scratch")
+                        flist = mover.listdir()
+                    logger.debug("moveArtifactsTry: found artifacts %s %s" % (jobName, str(flist)))
+                    for f in flist:
+                        mover.get(f, localDir + f)
+                    outDir = localDir                           # Transfer success
+                except IOError as e:
+                    logger.warning("moveArtifactsTry: failed to transfer artifacts %s" % str(flist))
+                    logger.debug("moveArtifactsTry: Error=%s" % (str(e)))
+                break
+            else:
+                logger.debug("moveArtifactsTry: sleep 10 waiting for artifacts")
+                sleep(10)
+    except Exception as e:
+        logger.warning("Leaving moveArtifactsTry, job=%s FTP Error=%s" % (jobName, str(e)))
+        return outDir
+
+    logger.debug("Leaving moveArtifactsTry, outDir=%s" % (outDir))
+
+    return outDir
+
+# Loop over projects in batch file moving build artifacts as jobs complete
+# This is invoked by a mover thread
+def moveBatchArtifacts(batchName, jobs):
+    logger.debug("In moveBatchArtifacts, batchName=%s, jobs[%d]" % (batchName, len(jobs)))
+
+    cntLimit = 400                # Max number of times to process batch file ~ 2 HRs
+    cnt = 0
+    while len(jobs) > 1:
+        sleep(15)
+        remaining = []
+        for job in jobs:
+            jobName = job[0]
+            localDir = job[1]
+            outDir = moveArtifactsTry(jobName, localDir)
+            if not outDir:
+                remaining.append([jobName, localDir])
+        jobs = remaining
+        cnt = cnt + 1
+        if cnt > cntLimit:
+            break
+        logger.debug("moveBatchArtifacts: batchName=%s, loop cnt=%d" % (batchName, cnt))
+
+    if len(jobs) == 1 and cnt < cntLimit:
+        logger.debug("moveBatchArtifacts: batchName=%s, last job synchronous wait" % batchName)
+        moveArtifacts(jobs[0][0], jobs[0][1])
+
+    logger.debug("Leaving moveBatchArtifacts, batchName=%s" % batchName)
+
 # Run Batch File - takes a batch file name and runs it
 @app.route("/autoport/runBatchFile", methods=["GET", "POST"])
 def runBatchFile ():
     # Get the batch file name from POST
     try:
         batchName = request.form["batchName"]
+        if not batchName:
+            return json.jsonify(status="failure", error="a batch file must be specified"), 400
     except KeyError:
         return json.jsonify(status="failure", error="missing batchName POST argument"), 400
 
     # Get the batch file name from POST
     try:
         nodeCSV = request.form["nodeCSV"]
+        if not nodeCSV:
+            return json.jsonify(status="failure", error="at least one node must be specified"), 400
     except KeyError:
         return json.jsonify(status="failure", error="missing buildServer argument"), 400
 
     logger.debug("In runBatchFile, batchName=%s, nodeCSV=%s" % (batchName, nodeCSV))
 
-    submittedJob = False
-    if batchName != "":
-        results = batch.parseBatchFile(batchName)
-        try:
-            fileBuf = results['fileBuf']
-        except KeyError:
-            return json.jsonify(status="failure", error=results['error']), 400
+    results = batch.parseBatchFile(batchName)
+    try:
+        fileBuf = results['fileBuf']
+    except KeyError:
+        return json.jsonify(status="failure", error=results['error']), 400
 
-        try:
-            error = fileBuf['error']
-            return json.jsonify(status="failure", error=error), 401
-        except KeyError:
-            pass
+    try:
+        error = fileBuf['error']
+        return json.jsonify(status="failure", error=error), 401
+    except KeyError:
+        pass
 
-        submissionTime = localtime()
+    # Parse config data
+    javaType = ""
+    if fileBuf['config']['java'] == "IBM Java":
+        javaType = "/etc/profile.d/ibm-java.sh"
 
-        # Randomly generate a batch job UID to append to the job name to provide a grouping
-        # for all jobs in the batch file for reporting purposes.
+    javaScriptType = ""
+    if fileBuf['config']['javascript'] == "IBM SDK for Node.js":
+        javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
+
+    logger.debug("runBatchFile: javaType=%s javaScriptType=%s nodeCSV=%s" % (javaType, javaScriptType, nodeCSV))
+
+    try:
+        temp, batchNameOnly, createdTime = batchName.split('.')
+        batchDirName = "%s.%s" % (
+            globals.localPathForBatchTestResults + ntpath.basename(batchNameOnly),
+            createdTime
+        )
+    except ValueError:
+        batchDirName = globals.localPathForBatchTestResults + ntpath.basename(batchName) + '.' + createdTime
+
+    jobs = []
+    nodeList = nodeCSV.split(',')
+    for node in nodeList:
+
+        # Create batch results directory and batch results file
+        # <batchDirName>/<batch-file-name>.<uuid>.<submission time>
+
         uid = randint(globals.minRandom, globals.maxRandom)
-
-        # Parse config data
-        javaType = ""
-        if fileBuf['config']['java'] == "IBM Java":
-            javaType = "/etc/profile.d/ibm-java.sh"
-
-        javaScriptType = ""
-        if fileBuf['config']['javascript'] == "IBM SDK for Node.js":
-            javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
-
-        logger.debug("runBatchFile: javaType=%s javaScriptType=%s nodeCSV=%s" % (javaType, javaScriptType, nodeCSV))
-
-        # Create batch results template, stores list of job names associated with batch file
-        # Create a folder of format  <batch_name>.<uuid>
+        submissionTime = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
         try:
-            temp,batchNameOnly, createdTime = batchName.split('.')
-            batchDirName = "%s.%s" % (
-                globals.localPathForBatchTestResults + ntpath.basename(batchNameOnly),
-                uid
-            )
-            newBatchName = "%s/%s.%s.%s" %(
+            newBatchName = "%s/%s.%s.%s" % (
                 batchDirName,
                 ntpath.basename(batchNameOnly),
                 uid,
-                strftime("%Y-%m-%d-h%H-m%M-s%S", submissionTime)
+                submissionTime
             )
 
-            if not os.path.exists(batchDirName):
-                os.makedirs(batchDirName)
         except ValueError:
-            newBatchName = globals.localPathForBatchTestResults + ntpath.basename(batchName)
+            newBatchName = globals.localPathForBatchTestResults + batchDirName + '/' + \
+                           ntpath.basename(batchName) + '.' + uid + '.' + submissionTime
+
+        if not os.path.exists(batchDirName):
+            os.makedirs(batchDirName)
 
         f = open(newBatchName, 'a+')
-        nodeList = nodeCSV.split(',')
-        for node in nodeList:
-            # Parse package data
-            for package in fileBuf['packages']:
+        # Parse package data
+        for package in fileBuf['packages']:
 
-                # if a project can't be built, skip it. Top N may not be buildable - documentation
-                selectedBuild = package['build']['selectedBuild']
-                selectedTest = package['build']['selectedTest']
-                if selectedBuild == "" and selectedTest == "":
-                    continue
+            # if a project can't be built, skip it. Top N may not be buildable - documentation
+            selectedBuild = package['build']['selectedBuild']
+            selectedTest = package['build']['selectedTest']
+            if selectedBuild == "" and selectedTest == "":
+                continue
 
-                # If build info is derived from a travis.yaml file, then both build and test
-                # need to be run if specified as 'selectedBuild' is devoted to dependencies and
-                # 'selectedTest' is devoted to the named project.  The latter includes both
-                # build and test commands as provided by travis.yaml file.
-                selectedEnv = package['build']['selectedEnv']
-                if (not selectedEnv or "TRAVIS_OS_NAME=" not in selectedEnv) and\
-                   'includeTestCmds' in fileBuf['config'] and fileBuf['config']['includeTestCmds'] == 'False':
-                    package['build']['selectedTest'] = ""
+            # If build info is derived from a travis.yaml file, then both build and test
+            # need to be run if specified as 'selectedBuild' is devoted to dependencies and
+            # 'selectedTest' is devoted to the named project.  The latter includes both
+            # build and test commands as provided by travis.yaml file.
+            selectedEnv = package['build']['selectedEnv']
+            if (not selectedEnv or "TRAVIS_OS_NAME=" not in selectedEnv) and\
+                'includeTestCmds' in fileBuf['config'] and fileBuf['config']['includeTestCmds'] == 'False':
+                package['build']['selectedTest'] = ""
 
-                if 'includeInstallCmds' in fileBuf['config'] and fileBuf['config']['includeInstallCmds'] == 'False':
-                    package['build']['selectedInstall'] = ""
- 
+            if 'includeInstallCmds' in fileBuf['config'] and fileBuf['config']['includeInstallCmds'] == 'False':
+                package['build']['selectedInstall'] = ""
                 createJob_results = createJob_common(localtime(),
                           uid,
                           package['id'],
@@ -1364,19 +1486,28 @@ def runBatchFile ():
                           package['build']['selectedEnv'],
                           package['build']['artifacts'],
                           package['build']['primaryLang'])
-                submittedJob = True
+
+                logger.debug("runBatchFile: createJob rc=%s" % createJob_results)
 
                 try:
-                    f.write(createJob_results['artifactFolder'] + "\n")
+                    jobName = createJob_results['jobName']
+                    artifactFolder = createJob_results['artifactFolder']
+                    localDir = globals.localPathForTestResults + artifactFolder
+                    f.write(artifactFolder + "\n")
+                    jobs.append([jobName, localDir])
+                    logger.debug("runBatchFile: queue moveBatchArtifacts job=%s" % jobName)
                 except KeyError:
                     pass
         f.close()
-    else:
-        return json.jsonify(status="failure", error="could not find batch file"), 404
+
+    # Start a single thread to transfer all batch jobs results to the local server
+    args = [((batchName, jobs), {})]
+    threadRequests = makeRequests(moveBatchArtifacts, args)
+    [globals.threadPool.putRequest(req) for req in threadRequests]
 
     logger.debug("Leaving runBatchFile, batchName=%s" % batchName)
 
-    if submittedJob:
+    if jobs:
         return json.jsonify(status="ok")
     else:
         shutil.rmtree(batchDirName, ignore_errors=True)
@@ -1483,7 +1614,7 @@ def archiveBatchReports():
 def removeBatchReports():
     try:
         reports = request.json['reports']
-        logger.info("In removeBatchReports reports=" + str(reports))
+        logger.debug("In removeBatchReports, reports=" + str(reports))
         batch.removeBatchReportsData(reports, catalog)
         return json.jsonify(status="ok"), 200
     except Exception as e:
