@@ -1133,6 +1133,7 @@ def createJob(i_id = None,
     try:
         rcstatus = rc['status']
     except KeyError:
+        logger.debug("createJob: jobName=%s, Error rc=%s" % (jobName, rc))
         return json.jsonify(status='failure', error="Failed to launch a Jenkins job"), 401
 
     try:
@@ -1142,8 +1143,8 @@ def createJob(i_id = None,
 
     try:
         # Queue the job to the mover so that its build artifacts are transferred to this server
-        if rcstatus == 'ok' and not jobName:
-            localDir = globals.localPathForTestResults + rc['artifactsFolder']
+        if rcstatus == 'ok' and jobName:
+            localDir = globals.localPathForTestResults + rc['artifactFolder']
             args = [((rc['jobName'], localDir), {})]
             threadRequests = makeRequests(moveArtifacts, args)
             [globals.threadPool.putRequest(req) for req in threadRequests]
@@ -1157,6 +1158,7 @@ def createJob(i_id = None,
 
     except Exception as e:
         logger.debug("createJob: jobName=%s, Error %s" % (jobName, str(e)))
+        logger.debug("createJob: jobName=%s, Error rc=%s" % (jobName, rc))
         return json.jsonify(status='failure', error="Failed to launch a Jenkins job for project %s" % jobName), 403
 
 # Polls the Jenkins master to see when a job has completed and moves artifacts over to local
