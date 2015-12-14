@@ -509,7 +509,7 @@ class Batch:
             try:
                 if reports[name] == "local":
                     logger.debug("removeBatchReportsData: local filepath=%s" % name)
-                    shutil.rmtree(os.path.dirname(name))
+                    shutil.rmtree(os.path.dirname(name), ignore_errors=True)
                 else:
                     filepath = globals.pathForBatchTestResults + \
                                os.path.basename(os.path.dirname(name)) + "/" + os.path.basename(name)
@@ -526,12 +526,9 @@ class Batch:
                     # Batch report removal from GSA
                     project.removeDirFromGSA(self.ssh_client, os.path.dirname(filepath))
             except IOError as e:
-                logger.debug("removeBatchReportsData: Error %s" % str(e))
+                logger.debug("removeBatchReportsData: I/O Error %s" % str(e))
             except Exception as e:
-                # Ignore this error as it related to the pending removal of the parent directory.  When
-                # the last file in the directory is removed, the parent directory is automatically removed.
-                # Then, rmtree tries to remove the parent directory again but it has already been removed
-                pass
+                logger.debug("removeBatchReportsData: Error %s" % str(e))
         logger.debug("Leaving removeBatchReportsData")
 
     # Archive Batch Reports Data to GSA

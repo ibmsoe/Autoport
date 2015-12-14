@@ -1127,13 +1127,12 @@ def createJob(i_id = None,
         else:
             return json.jsonify(status="failure", error="missing primary language"), 400
 
-    rc = createJob_common(localtime(), uid, id, tag, node, javaType, javaScriptType, selectedBuild,
-                          selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang)
-
     try:
+        rc = createJob_common(localtime(), uid, id, tag, node, javaType, javaScriptType, selectedBuild,
+                              selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang)
         rcstatus = rc['status']
     except KeyError:
-        logger.debug("createJob: jobName=%s, Error rc=%s" % (jobName, rc))
+        logger.debug("createJob: jobId=%s, Error rc=%s" % (id, rc))
         return json.jsonify(status='failure', error="Failed to launch a Jenkins job"), 401
 
     try:
@@ -1454,14 +1453,17 @@ def runBatchFile ():
         if not os.path.exists(batchDirName):
             os.makedirs(batchDirName)
 
+        logger.debug("runBatchFile: node=%s, newBatchName=%s" % (node, newBatchName))
+
         f = open(newBatchName, 'a+')
-        # Parse package data
+
         for package in fileBuf['packages']:
 
             # if a project can't be built, skip it. Top N may not be buildable - documentation
             selectedBuild = package['build']['selectedBuild']
             selectedTest = package['build']['selectedTest']
             if selectedBuild == "" and selectedTest == "":
+                logger.debug("runBatchFile: skipping node=%s, package=%s" % (node, package))
                 continue
 
             # If build info is derived from a travis.yaml file, then both build and test
@@ -1476,7 +1478,8 @@ def runBatchFile ():
             if 'includeInstallCmds' in fileBuf['config'] and fileBuf['config']['includeInstallCmds'] == 'False':
                 package['build']['selectedInstall'] = ""
 
-            createJob_results = createJob_common(localtime(),
+            try:
+                createJob_results = createJob_common(localtime(),
                           uid,
                           package['id'],
                           package['tag'],
@@ -1489,8 +1492,11 @@ def runBatchFile ():
                           package['build']['selectedEnv'],
                           package['build']['artifacts'],
                           package['build']['primaryLang'])
+            except Exception as e:
+                logger.debug("runBatchFile: createJob_common node=%s, Error %s" % (node, str(e)))
+                continue
 
-            logger.debug("runBatchFile: createJob rc=%s" % createJob_results)
+            logger.debug("runBatchFile: createJob node=%s, rc=%s" % (node, createJob_results))
 
             try:
                 jobName = createJob_results['jobName']
@@ -1499,9 +1505,11 @@ def runBatchFile ():
                 f.write(artifactFolder + "\n")
                 jobs.append([jobName, localDir])
                 logger.debug("runBatchFile: queue moveBatchArtifacts job=%s" % jobName)
-            except KeyError:
+            except KeyError as e:
+                logger.debug("runBatchFile: fwrite Error %s" % str(e))
                 pass
-        f.close()
+        else:
+            f.close()
 
     # Start a single thread to transfer all batch jobs results to the local server
     args = [((batchName, jobs), {})]
