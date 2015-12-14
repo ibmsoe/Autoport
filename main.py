@@ -1473,7 +1473,8 @@ def runBatchFile ():
 
             if 'includeInstallCmds' in fileBuf['config'] and fileBuf['config']['includeInstallCmds'] == 'False':
                 package['build']['selectedInstall'] = ""
-                createJob_results = createJob_common(localtime(),
+
+            createJob_results = createJob_common(localtime(),
                           uid,
                           package['id'],
                           package['tag'],
@@ -1487,17 +1488,17 @@ def runBatchFile ():
                           package['build']['artifacts'],
                           package['build']['primaryLang'])
 
-                logger.debug("runBatchFile: createJob rc=%s" % createJob_results)
+            logger.debug("runBatchFile: createJob rc=%s" % createJob_results)
 
-                try:
-                    jobName = createJob_results['jobName']
-                    artifactFolder = createJob_results['artifactFolder']
-                    localDir = globals.localPathForTestResults + artifactFolder
-                    f.write(artifactFolder + "\n")
-                    jobs.append([jobName, localDir])
-                    logger.debug("runBatchFile: queue moveBatchArtifacts job=%s" % jobName)
-                except KeyError:
-                    pass
+            try:
+                jobName = createJob_results['jobName']
+                artifactFolder = createJob_results['artifactFolder']
+                localDir = globals.localPathForTestResults + artifactFolder
+                f.write(artifactFolder + "\n")
+                jobs.append([jobName, localDir])
+                logger.debug("runBatchFile: queue moveBatchArtifacts job=%s" % jobName)
+            except KeyError:
+                pass
         f.close()
 
     # Start a single thread to transfer all batch jobs results to the local server
