@@ -1329,22 +1329,25 @@ def moveArtifactsTry(jobName, localDir):
                     if ".autoport-scratch" in flist:
                         mover.chdir(".autoport-scratch")
                         flist = mover.listdir()
-                    logger.debug("moveArtifactsTry: found artifacts %s %s" % (jobName, str(flist)))
+                    logger.debug("moveArtifactsTry: found artifacts job=%s %s" % (jobName, str(flist)))
                     for f in flist:
                         mover.get(f, localDir + f)
                     outDir = localDir                           # Transfer success
                 except IOError as e:
                     logger.warning("moveArtifactsTry: failed to transfer artifacts %s" % str(flist))
-                    logger.debug("moveArtifactsTry: Error=%s" % (str(e)))
+                    logger.debug("moveArtifactsTry: job=%s, Error=%s" % (jobName, str(e)))
                 break
             else:
                 logger.debug("moveArtifactsTry: sleep 10 waiting for artifacts")
                 sleep(10)
+        if not outDir:
+            outDir = 'N/A'
+            logger.debug("moveArtifactsTry: no artifacts found for job=%s" % jobName)
     except Exception as e:
         logger.warning("Leaving moveArtifactsTry, job=%s FTP Error=%s" % (jobName, str(e)))
         return outDir
 
-    logger.debug("Leaving moveArtifactsTry, outDir=%s" % (outDir))
+    logger.debug("Leaving moveArtifactsTry, job=%s, outDir=%s" % (jobName, outDir))
 
     return outDir
 
@@ -1356,6 +1359,7 @@ def moveBatchArtifacts(batchName, jobs):
     cntLimit = 400                # Max number of times to process batch file ~ 2 HRs
     cnt = 0
     while len(jobs) > 1:
+        logger.debug("moveBatchArtifacts: batchName=%s, jobs[%d], cnt=%d" % (batchName, len(jobs), cnt))
         sleep(15)
         remaining = []
         for job in jobs:
@@ -1368,7 +1372,6 @@ def moveBatchArtifacts(batchName, jobs):
         cnt = cnt + 1
         if cnt > cntLimit:
             break
-        logger.debug("moveBatchArtifacts: batchName=%s, loop cnt=%d" % (batchName, cnt))
 
     if len(jobs) == 1 and cnt < cntLimit:
         logger.debug("moveBatchArtifacts: batchName=%s, last job synchronous wait" % batchName)
