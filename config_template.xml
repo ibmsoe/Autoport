@@ -178,6 +178,68 @@
                           esac
                           return $rc
                       }
+                  else
+                      function sudoRetryRC() {
+                          args=$@
+                          expectedFailure=${args%% *}
+                          cmdline=${args#$expectedFailure }
+                          cmd=${cmdline%% *}
+                          rest=${cmdline#$cmd }
+
+                          echo "Autoport sudo wrapper: cmd=$cmdline expected-failure-rc=$expectedFailure"
+
+                          rc=0
+                          i=0
+                          while [ $i -lt 3 ]; do
+                              /usr/bin/sudo $cmd $rest
+                              rc=$?
+                              echo "Autoport sudo wrapper: cmd=$cmd $rest actual-rc=$rc"
+                              if [ "$rc" -eq "$expectedFailure" ]; then
+                                  i=$((i+1))
+                                  echo "Autoport sudo wrapper: sleep 30"
+                                  sleep 30
+                              else
+                                  break;
+                              fi
+                          done
+                          return $rc
+                      }
+                      # It is assumed that all apt-get commands are prefixed with sudo.  Protect
+                      # against lock collisions as we allow multiple projects to build at the
+                      # by retrying selected commands.  These commands come from TravisCI yml files.
+                      function sudo() {
+                          rc=0
+                          args=$@
+                          cmd=${args%% *}
+                          rest=""
+                          if [ "$cmd" != "$args" ]; then
+                              rest=${args#$cmd }
+                          fi
+                          case $cmd in
+                          "apt-get")
+                              sudoRetryRC 100 $cmd $rest
+                              return $rc
+                              ;;
+                          "aptitude")
+                              sudoRetryRC 255 $cmd $rest
+                              return $rc
+                              ;;
+                          "dpkg")
+                              sudoRetryRC 2 $cmd $rest
+                              return $rc
+                              ;;
+                          "synaptic")
+                              sudoRetryRC 1 $cmd $rest
+                              return $rc
+                              ;;
+                          *)
+                              # add-apt-repository doesn't appear to take any locks
+                              /usr/bin/sudo $args
+                              rc=$?
+                              ;;
+                          esac
+                          return $rc
+                      }
                   fi
                   function travis_retry() {
                       args=$@
@@ -308,6 +370,68 @@
                           esac
                           return $rc
                       }
+                  else
+                      function sudoRetryRC() {
+                          args=$@
+                          expectedFailure=${args%% *}
+                          cmdline=${args#$expectedFailure }
+                          cmd=${cmdline%% *}
+                          rest=${cmdline#$cmd }
+
+                          echo "Autoport sudo wrapper: cmd=$cmdline expected-failure-rc=$expectedFailure"
+
+                          rc=0
+                          i=0
+                          while [ $i -lt 3 ]; do
+                              /usr/bin/sudo $cmd $rest
+                              rc=$?
+                              echo "Autoport sudo wrapper: cmd=$cmd $rest actual-rc=$rc"
+                              if [ "$rc" -eq "$expectedFailure" ]; then
+                                  i=$((i+1))
+                                  echo "Autoport sudo wrapper: sleep 30"
+                                  sleep 30
+                              else
+                                  break;
+                              fi
+                          done
+                          return $rc
+                      }
+                      # It is assumed that all apt-get commands are prefixed with sudo.  Protect
+                      # against lock collisions as we allow multiple projects to build at the
+                      # by retrying selected commands.  These commands come from TravisCI yml files.
+                      function sudo() {
+                          rc=0
+                          args=$@
+                          cmd=${args%% *}
+                          rest=""
+                          if [ "$cmd" != "$args" ]; then
+                              rest=${args#$cmd }
+                          fi
+                          case $cmd in
+                          "apt-get")
+                              sudoRetryRC 100 $cmd $rest
+                              return $rc
+                              ;;
+                          "aptitude")
+                              sudoRetryRC 255 $cmd $rest
+                              return $rc
+                              ;;
+                          "dpkg")
+                              sudoRetryRC 2 $cmd $rest
+                              return $rc
+                              ;;
+                          "synaptic")
+                              sudoRetryRC 1 $cmd $rest
+                              return $rc
+                              ;;
+                          *)
+                              # add-apt-repository doesn't appear to take any locks
+                              /usr/bin/sudo $args
+                              rc=$?
+                              ;;
+                          esac
+                          return $rc
+                      }
                   fi
                   function travis_retry() {
                       args=$@
@@ -433,6 +557,68 @@
                               ;;
                           *)
                               /usr/bin/sudo $cmd $rest
+                              rc=$?
+                              ;;
+                          esac
+                          return $rc
+                      }
+                  else
+                      function sudoRetryRC() {
+                          args=$@
+                          expectedFailure=${args%% *}
+                          cmdline=${args#$expectedFailure }
+                          cmd=${cmdline%% *}
+                          rest=${cmdline#$cmd }
+
+                          echo "Autoport sudo wrapper: cmd=$cmdline expected-failure-rc=$expectedFailure"
+
+                          rc=0
+                          i=0
+                          while [ $i -lt 3 ]; do
+                              /usr/bin/sudo $cmd $rest
+                              rc=$?
+                              echo "Autoport sudo wrapper: cmd=$cmd $rest actual-rc=$rc"
+                              if [ "$rc" -eq "$expectedFailure" ]; then
+                                  i=$((i+1))
+                                  echo "Autoport sudo wrapper: sleep 30"
+                                  sleep 30
+                              else
+                                  break;
+                              fi
+                          done
+                          return $rc
+                      }
+                      # It is assumed that all apt-get commands are prefixed with sudo.  Protect
+                      # against lock collisions as we allow multiple projects to build at the
+                      # by retrying selected commands.  These commands come from TravisCI yml files.
+                      function sudo() {
+                          rc=0
+                          args=$@
+                          cmd=${args%% *}
+                          rest=""
+                          if [ "$cmd" != "$args" ]; then
+                              rest=${args#$cmd }
+                          fi
+                          case $cmd in
+                          "apt-get")
+                              sudoRetryRC 100 $cmd $rest
+                              return $rc
+                              ;;
+                          "aptitude")
+                              sudoRetryRC 255 $cmd $rest
+                              return $rc
+                              ;;
+                          "dpkg")
+                              sudoRetryRC 2 $cmd $rest
+                              return $rc
+                              ;;
+                          "synaptic")
+                              sudoRetryRC 1 $cmd $rest
+                              return $rc
+                              ;;
+                          *)
+                              # add-apt-repository doesn't appear to take any locks
+                              /usr/bin/sudo $args
                               rc=$?
                               ;;
                           esac
