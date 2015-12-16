@@ -251,7 +251,7 @@
                       i=0
                       while [ $i -lt 3 ]; do
                           if [ $cmd == "sudo" ]; then
-                              sudo $rest
+                              /usr/bin/sudo $rest
                           else
                               command $cmd $rest
                           fi
@@ -271,7 +271,7 @@
                           rest=${args#$cmd }
                       fi
                       if [ $cmd == "sudo" ]; then
-                          sudo $rest
+                          /usr/bin/sudo $rest
                       else
                           command $cmd $rest
                       fi

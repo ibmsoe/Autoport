@@ -820,7 +820,7 @@ def convertbuildInfoJson(env, buildCmd, testCmd, installCmd):
 
 # Common routine for createJob and runBatchJob
 def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selectedBuild,
-                     selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang):
+                     selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang, upstreamProj=None):
 
     # Get repository
     repo = globals.cache.getRepo(id)
@@ -844,7 +844,8 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
     except:
         pass
 
-    logger.debug("In createJob_common, name=%s, tag=%s, javaType=%s, jsType=%s" % (repo.name, tag, javaType, javaScriptType))
+    logger.debug("In createJob_common, name=%s, tag=%s, javaType=%s, jsType=%s, upstreamProj=%s" %
+                 (repo.name, tag, javaType, javaScriptType, upstreamProj))
 
     # Read template XML file
     tree = ET.parse("config_template.xml")
@@ -856,6 +857,16 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
     xml_env_command = root.find("./buildWrappers/EnvInjectBuildWrapper/info/propertiesContent")
     xml_node = root.find("./assignedNode")
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
+
+    # Synchronize execution with build of upstream project, ie. the project in the batch file before this one
+    # Upstream job must build and optionally test correctly before this project is built
+    if upstreamProj:
+        triggers = root.find("./triggers")
+        xmlString = "<jenkins.triggers.ReverseBuildTrigger> <spec></spec>" +\
+                    "<upstreamProjects>" + upstreamProj + "</upstreamProjects>" +\
+                    "<threshold><name>SUCCESS</name><ordinal>0</ordinal><color>BLUE</color><completeBuild>true</completeBuild></threshold>"+\
+                    "</jenkins.triggers.ReverseBuildTrigger>"
+        triggers.append(ET.fromstring(xmlString))
 
     # Modify selected elements
     xml_node.text = node
@@ -1421,7 +1432,22 @@ def runBatchFile ():
     if fileBuf['config']['javascript'] == "IBM SDK for Node.js":
         javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
 
-    logger.debug("runBatchFile: javaType=%s javaScriptType=%s nodeCSV=%s" % (javaType, javaScriptType, nodeCSV))
+    includeTestCmds = ""
+    try:
+        if fileBuf['config']['includeTestCmds'] == 'True':
+             includeTestCmds = "True"
+    except:
+        pass
+
+    includeInstallCmds = ""
+    try:
+        if fileBuf['config']['includeInstallCmds'] == 'True':
+            includeInstallCmds = "True"
+    except:
+        pass
+
+    logger.debug("runBatchFile: javaType=%s, javaScriptType=%s, includeTestCmds=%s, includeInstallCmds=%s, nodeCSV=%s" %
+                (javaType, javaScriptType, includeTestCmds, includeInstallCmds, nodeCSV))
 
     try:
         temp, batchNameOnly, createdTime = batchName.split('.')
@@ -1460,6 +1486,8 @@ def runBatchFile ():
 
         f = open(newBatchName, 'a+')
 
+        upstreamJobSync = ""
+
         for package in fileBuf['packages']:
 
             # if a project can't be built, skip it. Top N may not be buildable - documentation
@@ -1474,11 +1502,10 @@ def runBatchFile ():
             # 'selectedTest' is devoted to the named project.  The latter includes both
             # build and test commands as provided by travis.yaml file.
             selectedEnv = package['build']['selectedEnv']
-            if (not selectedEnv or "TRAVIS_OS_NAME=" not in selectedEnv) and\
-                'includeTestCmds' in fileBuf['config'] and fileBuf['config']['includeTestCmds'] == 'False':
+            if (not selectedEnv or "TRAVIS_OS_NAME=" not in selectedEnv) and not includeTestCmds:
                 package['build']['selectedTest'] = ""
 
-            if 'includeInstallCmds' in fileBuf['config'] and fileBuf['config']['includeInstallCmds'] == 'False':
+            if not includeInstallCmds:
                 package['build']['selectedInstall'] = ""
 
             try:
@@ -1494,7 +1521,8 @@ def runBatchFile ():
                           package['build']['selectedInstall'],
                           package['build']['selectedEnv'],
                           package['build']['artifacts'],
-                          package['build']['primaryLang'])
+                          package['build']['primaryLang'],
+                          upstreamJobSync)
             except Exception as e:
                 logger.debug("runBatchFile: createJob_common node=%s, Error %s" % (node, str(e)))
                 continue
@@ -1507,6 +1535,7 @@ def runBatchFile ():
                 localDir = globals.localPathForTestResults + artifactFolder
                 f.write(artifactFolder + "\n")
                 jobs.append([jobName, localDir])
+                upstreamJobSync = jobName if includeInstallCmds else ""
                 logger.debug("runBatchFile: queue moveBatchArtifacts job=%s" % jobName)
             except KeyError as e:
                 logger.debug("runBatchFile: fwrite Error %s" % str(e))
