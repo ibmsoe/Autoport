@@ -124,34 +124,35 @@
       <conditionalbuilders>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
-                 if [ ! -d .autoport-scratch ]; then
-                     mkdir .autoport-scratch
-                 fi
-                 echo &quot;*&quot; &gt; .autoport-scratch/.gitignore
-                 echo $META_CONTENTS &gt; .autoport-scratch/$META_NAME
-                 env</command>
-        </hudson.tasks.Shell>
-        <hudson.tasks.Shell>
-          <command>#!/bin/bash
-              if [ -n &quot;$CMD1&quot; ]; then
+                  if [ ! -d .autoport-scratch ]; then
+                      mkdir .autoport-scratch
+                  fi
+                  echo &quot;*&quot; &gt; .autoport-scratch/.gitignore
+                  echo $META_CONTENTS &gt; .autoport-scratch/$META_NAME
+
+                  # bitcoin is a good project to test these functions
+
+                  ################################ Shell program to create autoport environment ###########################
+
+                  bash_script_providing_builtin_autoport_functions='#/bin/bash
                   if [ -x /usr/bin/yum ]; then
                       function add-apt-repository() {
-                          echo "WARNING add-apt-repository $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport WARNING: add-apt-repository $* in autoport command needs to be replaced for RHEL"
                       }
                       function apt-cache() {
-                          echo "WARNING apt-cache $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport WARNING: apt-cache $* in autoport command needs to be replaced for RHEL"
                       }
                       function apt-get() {
-                          echo "WARNING apt-get $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport WARNING: apt-get $* in autoport command needs to be replaced for RHEL"
                       }
                       function aptitude() {
-                          echo "WARNING aptitude $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport WARNING: aptitude $* in autoport command needs to be replaced for RHEL"
                       }
                       function dpkg() {
-                          echo "WARNING dpkg $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport WARNING: dpkg $* in autoport command needs to be replaced for RHEL"
                       }
                       function synaptic() {
-                          echo "WARNING synaptic $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport WARNING: synaptic $* in autoport command needs to be replaced for RHEL"
                       }
                       function sudo() {
                           rc=0
@@ -163,13 +164,13 @@
                           fi
                           case $cmd in
                           "dpkg")
-                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              echo "Autoport WARNING: sudo $* in autoport command needs to be replaced"
                               ;;
                           "apt"*)
-                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              echo "Autoport WARNING: sudo $* in autoport command needs to be replaced"
                               ;;
                           "add-apt"*)
-                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
+                              echo "Autoport WARNING: sudo $* in autoport command needs to be replaced"
                               ;;
                           *)
                               /usr/bin/sudo $cmd $rest
@@ -186,17 +187,16 @@
                           cmd=${cmdline%% *}
                           rest=${cmdline#$cmd }
 
-                          echo "Autoport sudo wrapper: cmd=$cmdline expected-failure-rc=$expectedFailure"
+                          echo "Autoport INFO: sudo $cmdline"
 
                           rc=0
                           i=0
                           while [ $i -lt 3 ]; do
                               /usr/bin/sudo $cmd $rest
                               rc=$?
-                              echo "Autoport sudo wrapper: cmd=$cmd $rest actual-rc=$rc"
+                              echo "Autoport INFO: sudo $cmd $rest, rc=$rc"
                               if [ "$rc" -eq "$expectedFailure" ]; then
                                   i=$((i+1))
-                                  echo "Autoport sudo wrapper: sleep 30"
                                   sleep 30
                               else
                                   break;
@@ -217,7 +217,17 @@
                           fi
                           case $cmd in
                           "apt-get")
-                              sudoRetryRC 100 $cmd $rest
+                              subCmd=${rest%% *}
+                              rest=""
+                              if [ "$subCmd" != "$rest" ]; then
+                                  rest=${rest#$subCmd }
+                              fi
+                              if [ "$subCmd" == "update" ]; then
+                                  echo "Autoport INFO: sudo $cmd $subCmd $rest"
+                                  /usr/bin/sudo $cmd $subCmd $rest
+                              else
+                                  sudoRetryRC 100 $cmd $subCmd $rest
+                              fi
                               return $rc
                               ;;
                           "aptitude")
@@ -233,8 +243,9 @@
                               return $rc
                               ;;
                           *)
-                              # add-apt-repository doesn't appear to take any locks
-                              /usr/bin/sudo $cmd $args
+                              # add-apt-repository does not appear to take any locks
+                              echo "Autoport INFO: sudo $cmd $rest"
+                              /usr/bin/sudo $cmd $rest
                               rc=$?
                               ;;
                           esac
@@ -250,8 +261,21 @@
                       fi
                       i=0
                       while [ $i -lt 3 ]; do
-                          if [ $cmd == "sudo" ]; then
-                              /usr/bin/sudo $rest
+                          if [ "$cmd" == "sudo" ]; then
+                              cmd=${rest%% *}
+                              if [ "$cmd" != "$rest" ]; then
+                                  rest=${rest#$cmd }
+                              else
+                                  rest=""
+                              fi
+                              cmdType=`type $cmd`
+                              if [[ $cmdType != *"is a function"* ]]; then
+                                  echo "Autoport INFO: travis_retry sudo $cmd $rest"
+                                  /usr/bin/sudo $cmd $rest
+                              else
+                                  echo "Autoport WARNING: travis_retry sudo $cmd $rest in autoport command needs to be replaced"
+                                  rc=0
+                              fi
                           else
                               command $cmd $rest
                           fi
@@ -270,14 +294,38 @@
                       if [ "$cmd" != "$args" ]; then
                           rest=${args#$cmd }
                       fi
-                      if [ $cmd == "sudo" ]; then
-                          /usr/bin/sudo $rest
+                      if [ "$cmd" == "sudo" ]; then
+                          cmd=${rest%% *}
+                          if [ "$cmd" != "$rest" ]; then
+                              rest=${rest#$cmd }
+                          else
+                              rest=""
+                          fi
+                          cmdType=`type $cmd`
+                          if [[ $cmdType != *"is a function"* ]]; then
+                              echo "travis_retry sudo $cmd $rest"
+                              /usr/bin/sudo $cmd $rest
+                          else
+                              echo "Autoport WARNING: travis_wait sudo $cmd $rest in autoport command needs to be replaced"
+                              rc=0
+                          fi
                       else
                           command $cmd $rest
                       fi
                       rc=$?
                       return $rc
-                  }
+                  }'
+                 ################################ End shell program to create autoport environment ###########################
+
+                 # Dump to a bash script for execution
+                 echo "$bash_script_providing_builtin_autoport_functions" >.autoport-scratch/.autoportrc
+
+                 env</command>
+        </hudson.tasks.Shell>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+              if [ -n &quot;$CMD1&quot; ]; then
+                  source .autoport-scratch/.autoportrc
                   if [ $JAVATYPE ]; then
                       echo &quot;Sourcing Java to $JAVATYPE&quot;
                       sudo chmod a+x $JAVATYPE
@@ -326,150 +374,7 @@
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD2&quot; ]; then
-                  if [ -x /usr/bin/yum ]; then
-                      function add-apt-repository() {
-                          echo "WARNING add-apt-repository $* in autoport command needs to be replaced"
-                      }
-                      function apt-cache() {
-                          echo "WARNING apt-cache $* in autoport command needs to be replaced"
-                      }
-                      function apt-get() {
-                          echo "WARNING apt-get $* in autoport command needs to be replaced"
-                      }
-                      function aptitude() {
-                          echo "WARNING aptitude $* in autoport command needs to be replaced"
-                      }
-                      function dpkg() {
-                          echo "WARNING dpkg $* in autoport command needs to be replaced"
-                      }
-                      function synaptic() {
-                          echo "WARNING synaptic $* in autoport command needs to be replaced"
-                      }
-                      function sudo() {
-                          rc=0
-                          args=$@
-                          cmd=${args%% *}
-                          rest=""
-                          if [ "$cmd" != "$args" ]; then
-                              rest=${args#$cmd }
-                          fi
-                          case $cmd in
-                          "dpkg")
-                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                              ;;
-                          "apt"*)
-                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                              ;;
-                          "add-apt"*)
-                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                              ;;
-                          *)
-                              /usr/bin/sudo $cmd $rest
-                              rc=$?
-                              ;;
-                          esac
-                          return $rc
-                      }
-                  else
-                      function sudoRetryRC() {
-                          args=$@
-                          expectedFailure=${args%% *}
-                          cmdline=${args#$expectedFailure }
-                          cmd=${cmdline%% *}
-                          rest=${cmdline#$cmd }
-
-                          echo "Autoport sudo wrapper: cmd=$cmdline expected-failure-rc=$expectedFailure"
-
-                          rc=0
-                          i=0
-                          while [ $i -lt 3 ]; do
-                              /usr/bin/sudo $cmd $rest
-                              rc=$?
-                              echo "Autoport sudo wrapper: cmd=$cmd $rest actual-rc=$rc"
-                              if [ "$rc" -eq "$expectedFailure" ]; then
-                                  i=$((i+1))
-                                  echo "Autoport sudo wrapper: sleep 30"
-                                  sleep 30
-                              else
-                                  break;
-                              fi
-                          done
-                          return $rc
-                      }
-                      # It is assumed that all apt-get commands are prefixed with sudo.  Protect
-                      # against lock collisions as we allow multiple projects to build at the
-                      # by retrying selected commands.  These commands come from TravisCI yml files.
-                      function sudo() {
-                          rc=0
-                          args=$@
-                          cmd=${args%% *}
-                          rest=""
-                          if [ "$cmd" != "$args" ]; then
-                              rest=${args#$cmd }
-                          fi
-                          case $cmd in
-                          "apt-get")
-                              sudoRetryRC 100 $cmd $rest
-                              return $rc
-                              ;;
-                          "aptitude")
-                              sudoRetryRC 255 $cmd $rest
-                              return $rc
-                              ;;
-                          "dpkg")
-                              sudoRetryRC 2 $cmd $rest
-                              return $rc
-                              ;;
-                          "synaptic")
-                              sudoRetryRC 1 $cmd $rest
-                              return $rc
-                              ;;
-                          *)
-                              # add-apt-repository doesn't appear to take any locks
-                              /usr/bin/sudo $args
-                              rc=$?
-                              ;;
-                          esac
-                          return $rc
-                      }
-                  fi
-                  function travis_retry() {
-                      args=$@
-                      cmd=${args%% *}
-                      rest=""
-                      if [ "$cmd" != "$args" ]; then
-                          rest=${args#$cmd }
-                      fi
-                      i=0
-                      while [ $i -lt 3 ]; do
-                          if [ $cmd == "sudo" ]; then
-                              sudo $rest
-                          else
-                              command $cmd $rest
-                          fi
-                          rc=$?
-                          if [ "$rc" -eq "0" ]; then
-                              break;
-                          fi
-                          i=$((i+1))
-                      done
-                      return $rc
-                  }
-                  function travis_wait() {
-                      args=$@
-                      cmd=${args%% *}
-                      rest=""
-                      if [ "$cmd" != "$args" ]; then
-                          rest=${args#$cmd }
-                      fi
-                      if [ $cmd == "sudo" ]; then
-                          sudo $rest
-                      else
-                          command $cmd $rest
-                      fi
-                      rc=$?
-                      return $rc
-                  }
+                  source .autoport-scratch/.autoportrc
                   if [ $JAVATYPE ]; then
                       echo &quot;Sourcing Java to $JAVATYPE&quot;
                       sudo chmod a+x $JAVATYPE
@@ -518,150 +423,7 @@
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD3&quot; ]; then
-                  if [ -x /usr/bin/yum ]; then
-                      function add-apt-repository() {
-                          echo "WARNING add-apt-repository $* in autoport command needs to be replaced"
-                      }
-                      function apt-cache() {
-                          echo "WARNING apt-cache $* in autoport command needs to be replaced"
-                      }
-                      function apt-get() {
-                          echo "WARNING apt-get $* in autoport command needs to be replaced"
-                      }
-                      function aptitude() {
-                          echo "WARNING aptitude $* in autoport command needs to be replaced"
-                      }
-                      function dpkg() {
-                          echo "WARNING dpkg $* in autoport command needs to be replaced"
-                      }
-                      function synaptic() {
-                          echo "WARNING synaptic $* in autoport command needs to be replaced"
-                      }
-                      function sudo() {
-                          rc=0
-                          args=$@
-                          cmd=${args%% *}
-                          rest=""
-                          if [ "$cmd" != "$args" ]; then
-                              rest=${args#$cmd }
-                          fi
-                          case $cmd in
-                          "dpkg")
-                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                              ;;
-                          "apt"*)
-                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                              ;;
-                          "add-apt"*)
-                              echo "WARNING 'sudo $*' in autoport command needs to be replaced"
-                              ;;
-                          *)
-                              /usr/bin/sudo $cmd $rest
-                              rc=$?
-                              ;;
-                          esac
-                          return $rc
-                      }
-                  else
-                      function sudoRetryRC() {
-                          args=$@
-                          expectedFailure=${args%% *}
-                          cmdline=${args#$expectedFailure }
-                          cmd=${cmdline%% *}
-                          rest=${cmdline#$cmd }
-
-                          echo "Autoport sudo wrapper: cmd=$cmdline expected-failure-rc=$expectedFailure"
-
-                          rc=0
-                          i=0
-                          while [ $i -lt 3 ]; do
-                              /usr/bin/sudo $cmd $rest
-                              rc=$?
-                              echo "Autoport sudo wrapper: cmd=$cmd $rest actual-rc=$rc"
-                              if [ "$rc" -eq "$expectedFailure" ]; then
-                                  i=$((i+1))
-                                  echo "Autoport sudo wrapper: sleep 30"
-                                  sleep 30
-                              else
-                                  break;
-                              fi
-                          done
-                          return $rc
-                      }
-                      # It is assumed that all apt-get commands are prefixed with sudo.  Protect
-                      # against lock collisions as we allow multiple projects to build at the
-                      # by retrying selected commands.  These commands come from TravisCI yml files.
-                      function sudo() {
-                          rc=0
-                          args=$@
-                          cmd=${args%% *}
-                          rest=""
-                          if [ "$cmd" != "$args" ]; then
-                              rest=${args#$cmd }
-                          fi
-                          case $cmd in
-                          "apt-get")
-                              sudoRetryRC 100 $cmd $rest
-                              return $rc
-                              ;;
-                          "aptitude")
-                              sudoRetryRC 255 $cmd $rest
-                              return $rc
-                              ;;
-                          "dpkg")
-                              sudoRetryRC 2 $cmd $rest
-                              return $rc
-                              ;;
-                          "synaptic")
-                              sudoRetryRC 1 $cmd $rest
-                              return $rc
-                              ;;
-                          *)
-                              # add-apt-repository doesn't appear to take any locks
-                              /usr/bin/sudo $args
-                              rc=$?
-                              ;;
-                          esac
-                          return $rc
-                      }
-                  fi
-                  function travis_retry() {
-                      args=$@
-                      cmd=${args%% *}
-                      rest=""
-                      if [ "$cmd" != "$args" ]; then
-                          rest=${args#$cmd }
-                      fi
-                      i=0
-                      while [ $i -lt 3 ]; do
-                          if [ $cmd == "sudo" ]; then
-                              sudo $rest
-                          else
-                              command $cmd $rest
-                          fi
-                          rc=$?
-                          if [ "$rc" -eq "0" ]; then
-                              break;
-                          fi
-                          i=$((i+1))
-                      done
-                      return $rc
-                  }
-                  function travis_wait() {
-                      args=$@
-                      cmd=${args%% *}
-                      rest=""
-                      if [ "$cmd" != "$args" ]; then
-                          rest=${args#$cmd }
-                      fi
-                      if [ $cmd == "sudo" ]; then
-                          sudo $rest
-                      else
-                          command $cmd $rest
-                      fi
-                      rc=$?
-                      return $rc
-                  }
+                  source .autoport-scratch/.autoportrc
                   if [ $JAVATYPE ]; then
                       echo &quot;Sourcing Java to $JAVATYPE&quot;
                       sudo chmod a+x $JAVATYPE
