@@ -234,7 +234,7 @@
                               ;;
                           *)
                               # add-apt-repository doesn't appear to take any locks
-                              /usr/bin/sudo $args
+                              /usr/bin/sudo $cmd $args
                               rc=$?
                               ;;
                           esac
