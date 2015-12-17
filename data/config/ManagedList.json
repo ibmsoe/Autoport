@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "14",
+    "sequence": "15",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -385,6 +385,9 @@
                     "name": "ant"
                 },
                 {
+                    "name": "atlas-devel"
+                },
+                {
                     "name": "autoconf"
                 },
                 {
@@ -431,6 +434,9 @@
                 },
                 {
                     "name": "gnutls-utils"
+                },
+                {
+                    "name": "gtk3-devel"
                 },
                 {
                     "name": "java-1.7.0-openjdk-devel"
@@ -503,6 +509,9 @@
                 },
                 {
                     "name": "ncurses-devel"
+                },
+                {
+                    "name": "nss-devel"
                 },
                 {
                     "name": "numpy"
