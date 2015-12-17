@@ -287,13 +287,15 @@ def interpretTravis(repo, travisFile, travis_def):
 
             # Add autoport build command which comes from yaml before_install and install
             privileged = ['apt', 'dpkg', 'yum', 'rpm', 'install']
-            dontAddSudo = [ 'if ', 'then ', 'elif', 'else ', 'fi ',
-                            'for ', 'while ', 'do ', 'done ', 'true ', 'false ' ]
+            dontAddSudo = [ 'if', 'then', 'elif', 'else', 'fi',
+                            'for', 'while ', 'do', 'done', 'true', 'false' ]
             beforeInstall = ""
             if 'before_install' in data and data['before_install']:
                 if isinstance(data['before_install'], list):
                     newCmds = []
                     for cmdline in data['before_install']:
+                        if cmdline.endswith(';'):
+                            cmdline = cmdline[:-1]
                         cmd = cmdline.split()[0]
                         if any(x in cmdline for x in privileged) and\
                            'sudo' not in cmdline and cmd not in dontAddSudo:
@@ -317,6 +319,8 @@ def interpretTravis(repo, travisFile, travis_def):
                 if isinstance(data['install'], list):
                     newCmds = []
                     for cmdline in data['install']:
+                        if cmdline.endswith(';'):
+                            cmdline = cmdline[:-1]
                         cmd = cmdline.split()[0]
                         if any(x in cmdline for x in privileged) and\
                            'sudo' not in cmdline and cmd not in dontAddSudo:
@@ -326,10 +330,7 @@ def interpretTravis(repo, travisFile, travis_def):
                     install = '; '.join(newCmds)
                 else:
                     cmdline = data['install']
-                    logger.debug("interpretTravis: proj=%s cmdline=%s" % (repo.name, cmdline))
-
                     cmd = cmdline.split()[0]
-                    logger.debug("interpretTravis: proj=%s cmd=%s" % (repo.name, cmd))
                     if any(x in cmdline for x in privileged) and\
                        'sudo' not in cmdline and cmd not in dontAddSudo:
                         install = 'sudo ' + cmdline
