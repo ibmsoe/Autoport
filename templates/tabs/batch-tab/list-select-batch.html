@@ -39,12 +39,12 @@
         <select id="batchBuildServers" multiple="multiple" style="margin-right: 10px; float: left">
           <option rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
         </select>
-        <a rv-on-click="batchState.buildAndTest">
-          <button type="button" class="btn btn-primary" style="margin-left: 10px; margin-right: 10px; border-radius: 5px; float: left">
+        <a  rv-on-click="batchState.buildAndTest">
+          <button rv-disabled="batchState.selectedBatchFile.location | isEmptyObject" type="button"  id="batch_build_test" class="btn btn-primary" style="margin-left: 10px; margin-right: 10px; border-radius: 5px; float: left">
             Build + Test
           </button>
         </a>
-        <a rv-show="batchState.selectedBatchFile.location | isLocal"
+        <a rv-enabled="batchState.selectedBatchFile.location | isLocal"
           rv-on-click="batchState.archive">
           <button type="button" class="btn btn-primary" id="batch_file_archive"
            style="float: left; margin-right: 10px">
@@ -52,7 +52,7 @@
           </button>
         </a>
         <a rv-on-click="batchState.remove">
-            <button type="button" class="btn btn-primary disabled" id="batch_file_remove" style="float: left; margin-right: 10px">
+            <button  rv-disabled="batchState.selectedBatchFile.location | isEmptyObject" type="button" class="btn btn-primary disabled" id="batch_file_remove" style="float: left; margin-right: 10px">
                 Remove
             </button>
         </a>
@@ -251,7 +251,6 @@
                   <h4 class="modal-title" id="modalLabel">Set Batch Options</h4>
                 </div>
               </div>
-              
               <div class="row">
                 <div class="col-md-12">
                     <label class="github">Enable test:</label>
@@ -261,7 +260,9 @@
                <div class="row">
                 <div class="col-md-12">
                     <label class="github">Enable install:</label>
-                    <input type="checkbox" id="batchSettingsInstallCkBox" rv-on-change="batchState.onInstallCheckBoxChanged">
+                    <input type="checkbox" id="batchSettingsInstallCkBox"
+                             rv-checked="batchState.batchFile.config.includeInstallCmds | eq True"
+                             rv-on-change="batchState.onInstallCheckBoxChanged">
                   </div>
                 </div>
                 <div class="row">
@@ -272,16 +273,16 @@
                </div>
               </div>
              </div>
- 
+
               <!-- Dropdown box for choosing what kind of JavaScript to use. -->
               <!-- Dropdown box for choosing what kind of Python to use. -->
            <div class='modal-body' style="display:none" id="batchCommandsTableContanier">
           </div>
 
           <div class="modal-footer">
- 
+
             <a href="#" class="btn btn-primary pull-left" style="display:none" rv-on-click="batchState.displayBatchSettings" id="batchBuildCommandBackButton"><span class="glyphicon glyphicon-chevron-left"></span> Back</a>
-            <button type="button" id="showModifyButton" rv-on-click="batchState.displayBatchCommandsTable" class="btn btn-primary">Show/Modify Commands</button>            
+            <button type="button" id="showModifyButton" rv-on-click="batchState.displayBatchCommandsTable" class="btn btn-primary">Show/Modify Commands</button>
             <button rv-on-click="batchState.resetEnviron" type="button"
               class="btn btn-primary">Reset</button>
             <button rv-on-click="batchState.updateEnviron" type="button"

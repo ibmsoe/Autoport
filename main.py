@@ -1397,17 +1397,17 @@ def runBatchFile ():
     try:
         batchName = request.form["batchName"]
         if not batchName:
-            return json.jsonify(status="failure", error="a batch file must be specified"), 400
+            return json.jsonify(status="failure", error="Please select a batch file!"), 400
     except KeyError:
-        return json.jsonify(status="failure", error="missing batchName POST argument"), 400
+        return json.jsonify(status="failure", error="Please select a batch file!"), 400
 
     # Get the batch file name from POST
     try:
         nodeCSV = request.form["nodeCSV"]
         if not nodeCSV:
-            return json.jsonify(status="failure", error="at least one node must be specified"), 400
+            return json.jsonify(status="failure", error="Please select at least one build server!"), 400
     except KeyError:
-        return json.jsonify(status="failure", error="missing buildServer argument"), 400
+        return json.jsonify(status="failure", error="Please select at least one build server!"), 400
 
     logger.debug("In runBatchFile, batchName=%s, nodeCSV=%s" % (batchName, nodeCSV))
 

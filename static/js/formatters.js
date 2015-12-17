@@ -73,6 +73,34 @@ rivets.formatters.isLocal = function(value) {
     return value === "local";
 };
 
+rivets.formatters.isEmptyObject = function(value) {
+    return $.isEmptyObject(value);
+};
+
+rivets.formatters['eq'] = function (value, arg) {
+    var return_value=false;
+    if (value && arg)
+       var return_value = value.toString().toLowerCase() == arg.toString().toLowerCase();
+    else
+        return_value = false;
+    return return_value;
+};
+
+rivets.formatters['gt'] = function (value, arg) {
+  return value > arg;
+};
+
+rivets.formatters['lteq'] = function (value, arg) {
+  return value >= arg;
+};
+
+rivets.formatters['gt'] = function (value, arg) {
+  return value < arg;
+};
+
+rivets.formatters['gteq'] = function (value, arg) {
+  return value <= arg;
+};
 /************************************* Bootstrap Table addon formatters *********************************************/
 
 // Returns 'Yes' if the package is up-datable, 'No' otherwise
