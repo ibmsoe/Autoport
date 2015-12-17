@@ -287,8 +287,8 @@ def interpretTravis(repo, travisFile, travis_def):
 
             # Add autoport build command which comes from yaml before_install and install
             privileged = ['apt', 'dpkg', 'yum', 'rpm', 'install']
-            dontAddSudo = [ 'if', 'then', 'elif', 'else', 'fi',
-                            'for', 'while ', 'do', 'done', 'true', 'false' ]
+            dontAddSudo = [ 'if', 'then', 'elif', 'else', 'fi', 'case', 'function', 'until',
+                            'for', 'while', 'do', 'done', 'true', 'false', 'in' ]
             beforeInstall = ""
             if 'before_install' in data and data['before_install']:
                 if isinstance(data['before_install'], list):

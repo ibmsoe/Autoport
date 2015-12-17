@@ -793,6 +793,25 @@ def convertEnvJenkins(repo, selectedEnv):
 
     return new
 
+def addDefEnvJenkins(repo, selectedEnv):
+    '''
+    Method to add default environment variables for building assuming they
+    are not specified by the user.
+    '''
+
+    # Don't add double quotes inside the environment string, use single quotes instead
+    if selectedEnv:
+        if "CC=" not in selectedEnv:
+           selectedEnv = "CC=gcc\n" + selectedEnv
+        if "CXX=" not in selectedEnv:
+           selectedEnv = "CXX=g++\n" + selectedEnv
+    else:
+        selectedEnv="CC=gcc\nCXX=g++"
+
+    logger.debug("addDefEnvJenkins: proj=%s, env=%s" % (repo.name, selectedEnv))
+
+    return selectedEnv
+
 def convertbuildInfoJson(env, buildCmd, testCmd, installCmd):
     '''
     Method to convert parameters to "key": "value" pairs
@@ -801,7 +820,7 @@ def convertbuildInfoJson(env, buildCmd, testCmd, installCmd):
     '''
 
     if env:
-        # Env has already been reformated for jenkins and includes newlines between
+        # Env has already been reformatted for jenkins and includes newlines between
         # individual environment variables.  Substitute newline character for comma, blank
         # so that one can tell where each environment variable is supposed to end.
         # "K"="MAVEN_OPTS=-Xmx2g -XX:MaxPermSize=512M, JAVA_TOOL_OPTIONS=-Dos.arch=ppc64le"
@@ -815,6 +834,8 @@ def convertbuildInfoJson(env, buildCmd, testCmd, installCmd):
 
     if installCmd:
         installCmd = installCmd.replace('"', "'")
+
+    logger.debug("convertBuildInfoJson: env=%s" % env)
 
     return env, buildCmd, testCmd, installCmd
 
@@ -911,6 +932,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
 
     # Format environment variables deduced from readme files or provided by user
     selectedEnv = convertEnvJenkins(repo, selectedEnv)
+    selectedEnv = addDefEnvJenkins(repo, selectedEnv)
     xml_env_command.text = selectedEnv
 
     # Format commands and environment variables for json files

@@ -134,25 +134,25 @@
 
                   ################################ Shell program to create autoport environment ###########################
 
-                  bash_script_providing_builtin_autoport_functions='#/bin/bash
+                  bash_script_providing_builtin_autoport_functions='#!/bin/bash
                   if [ -x /usr/bin/yum ]; then
                       function add-apt-repository() {
-                          echo "Autoport WARNING: add-apt-repository $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport RHEL WARNING Replace: add-apt-repository $*"
                       }
                       function apt-cache() {
-                          echo "Autoport WARNING: apt-cache $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport RHEL WARNING Replace: apt-cache $*"
                       }
                       function apt-get() {
-                          echo "Autoport WARNING: apt-get $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport RHEL WARNING Replace: apt-get $*"
                       }
                       function aptitude() {
-                          echo "Autoport WARNING: aptitude $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport RHEL WARNING Replace: aptitude $*"
                       }
                       function dpkg() {
-                          echo "Autoport WARNING: dpkg $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport RHEL WARNING Replace: dpkg $*"
                       }
                       function synaptic() {
-                          echo "Autoport WARNING: synaptic $* in autoport command needs to be replaced for RHEL"
+                          echo "Autoport RHEL WARNING Replace: synaptic $*"
                       }
                       function sudo() {
                           rc=0
@@ -164,13 +164,13 @@
                           fi
                           case $cmd in
                           "dpkg")
-                              echo "Autoport WARNING: sudo $* in autoport command needs to be replaced"
+                              echo "Autoport RHEL WARNING Replace: sudo $*"
                               ;;
                           "apt"*)
-                              echo "Autoport WARNING: sudo $* in autoport command needs to be replaced"
+                              echo "Autoport RHEL WARNING Replace: sudo $*"
                               ;;
                           "add-apt"*)
-                              echo "Autoport WARNING: sudo $* in autoport command needs to be replaced"
+                              echo "Autoport RHEL WARNING Replace: sudo $*"
                               ;;
                           *)
                               /usr/bin/sudo $cmd $rest
@@ -218,9 +218,10 @@
                           case $cmd in
                           "apt-get")
                               subCmd=${rest%% *}
-                              rest=""
                               if [ "$subCmd" != "$rest" ]; then
                                   rest=${rest#$subCmd }
+                              else
+                                  rest=""
                               fi
                               if [ "$subCmd" == "update" ]; then
                                   echo "Autoport INFO: sudo $cmd $subCmd $rest"
@@ -273,7 +274,7 @@
                                   echo "Autoport INFO: travis_retry sudo $cmd $rest"
                                   /usr/bin/sudo $cmd $rest
                               else
-                                  echo "Autoport WARNING: travis_retry sudo $cmd $rest in autoport command needs to be replaced"
+                                  echo "Autoport RHEL WARNING Replace: travis_retry sudo $cmd $rest"
                                   rc=0
                               fi
                           else
@@ -306,7 +307,7 @@
                               echo "travis_retry sudo $cmd $rest"
                               /usr/bin/sudo $cmd $rest
                           else
-                              echo "Autoport WARNING: travis_wait sudo $cmd $rest in autoport command needs to be replaced"
+                              echo "Autoport RHEL WARNING Replace: travis_wait sudo $cmd $rest"
                               rc=0
                           fi
                       else
