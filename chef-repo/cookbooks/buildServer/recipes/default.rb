@@ -5,6 +5,7 @@ ArchiveLog.getLog(run_context, node)
 
 include_recipe 'buildServer::repo_settings'
 include_recipe 'buildServer::buildtools'
+include_recipe 'buildServer::cmake'
 include_recipe 'buildServer::ibm-sdk-nodejs'
 include_recipe 'buildServer::autoportPackages'
 include_recipe 'buildServer::java'
