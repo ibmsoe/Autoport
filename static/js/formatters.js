@@ -72,6 +72,10 @@ rivets.formatters.isProjectCompare = function(value) {
 rivets.formatters.isLocal = function(value) {
     return value === "local";
 };
+rivets.formatters.shortName = function(value) {
+    return value.replace(/.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)/,"").replace(/.(.*?)\.(.*?)\.(.*?)(-..-|-)/,"").replace("/","");
+
+};
 
 /************************************* Bootstrap Table addon formatters *********************************************/
 

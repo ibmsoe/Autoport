@@ -256,6 +256,10 @@ var searchState = {
                   forks:    0,
                   generate: function (ev) {
                       // TODO: remove redundant query qualifiers (stars/forks == 0)
+                      if (searchState.multiple.query.limit == '' ||parseInt(searchState.multiple.query.limit) <= 0){
+                         showAlert("Number of repository must be greater than 0.");
+                         return false;
+                      }
                       detailState.generateReady = false;
                       var data = {
                           // GitHub API parameters
@@ -339,7 +343,10 @@ var batchState = {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
+        batchState.showBatchFile = false;
+        batchState.selectedBatchFile = {};
         $('#batch_file_archive').addClass('disabled');
+        $('#batch_file_archive').show();
         $.getJSON("listBatchFiles/local", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
@@ -347,6 +354,8 @@ var batchState = {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
+        batchState.selectedBatchFile = {};
+        batchState.showBatchFile = false;
         $('#batch_file_archive').addClass('disabled');
         $('#batch_file_archive').hide();
         $.getJSON("listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
@@ -356,6 +365,8 @@ var batchState = {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
+        batchState.showBatchFile = false;
+        batchState.selectedBatchFile = {};
         $('#batch_file_archive').addClass('disabled');
         $('#batch_file_archive').show();
         $.getJSON("listBatchFiles/all", { filter: $("#batchFileFilter").val() },
@@ -471,15 +482,16 @@ var batchState = {
             selectedServers = "";
             for (var i=options.length; i--;) {
                 if (options[i].selected){
-               	    if(selectedServers == ""){
-                        selectedServers = options[i].value;
-                    }else{
-                        selectedServers = selectedServers+","+options[i].value;
-                    }
+                   if(selectedServers == ""){
+                       selectedServers = options[i].value;
+                   }else{
+                       selectedServers = selectedServers+","+options[i].value;
+                   }
                 }
             }
         if (selectedServers == ""){
-            showAlert("Please select atleast one build server");
+            showAlert("Please select atleast one build server!");
+            batchState.loading = false;
             return false;
         }
         else{
@@ -488,7 +500,7 @@ var batchState = {
         }
     },
     detail: function(ev, el) {
-	if(batchState.selectedBatchFile.filename== undefined || batchState.selectedBatchFile.filename == ""){
+        if(batchState.selectedBatchFile.filename== undefined || batchState.selectedBatchFile.filename == ""){
             showAlert("Please select batch file");
             return false;
         }
@@ -499,6 +511,9 @@ var batchState = {
                 batchName: batchState.selectedBatchFile.filename
             }, function(data){
                 parseBatchFileCallback(data, batchState);
+                var tempinstallcmd = data.results.config.includeInstallCmds;
+                batchState.batchFile.config.includeInstallCmds =  "False"; // this is a hack to switch the checkbox checked option
+                batchState.batchFile.config.includeInstallCmds = tempinstallcmd;
             }, "json").fail(function(data){
                 parseBatchFileCallback(data, batchState);
             }
@@ -523,9 +538,9 @@ var batchState = {
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
     },
     archive: function(ev, el) {
-    	if($('#batchListSelectTable').bootstrapTable('getSelections').length<1){
-        	showAlert("Please select one batch file to archive");
-        	return false;
+        if($('#batchListSelectTable').bootstrapTable('getSelections').length<1){
+            showAlert("Please select one batch file to archive");
+            return false;
         }
         batchState.loading = true;
         $.post("archiveBatchFile", {filename: batchState.selectedBatchFile.filename},
@@ -559,8 +574,10 @@ var batchState = {
 // Object for batch reporting
 var batchReportState = {
     // member variables and methods
+    prjCompareSingle: true,
+    prjCompareReady: true,
     showListSelectTable: false, // Allow batch table display
-    fileList: [],               // Stores batch files found
+    fileList: [], // Stores batch files found
     selectedBatchFile: {},
     testResultsPanel: false,
     batchReportFilter: "",
@@ -795,6 +812,51 @@ var batchReportState = {
             showMessage("Error: ", "Two Batch job from the list needs to be selected.");
             batchReportState.loading = false;
         }
+    },
+    compareLogs: function(ev,item) {
+        var buttonID = ev.target.id;
+        if(buttonID === "viewBatchBuildLogBtn")
+             logFile = "build_result.arti"
+        if(buttonID === "viewBatchTestLogBtn")
+             logFile = "test_result.arti"
+
+        var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+        var sel = [];
+        var selectedIndex = 0;
+        var selectedJobIndex = 0;
+        batchReportState.modalHeader = "Log Results";
+        $("#tree2 >li .active").removeClass("active");
+        $(this).parent().addClass("active");
+        $(this).addClass("active");
+        for (var i = 0; i < selectedBatchJobs.length; i++){
+              sel[i]={};
+              selectedBatchJobs[i].logfile = logFile;
+              for(var j=0;j<selectedBatchJobs[i].jobNames.length;j++){
+                     sel[i][j] = selectedBatchJobs[i].jobNames[j];
+                     if (item.batch && item.batchjobname ){
+                        if (selectedBatchJobs[i].jobNames[j] == item.batchjobname) {
+                            selectedIndex = i;
+                            selectedJobIndex = j;
+                            logFile = item.batch.logfile
+                         }}
+                 }
+          }
+        batchReportState.selectedBatchJobs = selectedBatchJobs;
+        if (buttonID == "viewBatchBuildLogBtn" || buttonID == "viewBatchTestLogBtn") 
+              $('#tree2').treed();
+        var leftProject = sel[selectedIndex][selectedJobIndex];
+        var rightProject = sel[selectedIndex][selectedJobIndex];
+        var leftRepo = selectedBatchJobs[selectedIndex].repo;
+        var rightRepo = selectedBatchJobs[selectedIndex].repo;
+        $.getJSON("getDiffLogResults",
+                      {
+                        logfile: logFile,
+                        leftbuild: leftProject.replace(/\n/g, "").replace("/", ""),
+                        rightbuild: rightProject.replace(/\n/g, "").replace("/", ""),
+                        leftrepository: leftRepo,
+                        rightrepository: rightRepo
+                      },
+                     processBatchBuildLogResults).fail(processBatchBuildLogResults);
     },
     reset: function() {
         // reset the Batch Report section to default values.
@@ -1181,6 +1243,13 @@ var jenkinsState = {
             jenkinsState.showPackageTypeSelector = false;
         }
     },
+    clearPackage: function(){
+        jenkinsState.showPackageTypeSelector = false;
+        jenkinsState.showDebSelector = false
+        jenkinsState.showRpmSelector = false;
+        $("#uploadPackageName").val('');
+        $('#packageFile').val('');
+    },
     loadingState: {
         packageListLoading: false,
         packageActionLoading: false,
@@ -1460,6 +1529,10 @@ var jenkinsState = {
         var file = $('#packageFile')[0].files[0];
         var packageDetails = ""
         var packageType = $("#packageTypeOnPackageUpload").find(":selected").val();
+        if ($('#packageFile').val()==''){
+            showAlert("Please select a package to upload!");
+            return false;
+        }
         if ($('#packageFile').val().indexOf('.tar') != -1
             || $('#packageFile').val().indexOf('.zip') !=-1
             ||  $('#packageFile').val().indexOf('.bin') !=-1){
@@ -1983,6 +2056,67 @@ function processBuildResults(data) {
     $("#testResultsTable").html(tableContent);
     projectReportState.prjTableReady = true;
 }
+function processBatchBuildLogResults(data) {
+      if (data.status != "ok") {
+         $("#batchLeftdiff").html("No Test Results Found");
+    } else {
+        var left = data.leftCol;
+        var right = data.rightCol;
+
+        var headerContent = "<table id=\"batchLogdiffHeader1\" >" +
+                                 "<th style=\"border:none\">" +
+                                      left['log'] + "<br />" +
+                                      "[" + left['repo'] + "] " + left['job'] + "<br />" +
+                                      left['pkgname'] + "-" + left['pkgver'] + "<br />" +
+                                      left['distro'] +
+                                 "</th>" ;
+         headerContent+="</table>";
+         $("#batchLogdiffHeader").html(headerContent);
+         $("#batchLeftdiff").html(data.results['diff'][left['diffName']]);
+         $('#batchLogdiffModal').on('show.bs.modal', function() {
+         $('#batchLeftdiff span').each(function(index) {
+            var elementID = "searchcontrol"+index;
+               var html = '<div id="' + elementID + '"></div>';
+               $('#batchLogdiffModal').append(html);
+               $(this).qtip({
+                 content: {
+                             text: function(event, api) {
+                                      var searchControl = new google.search.SearchControl();
+                                      searchControl.addSearcher(new google.search.WebSearch());
+                                      searchControl.draw(document.getElementById(elementID));
+                                      var searchword = $(this).text();
+                                      if (searchword.length>40) {
+                                           searchword = searchword.substring(searchword.length-40);
+                                                    }
+                                       searchControl.execute(searchword);
+                                       return $("#"+elementID);
+                                       },
+                               title: 'From Google Search',
+                               button: true
+                               },
+                   position: {
+                       viewport: $(window)
+                             },
+                   hide: false
+                   });
+                  });
+                });
+           $('#batchLogdiffModal').on('hidden.bs.modal', function () {
+             $('#batchLeftdiff span').each(function(index) {
+                       if( $(this).data('qtip')) {
+                             $(this).qtip('destroy', true);
+                                }
+                    });
+                });
+
+           $('#batchLogdiffModal').modal('show');
+    }
+    batchReportState.prjCompareReady = true;
+    if($('.nav-pills li ul').find('.active').length ==0)
+        $('.nav-pills li ul li:first').addClass("active");
+}
+
+
 
 function processLogCompareResults(data) {
     if (projectReportState.loadingState.diffLoading) {
@@ -2021,40 +2155,40 @@ function processLogCompareResults(data) {
         $('#logdiffModal').on('show.bs.modal', function() {
             $('#leftdiff span, #rightdiff span').each(function(index) {
                 var elementID = "searchcontrol"+index;
-				var html = '<div id="' + elementID + '"></div>';
-				$('#logdiffModal').append(html);
-				$(this).qtip({
-					content: {
-						text: function(event, api) {
-							var searchControl = new google.search.SearchControl();
-							searchControl.addSearcher(new google.search.WebSearch());
-							searchControl.draw(document.getElementById(elementID));
-							var searchword = $(this).text();
-							if (searchword.length>40) {
-								searchword = searchword.substring(searchword.length-40);
-							}
-							searchControl.execute(searchword);
-							return $("#"+elementID);
-						},
-						title: 'From Google Search',
-						button: true
-					},
-					position: {
-						viewport: $(window)
-					},
-					hide: false
-				});
-			});
-		});
+                var html = '<div id="' + elementID + '"></div>';
+                $('#logdiffModal').append(html);
+                $(this).qtip({
+                    content: {
+                        text: function(event, api) {
+                            var searchControl = new google.search.SearchControl();
+                            searchControl.addSearcher(new google.search.WebSearch());
+                            searchControl.draw(document.getElementById(elementID));
+                            var searchword = $(this).text();
+                            if (searchword.length>40) {
+                                searchword = searchword.substring(searchword.length-40);
+                            }
+                            searchControl.execute(searchword);
+                            return $("#"+elementID);
+                        },
+                        title: 'From Google Search',
+                        button: true
+                    },
+                    position: {
+                        viewport: $(window)
+                    },
+                    hide: false
+               });
+           });
+        });
         $('#logdiffModal').on('hidden.bs.modal', function () {
             $('#leftdiff span, #rightdiff span').each(function(index) {
-				if( $(this).data('qtip')) {
-					$(this).qtip('destroy', true);
-				}
-		    });
-		});
+                if( $(this).data('qtip')) {
+                    $(this).qtip('destroy', true);
+                }
+            });
+       });
 
-        $('#logdiffModal').modal('show');
+    $('#logdiffModal').modal('show');
     }
     projectReportState.prjCompareReady = true;
 }
@@ -2655,6 +2789,10 @@ function uploadBatchFileCallback(data) {
     if (data.status !== "ok") {
         showAlert("", data);
     }
+    else {
+        showAlert("Batch file uploaded successfully!");
+    }
+    
 }
 
 function uploadPackageCallback(data) {
@@ -2694,7 +2832,7 @@ function batchSaveCallback(data) {
     if (data.status !== "ok") {
         showAlert("", data);
     } else {
-    	showAlert("Batch file saved successfully");
+        showAlert("Batch file saved successfully");
         batchState.fileList.push(batchState.batchFile);
     }
 }
@@ -2731,7 +2869,7 @@ function parseBatchFileCallback(data, batch_obj){
         batch_obj.saveBatchFileName = data.results.config.name;
         batch_obj.javaType = data.results.config.java;
         batch_obj.javaScriptType = data.results.config.javascript;
-
+        console.log("hereiam");
         $("#batchSettingsInstallCkBox").attr('checked', false);
         $("#batchSettingsTestCkBox").attr('checked', true);
 
@@ -3644,7 +3782,7 @@ function updateTestCommand(value, key){
 }
 
 function updateBuildCommand(value, key){
-	batchState.batchFile.packages[key].build.selectedInstall = value;
+    batchState.batchFile.packages[key].build.selectedInstall = value;
 }
 function updateInstallCommand(value, key){
     batchState.batchFile.packages[key].build.selectedInstall = value;
@@ -3751,13 +3889,18 @@ $(document).ready(function() {
     $('#batchListSelectTable').on('check.bs.table', function (e, row) {
         batchState.selectedBatchFile = row;
     });
+    $('#batchListSelectTable').on('uncheck.bs.table', function (e, row) {
+        batchState.selectedBatchFile={};
+    });
     $('#batchListSelectTable').change(function() {
         if($('#batchListSelectTable').bootstrapTable('getSelections').length>0){
             $('#batch_file_remove').removeClass('disabled');
             $('#batch_file_archive').removeClass('disabled');
+            $('#batch_build_test').removeClass('disabled');
         }else{
             $('#batch_file_remove').addClass('disabled');
             $('#batch_file_archive').addClass('disabled');
+            $('#batch_build_test').addClass('disabled');
         }
     });
     // Initializes an empty batch Report list/select table
@@ -3784,7 +3927,8 @@ $(document).ready(function() {
             $("#singlePanelRemoveBtn").removeClass("disabled");
         }
     });
-     $('#singleServerPackageListTable').on('uncheck.bs.table', function (e, row) {
+
+    $('#singleServerPackageListTable').on('uncheck.bs.table', function (e, row) {
         jenkinsState.selectedSingleSlavePackage = row;
         var selectedPackages = $('#singleServerPackageListTable').bootstrapTable('getSelections');
         if(selectedPackages.length === 0) {
@@ -3885,3 +4029,68 @@ $(document).ready(function() {
         toggleBatchReportButtons();
     });
 });
+
+$.fn.extend({
+    treed: function (o) {
+
+      var openedClass = 'glyphicon-minus-sign';
+      var closedClass = 'glyphicon-plus-sign';
+      if (typeof o != 'undefined'){
+        if (typeof o.openedClass != 'undefined'){
+        openedClass = o.openedClass;
+        }
+        if (typeof o.closedClass != 'undefined'){
+        closedClass = o.closedClass;
+        }
+      };
+
+        //initialize each of the top levels
+        var tree = $(this);
+        tree.addClass("tree");
+        tree.find('i').remove();
+
+        tree.find('li').has("ul").each(function () {
+            var branch = $(this); //li with children ul
+            branch.prepend("<i class='indicator glyphicon " + closedClass + "'></i>");
+            branch.addClass('branch');
+            branch.unbind( "click" );
+            branch.on('click', function (e) {
+                if (this == e.target) {
+                    var icon = $(this).children('i:first');
+                    icon.toggleClass(openedClass + " " + closedClass);
+                    $(this).children().children().toggle();
+                }
+            });
+            branch.children().children().hide();
+        });
+        //fire event from the dynamically added icon
+      tree.find('.branch .indicator').each(function(){
+        $(this).on('click', function () {
+            $(this).closest('li').click();
+        });
+      });
+        //fire event to open branch if the li contains an anchor instead of text
+        tree.find('.branch>a').each(function () {
+            $(this).on('click', function (e) {
+                $(this).closest('li').click();
+                e.preventDefault();
+            });
+        });
+        //fire event to open branch if the li contains a button instead of text
+        tree.find('.branch>button').each(function () {
+            $(this).on('click', function (e) {
+                $(this).closest('li').click();
+                e.preventDefault();
+            });
+        });
+    }
+});
+
+//Initialization of treeviews
+
+//$('#tree1').treed();
+
+//$('#tree2').treed({openedClass:'glyphicon-folder-open', closedClass:'glyphicon-folder-close'});
+
+//$('#tree3').treed({openedClass:'glyphicon-chevron-right', closedClass:'glyphicon-chevron-down'});
+
