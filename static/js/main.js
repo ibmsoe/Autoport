@@ -1181,6 +1181,13 @@ var jenkinsState = {
             jenkinsState.showPackageTypeSelector = false;
         }
     },
+    clearPackage: function(){
+        jenkinsState.showPackageTypeSelector = false;
+        jenkinsState.showDebSelector = false
+        jenkinsState.showRpmSelector = false;
+        $("#uploadPackageName").val('');
+        $('#packageFile').val('');
+    },
     loadingState: {
         packageListLoading: false,
         packageActionLoading: false,
@@ -1460,6 +1467,10 @@ var jenkinsState = {
         var file = $('#packageFile')[0].files[0];
         var packageDetails = ""
         var packageType = $("#packageTypeOnPackageUpload").find(":selected").val();
+        if ($('#packageFile').val()==''){
+            alert("Please select a package to upload!");
+            return false;
+        }
         if ($('#packageFile').val().indexOf('.tar') != -1
             || $('#packageFile').val().indexOf('.zip') !=-1
             ||  $('#packageFile').val().indexOf('.bin') !=-1){
