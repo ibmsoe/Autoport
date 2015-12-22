@@ -678,8 +678,8 @@ class Batch:
                     batch_detail_file.close();
         elif location=="gsa":
             try:
-                filePath = globals.pathForBatchFiles + ntpath.basename(filePath)
-                f = self.ftp_client.open(filePath, 'w')
+                gsafilePath = globals.pathForBatchFiles + ntpath.basename(filePath)
+                f = self.ftp_client.open(gsafilePath, 'w')
                 f.write(fileContent)
             except Exception as e:
                 logger.debug("updateBatchFile: Error %s" % str(e))
@@ -687,4 +687,13 @@ class Batch:
             finally:
                 if isinstance(f, file):
                     f.close();
-
+            # if update is successful then update the local copy in /tmp folder
+            try:
+                batch_detail_file = open(filePath, 'w')
+                batch_detail_file.write(fileContent)
+            except Exception as e:
+                logger.debug("updateBatchFile: Error %s" % str(e))
+                assert(False), str(e)
+            finally:
+                if isinstance(batch_detail_file, file):
+                    batch_detail_file.close();

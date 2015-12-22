@@ -339,7 +339,10 @@ var batchState = {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
+        batchState.showBatchFile = false;
+        batchState.selectedBatchFile = {};
         $('#batch_file_archive').addClass('disabled');
+        $('#batch_file_archive').show();
         $.getJSON("listBatchFiles/local", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
@@ -347,6 +350,8 @@ var batchState = {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
+        batchState.selectedBatchFile = {};
+        batchState.showBatchFile = false;
         $('#batch_file_archive').addClass('disabled');
         $('#batch_file_archive').hide();
         $.getJSON("listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
@@ -356,6 +361,8 @@ var batchState = {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
+        batchState.showBatchFile = false;
+        batchState.selectedBatchFile = {};
         $('#batch_file_archive').addClass('disabled');
         $('#batch_file_archive').show();
         $.getJSON("listBatchFiles/all", { filter: $("#batchFileFilter").val() },
@@ -479,7 +486,8 @@ var batchState = {
                 }
             }
         if (selectedServers == ""){
-            showAlert("Please select atleast one build server");
+            showAlert("Please select atleast one build server!");
+            batchState.loading = false;
             return false;
         }
         else{
@@ -488,7 +496,7 @@ var batchState = {
         }
     },
     detail: function(ev, el) {
-	if(batchState.selectedBatchFile.filename== undefined || batchState.selectedBatchFile.filename == ""){
+        if(batchState.selectedBatchFile.filename== undefined || batchState.selectedBatchFile.filename == ""){
             showAlert("Please select batch file");
             return false;
         }
@@ -499,6 +507,9 @@ var batchState = {
                 batchName: batchState.selectedBatchFile.filename
             }, function(data){
                 parseBatchFileCallback(data, batchState);
+                var tempinstallcmd = data.results.config.includeInstallCmds;
+                batchState.batchFile.config.includeInstallCmds =  "False"; // this is a hack to switch the checkbox checked option
+                batchState.batchFile.config.includeInstallCmds = tempinstallcmd;
             }, "json").fail(function(data){
                 parseBatchFileCallback(data, batchState);
             }
@@ -2655,6 +2666,10 @@ function uploadBatchFileCallback(data) {
     if (data.status !== "ok") {
         showAlert("", data);
     }
+    else {
+        showAlert("Batch file uploaded successfully!");
+    }
+    
 }
 
 function uploadPackageCallback(data) {
@@ -2731,7 +2746,7 @@ function parseBatchFileCallback(data, batch_obj){
         batch_obj.saveBatchFileName = data.results.config.name;
         batch_obj.javaType = data.results.config.java;
         batch_obj.javaScriptType = data.results.config.javascript;
-
+        console.log("hereiam");
         $("#batchSettingsInstallCkBox").attr('checked', false);
         $("#batchSettingsTestCkBox").attr('checked', true);
 
@@ -3751,13 +3766,18 @@ $(document).ready(function() {
     $('#batchListSelectTable').on('check.bs.table', function (e, row) {
         batchState.selectedBatchFile = row;
     });
+    $('#batchListSelectTable').on('uncheck.bs.table', function (e, row) {
+        batchState.selectedBatchFile={};
+    });
     $('#batchListSelectTable').change(function() {
         if($('#batchListSelectTable').bootstrapTable('getSelections').length>0){
             $('#batch_file_remove').removeClass('disabled');
             $('#batch_file_archive').removeClass('disabled');
+            $('#batch_build_test').removeClass('disabled');
         }else{
             $('#batch_file_remove').addClass('disabled');
             $('#batch_file_archive').addClass('disabled');
+            $('#batch_build_test').addClass('disabled');
         }
     });
     // Initializes an empty batch Report list/select table
@@ -3784,7 +3804,8 @@ $(document).ready(function() {
             $("#singlePanelRemoveBtn").removeClass("disabled");
         }
     });
-     $('#singleServerPackageListTable').on('uncheck.bs.table', function (e, row) {
+
+    $('#singleServerPackageListTable').on('uncheck.bs.table', function (e, row) {
         jenkinsState.selectedSingleSlavePackage = row;
         var selectedPackages = $('#singleServerPackageListTable').bootstrapTable('getSelections');
         if(selectedPackages.length === 0) {
