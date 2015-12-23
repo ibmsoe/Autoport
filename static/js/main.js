@@ -256,6 +256,10 @@ var searchState = {
                   forks:    0,
                   generate: function (ev) {
                       // TODO: remove redundant query qualifiers (stars/forks == 0)
+                      if (searchState.multiple.query.limit == '' ||parseInt(searchState.multiple.query.limit) <= 0){
+                         showAlert("Number of repository must be greater than 0.");
+                         return false;
+                      }
                       detailState.generateReady = false;
                       var data = {
                           // GitHub API parameters
@@ -1479,7 +1483,7 @@ var jenkinsState = {
         var packageDetails = ""
         var packageType = $("#packageTypeOnPackageUpload").find(":selected").val();
         if ($('#packageFile').val()==''){
-            alert("Please select a package to upload!");
+            showAlert("Please select a package to upload!");
             return false;
         }
         if ($('#packageFile').val().indexOf('.tar') != -1
