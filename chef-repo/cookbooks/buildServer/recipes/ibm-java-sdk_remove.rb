@@ -1,47 +1,31 @@
-version       = node['buildServer']['ibm-java-sdk']['version']
-arch          = node['kernel']['machine']
-java_package  = "ibm-java-sdk-#{version}"
-install_dir   = node['buildServer']['ibm-java-sdk']['install_dir']
-uninstall_dir = "#{java_package}/_uninstall"
-arch          = node['kernel']['machine']
+version_arr = node['buildServer']['ibm-java-sdk']['version']
 
-execute "Uninstalling ibm nodejs" do
-  cwd   uninstall_dir
-  command "./uninstall -i silent"
-  ignore_failure true
-  only_if { File.exist?("#{uninstall_dir}/uninstall") }
-end
+if version_arr.kind_of?(Array) and version_arr.any?
+  version_arr.each do |version|
+    java_package  = "ibm-java-sdk-#{version}"
+    uninstall_dir = "#{java_package}/_uninstall"
+    major_version = version.split(".")[0]
 
-[
- "#{install_dir}/#{java_package}-#{arch}-archive.bin",
- "#{install_dir}/ibm-java-installer.properties",
- "#{install_dir}/ibm-java-log"
-].each do |file|
-  file file do
-    action :delete
-    ignore_failure true
+    buildServer_ibmjava java_package do
+      name            java_package
+      version         version
+      install_dir     node['buildServer']['ibm-java-sdk']['install_dir']
+      uninstall_dir   uninstall_dir
+      repo_url        node['buildServer']['repo_url']
+      arch            node['kernel']['machine']
+      action          :remove
+      ignore_failure  true
+    end
+
+    record = "ibm-java-sdk-#{major_version},#{version},ibm-java-sdk,ibm-java-sdk,#{arch},.bin,#{java_package}-#{arch}-archive.bin"
+
+    buildServer_log "ibm-java-sdk-#{major_version}" do
+      name         "ibm-java-sdk-#{major_version}"
+      log_location node['log_location']
+      log_record   record
+      action       :remove
+      ignore_failure true
+      only_if { Dir.exist?("#{install_dir}/#{java_package}") }
+    end
   end
-end
-
-file "/etc/profile.d/ibm-java.sh" do
-  action :delete
-  ignore_failure true
-  only_if "grep -w #{version} /etc/profile.d/ibm-java.sh"
-end
-
-directory "#{install_dir}/#{java_package}" do
-  action     :delete
-  recursive  true
-  ignore_failure true
-end
-
-record = "ibm-java-sdk,#{version},ibm-java-sdk,\
-ibm-java-sdk,#{arch},.bin,#{java_package}-#{arch}-archive.bin"
-
-buildServer_log 'ibm-java-sdk' do
-  name         'ibm-java-sdk'
-  log_location node['log_location']
-  log_record   record
-  action       :remove
-  ignore_failure true
 end

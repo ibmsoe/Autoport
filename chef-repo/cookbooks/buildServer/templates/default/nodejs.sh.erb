@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ -z "$JS_TYPE" ]; then
+  export PATH=$PATH:<%= @install_dir%>/bin
+fi
+
+if [ "$JS_TYPE" = "ibm-sdk-nodejs" -a ! -z "$JS_VERSION" ]; then
+  source /opt/ibm/ibm-nodejs-${JS_VERSION}.sh
+fi

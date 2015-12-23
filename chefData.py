@@ -74,14 +74,32 @@ class ChefData:
                     # Filling in autoportChefPackages
                     for pkg in runtime['autoportChefPackages']:
                         if 'version' in pkg:
-                            if 'tag' in pkg and pkg['tag'] == "ibm-sdk-nodejs":
-                                pkgKey = 'ibm-sdk-nodejs'
-                                chefInstallAttrs['buildServer'][pkgKey] = {}
-                                chefInstallAttrs['buildServer'][pkgKey]['name'] = pkg['name']
+
+                            # 'openjdk', 'ibm-java-sdk', 'ibm-sdk-nodejs' are packages for which
+                            # multiple version could be installed as part of synch.
+
+                            if 'openjdk' in pkg['name']:
+                                if 'openjdk' in  chefInstallAttrs['buildServer'].keys():
+                                    chefInstallAttrs['buildServer']['openjdk']['version'].append(pkg['version'])
+                                else:
+                                    chefInstallAttrs['buildServer']['openjdk'] = {}
+                                    chefInstallAttrs['buildServer']['openjdk']['version'] = [ pkg['version'] ]
+                            elif 'ibm-java-sdk' in pkg['name']:
+                                if 'ibm-java-sdk' in  chefInstallAttrs['buildServer'].keys():
+                                    chefInstallAttrs['buildServer']['ibm-java-sdk']['version'].append(pkg['version'])
+                                else:
+                                    chefInstallAttrs['buildServer']['ibm-java-sdk'] = {}
+                                    chefInstallAttrs['buildServer']['ibm-java-sdk']['version'] = [ pkg['version'] ]
+                            elif 'tag' in pkg and pkg['tag'] == 'ibm-sdk-nodejs':
+                                if 'ibm-sdk-nodejs' in chefInstallAttrs['buildServer'].keys():
+                                    chefInstallAttrs['buildServer']['ibm-sdk-nodejs']['packages'].update({pkg['version']: pkg['name']})
+                                else:
+                                    chefInstallAttrs['buildServer']['ibm-sdk-nodejs'] = OrderedDict()
+                                    chefInstallAttrs['buildServer']['ibm-sdk-nodejs']['packages'] = {pkg['version']: pkg['name']}
                             else:
                                 pkgKey = pkg['name']
                                 chefInstallAttrs['buildServer'][pkgKey] = {}
-                            chefInstallAttrs['buildServer'][pkgKey]['version'] = pkg['version']
+                                chefInstallAttrs['buildServer'][pkgKey]['version'] = pkg['version']
                             numberOfInstalls = numberOfInstalls + 1
 
                     # Filling in userpackages based on current owner
@@ -149,8 +167,17 @@ class ChefData:
             name = name
             chefAttrs['buildServer'][type].update({name: version})
         elif type == 'ibm-sdk-nodejs':
-            chefAttrs['buildServer'][type] = {'name': name}
-            chefAttrs['buildServer'][type].update({'version': version})
+            if 'ibm-sdk-nodejs' in chefAttrs['buildServer'].keys():
+                chefAttrs['buildServer'][type]['packages'].update({version: name })
+            else:
+               chefAttrs['buildServer'][type] = OrderedDict()
+               chefAttrs['buildServer'][type]['packages'] = {version: name}
+        elif type == 'ibm-java-sdk':
+            if 'ibm-java-sdk' in chefAttrs['buildServer'].keys():
+                chefAttrs['buildServer'][type]['version'].append(version)
+            else:
+                chefAttrs['buildServer'][type] = {}
+                chefAttrs['buildServer'][type]['version'] = [version]
         else:
             attribute = name
             chefAttrs['buildServer'][attribute] = {'version': version}
