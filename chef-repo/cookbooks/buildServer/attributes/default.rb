@@ -38,10 +38,10 @@ default['buildServer']['protobuf']['source_dir'] = '/opt'
 default['buildServer']['protobuf']['ext'] = ''
 
 # Attributes for java
-default['buildServer']['java']['version'] = '7'
+default['buildServer']['openjdk']['version'] = []
 
 # Attributes for ibm-java
-default['buildServer']['ibm-java-sdk']['version'] = "8.0-1.1"
+default['buildServer']['ibm-java-sdk']['version'] = []
 default['buildServer']['ibm-java-sdk']['install_dir'] = '/opt/ibm'
 
 # Attributes for apache-ant
@@ -63,8 +63,7 @@ default['buildServer']['gradle']['install_dir'] = '/opt'
 default['buildServer']['gradle']['ext'] = ''
 
 # Attributes for ibm-nodejs
-default['buildServer']['ibm-sdk-nodejs']['version'] = '0.12.7'
-default['buildServer']['ibm-sdk-nodejs']['name'] = 'ibm-1.2.0.5-node-v'
+default['buildServer']['ibm-sdk-nodejs']['packages'] = {}
 default['buildServer']['ibm-sdk-nodejs']['install_dir'] = '/opt/ibm'
 
 # Attributes for scala

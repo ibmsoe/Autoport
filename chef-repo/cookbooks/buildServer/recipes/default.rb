@@ -5,7 +5,6 @@ ArchiveLog.getLog(run_context, node)
 
 include_recipe 'buildServer::repo_settings'
 include_recipe 'buildServer::buildtools'
-include_recipe 'buildServer::cmake'
 include_recipe 'buildServer::ibm-sdk-nodejs'
 include_recipe 'buildServer::autoportPackages'
 include_recipe 'buildServer::java'
@@ -14,7 +13,6 @@ include_recipe 'buildServer::maven_binary'
 include_recipe 'buildServer::protobuf_source'
 include_recipe 'buildServer::scala'
 include_recipe 'buildServer::gradle_binary'
-include_recipe 'buildServer::ibm-java-sdk'
 include_recipe 'buildServer::perl'
 include_recipe 'buildServer::strict-perl'
 case node['platform']

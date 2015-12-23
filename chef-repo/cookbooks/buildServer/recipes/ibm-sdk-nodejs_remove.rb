@@ -1,55 +1,37 @@
-package = node['buildServer']['ibm-sdk-nodejs']['name']
-version = node['buildServer']['ibm-sdk-nodejs']['version']
-arch = node['kernel']['machine']
+packages = node['buildServer']['ibm-sdk-nodejs']['packages']
 install_dir = node['buildServer']['ibm-sdk-nodejs']['install_dir']
-uninstall_dir = "#{install_dir}/#{package}-#{version}/_node_installation"
 arch = node['kernel']['machine']
 
-if node['kernel']['machine'] == 'ppc64le'
-  pkg_name = "#{package}#{version}-linux-ppcle64"
-elsif node['kernel']['machine'] == 'x86_64'
-  pkg_name = "#{package}#{version}-linux-x64"
-else
-  arch = node['kernel']['machine']
-  pkg_name = "#{package}#{version}-linux-#{arch}"
-end
+if packages.kind_of?(Hash) and packages.any?
+  packages.each do |version, pkg_name|
 
-execute "Uninstalling ibm nodejs" do
-  cwd   uninstall_dir
-  command "./uninstall -i silent"
-  ignore_failure true
-  only_if { File.exist?("#{uninstall_dir}/uninstall") }
-end
+    if arch == 'ppc64le'
+      archive_name = "#{pkg_name}#{version}-linux-ppcle64.bin"
+    elsif arch == 'x86_64'
+      archive_name = "#{pkg_name}#{version}-linux-x64.bin"
+    end
 
-[
-  "#{install_dir}/#{pkg_name}.bin",
-  "#{install_dir}/ibm-nodejs-installer.properties",
-  "#{install_dir}/ibm-nodejs-log",
-].each do |file|
-  file file do
-    action :delete
-    ignore_failure true
+    uninstall_dir = "#{install_dir}/#{pkg_name}#{version}/_node_installation"
+
+    buildServer_ibmnodejs pkg_name do
+      name            pkg_name
+      version         version
+      install_dir     install_dir
+      uninstall_dir   uninstall_dir
+      repo_url        node['buildServer']['repo_url']
+      archive_name    archive_name
+      action          :remove
+      ignore_failure  true
+    end
+
+    record = "#{pkg_name},#{version},ibm-sdk-nodejs,ibm-sdk-nodejs,#{arch},.bin,#{archive_name}"
+    buildServer_log pkg_name do
+      name         pkg_name
+      log_location node['log_location']
+      log_record   record
+      action       :remove
+      ignore_failure true
+      only_if { Dir.exist?("#{install_dir}/#{pkg_name}#{version}") }
+    end
   end
-end
-
-file "/etc/profile.d/ibm-nodejs.sh" do
-  action :delete
-  ignore_failure true
-  only_if "grep -w #{version} /etc/profile.d/ibm-nodejs.sh"
-end
-
-directory "#{install_dir}/#{package}#{version}" do
-  action     :delete
-  recursive  true
-  ignore_failure true
-end
-
-record = "#{package},#{version},ibm-sdk-nodejs,ibm-sdk-nodejs,#{arch},.bin,#{pkg_name}.bin"
-
-buildServer_log package do
-  name         package
-  log_location node['log_location']
-  log_record   record
-  action       :remove
-  ignore_failure true
 end

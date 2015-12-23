@@ -5,7 +5,7 @@ module ArchiveLog
 
   def self.getLog(run_context, node)
     # Downloading archive log from custom repositry.
-    archive_path = "/#{node['buildServer']['download_location']}/archive.log"
+    archive_path = "#{node['buildServer']['download_location']}/archive.log"
     archiveFile = Chef::Resource::RemoteFile.new(archive_path, run_context)
     archiveFile.source("#{node['buildServer']['repo_url']}/archives/archive.log")
     archiveFile.run_action(:create)

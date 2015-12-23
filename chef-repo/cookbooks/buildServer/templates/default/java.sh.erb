@@ -1,3 +1,15 @@
 #!/bin/bash
-JAVA_HOME=<%= @java_home%>
-export PATH=$PATH:$JAVA_HOME/bin
+
+if [ -z "$JAVA_TYPE" -a -z "$JAVA_VERSION" ]; then
+  JAVA_TYPE=<%= @type %>
+  JAVA_VERSION=<%= @version %>
+fi
+
+case "$JAVA_TYPE" in
+  "openjdk")
+    source /opt/openjdk-$JAVA_VERSION.sh
+    ;;
+  "ibm-java-sdk")
+    source <%= @install_dir %>/ibm-java-$JAVA_VERSION.sh
+    ;;
+esac

@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "15",
+    "sequence": "16",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -345,8 +345,12 @@
                     "version": "2.9"
                 },
                 {
-                    "name": "ibm-java-sdk",
+                    "name": "ibm-java-sdk-7",
                     "version": "7.1-3.20"
+                },
+                {
+                    "name": "ibm-java-sdk-8",
+                    "version": "8.0-2.0"
                 },
                 {
                     "name": "ibm-4.2.2.0-node-v",
@@ -361,6 +365,10 @@
                 {
                     "name": "openjdk-7-jdk",
                     "version": "7"
+                },
+                {
+                    "name": "openjdk-8-jdk",
+                    "version": "8"
                 },
                 {
                     "name": "protobuf",
@@ -609,8 +617,12 @@
                     "version": "2.9"
                 },
                 {
-                    "name": "ibm-java-sdk",
+                    "name": "ibm-java-sdk-7",
                     "version": "7.1-3.20"
+                },
+                {
+                    "name": "ibm-java-sdk-8",
+                    "version": "8.0-2.0"
                 },
                 {
                     "name": "ibm-4.2.2.0-node-v",
@@ -620,6 +632,10 @@
                 {
                     "name": "java-1.7.0-openjdk",
                     "version": "7"
+                },
+                {
+                    "name": "java-1.8.0-openjdk",
+                    "version": "8"
                 },
                 {
                     "name": "Module-Install",

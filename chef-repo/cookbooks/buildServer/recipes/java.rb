@@ -1,51 +1,25 @@
-# This recipe installs java package using package manager.
-# It is also responsible to configure java_home using java.sh in profile.d.
+# This recipe is a wrapper, which takes care of installing openjdk and ibm-java.
+# It also creates a generic java.sh file in order to set JAVA_HOME and add it to PATH settings.
 
-java_packages = []
-version = node['buildServer']['java']['version']
-arch = ''
-
-if node['kernel']['machine'] == 'x86_64'
-  arch = 'amd64'
-elsif node['kernel']['machine'] == 'ppc64le'
-  arch = 'ppc64el'
+if node['buildServer']['openjdk']['version'].any?
+   default_version = node['buildServer']['openjdk']['version'][0]
 end
 
-case node['platform']
-when 'ubuntu'
-  java_packages = [
-    "openjdk-#{version}-jre",
-    "openjdk-#{version}-jdk"
-  ]
-  java_home = "/usr/lib/jvm/java-#{version}-openjdk-#{arch}"
-  opt = '--force-yes'
-when 'redhat'
-  java_packages = [
-    "java-1.#{version}.0-openjdk",
-    "java-1.#{version}.0-openjdk-devel"
-  ]
-  java_home = "/usr/lib/jvm/java-1.#{version}.0-openjdk"
-  opt =''
-end
+install_dir = node['buildServer']['ibm-java-sdk']['install_dir']
 
-if java_packages.any?
-  java_packages.each do |pkg|
-    package pkg do
-      action :install
-      options opt
-      ignore_failure true
-    end
-  end
+include_recipe 'buildServer::openjdk'
+include_recipe 'buildServer::ibm-java-sdk'
 
-  template '/etc/profile.d/java.sh' do
-    owner 'root'
-    group 'root'
-    source 'java.sh.erb'
-    mode '0644'
-    variables(
-      java_home: java_home
-    )
-    only_if { Dir.exist?(java_home) }
-    ignore_failure true
-  end
+template '/etc/profile.d/java.sh' do
+  owner 'root'
+  group 'root'
+  source 'java.sh.erb'
+  mode '0644'
+  variables(
+    version: default_version,
+    install_dir: install_dir,
+    type: 'openjdk'
+  )
+  only_if { default_version }
+  ignore_failure true
 end

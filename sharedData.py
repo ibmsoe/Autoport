@@ -325,10 +325,13 @@ class SharedData:
                 pkgArch = 'ALL'
 
             # Extracting package name
+            exceptionalPackages = [ 'ibm-java-sdk' ]
             if pkgVersion:
                 pkgName = filename[:filename.find(pkgVersion)]
                 if pkgName[len(pkgName)-1] == "-":
                     pkgName = pkgName[:pkgName.rfind('-')]
+                if pkgName in exceptionalPackages:
+                    pkgName = pkgName + "-" + pkgVersion.split(".")[0]
             else:
                 return repoPath, command
 
