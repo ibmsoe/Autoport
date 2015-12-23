@@ -219,6 +219,7 @@ class SharedData:
                 return ""
 
         except Exception as e:
+            logger.debug("putSharedData: Error %s" % str(e))
             assert(False), str(e)
 
         return sharedPath
@@ -400,8 +401,8 @@ class SharedData:
         if localVersion > sharedVersion or \
            (localVersion == sharedVersion and localSequence > sharedSequence):
 
-            logger.info("Uploading new chef cookbook")
-            logger.debug("Replacing shared version=%s sequence=%s" % (sharedVersion, sharedSequence))
+            logger.info("Uploading new chef cookbook version=%d sequence=%d" % (localVersion, localSequence))
+            logger.info("Replacing cookbook version=%s sequence=%s" % (sharedVersion, sharedSequence))
 
             # Upload local chef-repo-version.json
             sharedDataPath = self.putSharedData(localData, sharedData, "")
@@ -450,10 +451,10 @@ class SharedData:
                 logger.warning("Failed upload of new chef cookbook to jenkins master")
 
             # Read the shared control data again and validate that we are still latest
-            sharedData = self.getSharedData("chef-repo-version.json", "")
+            newSharedData = self.getSharedData("chef-repo-version.json", "")
             try:
-                sharedSequence = int(sharedData['sequence'])
-                sharedVersion = int(sharedData['version'])
+                sharedSequence = int(newSharedData['sequence'])
+                sharedVersion = int(newSharedData['version'])
             except KeyError:
                 sharedSequence = 0
                 sharedVersion = 0
@@ -488,15 +489,15 @@ class SharedData:
                 logger.info("Re-try upload of chef cookbook")
 
                 cmdR = "chef-server-ctl reconfigure > ../chef-server-reconfig.out.$$ 2>&1"
+                cmd4 = "knife cookbook upload / --force > ../knife-upload.out.$$ 2>&1"
                 command = cmd1 + " && " + cmd2 + " && " + cmdR + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
                 exit_status, stderr = self.executeSharedCommand(command)
                 if exit_status:
                     logger.warning("Failed re-try upload of chef cookbook.  Continuing...")
-                    logger.info("Setting chef-repo control sequence=0")
-                    newSharedData['sequence'] = "0"
-                    sharedDataPath = self.putSharedData(newSharedData, newSharedData, "")
+                    logger.info("Restoring old chef-repo control file")
+                    sharedDataPath = self.putSharedData(sharedData, newSharedData, "")
                     if not sharedDataPath:
-                        msg = "Failed to set chef-repo control sequence=0"
+                        msg = "Failed to set chef-repo control back to original value"
                         logger.error(msg)
                         assert(False), msg
 
