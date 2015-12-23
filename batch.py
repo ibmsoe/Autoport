@@ -132,24 +132,25 @@ class Batch:
                         putdir = tempfile.mkdtemp(prefix="autoport_")
                         self.catalog.newTmpDirectoryAdded(putdir)
                         self.copyRemoteDirToLocal(globals.pathForBatchTestResults + "/" + filename, putdir)
-                        batchFilePath = os.listdir(putdir + "/" + filename)[0]
-                        logger.debug("listGSABatchReports: batchFilePath=%s" % batchFilePath)
-                        batchTestReportFile = open("%s/%s/%s" % (putdir, filename, batchFilePath), 'r')
-                        dataFile = batchTestReportFile.readlines()
-                        for projectsReport in dataFile:
-                            logger.debug("listGSABatchReports: projectsReport=%s" % projectsReport)
-                            try:
-                                self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
-                            except Exception as ex:
-                                # Project results may be missing
-                                logger.debug("listGSABatchReports: Error in copying project %s" % projectsReport.strip() + str(ex))
-                        parsedResult = self.parseBatchReportList(
-                            os.path.join(putdir,filename,batchFilePath),
-                            "gsa",
-                            putdir
-                        )
-                        if parsedResult:
-                            filteredList.append(parsedResult)
+                        for batchFilePath in os.listdir(putdir + "/" + filename):
+                        #batchFilePath = os.listdir(putdir + "/" + filename)[0]
+                            logger.debug("listGSABatchReports: batchFilePath=%s" % batchFilePath)
+                            batchTestReportFile = open("%s/%s/%s" % (putdir, filename, batchFilePath), 'r')
+                            dataFile = batchTestReportFile.readlines()
+                            for projectsReport in dataFile:
+                                logger.debug("listGSABatchReports: projectsReport=%s" % projectsReport)
+                                try:
+                                    self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
+                                except Exception as ex:
+                                    # Project results may be missing
+                                    logger.debug("listGSABatchReports: Error in copying project %s" % projectsReport.strip() + str(ex))
+                            parsedResult = self.parseBatchReportList(
+                                os.path.join(putdir,filename,batchFilePath),
+                                "gsa",
+                                putdir
+                            )
+                            if parsedResult:
+                                filteredList.append(parsedResult)
                     except Exception as ex:
                         logger.warning("listGSABatchReports: Error %s" % str(ex))
                     finally:
@@ -509,7 +510,9 @@ class Batch:
             try:
                 if reports[name] == "local":
                     logger.debug("removeBatchReportsData: local filepath=%s" % name)
-                    shutil.rmtree(os.path.dirname(name), ignore_errors=True)
+                    os.remove(name)
+                    if len(os.listdir(os.path.dirname(name))) == 0:
+                        shutil.rmtree(os.path.dirname(name), ignore_errors=True)
                 else:
                     filepath = globals.pathForBatchTestResults + \
                                os.path.basename(os.path.dirname(name)) + "/" + os.path.basename(name)
@@ -523,8 +526,10 @@ class Batch:
                     # Projects report removal from GSA
                     catalog.removeProjectsData(projects, project)
 
-                    # Batch report removal from GSA
-                    project.removeDirFromGSA(self.ssh_client, os.path.dirname(filepath))
+                    self.ftp_client.remove(filepath)
+                    if len(self.ftp_client.listdir(os.path.dirname(filepath))) == 0:
+                        # Batch report removal from GSA
+                        self.ftp_client.rmdir(os.path.dirname(filepath))
             except IOError as e:
                 logger.debug("removeBatchReportsData: I/O Error %s" % str(e))
             except Exception as e:
@@ -539,7 +544,11 @@ class Batch:
                      % (str(report), batchReportDir, batchReportName))
         try:
             self.ftp_client.stat(batchReportDir)
-            return "Already Exists"
+            self.ftp_client.put(report, batchReportDir + '/' + batchReportName)
+            os.remove(report)
+            if len(os.listdir(os.path.dirname(report))) == 0:
+                shutil.rmtree(os.path.dirname(report), ignore_errors=True)
+            return "Success"
         except AttributeError:
             msg = "Connection error to archive storage.  Use settings menu to configure!"
             assert(False), msg
@@ -550,7 +559,9 @@ class Batch:
             self.ftp_client.mkdir(batchReportDir)
             self.ftp_client.put(report, batchReportDir + '/' + batchReportName)
             # Cleaning-up local batch_test_report after archival
-            shutil.rmtree(os.path.dirname(report))
+            os.remove(report)
+            if len(os.listdir(os.path.dirname(report))) == 0:
+                shutil.rmtree(os.path.dirname(report), ignore_errors=True)
             return "Success"
         except IOError as e:
             logger.warning("archiveBatchReports: Can't push " + batchReportName + ": Error=" + str(e))
@@ -678,8 +689,8 @@ class Batch:
                     batch_detail_file.close();
         elif location=="gsa":
             try:
-                gsafilePath = globals.pathForBatchFiles + ntpath.basename(filePath)
-                f = self.ftp_client.open(gsafilePath, 'w')
+                filePath = globals.pathForBatchFiles + ntpath.basename(filePath)
+                f = self.ftp_client.open(filePath, 'w')
                 f.write(fileContent)
             except Exception as e:
                 logger.debug("updateBatchFile: Error %s" % str(e))
