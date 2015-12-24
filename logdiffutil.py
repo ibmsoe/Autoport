@@ -3,12 +3,23 @@ def renderline(text, errorWords, packageDict):
     if 'failures: 0' in text.lower() or 'errors: 0' in text.lower():
         return text
 
+    # Check if it is a compiling command
+    compilers = ['gcc', 'g++', 'clang', 'clang++', 'clips', 'erlang', 'javac', 'luac', 'scala']
+    noEndsWithStr = '[~!@#$%^&*()_{}":;\']+$'
+    firstword = text.split(' ', 1)[0]
+    lastChar = firstword[len(firstword) - 1]
+    for compiler in compilers:
+        if firstword.startswith(compiler) and not lastChar in noEndsWithStr:
+            return text
+
+    # Check if it contains error words
     for errword in errorWords:
         if errword in text.lower():
             words = text.strip().split()
             for word in words:
                 if packageDict.has_key(word.lower()):
                     text = (text.replace(word,"""<font style=\"background:#f9f900;\">%s</font>"""%(word)))
+            #return ("""<span><font style=\"background:#ff9797;\">%s</font></span>""" % text)
             return ("""<font style=\"background:#ff9797;\">%s</font>""" % text)
     return text
 
