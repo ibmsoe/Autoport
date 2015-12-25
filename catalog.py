@@ -97,7 +97,7 @@ class Catalog:
                  nodeLabel = resultPattern.match(job).group(3)
                  pkgName = resultPattern.match(job).group(4)
                  pkgVer = resultPattern.match(job).group(5)
-                 date = resultPattern.match(job).group(6)
+                 date = time.asctime(time.strptime(resultPattern.match(job).group(6),"%Y-%m-%d-h%H-m%M-s%S"))
              except AttributeError:
                  continue
 

@@ -205,6 +205,7 @@ class Batch:
             "batch_name": "INVALID BATCH FILE",
             "build_server": "-",
             "repo": "-",
+            "jobNames": "-",
             "date_submitted": "-",
             "filename": "-",
             "build_log_count": 'Not Available',
@@ -217,11 +218,11 @@ class Batch:
             batchCreationTime = "-"
         try:
             batchFile = open(filename)
-            batchName, batchUID, batchSubmissionTime = ntpath.basename(filename).split('.')
+            batchName, batchUID, batchSubmissionTimeObj = ntpath.basename(filename).split('.')
             # knowing that date format will be "%Y-%m-%d-h%H-m%M-s%S"
             # Converting it to "%Y-%m-%d-%H-%M-%S"
-            batchSubmissionTimeObj = strptime(batchSubmissionTime, "%Y-%m-%d-h%H-m%M-s%S")
-            batchSubmissionTime = strftime("%Y-%m-%d %H:%M:%S", batchSubmissionTimeObj)
+            #batchSubmissionTimeObj = strptime(batchSubmissionTime, "%Y-%m-%d-h%H-m%M-s%S")
+            batchSubmissionTime = asctime(strptime(batchSubmissionTimeObj, "%Y-%m-%d-h%H-m%M-s%S"))
             jobNames = batchFile.readlines()
             buildAndTestLogs = self.getLocalBuildAndTestLogs(jobNames, location, tmpDir)
             project_count = len(jobNames)
@@ -239,6 +240,7 @@ class Batch:
                 "build_server": buildServer or '-',
                 "project_count": project_count,
                 "repo": location,
+                "jobNames": jobNames,
                 "date_submitted": batchSubmissionTime,
                 "filename": filename,
                 "build_log_count": buildAndTestLogs['build_logs'] or 'Not Available',

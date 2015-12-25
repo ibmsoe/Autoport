@@ -33,7 +33,7 @@
     </div>
 
     <br />
-
+    {% include "tabs/reports-tab/batch-logdiff-results.html"%}
     <!-- List batch files table -->
     <div rv-show="batchReportState.showListSelectTable">
       <div id="batchReportListSelectToolbar" class="btn-group">
@@ -85,7 +85,7 @@
             <th data-field="project_count" data-sortable="true">Projects</th>
             <th data-field="build_log_count" data-sortable="true">Build Logs</th>
             <th data-field="test_log_count" data-sortable="true">Test Logs</th>
-            <th data-field="date_submitted" data-sortable="true">Date Submitted</th>
+            <th data-field="date_submitted" data-sortable="true" data-sorter="CustomDateSorter">Date Submitted</th>
           </tr>
         </thead>
       </table>
@@ -102,12 +102,37 @@
           </table>
         </div>
       </div>
-      <a class="backToBatchResults" rv-on-click="batchReportState.backToBatchList">
+        <div class="row">
+          <div class="col-md-8">
+             <a class="backToBatchResults" rv-on-click="batchReportState.backToBatchList">
+             <button type="button" class="btn btn-info">
+                 <span class="glyphicon glyphicon-chevron-left"></span>
+                 Back to list
+             </button>
+            </a>
+          </div>
+          <div class="col-md-2">
+              <a rv-on-click="batchReportState.compareLogs">
+                   <button type="button" class="btn btn-primary buttonLeft" id="viewBatchBuildLogBtn">
+                   View Build Log
+                  </button>
+              </a>
+          </div>
+           <div class="col-md-2">
+              <a rv-on-click="batchReportState.compareLogs">
+                   <button type="button" class="btn btn-primary buttonLeft" id="viewBatchTestLogBtn">
+                   View Test Log
+                  </button>
+              </a>
+          </div>
+
+          </div>
+     <!-- <a class="backToBatchResults" rv-on-click="batchReportState.backToBatchList">
         <button type="button" class="btn btn-info">
             <span class="glyphicon glyphicon-chevron-left"></span>
             Back to list
         </button>
-      </a>
+      </a>-->
     </div>
 
     <div id="testBatchCompareLog"
