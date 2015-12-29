@@ -14,24 +14,24 @@ import com.autoport.utilities.CommonFunctions;
 public class SCH_Use_Case_4 {
 
 	WebDriver driver;
-	CommonFunctions function;
+	// CommonFunctions function;
 	HomePage homePage;
 	SearchTab searchTab;
 	BatchJobsTab batchJobsTab;
 
-	@Parameters({ "browser" })
+	// @Parameters({ "browser" })
 	@BeforeTest
-	public void beforeTest(String browser) throws Exception {
+	public void beforeTest() throws Exception {
 
-		function = new CommonFunctions();
-		function.launchBrowser(browser);
-		driver = function.driver;
+		// function = new CommonFunctions();
+		// CommonFunctions.launchBrowser();
+		driver = CommonFunctions.driver;
 
-		homePage = function.homePage;
-		searchTab = function.searchTab;
-		batchJobsTab = function.batchJobsTab;
+		homePage = CommonFunctions.homePage;
+		searchTab = CommonFunctions.searchTab;
+		batchJobsTab = CommonFunctions.batchJobsTab;
 
-		function.openAutoport();
+		// function.openAutoport();
 	}
 
 	@Test(priority = 0)
@@ -194,9 +194,9 @@ public class SCH_Use_Case_4 {
 		searchTab.clickOnBackToResults();
 	}
 
-	@AfterTest
-	public void afterTest() {
-		driver.quit();
-	}
+	// @AfterTest
+	// public void afterTest() {
+	// driver.quit();
+	// }
 
 }

@@ -12,20 +12,20 @@ import com.autoport.utilities.CommonFunctions;
 public class SCH_Use_Case_7 {
 
 	WebDriver driver;
-	CommonFunctions function;
+	// CommonFunctions function;
 	SearchTab searchTab;
 
-	@Parameters({ "browser" })
+	// @Parameters({ "browser" })
 	@BeforeTest
-	public void beforeTest(String browser) throws Exception {
+	public void beforeTest() throws Exception {
 
-		function = new CommonFunctions();
-		function.launchBrowser(browser);
-		driver = function.driver;
+		// function = new CommonFunctions();
+		// CommonFunctions.launchBrowser();
+		driver = CommonFunctions.driver;
 
-		searchTab = function.searchTab;
+		searchTab = CommonFunctions.searchTab;
 
-		function.openAutoport();
+		// function.openAutoport();
 	}
 
 	@Test(priority = 0)
@@ -69,9 +69,9 @@ public class SCH_Use_Case_7 {
 	}
 
 	@Test(priority = 7)
-	public void SCH_Search_common_projects_035() {
+	public void SCH_Search_common_projects_035() throws InterruptedException {
 
-		searchTab.enterNumOfTopRepositories("15");
+		searchTab.enterNumOfTopRepositories("3");
 
 		searchTab.selectSortByValue("Forks");
 
@@ -87,7 +87,7 @@ public class SCH_Use_Case_7 {
 
 		searchTab.verifyCommonProjectBatchFileSaveExportUI();
 
-		searchTab.verifyNumOfRepositories(15);
+		searchTab.verifyNumOfRepositories(3);
 
 		searchTab.verifyCommonProjectRepositoryHeader();
 
@@ -98,7 +98,7 @@ public class SCH_Use_Case_7 {
 	}
 
 	@Test(priority = 8)
-	public void SCH_Owner_Repository_common_projects_036() {
+	public void SCH_Owner_Repository_common_projects_036() throws InterruptedException {
 
 		searchTab.clickOnOwnerForCommonProject();
 
@@ -106,7 +106,7 @@ public class SCH_Use_Case_7 {
 
 		searchTab.clickOnMostCommonlyUsedProjectsBtn();
 
-		searchTab.enterNumOfTopRepositories("15");
+		searchTab.enterNumOfTopRepositories("3");
 
 		searchTab.selectSortByValue("Forks");
 
@@ -126,7 +126,7 @@ public class SCH_Use_Case_7 {
 
 		searchTab.clickOnMostCommonlyUsedProjectsBtn();
 
-		searchTab.enterNumOfTopRepositories("15");
+		searchTab.enterNumOfTopRepositories("3");
 
 		searchTab.selectSortByValue("Forks");
 
@@ -167,9 +167,9 @@ public class SCH_Use_Case_7 {
 		searchTab.clickOnBackToResultsForCommonProjects();
 	}
 
-	@AfterTest
-	public void afterTest() {
-		driver.quit();
-	}
+	// @AfterTest
+	// public void afterTest() {
+	// driver.quit();
+	// }
 
 }

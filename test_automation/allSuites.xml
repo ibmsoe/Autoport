@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<suite name="All Suites" parallel="false">
+
+	<suite-files>
+		<suite-file path="searchTab.xml" />
+		<suite-file path="batchJobs.xml" />
+		<suite-file path="buildServerTab.xml" />
+	</suite-files>
+
+</suite> 

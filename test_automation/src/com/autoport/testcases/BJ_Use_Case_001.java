@@ -6,14 +6,17 @@ import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
+import com.autoport.pageobjects.BatchJobsTab;
 import com.autoport.pageobjects.HomePage;
+import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
 
-public class SCH_Use_Case_1 {
+public class BJ_Use_Case_001 {
 
 	WebDriver driver;
 	// CommonFunctions function;
 	HomePage homePage;
+	BatchJobsTab batchJobsTab;
 
 	// @Parameters({ "browser" })
 	@BeforeTest
@@ -23,25 +26,18 @@ public class SCH_Use_Case_1 {
 		// CommonFunctions.launchBrowser();
 
 		driver = CommonFunctions.driver;
-
 		homePage = CommonFunctions.homePage;
+		batchJobsTab = CommonFunctions.batchJobsTab;
 
 		// function.openAutoport();
 
+		homePage.clickBatchJobsTab();
 	}
 
-	@Test(priority = 0)
-	public void SCH_AutoPort_Initialization_001() {
+	@Test
+	public void BJ_Batch_Jobs_UI_001() {
 
-		homePage.initializeText();
-
-	}
-
-	@Test(priority = 1)
-	public void SCH_Home_UI_002() {
-
-		homePage.verifyHomePageUI();
-		homePage.verifySearchTabContents();
+		batchJobsTab.verifyBatchJobsTabUI();
 
 	}
 
@@ -49,5 +45,4 @@ public class SCH_Use_Case_1 {
 	// public void afterTest() {
 	// driver.quit();
 	// }
-
 }

@@ -1,7 +1,14 @@
 package com.autoport.pageobjects;
 
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.Set;
+import java.util.TimeZone;
 
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -15,6 +22,7 @@ import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 
+import com.autoport.utilities.CommonFunctions;
 import com.autoport.utilities.LogResult;
 
 public class SearchTab {
@@ -24,8 +32,13 @@ public class SearchTab {
 	// CommonFunctions functions;
 
 	Actions action;
+	
+	private String buildClickTime; 
+	
+	private int selectedBuildServersCount;
 	// HomePage homePage;
 
+	
 	public SearchTab(WebDriver driver, FluentWait<WebDriver> wait) {
 
 		// functions= new CommonFunctions();
@@ -44,6 +57,7 @@ public class SearchTab {
 		// homePage = functions.homePage;
 
 	}
+	
 
 	@FindBy(id = "singleSearchButton")
 	WebElement searchSingleProjectTab;
@@ -135,7 +149,11 @@ public class SearchTab {
 	@FindBy(xpath = "//div[@id='singleDetailPanel']/div/h1/div/a/button")
 	WebElement addToBatchBtnForAutoResult;
 
-	@FindBy(id = "singleVersions")
+	// Not working hence commented
+	// @FindBy(id = "singleVersions")
+	// WebElement currentVersionForAutoResult;
+
+	@FindBy(xpath = "//div[@id='singleDetailPanel']/div/h1/div/div[3]/button")
 	WebElement currentVersionForAutoResult;
 
 	@FindBy(xpath = "//div[@id='singleDetailPanel']/div/h1/div/div[2]/ul//a")
@@ -208,6 +226,9 @@ public class SearchTab {
 
 	@FindBy(xpath = "//tbody[@id='resultsTable']//td[3]/a/button")
 	WebElement repositoryDetailsList;
+
+	@FindBy(xpath = "//div[@id='resultsPanel']/table/tbody[1]//td[3]//button")
+	WebElement firstRepositoryDetailsList;
 
 	@FindBy(xpath = "//tbody[@id='resultsTable']/tr")
 	List<WebElement> numOfResultRows;
@@ -456,6 +477,9 @@ public class SearchTab {
 
 	@FindBy(xpath = "//tbody[@id='resultsTable']//td[2]/a/button")
 	WebElement commonProjectRepositoryDetailsList;
+	
+//	@FindBy(xpath = "//tbody[@id='resultsTable'][1]//td[2]/a/button")
+//	WebElement commonProjectFirstRepositoryDetailsList;
 
 	@FindBy(xpath = "//tbody[@id='resultsTable']//td[3]/a/button")
 	WebElement commonProjectRemoveList;
@@ -463,10 +487,10 @@ public class SearchTab {
 	@FindBy(id = "generateDetailBackButton")
 	WebElement commonProjectBackToResultsBtn;
 
-	@FindBy(xpath = "//tbody[@id='resultsTable'][1]/tr/td[2]/a/button")
-	WebElement commonProjectRepositoryDetailBtn;
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[1]//td[2]//button") 
+	WebElement commonProjectRepositoryDetailBtn; // //tbody[@id='resultsTable'][1]/tr/td[2]/a/button
 
-	@FindBy(xpath = "//tbody[@id='resultsTable'][1]/tr/td[3]/a/button")
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[1]//td[3]//button") // //tbody[@id='resultsTable'][1]/tr/td[3]/a/button
 	WebElement commonProjectRepositoryRemoveBtn;
 
 	@FindBy(xpath = "//div[@id='generateDetailPanel']/div")
@@ -483,6 +507,12 @@ public class SearchTab {
 
 	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable'][1]/tr/td[1]/a[2]")
 	WebElement commonProjectRepositoryList;
+
+	@FindBy(xpath = "//div[@id='errorAlert']/div/div/div[1]")
+	WebElement alertMessage;
+
+	@FindBy(xpath = "//div[@id='errorAlert']//button")
+	WebElement alertCloseBtn;
 
 	// To get the title
 	public String getPageTitle() {
@@ -564,6 +594,8 @@ public class SearchTab {
 		searchSingleProjectQueryTbx.sendKeys(query);
 
 		searchSingleProjectQueryTbx.sendKeys(Keys.ENTER);
+		
+		
 	}
 
 	// To verify results when sorted by relevance
@@ -1310,8 +1342,8 @@ public class SearchTab {
 	public void clickOnBatchFileExportBtn() {
 		exportBatchFileBtn.click();
 
-		if (searchSingleProjectTab.isDisplayed()) {
-			LogResult.pass("Export button not clicked.");
+		if (batchSaveExportClearSection.isDisplayed()) {
+			LogResult.fail("Export button not clicked.");
 		} else {
 			LogResult.pass("Export button clicked.");
 		}
@@ -1363,6 +1395,8 @@ public class SearchTab {
 	// To verify if clicking on Use Current Version drop down displays different
 	// versions
 	public void verifyUseCurrentVersion() {
+
+		wait.until(ExpectedConditions.visibilityOf(currentVersionForAutoResult));
 
 		if (currentVersionForAutoResult.getText().contentEquals("Use current version")) {
 			LogResult.pass("Use current version drop down is displayed.");
@@ -1417,13 +1451,17 @@ public class SearchTab {
 			}
 
 			List<WebElement> buildServerChkbx1 = buildServerListChkbx;
-
+		
+			int i=0;
+			
 			for (WebElement item : buildServerChkbx1) {
 
 				item.click();
-
+				i++;
 			}
-
+			
+			this.setBuildServersCount(i);
+			
 			// Currently the build servers are dynamic hence checking for
 			// partial text and omitting the number in brackets
 			if (selectBuildServerForAutoResult.getText().contains("All selected")) {
@@ -1440,18 +1478,146 @@ public class SearchTab {
 		}
 
 	}
+	
+	
+	public void setBuildServersCount(int buildServersCount){
+		this.selectedBuildServersCount=buildServersCount;
+		System.out.println(buildServersCount);
+	}
+	
+	public int getBuildServersCount(){
+		return this.selectedBuildServersCount;
+	}
+	
+	
 
 	// Clicking on Build+Test button
-	public void clickOnBuildAndTestBtn() {
+	public void clickOnBuildAndTestBtn() throws InterruptedException {
 
+		selectBuildServerForAutoResult.click();
+
+		ArrayList<String> buildServersArray = new ArrayList<String>();
+
+		for (int i = 0; i < buildServerList.size(); i++) {
+
+			buildServersArray.add(i, buildServerList.get(i).getText());
+		}
+
+		// for (int i=0;i< buildServerList.size();i++) {
+		//
+		// System.out.println("Value @ index: "+i+" is: "+
+		// buildServerList.get(i).getText());
+		//
+		// }
+
+		String currentWindow = driver.getWindowHandle();
+
+		this.setBuildClickTime(getSystemTime());
+		
 		buildAndTestBtnForAutoResult.click();
 
-		LogResult.pass("Build+Test button is clicked.");
+		Thread.sleep(5000);
+
+		driver.switchTo().window(currentWindow);
+
+		wait.until(ExpectedConditions.visibilityOf(alertCloseBtn));
+
+		if (alertCloseBtn.isDisplayed()) {
+			LogResult.pass("Build+Test button is clicked.");
+
+			if (alertMessage.getText().contentEquals("Build job submitted")) {
+				LogResult.pass("Jobs successfully triggered on jenkins.");
+			} else {
+				LogResult.fail("Jobs failed to get triggered on jenkins.");
+			}
+		} else {
+			LogResult.fail("Build+Test button is not clicked.");
+		}
+
+		Set<String> windowHandles = driver.getWindowHandles();
+
+		for (String window : windowHandles) {
+			// eliminate switching to current window
+			if (!window.equals(currentWindow)) {
+				// Now switchTo new Tab.
+				driver.switchTo().window(window);
+
+				for (String item : buildServersArray) {
+
+					if (driver.getTitle().contains(item)) {
+
+						LogResult.pass("Jenkins page opened for build server: " + item);
+					}
+
+				}
+
+			}
+
+		}
+
+		Thread.sleep(10000); // wait till the job is completed
+
+		for (String window : windowHandles) {
+
+			// eliminate switching to current window
+			if (!window.equals(currentWindow)) {
+				// Now switchTo new Tab.
+				driver.switchTo().window(window);
+
+				driver.close();
+
+			}
+		}
+
+		driver.switchTo().window(currentWindow);
+
+	}
+	
+	public void setBuildClickTime(String buildClickTime){
+		this.buildClickTime=buildClickTime;
+		System.out.println(buildClickTime);
+	}
+	
+	public String getBuildClickTime(){
+		return this.buildClickTime;
+	}
+
+	
+	
+	// public String getJenkinsServerTime() {
+	//
+	// Date d = new Date();
+	// DateFormat format = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss");
+	// format.setTimeZone(TimeZone.getTimeZone("CST")); //put server time zone
+	// return format.format(d);
+	// }
+	
+	public String getSystemTime(){
+		Date d = new Date();
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss");
+		String buildTime = format.format(d);
+		return buildTime;
+	}
+
+	// Clicking on Close button for dismissing alert
+	public void clickOnAlertCloseBtn() throws InterruptedException {
+
+		alertCloseBtn.click();
+
+		Thread.sleep(2000);
+
+		if (alertCloseBtn.isDisplayed()) {
+			LogResult.fail("Close button is not clicked. Alert not dismissed.");
+		} else {
+			LogResult.pass("Close button is clicked. Alert dismissed.");
+		}
 
 	}
 
 	// To verify Build Steps section (i.e Build, Test and Environment options)
 	public void verifyBuildSteps() {
+
+		wait.until(ExpectedConditions.visibilityOf(selectBuildOptions));
 
 		if (selectBuildOptions.isDisplayed()) {
 			if (selectBuildOptions.getText().contentEquals("Select build options")) {
@@ -1507,11 +1673,16 @@ public class SearchTab {
 		}
 	}
 
-	// ------------------ Most commonly used
-	// projects-----------------------------
+	// -----------Most commonly used projects------------
 
 	// To verify expansion of Search for Most commonly used projects button
 	public void clickOnMostCommonlyUsedProjectsBtn() {
+
+		if (searchSingleProjectQueryTbx.isDisplayed()) {
+
+			searchSingleProjectTab.click();
+		}
+
 		searchCommonlyUsedProjectsTab.click();
 
 		if (searchCommonlyUsedProjectsTab.isDisplayed()) {
@@ -1657,7 +1828,7 @@ public class SearchTab {
 
 		if (commonProjectsProgrammingLanguage.isDisplayed()) {
 			LogResult.pass(
-					"Proramming Language drop down is displayed. Values in programming languages drop down are: ");
+					"Programming Language drop down is displayed. Values in programming languages drop down are: ");
 
 			List<WebElement> programmingLanguagesOptions = s.getOptions();
 
@@ -1728,7 +1899,7 @@ public class SearchTab {
 
 				wait.until(ExpectedConditions.visibilityOf(commonProjectRepositoryDetailsList));
 
-				commonProjectRepositoryDetailsList.click();
+				commonProjectRepositoryDetailBtn.click();
 
 				wait.until(ExpectedConditions.visibilityOf(commonProjectSingleDetailPanel));
 
@@ -1820,10 +1991,12 @@ public class SearchTab {
 	}
 
 	// To enter number of repositories for searching Most commonly used projects
-	public void enterNumOfTopRepositories(String num) {
+	public void enterNumOfTopRepositories(String num) throws InterruptedException {
 		commonProjectsTopRepositoriesValue.clear();
 
 		commonProjectsTopRepositoriesValue.sendKeys(num);
+
+		Thread.sleep(3000);
 
 		if (commonProjectsTopRepositoriesValue.getAttribute("value").contentEquals(num)) {
 			LogResult.pass("Top Repositories value entered as: " + num);
@@ -1903,7 +2076,7 @@ public class SearchTab {
 
 		commonProjectsSearchBtn.click();
 
-		wait.until(ExpectedConditions.elementToBeClickable(commonProjectResultsPanel));
+		 wait.until(ExpectedConditions.elementToBeClickable(commonProjectResultsPanel));
 
 		if (commonProjectSaveExportSection.isDisplayed()) {
 			LogResult.pass("Search button clicked.");
@@ -2395,11 +2568,15 @@ public class SearchTab {
 
 			List<WebElement> buildServerChkbx1 = commonProjectBuildServerListChkbx;
 
+			int i=0;
+			
 			for (WebElement item : buildServerChkbx1) {
 
 				item.click();
-
+				i++;
 			}
+			
+			this.setBuildServersCount(i);
 
 			// Currently the build servers are dynamic hence checking for
 			// partial text and omitting the number in brackets
@@ -2419,11 +2596,84 @@ public class SearchTab {
 	}
 
 	// Clicking on Build+Test button for Most commonly used project
-	public void clickOnBuildAndTestBtnForCommonProject() {
+	public void clickOnBuildAndTestBtnForCommonProject() throws InterruptedException {
 
+		commonProjectSelectBuildServer.click();
+
+		ArrayList<String> buildServersArray = new ArrayList<String>();
+
+		for (int i = 0; i < commonProjectBuildServerList.size(); i++) {
+
+			buildServersArray.add(i, commonProjectBuildServerList.get(i).getText());
+		}
+	
+
+//		 for (int i=0;i< buildServerList.size();i++) {
+//		
+//		 System.out.println("Value @ index: "+i+" is: "+commonProjectBuildServerList.get(i).getText());
+//		
+//		 }
+
+		String currentWindow = driver.getWindowHandle();
+
+		this.setBuildClickTime(getSystemTime());
+		
 		commonProjectBuildAndTestBtn.click();
 
-		LogResult.pass("Build+Test button is clicked.");
+		Thread.sleep(5000);
+
+		driver.switchTo().window(currentWindow);
+
+		wait.until(ExpectedConditions.visibilityOf(alertCloseBtn));
+
+		if (alertCloseBtn.isDisplayed()) {
+			LogResult.pass("Build+Test button is clicked.");
+
+			if (alertMessage.getText().contentEquals("Build job submitted")) {
+				LogResult.pass("Jobs successfully triggered on jenkins.");
+			} else {
+				LogResult.fail("Jobs failed to get triggered on jenkins.");
+			}
+		} else {
+			LogResult.fail("Build+Test button is not clicked.");
+		}
+
+		Set<String> windowHandles = driver.getWindowHandles();
+
+		for (String window : windowHandles) {
+			// eliminate switching to current window
+			if (!window.equals(currentWindow)) {
+				// Now switchTo new Tab.
+				driver.switchTo().window(window);
+
+				for (String item : buildServersArray) {
+
+					if (driver.getTitle().contains(item)) {
+
+						LogResult.pass("Jenkins page opened for build server: " + item);
+					}
+
+				}
+
+			}
+
+		}
+
+		Thread.sleep(10000); // wait till the job is completed
+
+		for (String window : windowHandles) {
+
+			// eliminate switching to current window
+			if (!window.equals(currentWindow)) {
+				// Now switchTo new Tab.
+				driver.switchTo().window(window);
+
+				driver.close();
+
+			}
+		}
+
+		driver.switchTo().window(currentWindow);
 
 	}
 
@@ -2431,6 +2681,8 @@ public class SearchTab {
 	// for Most commonly used project
 	public void verifyBuildStepsForCommonProject() {
 
+		wait.until(ExpectedConditions.visibilityOf(commonProjectSelectBuildOptions));
+		
 		if (commonProjectSelectBuildOptions.isDisplayed()) {
 			if (commonProjectSelectBuildOptions.getText().contentEquals("Select build options")) {
 				LogResult.pass("Select build options drop down has text: " + commonProjectSelectBuildOptions.getText());
@@ -2515,6 +2767,12 @@ public class SearchTab {
 		} else {
 			LogResult.fail("Repository details are not displayed on GitHub website.");
 		}
+	}
+
+	public void clickOnFirstRepositoryDetailsBtn() {
+
+		firstRepositoryDetailsList.click();
+
 	}
 
 }
