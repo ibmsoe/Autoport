@@ -1844,7 +1844,8 @@ function processSearchResults(data) {
         }
         showAlert("Bad response from /search!", data);
     } else if (data.type === "multiple") {
-
+        detailState.ready = false;
+        detailState.autoSelected = false;
         // Got multiple results
         // Add select function to each result
         data.results.forEach(function(result) {
@@ -2869,7 +2870,6 @@ function parseBatchFileCallback(data, batch_obj){
         batch_obj.saveBatchFileName = data.results.config.name;
         batch_obj.javaType = data.results.config.java;
         batch_obj.javaScriptType = data.results.config.javascript;
-        console.log("hereiam");
         $("#batchSettingsInstallCkBox").attr('checked', false);
         $("#batchSettingsTestCkBox").attr('checked', true);
 
@@ -4085,12 +4085,4 @@ $.fn.extend({
         });
     }
 });
-
-//Initialization of treeviews
-
-//$('#tree1').treed();
-
-//$('#tree2').treed({openedClass:'glyphicon-folder-open', closedClass:'glyphicon-folder-close'});
-
-//$('#tree3').treed({openedClass:'glyphicon-chevron-right', closedClass:'glyphicon-chevron-down'});
 
