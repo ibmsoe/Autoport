@@ -489,10 +489,10 @@ class SharedData:
                (localVersion == newSharedVersion and localSequence > newSharedSequence) or \
                (exit_status):
 
-                logger.info("Re-try upload of chef cookbook")
+                logger.info("Re-try upload of chef cookbook with force option")
 
                 cmdR = "chef-server-ctl reconfigure > ../chef-server-reconfig.out.$$ 2>&1"
-                cmd4 = "knife cookbook upload / --force > ../knife-upload.out.$$ 2>&1"
+                cmd4 = "knife upload / --force > ../knife-upload.out.$$ 2>&1"
                 command = cmd1 + " && " + cmd2 + " && " + cmdR + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
                 exit_status, stderr = self.executeSharedCommand(command)
                 if exit_status:
