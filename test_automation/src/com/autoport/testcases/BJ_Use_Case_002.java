@@ -11,13 +11,12 @@ import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
 
-public class SCH_Use_Case_8 {
+public class BJ_Use_Case_002 {
 
 	WebDriver driver;
-	CommonFunctions function;
-
-	SearchTab searchTab;
+	// CommonFunctions function;
 	HomePage homePage;
+	SearchTab searchTab;
 	BatchJobsTab batchJobsTab;
 
 	// @Parameters({ "browser" })
@@ -33,18 +32,38 @@ public class SCH_Use_Case_8 {
 		batchJobsTab = CommonFunctions.batchJobsTab;
 
 		// function.openAutoport();
+
+		// homePage.clickBatchJobsTab();
 	}
 
 	@Test(priority = 0)
-	public void SCH_Save_Batch_File_common_projects_041() throws InterruptedException {
+	public void BJ_Import_UI_002() {
 
-		// searchTab.clickOnMostCommonlyUsedProjectsBtn();
+		batchJobsTab.clickImportBtn();
+		
+		batchJobsTab.verifyDisplayOfImportSection();
 
-		searchTab.clickOnCommonlyUsedProjectSearch();
+		batchJobsTab.verifyUploadDisplayBox();
 
-		searchTab.clickOnBatchFileSaveBtnForCommonProjects();
+		batchJobsTab.verifyPlaceHolderTextForUploadFileDisplayBox();
 
-		homePage.clickBatchJobsTab();
+		batchJobsTab.verifySelectFileBtn();
+
+		batchJobsTab.verifyUploadBtn();
+	}
+
+	@Test(priority = 1)
+	public void BJ_Browse_batch_file_upload_003() {
+
+		batchJobsTab.selectFileToUpload("C:\\Users\\manish_kane\\Downloads\\spring-framework-3");
+		// For Linux /root/Downloads/spring-framework-3
+	}
+
+	@Test(priority = 2)
+	public void BJ_Upload_batch_file_004() throws InterruptedException {
+		batchJobsTab.clickOnUploadBtn();
+		
+		batchJobsTab.clickOnAlertCloseBtn();
 
 		batchJobsTab.clickListSelectBtn();
 
@@ -52,28 +71,7 @@ public class SCH_Use_Case_8 {
 
 		batchJobsTab.verifyLocallySavedBatchFile("spring-framework-3");
 
-	}
-
-	@Test(priority = 1)
-	public void SCH_Export_Batch_File_common_projects_042() throws InterruptedException {
-
-		homePage.clickSearchTab();
-
-		searchTab.clickOnCommonlyUsedProjectSearch();
-
-		searchTab.clickOnBatchFileExportBtnForCommonProjects();
-
-		Thread.sleep(2000);
-
-		searchTab.confirmFileDownload("spring-framework-3");
-	}
-
-	@Test(priority = 2)
-	public void SCH_Remove_repository_batch_file_043() {
-
-		searchTab.clickOnCommonlyUsedProjectSearch();
-
-		searchTab.commonProjectRemoveRepository();
+		batchJobsTab.clickImportBtn();
 	}
 
 	// @AfterTest

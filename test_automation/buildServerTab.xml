@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<suite name="Build Servers tab test cases" parallel="false">
+
+	<test name="View Jenkins Status and Check Progress">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.Initialize" />
+			<class name="com.autoport.testcases.BS_UseCase_1" />
+		</classes>
+	</test>
+
+	<test name="List Packages from different servers">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.BS_UseCase_2" />
+		</classes>
+	</test>
+
+	<test name="Install packages on different Servers">
+		<parameter name="browser" value="firefox" />
+		<classes>
+			<class name="com.autoport.testcases.BS_UseCase_3" />
+		</classes>
+	</test>
+
+</suite>

@@ -12,26 +12,26 @@ import com.autoport.utilities.CommonFunctions;
 public class SCH_Use_Case_2 {
 
 	WebDriver driver;
-	CommonFunctions function;
+	// CommonFunctions function;
 	HomePage homePage;
 
-	@Parameters({ "browser" })
+	// @Parameters({ "browser" })
 	@BeforeTest
-	public void beforeTest(String browser) throws Exception {
-		function = new CommonFunctions();
-		function.launchBrowser(browser);
-		driver = function.driver;
+	public void beforeTest() throws Exception {
+		// function = new CommonFunctions();
+		
+		// CommonFunctions.launchBrowser();
+		driver = CommonFunctions.driver;
+		homePage = CommonFunctions.homePage;
 
-		homePage = function.homePage;
-
-		function.openAutoport();
-
-		homePage.clickOnSettings();
+		// function.openAutoport();
 	}
 
 	@Test(priority = 0)
 	public void SCH_Settings_UI_003() {
 
+		homePage.clickOnSettings();
+		
 		homePage.verifySettingsUI();
 	}
 
@@ -42,7 +42,7 @@ public class SCH_Use_Case_2 {
 
 	@Test(priority = 2)
 	public void SCH_Saving_Changes_Settings_005() {
-		homePage.verifyGsaConnectedStatus("mkane", "ZCpWbh0SYh8f");
+		homePage.verifyGsaConnectedStatus("mkane", "wysIwyg85");
 	}
 
 	@Test(priority = 3)
@@ -50,8 +50,8 @@ public class SCH_Use_Case_2 {
 		homePage.clickOnSettingsCloseBtn();
 	}
 
-	@AfterTest
-	public void afterTest() {
-		driver.quit();
-	}
+	// @AfterTest
+	// public void afterTest() {
+	// driver.quit();
+	// }
 }

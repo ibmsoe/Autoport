@@ -1,43 +1,51 @@
 package com.autoport.testcases;
 
+import java.text.ParseException;
+
 import org.openqa.selenium.WebDriver;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
+import com.autoport.pageobjects.HomePage;
+import com.autoport.pageobjects.ReportsTab;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
 
 public class SCH_Use_Case_6 {
 
 	WebDriver driver;
-	CommonFunctions function;
-
+	// CommonFunctions function;
+	HomePage homePage;
 	SearchTab searchTab;
+	ReportsTab reportsTab;
 
-	@Parameters({ "browser" })
+	// @Parameters({ "browser" })
 	@BeforeTest
-	public void beforeTest(String browser) throws Exception {
+	public void beforeTest() throws Exception {
 
-		function = new CommonFunctions();
-		function.launchBrowser(browser);
-		driver = function.driver;
+		// function = new CommonFunctions();
+		// CommonFunctions.launchBrowser();
+		driver = CommonFunctions.driver;
 
-		searchTab = function.searchTab;
-
-		function.openAutoport();
+		homePage = CommonFunctions.homePage;
+		searchTab = CommonFunctions.searchTab;
+		reportsTab = CommonFunctions.reportsTab;
+		// function.openAutoport();
 	}
 
 	@Test(priority = 0)
 	public void SCH_Use_current_version_repository_details_single_project_024() {
-		searchTab.clickOnSingleProjectBtn();
+		// searchTab.clickOnSingleProjectBtn();
 
-		searchTab.searchForRepository("cassandra");
+		searchTab.searchForRepository("bson");
 
 		searchTab.verifyResultsSortByRelavance();
 
-		searchTab.waitingForSingleProjectResultPanel();
+		searchTab.waitingForResultPanel();
+
+		searchTab.clickOnFirstRepositoryDetailsBtn();
 
 		searchTab.verifyUseCurrentVersion();
 	}
@@ -49,8 +57,25 @@ public class SCH_Use_Case_6 {
 	}
 
 	@Test(priority = 2)
-	public void SCH_Build_Test_repository_single_project_026() {
+	public void SCH_Build_Test_repository_single_project_026() throws InterruptedException, ParseException {
+
 		searchTab.clickOnBuildAndTestBtn();
+
+		searchTab.clickOnAlertCloseBtn();
+
+		homePage.clickReportsTab();
+
+		reportsTab.clickOnManageCompareProjectResultsBtn();
+
+		reportsTab.enterProjectNameForSearch("rabl");
+
+		reportsTab.clickOnListLocalBtn();
+
+		reportsTab.clickOnDateCompletedHeader();
+
+		reportsTab.verifyJenkinsJobCompletion(searchTab.getBuildClickTime(), searchTab.getBuildServersCount());
+
+		homePage.clickSearchTab();
 
 	}
 
@@ -59,9 +84,9 @@ public class SCH_Use_Case_6 {
 		searchTab.verifyBuildSteps();
 	}
 
-	@AfterTest
-	public void afterTest() {
-		driver.quit();
-	}
+	// @AfterTest
+	// public void afterTest() {
+	// driver.quit();
+	// }
 
 }

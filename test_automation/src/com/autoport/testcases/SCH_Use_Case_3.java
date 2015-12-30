@@ -12,20 +12,18 @@ import com.autoport.utilities.CommonFunctions;
 public class SCH_Use_Case_3 {
 
 	WebDriver driver;
-	CommonFunctions function;
+	// CommonFunctions function;
 	HomePage homePage;
 
-	@Parameters({ "browser" })
+	// @Parameters({ "browser" })
 	@BeforeTest
-	public void beforeTest(String browser) throws Exception {
-		function = new CommonFunctions();
-		function.launchBrowser(browser);
-		driver = function.driver;
+	public void beforeTest() throws Exception {
+		// function = new CommonFunctions();
+		// CommonFunctions.launchBrowser();
+		driver = CommonFunctions.driver;
+		homePage = CommonFunctions.homePage;
 
-		homePage = function.homePage;
-
-		function.openAutoport();
-
+		// function.openAutoport();
 	}
 
 	@Test
@@ -33,8 +31,8 @@ public class SCH_Use_Case_3 {
 		homePage.clickOnHideHelpBtn();
 	}
 
-	@AfterTest
-	public void afterTest() {
-		driver.quit();
-	}
+	// @AfterTest
+	// public void afterTest() {
+	// driver.quit();
+	// }
 }

@@ -1,9 +1,13 @@
 package com.autoport.utilities;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
@@ -32,86 +36,106 @@ import com.autoport.pageobjects.SearchTab;
 
 public class CommonFunctions {
 
-	public WebDriver driver;
+	public static WebDriver driver;
 
-	public FluentWait<WebDriver> fluentWait;
-	public WebDriverWait explicitWait;
+	public static FluentWait<WebDriver> fluentWait;
+	public static WebDriverWait explicitWait;
 
-	public HomePage homePage;
-	public SearchTab searchTab;
-	public BuildServersTab buildServerTab;
-	public BatchJobsTab batchJobsTab;
-	public ReportsTab reportsTab;
+	public static HomePage homePage;
+	public static SearchTab searchTab;
+	public static BuildServersTab buildServerTab;
+	public static BatchJobsTab batchJobsTab;
+	public static ReportsTab reportsTab;
 
-	public void launchBrowser(String browser) throws Exception {
+	public static void launchBrowser() throws Exception {
 
-		String userDir = System.getProperty("user.dir");
+		try {
 
-		if (browser.equalsIgnoreCase("Firefox")) {
+			Properties prop = new Properties();
+			String userDir = System.getProperty("user.dir");
+			String filePath = userDir + "/config.properties";
 
-			FirefoxProfile ffProfile = new FirefoxProfile();
-			ffProfile.setPreference("browser.helperApps.neverAsk.saveToDisk", "text/plain");
-			driver = new FirefoxDriver(ffProfile);
+			InputStream is = new FileInputStream(filePath);
 
-			/*
-			 * DesiredCapabilities capability = DesiredCapabilities.firefox();
-			 * capability.setBrowserName("firefox"); driver = new
-			 * FirefoxDriver(capability);
-			 */
+			prop.load(is);
 
-		} else if (browser.equalsIgnoreCase("chrome")) {
+			String url = prop.getProperty("URL");
+			String browser = prop.getProperty("browser");
+			long implicitWaitTime = Integer.parseInt(prop.getProperty("implicitWait"));
+			long explicitWaitTime = Integer.parseInt(prop.getProperty("explicitWait"));
+			long fluentWaitTime = Integer.parseInt(prop.getProperty("fluentWait"));
 
-			System.setProperty("webdriver.chrome.driver", userDir + "/Drivers/chromedriver.exe");
-			driver = new ChromeDriver();
-		} else if (browser.equalsIgnoreCase("IE")) {
+			if (browser.equalsIgnoreCase("Firefox")) {
 
-			System.setProperty("webdriver.ie.driver", userDir + "/Drivers/IEDriverServer.exe");
-			driver = new InternetExplorerDriver();
+				FirefoxProfile ffProfile = new FirefoxProfile();
+				ffProfile.setPreference("browser.helperApps.neverAsk.saveToDisk", "text/plain");
+				ffProfile.setPreference("privacy.popups.policy", "true");
+				ffProfile.setPreference("browser.popups.showPopupBlocker", "false");
+				driver = new FirefoxDriver(ffProfile);
+
+				// DesiredCapabilities capability =
+				// DesiredCapabilities.firefox();
+				// capability.setBrowserName("firefox");
+				// driver = new FirefoxDriver(capability);
+
+			} else if (browser.equalsIgnoreCase("chrome")) {
+
+				System.setProperty("webdriver.chrome.driver", userDir + "/Drivers/chromedriver.exe");
+				driver = new ChromeDriver();
+			} else if (browser.equalsIgnoreCase("IE")) {
+
+				System.setProperty("webdriver.ie.driver", userDir + "/Drivers/IEDriverServer.exe");
+				driver = new InternetExplorerDriver();
+			}
+
+			driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+			driver.manage().window().maximize();
+			explicitWait = new WebDriverWait(driver, 30);
+			fluentWait = new FluentWait<WebDriver>(driver).withTimeout(90, TimeUnit.SECONDS)
+					.pollingEvery(5, TimeUnit.SECONDS).ignoring(NoSuchElementException.class);
+
+			homePage = new HomePage(driver, fluentWait);
+			searchTab = new SearchTab(driver, fluentWait);
+			batchJobsTab = new BatchJobsTab(driver, fluentWait);
+			reportsTab = new ReportsTab(driver, fluentWait);
+			buildServerTab = new BuildServersTab(driver, fluentWait);
+
+			driver.get(url);
+
+		} catch (FileNotFoundException ex) {
+			ex.printStackTrace();
+		} catch (IOException ex) {
+			ex.printStackTrace();
 		}
-
-		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-		driver.manage().window().maximize();
-		explicitWait = new WebDriverWait(driver, 30);
-		fluentWait = new FluentWait<WebDriver>(driver).withTimeout(60, TimeUnit.SECONDS)
-				.pollingEvery(5, TimeUnit.SECONDS).ignoring(NoSuchElementException.class);
-
-		homePage = new HomePage(driver, fluentWait);
-		searchTab = new SearchTab(driver, fluentWait);
-		batchJobsTab = new BatchJobsTab(driver, fluentWait);
-	    reportsTab = new ReportsTab(driver, fluentWait);
-		buildServerTab = new BuildServersTab(driver, fluentWait);
-		
-	
 	}
 
-	public void openAutoport() {
+	// public void openAutoport() {
+	// driver.get("http://10.44.189.55:5700/autoport/");
+	// }
 
-		driver.get("http://10.44.189.55:5600/autoport/");
+	public static void goTo_ListInstallSingleSoftwarSection() {
+
+		homePage.openBuildServerTab();
+
+		buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
+
+		buildServerTab.clickListInstallRemoveSoftwareBtnToOpen();
 	}
-	
-	public void goTo_ListInstallSingleSoftwarSection(){
-		
-		 homePage.clickBuildServerTab();
-		  
-		 buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
-		  
-		 buildServerTab.clicListInstallRemoveSoftwareBtnToOpen();	
+
+	public static void goTo_ListInstallUsingManagedServicesSection() {
+
+		homePage.openBuildServerTab();
+
+		buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
+
+		buildServerTab.clickListInstallRemoveSoftwareUsingManagedServicesBtnToOpen();
 	}
-	
-	public void goTo_ListInstallUsingManagedServicesSection(){
-		
-		 homePage.clickBuildServerTab();
-		  
-		 buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
-		  
-		 buildServerTab.clickListInstallRemoveSoftwareUsingManagedServicesBtnToOpen();	
-	}
-	
-	public void goTo_UploadPackageToRepositorySection(){
-		
-		 homePage.clickBuildServerTab();	 
-		  
-		 buildServerTab.clickuploadPackagesToRepositoryBtn();	
+
+	public static void goTo_UploadPackageToRepositorySection() {
+
+		homePage.openBuildServerTab();
+
+		buildServerTab.clickuploadPackagesToRepositoryBtnToOpen();
 	}
 
 }

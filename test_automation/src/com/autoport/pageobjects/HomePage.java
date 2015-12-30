@@ -177,7 +177,7 @@ public class HomePage {
 	}
 
 	// To verify if Reports tab is displayed
-	public void clickBuildServerTab() {
+	public void openBuildServerTab() {
 		buildServerTab.click();
 		if (true) {
 			LogResult.pass("Build Server tab is displayed.");
@@ -187,7 +187,7 @@ public class HomePage {
 	}
 
 	// To verify if Build Servers tab is displayed
-	public void clickReportsTab() {		
+	public void clickReportsTab() {
 		reportsTab.click();
 
 		if (true) {
