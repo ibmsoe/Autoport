@@ -148,11 +148,14 @@ class ChefData:
             print str(e)
             assert(False)
 
-    def setChefDataForPackage(self, name, version, type, action, ext, attributes = {}):
+    def setChefDataForPackage(self, name, version, type, action, ext, attributes = None):
         # This routine is responsible for setting up chef attributes that
         # and run list for a single specific package.
         # The version of the package is passed to this routine based
         # on user selection is not based on version in ManagedList.
+        if not attributes:
+          attributes = {}
+
         chefAttrs = attributes
         if not chefAttrs:
             chefAttrs['buildServer'] = {}

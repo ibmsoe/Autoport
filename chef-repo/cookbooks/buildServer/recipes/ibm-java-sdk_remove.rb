@@ -1,4 +1,6 @@
 version_arr = node['buildServer']['ibm-java-sdk']['version']
+arch = node['kernel']['machine']
+install_dir = node['buildServer']['ibm-java-sdk']['install_dir']
 
 if version_arr.kind_of?(Array) and version_arr.any?
   version_arr.each do |version|
@@ -12,7 +14,7 @@ if version_arr.kind_of?(Array) and version_arr.any?
       install_dir     node['buildServer']['ibm-java-sdk']['install_dir']
       uninstall_dir   uninstall_dir
       repo_url        node['buildServer']['repo_url']
-      arch            node['kernel']['machine']
+      arch            arch
       action          :remove
       ignore_failure  true
     end
@@ -25,7 +27,6 @@ if version_arr.kind_of?(Array) and version_arr.any?
       log_record   record
       action       :remove
       ignore_failure true
-      only_if { Dir.exist?("#{install_dir}/#{java_package}") }
     end
   end
 end

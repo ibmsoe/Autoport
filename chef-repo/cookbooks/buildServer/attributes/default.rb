@@ -38,7 +38,7 @@ default['buildServer']['protobuf']['source_dir'] = '/opt'
 default['buildServer']['protobuf']['ext'] = ''
 
 # Attributes for java
-default['buildServer']['openjdk']['version'] = []
+default['buildServer']['openjdk']['version'] = ['7']
 
 # Attributes for ibm-java
 default['buildServer']['ibm-java-sdk']['version'] = []

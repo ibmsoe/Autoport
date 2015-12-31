@@ -31,7 +31,6 @@ if packages.kind_of?(Hash) and packages.any?
       log_record   record
       action       :remove
       ignore_failure true
-      only_if { Dir.exist?("#{install_dir}/#{pkg_name}#{version}") }
     end
   end
 end
