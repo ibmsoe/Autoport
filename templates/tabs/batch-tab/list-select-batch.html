@@ -46,7 +46,7 @@
         </a>
         <a rv-enabled="batchState.selectedBatchFile.location | isLocal"
           rv-on-click="batchState.archive">
-          <button type="button" class="btn btn-primary" id="batch_file_archive"
+          <button rv-enabled="batchState.selectedBatchFile.location | isLocal" type="button" class="btn btn-primary" id="batch_file_archive"
            style="float: left; margin-right: 10px">
             Archive
           </button>
@@ -230,10 +230,11 @@
                 <div class="col-md-12">
                   <div class="col-md-3 btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle" style="margin-right:20px;" data-toggle="dropdown" >Use {batchState.batchFile.config.java}<span class="caret"></span></button>
-                    <ul class="dropdown-menu">
-                      <li rv-on-click="batchState.selectJavaType"><a>OpenJDK</a></li>
-                      <li rv-on-click="batchState.selectJavaType"><a>IBM Java</a></li>
-                    </ul>
+                      <ul class="dropdown-menu">
+                        <li rv-on-click="batchState.selectJavaType" rv-each-java="detailState.supportedJavaListOptions">
+                            <a><span rv-text="java"></span></a>
+                        </li>
+                      </ul>
                   </div>
                   <div class="col-md-3 btn-group">
                       <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use {batchState.batchFile.config.javascript}<span class="caret"></span></button>
@@ -241,7 +242,6 @@
                       <li rv-on-click="batchState.selectNodeJsType"><a>Node.js</a></li>
                       <li rv-on-click="batchState.selectNodeJsType"><a>IBM SDK for Node.js</a></li>
                     </ul>
-
                   </div>
                   </div>
               </div>

@@ -301,7 +301,7 @@ class Batch:
 
         try:
             env = fileBuf['config']['java']
-            if env == "IBM Java":
+            if "ibm java" in env.lower().replace('-',' '):
                 environment = "IBM Java"
             else:
                 environment = "OpenJDK"

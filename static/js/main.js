@@ -237,7 +237,7 @@ var searchState = {
                   var name = searchState.multiple.batchFile.config.name;
                   searchState.multiple.batchFile.config.includeTestCmds = "True";
                   searchState.multiple.batchFile.config.includeInstallCmds = "False";
-                  searchState.multiple.batchFile.config.java = detailState.generateJavaType;
+                  searchState.multiple.batchFile.config.java = detailState.JavaType;
                   searchState.multiple.batchFile.config.javascript = detailState.generateJavaScriptType;
                   var file = JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
                       undefined, 2);
@@ -414,13 +414,7 @@ var batchState = {
         console.log("selectNodeJsType: setting javascript=", batchState.batchFile.config.javascript)
     },
     selectJavaType: function(ev, el) {
-        var selection = $(ev.target).text().toLowerCase();
-        if (selection === "openjdk") {
-            batchState.batchFile.config.java = "OpenJDK";
-        }
-        else if (selection === "ibm java") {
-            batchState.batchFile.config.java = "IBM Java";
-        }
+        batchState.batchFile.config.java = $(ev.target).text();
         console.log("selectJavaType: setting java=", batchState.batchFile.config.java)
     },
     updateEnviron: function(ev, el) {
@@ -1013,11 +1007,11 @@ var detailState = {
     autoSelected: false,                            // Was this repository autoselected from search query?
     pie: null,                                      // Pie chart
     generatePie: null,
+    supportedJavaList: [],
+    supportedJavaListOptions: [],
     //TODO - split single and generate out, this repetition is bad.  Pertains to two detail menus
-    javaType: "OpenJDK",                            // OpenJDK or IBM Java
-    generateJavaType: "OpenJDK",
+    javaType: "openjdk 7",                            // OpenJDK or IBM Java
     javaTypeOptions: "",
-    generateJavaTypeOptions: "",
     generateJavaScriptType: "nodejs",
     javaScriptType: "nodejs",                       // nodejs or IBM SDK for Node.js
     javaScriptTypeOptions: "",
@@ -1045,13 +1039,11 @@ var detailState = {
     // When the radio button is pressed update the server environment data
     selectJavaType: function(ev) {
         var selection = $(ev.target).text().toLowerCase();
-        if (selection === "openjdk") {
-            detailState.javaType = "OpenJDK";
-            detailState.javaTypeOptions = "";
-        }
-        else if (selection === "ibm java") {
-            detailState.javaType = "IBM Java";
+        detailState.javaType = $(ev.target).text();
+        if ((selection.indexOf('java') > -1 && selection.indexOf('sdk') > -1)) {// asuming this naming convention for IBM Java.
             detailState.javaTypeOptions = "/etc/profile.d/ibm-java.sh";
+        } else if (selection.indexOf('jdk') > -1) { // asuming this naming convention for openjdk.
+            detailState.javaTypeOptions = "";
         }
     },
     // When the radio button is pressed update the server environment data
@@ -1064,18 +1056,6 @@ var detailState = {
         else if (selection === "ibm sdk for node.js") {
             detailState.javaScriptType = "IBM SDK for Node.js";
             detailState.javaScriptTypeOptions = "/etc/profile.d/ibm-nodejs.sh";
-        }
-    },
-    // TODO - this is bad, this will be changed
-    selectGenerateJavaType: function(ev) {
-        var selection = $(ev.target).text().toLowerCase();
-        if (selection === "openjdk") {
-            detailState.generateJavaType = "OpenJDK";
-            detailState.generateJavaTypeOptions = "";
-        }
-        else if (selection === "ibm java") {
-            detailState.generateJavaType = "IBM Java";
-            detailState.generateJavaTypeOptions = "/etc/profile.d/ibm-java.sh";
         }
     },
     selectGenerateJavaScriptType: function(ev) {
@@ -2649,11 +2629,13 @@ function showDetail(data) {
 
                 var el = $("#singleBuildServers")[0];
                 var buildServers = getSelectedValues(el);
+                var javaType = detailState.javaType.split(' ')[0];
+                var javaVersion = (detailState.supportedJavaList[detailState.javaType])?detailState.supportedJavaList[detailState.javaType]:7;
 
                 for (var i=0; i < buildServers.length; i++) {
                     console.log(detailState.repo.useVersion + " version");
                     $.post("createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion,
-                           javaType: detailState.javaTypeOptions, javaScriptType: detailState.javaScriptTypeOptions,
+                           javaType: javaType+','+javaVersion, javaScriptType: detailState.javaScriptTypeOptions,
                            node: buildServers[i], selectedBuild: selectedBuild,
                            selectedTest: selectedTest, selectedEnv: selectedEnv,
                            artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang},
@@ -2676,6 +2658,8 @@ function showDetail(data) {
         else if (data.panel === "generate") {
             var buildInfo = data.repo.build;
             detailState.generateRepo = data.repo;
+            detailState.generateRepo.javaType = detailState.supportedJavaListOptions[0];
+
             detailState.generateRepo.addToJenkins = function(e) {
                 var buildInfo = detailState.generateRepo.build;
 
@@ -2690,17 +2674,23 @@ function showDetail(data) {
 
                 var el = $("#generateBuildServers")[0];
                 var buildServers = getSelectedValues(el);
+                var javaType = detailState.generateRepo.javaType.split(' ')[0];
+                var javaVersion = (detailState.supportedJavaList[detailState.generateRepo.javaType])?detailState.supportedJavaList[detailState.generateRepo.javaType]:7;
 
                 for (var i=0; i < buildServers.length; i++) {
                     $.post("createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion,
-                           javaType: detailState.generateJavaTypeOptions, javaScriptType: detailState.generateJavaScriptTypeOptions,
-                           node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest,
-                           selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang},
-                           addToJenkinsCallback, "json").fail(addToJenkinsCallback);
+                            javaType: javaType+','+javaVersion, javaScriptType: detailState.generateJavaScriptTypeOptions,
+                            node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest,
+                            selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang},
+                            addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
             detailState.generateRepo.updateVersion = function(e) {
                 detailState.generateRepo.useVersion = e.target.innerHTML;
+            };
+            detailState.generateRepo.selectGenerateJavaType = function(ev) {
+                var selection = $(ev.target).text().toLowerCase();
+                detailState.generateRepo.javaType = $(ev.target).text();
             };
             searchState.multiple.loadingState.loading = false;
             detailState.generateReady = true;
@@ -2793,7 +2783,7 @@ function uploadBatchFileCallback(data) {
     else {
         showAlert("Batch file uploaded successfully!");
     }
-    
+
 }
 
 function uploadPackageCallback(data) {
@@ -3798,6 +3788,44 @@ function CustomDateSorter(date1, date2){
     return dateObj1 - dateObj2
 }
 
+function populateJavaTypeDropdown(data){
+    // Assuming Ubuntu and RHEL will have same set of managed packages.
+    var managedRuntimePackages = data.results.managedRuntime;
+    var supportedJavaTypes = {};
+    if (managedRuntimePackages && managedRuntimePackages.length > 0){
+        var autoportChefPackages = managedRuntimePackages[0].autoportChefPackages;
+        var autoportPackages = managedRuntimePackages[0].autoportPackages;
+        for(var i = 0; i < autoportPackages.length; i++){
+            var packageName = autoportPackages[i].name.toLowerCase();
+            if (packageName.startsWith('ibm-java-sdk') || packageName.startsWith('openjdk')){
+                var javaKey = 'openjdk';
+                var javaVersion = (autoportPackages[i].version !== undefined)?autoportPackages[i].version.split('.')[0]:7;
+                if (autoportPackages[i].name.startsWith('ibm-java-sdk')){
+                    javaKey = 'ibm-java-sdk' + ' ' + javaVersion;
+                }else if(autoportPackages[i].name.startsWith('openjdk')){
+                    javaKey = 'openjdk' + ' ' + javaVersion;
+                }
+                supportedJavaTypes[javaKey] = javaVersion;
+            }
+        }
+        for(var i = 0; i < autoportChefPackages.length; i++){
+            var packageName = autoportChefPackages[i].name.toLowerCase();
+            if (packageName.startsWith('ibm-java-sdk') || packageName.startsWith('openjdk')){
+                var javaVersion = (autoportChefPackages[i].version !== undefined)?autoportChefPackages[i].version.split('.')[0]:7;
+                var javaKey = 'openjdk';
+                if (autoportChefPackages[i].name.startsWith('ibm-java-sdk')){
+                    javaKey = 'ibm-java-sdk' + ' ' + javaVersion;
+                }else if(autoportChefPackages[i].name.startsWith('openjdk')){
+                    javaKey = 'openjdk' + ' ' + javaVersion;
+                }
+                supportedJavaTypes[javaKey] = javaVersion;
+            }
+        }
+    }
+    detailState.supportedJavaList = supportedJavaTypes;
+    detailState.supportedJavaListOptions = Object.keys(supportedJavaTypes);
+}
+
 $(document).ready(function() {
     // NOTE - rivets does not play well with multiselect
     // Query Jenkins for list of build servers
@@ -3819,6 +3847,16 @@ $(document).ready(function() {
         dataType: "json",
         async:true
     });
+    //Call to fetch ManagedList.json data which will be used to populate dropdowns.
+    $.ajax({
+        type: 'GET',
+        contentType: "application/json; charset=utf-8",
+        url: "getManagedList",
+        success: populateJavaTypeDropdown,
+        dataType: "json",
+        async:true
+    });
+
     // Initialize bootstrap multiselect plugin
     // Config options go here
     $('#singleBuildServers').multiselect({

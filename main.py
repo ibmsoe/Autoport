@@ -1167,7 +1167,8 @@ def createJob(i_id = None,
     except KeyError:
         logger.debug("createJob: jobId=%s, Error rc=%s" % (id, rc))
         return json.jsonify(status='failure', error="Failed to launch a Jenkins job"), 401
-
+    except Exception as ex:
+        logger.debug("createJob: Error=%s" % str(ex))
     try:
         jobName = rc['jobName']
     except KeyError:
@@ -1446,9 +1447,7 @@ def runBatchFile ():
         pass
 
     # Parse config data
-    javaType = ""
-    if fileBuf['config']['java'] == "IBM Java":
-        javaType = "/etc/profile.d/ibm-java.sh"
+    javaType = fileBuf['config']['java'].replace(' ',',')
 
     javaScriptType = ""
     if fileBuf['config']['javascript'] == "IBM SDK for Node.js":
@@ -2893,6 +2892,14 @@ def getBatchTestDetails():
     else:
         return json.jsonify(status=batchDetails['status'], results = batchDetails)
 
+@app.route('/autoport/getManagedList', methods=['GET','POST'])
+def getManagedList():
+    try:
+        managedList = sharedData.getManagedList()
+    except Exception as ex:
+        managedList = {}
+    return json.jsonify(status='ok', results = managedList)
+
 def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
     # This is called before starting the flask application.  It is responsible
     # for performing initial setup of the Jenkins master.  Only required items
@@ -2957,4 +2964,4 @@ if __name__ == "__main__":
     if args.public:
         app.run(threaded=True, host='0.0.0.0')
     else:
-        app.run(debug = args.debug)
+        app.run(debug = args.debug, threaded=True)

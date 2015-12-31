@@ -76,7 +76,6 @@
           <a title="Repository" class="result-title" rv-href="detailState.generateRepo.url" rv-text="detailState.generateRepo.name"></a>
 
           <div class="dropdown buttonRight">
-
             <!-- Dropdown box for choosing what kind of javaScript to use. -->
             <div class="dropdown">
               <button rv-show="detailState.generateRepo.language | isJavaScript" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.generateJavaScriptType } <span class="caret"></span></button>
@@ -88,10 +87,11 @@
 
             <!-- Dropdown box for choosing what kind of java to use. -->
             <div class="dropdown">
-              <button rv-show="detailState.generateRepo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.generateJavaType } <span class="caret"></span></button>
+              <button rv-show="detailState.generateRepo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.generateRepo.javaType } <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                <li rv-on-click="detailState.selectGenerateJavaType"><a>Open JDK</a></li>
-                <li rv-on-click="detailState.selectGenerateJavaType"><a>IBM Java</a></li>
+                <li rv-on-click="detailState.generateRepo.selectGenerateJavaType" rv-each-java="detailState.supportedJavaListOptions">
+                    <a><span rv-text="java"></span></a>
+                </li>
               </ul>
             </div>
 

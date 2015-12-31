@@ -144,8 +144,9 @@
             <div class="dropdown">
               <button rv-show="detailState.repo.language | isJava" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.javaType } <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right">
-                <li rv-on-click="detailState.selectJavaType"><a>OpenJDK</a></li>
-                <li rv-on-click="detailState.selectJavaType"><a>IBM Java</a></li>
+                <li rv-on-click="detailState.selectJavaType" rv-each-java="detailState.supportedJavaListOptions">
+                    <a><span rv-text="java"></span></a>
+                </li>
               </ul>
             </div>
 

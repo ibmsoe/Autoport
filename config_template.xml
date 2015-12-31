@@ -328,12 +328,13 @@
               if [ -n &quot;$CMD1&quot; ]; then
                   source .autoport-scratch/.autoportrc
                   if [ $JAVATYPE ]; then
-                      echo &quot;Sourcing Java to $JAVATYPE&quot;
-                      sudo chmod a+x $JAVATYPE
-                      LEN=$((${#PATH}+1))
-                      source $JAVATYPE
-                      LAST_PATH=${PATH: $LEN}
-                      PATH=$LAST_PATH:$PATH
+                      # Expecting value of JAVATYPE as 'ibm-java-sdk,7' or 'openjdk,7'
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
+                      echo &quot;Setting Java to $JAVATYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JAVATYPE"
+                      JAVA_TYPE=`echo ${ADDR[0]}`
+                      JAVA_VERSION=`echo ${ADDR[1]}`
                   fi
                   if [ $JSTYPE ]; then
                       echo &quot;Sourcing JavaScript to $JSTYPE&quot;
@@ -344,10 +345,6 @@
                       PATH=$LAST_NPATH:$PATH
                   fi
                   source /etc/profile
-                  if [ $JAVATYPE ]; then
-                      JAVA_HOME=${LAST_PATH%/bin}
-                  fi
-                  export JAVA_HOME
                   ARTI=&quot;.autoport-scratch/build_result.arti&quot;
                   echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                   echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
@@ -377,12 +374,13 @@
               if [ -n &quot;$CMD2&quot; ]; then
                   source .autoport-scratch/.autoportrc
                   if [ $JAVATYPE ]; then
-                      echo &quot;Sourcing Java to $JAVATYPE&quot;
-                      sudo chmod a+x $JAVATYPE
-                      LEN=$((${#PATH}+1))
-                      source $JAVATYPE
-                      LAST_PATH=${PATH: $LEN}
-                      PATH=$LAST_PATH:$PATH
+                      # Expecting value of JAVATYPE as 'ibm-java-sdk,7' or 'openjdk,7'
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
+                      echo &quot;Setting Java to $JAVATYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JAVATYPE"
+                      JAVA_TYPE=`echo ${ADDR[0]}`
+                      JAVA_VERSION=`echo ${ADDR[1]}`
                   fi
                   if [ $JSTYPE ]; then
                       echo &quot;Sourcing JavaScript to $JSTYPE&quot;
@@ -393,10 +391,6 @@
                       PATH=$LAST_NPATH:$PATH
                   fi
                   source /etc/profile
-                  if [ $JAVATYPE ]; then
-                      JAVA_HOME=${LAST_PATH%/bin}
-                  fi
-                  export JAVA_HOME
                   ARTI=&quot;.autoport-scratch/test_result.arti&quot;
                   echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                   echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
@@ -426,12 +420,13 @@
               if [ -n &quot;$CMD3&quot; ]; then
                   source .autoport-scratch/.autoportrc
                   if [ $JAVATYPE ]; then
-                      echo &quot;Sourcing Java to $JAVATYPE&quot;
-                      sudo chmod a+x $JAVATYPE
-                      LEN=$((${#PATH}+1))
-                      source $JAVATYPE
-                      LAST_PATH=${PATH: $LEN}
-                      PATH=$LAST_PATH:$PATH
+                      # Expecting value of JAVATYPE as 'ibm-java-sdk,7' or 'openjdk,7'
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
+                      echo &quot;Setting Java to $JAVATYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JAVATYPE"
+                      JAVA_TYPE=`echo ${ADDR[0]}`
+                      JAVA_VERSION=`echo ${ADDR[1]}`
                   fi
                   if [ $JSTYPE ]; then
                       echo &quot;Sourcing JavaScript to $JSTYPE&quot;
@@ -442,10 +437,6 @@
                       PATH=$LAST_NPATH:$PATH
                   fi
                   source /etc/profile
-                  if [ $JAVATYPE ]; then
-                      JAVA_HOME=${LAST_PATH%/bin}
-                  fi
-                  export JAVA_HOME
                   ARTI=&quot;.autoport-scratch/install_result.arti&quot;
                   echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                   echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
