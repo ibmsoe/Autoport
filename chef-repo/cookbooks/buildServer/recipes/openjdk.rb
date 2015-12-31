@@ -40,7 +40,7 @@ when 'redhat'
   opt = ''
 end
 
-if java_packages.kind_of?(Array) and java_packages.any?
+if java_packages.kind_of?(Hash) and java_packages.any?
   java_packages.each do |key, value|
     value['pkgs'].each do |pkg|
       package pkg do

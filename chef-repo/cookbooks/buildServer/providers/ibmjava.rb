@@ -86,11 +86,11 @@ action :remove do
   repo_url         = new_resource.repo_url
   arch             = new_resource.arch
 
-  execute "Uninstalling ibm nodejs" do
+  execute "Uninstalling ibm java" do
     cwd   uninstall_dir
     command "./uninstall -i silent"
     ignore_failure true
-    only_if { File.exist?("#{uninstall_dir}/uninstall") }
+    only_if { ::File.exist?("#{uninstall_dir}/uninstall") }
   end
 
   [
