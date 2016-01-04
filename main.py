@@ -1010,7 +1010,10 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
     if r.status_code == 200:
 
         # Success, send the jenkins job and start it right away.
-        startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
+        if upstreamProj:
+            startJobUrl = globals.jenkinsUrl + "/job/" + jobName
+        else:
+            startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
 
         # But then redirect to job home to monitor job progress.
         homeJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/"
