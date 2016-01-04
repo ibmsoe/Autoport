@@ -3086,9 +3086,11 @@ function managePackageForSingleSlaveCallback(data) {
     jenkinsState.pkgInstallRemoveResponseCounter++;
     if (data.status === "ok") {
         jenkinsState.singleSlavePackageTableReady = false;
-        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':data.packageName, 'packageAction':data.packageAction, 'status': data.buildStatus});
+        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':data.packageName,
+                            'packageAction':data.packageAction, 'status': data.buildStatus});
     } else {
-        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':data.packageName, 'packageAction':data.packageAction, 'status': data.error});
+        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':data.packageName,
+        'packageAction':data.packageAction, 'status': data.buildStatus, 'logUrl': data.logUrl});
     }
     if ( jenkinsState.pkgInstallRemoveResponseCounter == jenkinsState.totalSelectedSingleSlavePkg ) {
         jenkinsState.loadingState.packageActionLoading = false;
@@ -3109,7 +3111,14 @@ function managePackageForSingleSlaveCallback(data) {
                 text += '<tr class="' + activeclass + '">';
                 text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].packageName + '</td>';
                 text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].packageAction + '/update</td>';
-                text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].status + '</td>';
+                if (jenkinsState.pkgInstallRemoveStatusSingleSlave[i].logUrl) {
+                  text += '<td>' + "<a href='" +
+                  jenkinsState.pkgInstallRemoveStatusSingleSlave[i].logUrl +
+                  "' target='_blank'  style='text-decoration: underline' >" +
+                  jenkinsState.pkgInstallRemoveStatusSingleSlave[i].status + "</a>" + '</td>';
+                } else {
+                  text += '<td>' + jenkinsState.pkgInstallRemoveStatusSingleSlave[i].status + '</td>';
+                }
                 text += '</tr>';
             }
         }
@@ -3204,14 +3213,17 @@ function notificationCallback(obj){
         if (data.jobstatus) {
             title =data.jobstatus;
             if (data.jobstatus == "SUCCESS") {
-                message= "<br>Sync completed on "+data.nodeLabel;
                 type = "success";
                 classcss = "text-success";
+                message= "<br><span class='"+classcss+"'>Sync completed successfully on "+data.nodeLabel+"</span>";
             }
             if (data.jobstatus == "FAILURE") {
-                message= "<br>Sync failed on "+data.nodeLabel;
                 type = "danger";
-                classcss = "text-warning";
+                classcss = "text-danger";
+                message= "<br/><span class='"+classcss+"'>Sync completed with few errors on  " +
+                data.nodeLabel+" .Please check the <a href='" +
+                data.logUrl+"' target='_blank'  style='text-decoration: underline' >log</a> for details"+"</span>";
+
             }
             /*$.notify({
                  title: "<strong>"+title+"</strong> ",

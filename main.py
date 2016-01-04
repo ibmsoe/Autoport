@@ -2085,7 +2085,7 @@ def managePackageForSingleSlave():
        buildStatus = ""
        try:
            if job['status'] == "success":
-               buildStatus = monitorChefJobs(job['jobName'], sync = True)
+               buildStatus, consoleLogUrl = monitorChefJobs(job['jobName'], sync = True)
        except KeyError as e:
            print str(e)
            assert(False)
@@ -2093,8 +2093,8 @@ def managePackageForSingleSlave():
            return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction,
                                buildStatus=buildStatus)
        else:
-           return json.jsonify(status="failure", error="Failed to run Jenkins job. Job Status: %s" % buildStatus, packageName=packageName, packageAction=packageAction,
-                               buildStatus="FAILURE"), 400
+           return json.jsonify(status="failure", error="Job failed", packageName=packageName, packageAction=packageAction, 
+                               buildStatus="FAILURE", logUrl=consoleLogUrl)
     else:
         # Read template XML file
         tree = ET.parse("./config_template_package_actions_single_slave.xml")
@@ -2528,8 +2528,8 @@ def monitorJob():
     requestJobName = request.args.get("jobName", "")
     nodeLabel = request.args.get("nodeLabel", "")
     if requestJobName:
-       status = monitorChefJobs(requestJobName, sync=True)
-    return json.jsonify(status="ok", jobstatus=status, nodeLabel=nodeLabel)
+       status, log_url = monitorChefJobs(requestJobName, sync=True)
+    return json.jsonify(status="ok", jobstatus=status, logUrl=log_url, nodeLabel=nodeLabel)
 
 def monitorChefJobs(jobName, sync=False):
     # Monitor each job in chefJobs
@@ -2572,12 +2572,25 @@ def monitorChefJobs(jobName, sync=False):
     logfile.write(log)
     logfile.close()
 
+    # Parsing the console log for errors.
+    # NOTE: A job may be successful but may have a failed chef-client run.
+    # runStatus indicates the status of the chef-client run.
+    # jobStatus indicates the status of the job execution.
+
+    error_hints = ["FATAL:", "ERROR:"]
+    for hint in error_hints:
+      if hint in log:
+        runStatus = "FAILURE"
+        break
+      else:
+        runStatus = "SUCCESS"
+
     if jobStatus == 'SUCCESS':
         if sync == True:
-            return "SUCCESS"
+            return runStatus, consoleLog
     else:
         if sync == True:
-            return "FAILURE"
+            return "FAILURE", consoleLog
 
 # Read and sanitize the contents of the named batch file
 @app.route("/autoport/parseBatchFile")
