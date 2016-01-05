@@ -366,19 +366,36 @@ class Batch:
         try:
             env = fileBuf['config']['java']
             if env == "":
-                fileBuf['config']['java'] = "OpenJDK"
+                fileBuf['config']['java'] = "openjdk 7"
         except KeyError:
-            fileBuf['config']['java'] = "OpenJDK"
+            fileBuf['config']['java'] = "openjdk 7"
 
         try:
             env = fileBuf['config']['javascript']
             if env == "":
-                fileBuf['config']['javascript'] = "Node.js"
+                fileBuf['config']['javascript'] = "nodejs"
         except KeyError:
-            fileBuf['config']['javascript'] = "Node.js"
+            fileBuf['config']['javascript'] = "nodejs"
 
         logger.debug("parseBatchFile: file['config']['java']=%s" % fileBuf['config']['java'])
         logger.debug("parseBatchFile: file['config']['javascript']=%s" % fileBuf['config']['javascript'])
+
+        try:
+            tst = fileBuf['config']['includeTestCmds']
+            if tst == "":
+                fileBuf['config']['includeTestCmds'] = "True"
+        except KeyError:
+            fileBuf['config']['includeTestCmds'] = "True"
+
+        try:
+            tst = fileBuf['config']['includeInstallCmds']
+            if tst == "":
+                fileBuf['config']['includeInstallCmds'] = "False"
+        except KeyError:
+            fileBuf['config']['includeInstallCmds'] = "False"
+
+        logger.debug("parseBatchFile: file['config']['includeTestCmds']=%s" % fileBuf['config']['includeTestCmds'])
+        logger.debug("parseBatchFile: file['config']['includeInstallCmds']=%s" % fileBuf['config']['includeInstallCmds'])
 
         for package in fileBuf['packages']:
             try:
@@ -388,6 +405,9 @@ class Batch:
 
             try:
                 idStr = package['id']
+                repo = globals.cache.getRepo(int(idStr))
+                if repo == None:
+                    return { "error": "batch file invalid project " + name }
             except KeyError:
                 return { "error": "Missing id field for project " + name }
 
@@ -401,9 +421,6 @@ class Batch:
             try:
                 selectedBuild = package['build']['selectedBuild']
             except KeyError:
-                repo = globals.cache.getRepo(int(idStr))
-                if repo == None:
-                    return { "error": "batch file invalid project " + name }
                 package['build'] = inferBuildSteps(globals.cache.getDir(repo), repo)
 
             try:
@@ -437,11 +454,11 @@ class Batch:
                 package['build']['primaryLang'] = ""
 
             try:
-                repo = globals.cache.getRepo(int(idStr))
                 package['build']['owner_url'] = repo.owner.html_url
             except Exception as e:
                 package['build']['owner_url'] = ""
 
+        print "filebuf['config']=", fileBuf['config']
         return { "status": "ok", "fileBuf": fileBuf }
 
     # Closing the SSHClient

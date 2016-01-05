@@ -382,6 +382,8 @@ var batchState = {
     batchFile: {},                          // content of batch file.  All fields resolved
     javaType: "",                           // Initial value in config section
     javaScriptType: "",                     // Initial value in config section
+    includeTestCmds: true,                  // Initial value in config section
+    includeInstallCmds: false,              // Initial value in config section
     loading: false,                         // parsing batch file.  Size is variable
     showBatchFile: false,                   // draw batch file detail table
     saveBatchFileName: "",                  // user input to save button for new batch file name
@@ -394,9 +396,21 @@ var batchState = {
         var batchObj = $('#batchListSelectTable').bootstrapTable('getSelections')[0];
         batchState.saveBatchFileName = $("#saveBatchFileFilter").val();
         batchState.batchFile.config.name = batchState.saveBatchFileName;
-        if (batchState.saveBatchFileName == batchObj.name){
+        if (batchState.includeTestCmds) {
+            batchState.batchFile.config.includeTestCmds = "True"
+        } else {
+            batchState.batchFile.config.includeTestCmds = "False"
+        }
+        if (batchState.includeInstallCmds) {
+            batchState.batchFile.config.includeInstallCmds = "True"
+        } else {
+            batchState.batchFile.config.includeInstallCmds = "False"
+        }
+        console.log("In batchState.saveBatch, batchFile.config=", batchState.batchFile.config)
+
+        if (batchState.saveBatchFileName == batchObj.name) {
             var file = JSON.stringify(batchState.batchFile, undefined, 2);
-            $.post("updateBatchFile", {name: batchObj.filename, file: file, location:batchObj.location},
+            $.post("updateBatchFile", {name: batchObj.filename, file: file, location: batchObj.location},
                batchSaveCallback, "json").fail(uploadBatchFileCallback);
         } else {
             var file = JSON.stringify(batchState.batchFile, undefined, 2);
@@ -441,20 +455,6 @@ var batchState = {
          $("#settingsBatchModal1").hide();
          $('#showModifyButton').hide();
          $("#batchBuildCommandBackButton").show();
-    },
-    onInstallCheckBoxChanged: function(ev, el) {
-        if($("#batchSettingsInstallCkBox").is(":checked")){
-            batchState.batchFile.config.includeInstallCmds = "True";
-        }else {
-            batchState.batchFile.config.includeInstallCmds = "False";
-        }
-    },
-    onTestCheckBoxChanged: function(ev, el) {
-        if($("#batchSettingsTestCkBox").is(":checked")){
-            batchState.batchFile.config.includeTestCmds = "True";
-        }else {
-            batchState.batchFile.config.includeTestCmds = "False";
-        }
     },
     onBatchSettingsOwnerChange:function(ev, el) {
         if($('#batchSettingsOwner').val() != ""){
@@ -505,9 +505,6 @@ var batchState = {
                 batchName: batchState.selectedBatchFile.filename
             }, function(data){
                 parseBatchFileCallback(data, batchState);
-                var tempinstallcmd = data.results.config.includeInstallCmds;
-                batchState.batchFile.config.includeInstallCmds =  "False"; // this is a hack to switch the checkbox checked option
-                batchState.batchFile.config.includeInstallCmds = tempinstallcmd;
             }, "json").fail(function(data){
                 parseBatchFileCallback(data, batchState);
             }
@@ -2852,7 +2849,7 @@ function getBatchResultsCallback(data) {
 function parseBatchFileCallback(data, batch_obj){
     batch_obj.loading = false;
     if (data.status === "ok") {
-        // If data is retrieved successfuly continue preparations.
+        // If data is retrieved successfully continue preparations.
         // Get data and update batchReportState attributes.
         batch_obj.showListSelectTable = false;
         batch_obj.showBatchFile = true;
@@ -2860,8 +2857,19 @@ function parseBatchFileCallback(data, batch_obj){
         batch_obj.saveBatchFileName = data.results.config.name;
         batch_obj.javaType = data.results.config.java;
         batch_obj.javaScriptType = data.results.config.javascript;
-        $("#batchSettingsInstallCkBox").attr('checked', false);
-        $("#batchSettingsTestCkBox").attr('checked', true);
+
+        if (data.results.config.includeTestCmds === "True") {
+            batch_obj.includeTestCmds = true;
+        } else {
+            batch_obj.includeTestCmds = false;
+        }
+        if (data.results.config.includeInstallCmds === "True") {
+            batch_obj.includeInstallCmds = true;
+        } else {
+            batch_obj.includeInstallCmds = false;
+        }
+
+        console.log("In parseBatchFileCallback, batchFile.config=", data.results.config); 
 
         var buildInstallTable = $('<table border="1" class="table panel panel-default table-hover"></table>').attr({ id: "buildInstallTable" });
 
@@ -2874,7 +2882,6 @@ function parseBatchFileCallback(data, batch_obj){
             packageObj.testCommand = package.build.selectedTest;
             packageObj.gitURL = package.build.owner_url;
             packageObj.installCommand = package.build.selectedInstall;
-
 
             var packageNameRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Package Name').appendTo(packageNameRow);

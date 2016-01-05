@@ -254,15 +254,13 @@
               <div class="row">
                 <div class="col-md-12">
                     <label class="github">Enable test:</label>
-                    <input type="checkbox" id="batchSettingsTestCkBox" checked rv-on-change="batchState.onTestCheckBoxChanged">
+                    <input type="checkbox" id="batchSettingsTestCkBox" rv-checked="batchState.includeTestCmds">
                 </div>
                </div>
                <div class="row">
                 <div class="col-md-12">
                     <label class="github">Enable install:</label>
-                    <input type="checkbox" id="batchSettingsInstallCkBox"
-                             rv-checked="batchState.batchFile.config.includeInstallCmds | eq True"
-                             rv-on-change="batchState.onInstallCheckBoxChanged">
+                    <input type="checkbox" id="batchSettingsInstallCkBox" rv-checked="batchState.includeInstallCmds">
                   </div>
                 </div>
                 <div class="row">
