@@ -38,7 +38,8 @@ rivets.formatters.isUpdated = function(value) {
 
 // For showing compiler/sdk options based on language
 rivets.formatters.isJava = function(value) {
-    return value === "Java";
+    return (['Java', 'Scala', 'Clojure'].indexOf(value) != -1)
+    //return value === "Java";
 };
 
 // For showing compiler/sdk options based on language
