@@ -69,10 +69,8 @@
 # of packages seperately.
 
 # Running chef recipes for removing packages
-if [ ! -z "$chefRemoveAttr" -a "$chefRemoveAttr" != " " ]; then
-
+if ([ -n "$chefRemoveAttr" ] &amp;&amp; [ "$chefRemoveAttr" != "{}" ]) &amp;&amp; ([ -n "$chefRemoveAttr" ] &amp;&amp; [ "$chefRemoveAttr" != "[]" ]);then
 role=buildServer_remove_packages_$(date +%Y%m%d_%H%M%S)_$(echo $host | cut -d"." -f1)
-
 cat &lt;&lt;EOF &gt; $role.json
 {
  "name": "$role" ,
@@ -82,20 +80,17 @@ cat &lt;&lt;EOF &gt; $role.json
  "run_list":$chefRemoveRecipes
 }
 EOF
-echo "-------------------Creating chef role to remove packages---------------"
-knife role from file $role.json
-
-rm -rf $role.json
 
 # knife bootstrap takes care of:
 # Registering the node to chef server.
 # Installing chef client on the node if not already installed.
 # Running the chef scripts to install appropriate pacakges.
-
-echo "-------------------Running knife bootstrap to remove packages---------------"
+echo "======================================================================="
+echo "-------------------Running knife bootstrap to remove packages----------"
+echo "======================================================================="
+knife role from file $role.json
+rm -rf $role.json
 knife bootstrap $ipaddress -N $host -x jenkins -i /home/jenkins/.ssh/jenkins --sudo --no-host-key-verify -r role[$role]
-
-echo "---------------------Deleting chef role created for installation of packages"
 knife role delete $role -y
 fi
 
@@ -110,17 +105,12 @@ cat &lt;&lt;EOF &gt; $role.json
  "run_list":$chefInstallRecipes
 }
 EOF
-
-echo "-------------------Creating chef role to install packages--------------------------"
-
+echo -e "\n\n======================================================================="
+echo "-------------------Running knife bootstrap to install packages---------"
+echo "======================================================================="
 knife role from file $role.json
-
 rm -rf $role.json
-
-echo "-------------------Running knife bootstrap to install packages---------------------"
 knife bootstrap $ipaddress -N $host -x jenkins -i /home/jenkins/.ssh/jenkins --sudo --no-host-key-verify -r role[$role]
-
-echo "---------------------Deleting chef role created for installation of packages"
 knife role delete $role -y
          </command>
       </hudson.tasks.Shell>
