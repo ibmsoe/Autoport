@@ -458,7 +458,6 @@ class Batch:
             except Exception as e:
                 package['build']['owner_url'] = ""
 
-        print "filebuf['config']=", fileBuf['config']
         return { "status": "ok", "fileBuf": fileBuf }
 
     # Closing the SSHClient
