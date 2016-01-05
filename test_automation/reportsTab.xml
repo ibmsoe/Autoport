@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suite name="Autoport Smoke Tests" parallel="false"> 	
+<test name="List Local/Archived/All project results.">  
+   <classes>
+     <class name="com.autoport.testcases.Initialize"/>
+     <class name="com.autoport.testcases.Reports_UseCase_1"/>
+   </classes>
+  </test> 
+   
+  <test name="View(History/Details) project results.">  
+    <classes>
+      <class name="com.autoport.testcases.Reports_UseCase_2"/>
+    </classes>
+  </test>    
+    
+  <test name="Manage(Archive/Remove) project results.">  
+    <classes>
+      <class name="com.autoport.testcases.Reports_UseCase_3"/>
+    </classes>
+  </test> 
+ 
+  <test name="Compare the project results.">  
+    <classes>
+      <class name="com.autoport.testcases.Reports_UseCase_4"/>
+    </classes>
+  </test>    
+  
+  <test name="List Local/Archived/All batch job results.">  
+    <classes>
+      <class name="com.autoport.testcases.Reports_UseCase_5"/>
+    </classes>
+  </test> 
+  
+  <test name="View(History/Details) batch job results.">  
+    <classes>
+      <class name="com.autoport.testcases.Reports_UseCase_6"/>
+    </classes>
+  </test> 
+  
+  <test name="Manage(Archive/Remove) batch job results.">
+    <classes>
+      <class name="com.autoport.testcases.Reports_UseCase_7"/>
+    </classes>
+  </test> 
+  
+  <test name="Compare the batch job results.">  
+    <classes>
+      <class name="com.autoport.testcases.Reports_UseCase_8"/>
+    </classes>
+  </test>
+  
+  <test name="View Build and Test logs"> 
+    <classes>
+      <class name="com.autoport.testcases.Reports_UseCase_9"/>
+    </classes>
+  </test> 
+</suite> 
+
+
