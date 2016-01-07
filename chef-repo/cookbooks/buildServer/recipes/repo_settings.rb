@@ -28,7 +28,7 @@ template "#{file_path}/#{repo_file}" do
     repo_url:  repo_url,
     repo_name: repo_name,
     osrelease: node['lsb']['codename'],
-    platform_version: node['platform_version'],
+    platform_version: node['platform_version'].split(".")[0],
   )
   ignore_failure true
 end
