@@ -11,11 +11,6 @@ action :install do
   archive_name     = new_resource.archive_name
   extract_location = new_resource.extract_location
   perl_prefix_dir  = new_resource.perl_prefix_dir
-  perl_module      = name.split('-')
-  perl_module.pop
-  module_string   = perl_module.join('::')
-  guard_condition = "#{perl_prefix_dir}/bin/perl \
-                   -M#{module_string} -e 'print \"$#{module_string}::VERSION\"'"
 
   directory extract_location do
     mode '0755'
@@ -64,7 +59,7 @@ action :install do
       make install >> /tmp/check
     EOH
     ignore_failure true
-    only_if { ! guard_condition && ::Dir.exist?("#{extract_location}/#{name}") }
+    only_if { ::Dir.exist?("#{extract_location}/#{name}") }
   end
   new_resource.updated_by_last_action(true)
 end
