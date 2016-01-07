@@ -2790,7 +2790,7 @@ def getTestHistory():
                     "repository": prj['repository'],
                     "project": meta,
                     "results": prjRes})
-                logger.debug("getTestHistory: name=%s, results=%s" % (prj['fullName'], prjres))
+                logger.debug("getTestHistory: name=%s, results=%s" % (prj['fullName'], prjRes))
         out.append({
             "name": "Test results for project " + projectName[0] + "-" + projectName[1],
             "results": prjOut
