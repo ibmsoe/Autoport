@@ -222,6 +222,8 @@ def interpretTravis(repo, travisFile, travis_def):
     travis_flag = None
     try:
         travis_data = repo.get_file_contents(travisFile.path).content.decode('base64', 'strict')
+        if 'docker' in travis_data:
+            travis_data = ""
     except Exception as e:
         logger.debug("interpretTravis: File Error %s" % str(e))
         travis_data = ""
