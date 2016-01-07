@@ -1,10 +1,7 @@
 package com.autoport.testcases;
 
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.BuildServersTab;
@@ -14,28 +11,20 @@ import com.autoport.utilities.CommonFunctions;
 public class BS_UseCase_8 {
 	
 	WebDriver driver;
-	FluentWait<WebDriver> wait;
-	CommonFunctions functions;
 	HomePage homePage;
 	BuildServersTab buildServerTab;
 	
-	 @Parameters({"browser"})
 	 @BeforeTest
-	  public void beforeTest(String browser) throws Exception {
-		 //String browser = "firefox";
-		 functions = new CommonFunctions();
-		 functions.launchBrowser(browser);	
-		 
-		 driver = functions.driver;
-		 homePage = functions.homePage;
-		 buildServerTab = functions.buildServerTab;
-		 
-		 functions.openAutoport();		 
-		 functions.goTo_ListInstallUsingManagedServicesSection();	
+	  public void beforeTest() throws Exception {
+		//CommonFunctions.launchBrowser(); 
+		 driver = CommonFunctions.driver; 
+		 homePage = CommonFunctions.homePage;
+		 buildServerTab = CommonFunctions.buildServerTab;			 
+		 CommonFunctions.goTo_ListInstallUsingManagedServicesSection();	
 	  }
 	 
 	 @Test(priority=0)
-	  public void BS_Synch_Packages_On_RHEL_Servers() throws Exception{ 
+	  public void BS_Synch_Packages_On_RHEL_Servers_029() throws Exception{ 
 		  buildServerTab.clickListRhelBtn();
 		  
 		  buildServerTab.verifyPopulatedBuildServers("RHEL");
@@ -54,7 +43,7 @@ public class BS_UseCase_8 {
 	  }
 	
 	 @Test(priority=1)
-	  public void BS_Synch_Packages_On_Ubuntu_Servers() throws Exception{ 
+	  public void BS_Synch_Packages_On_Ubuntu_Servers_030() throws Exception{ 
 		 buildServerTab.clickListUbuntuBtn(); 
 		  
 		  buildServerTab.verifyPopulatedBuildServers("Ubuntu");		  
@@ -63,19 +52,12 @@ public class BS_UseCase_8 {
 		  
 		  buildServerTab.verifySelectBuildServerMsg();
 		  
-		  buildServerTab.selectBuildServerToSynch("ppc64le-64-ubuntu");
+		  buildServerTab.selectBuildServerToSynch("ppcle-ubuntu");
 		  
 		  buildServerTab.clickSynchBtn();
 		  
-		  buildServerTab.verifyBackgroundInstallationPopup("ppc64le-64-ubuntu");
+		  buildServerTab.verifyBackgroundInstallationPopup("ppcle-ubuntu");
 		  
 		  buildServerTab.verifySychSuccessPopUp();
-	  }
-	 
-	 @AfterTest
-	  public void afterClass() {
-		  
-		  driver.quit();
-	  }
-	 
+	  }	 
 }

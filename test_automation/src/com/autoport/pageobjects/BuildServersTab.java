@@ -4,7 +4,6 @@ import java.util.List;
 
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
-import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
@@ -143,16 +142,38 @@ public class BuildServersTab {
 	
 	/****************************** Manage Jenkins Slave Nodes Functions *******************************/
 	
-	/* Function to navigate to Show Jenkins status section */
-	public void goTo_ShowJenkinsStatusSection(){
-		showJenkinsStatusBtn.click();
-		
+	/* Function to open to Show Jenkins status section */
+	public void openShowJenkinsStatusSection(){
 		if(checkProgressBtn.isDisplayed()){
 			LogResult.pass("Show Jenkins status section is expanded.");
 		}
 		else{
-			LogResult.fail("Show Jenkins status section is not expanded.");
+			showJenkinsStatusBtn.click();
+			
+			if(checkProgressBtn.isDisplayed()){
+				LogResult.pass("Show Jenkins status section is expanded.");
+			}
+			else{
+				LogResult.fail("Show Jenkins status section is not expanded.");
+			}
+		}		
+	}
+	
+	/* Function to close to Show Jenkins status section */
+	public void closeShowJenkinsStatusSection(){
+		if(checkProgressBtn.isDisplayed()){
+			showJenkinsStatusBtn.click();
+			
+			if(checkProgressBtn.isDisplayed()){
+				LogResult.fail("Show Jenkins status section is not closed.");
+			}
+			else{
+				LogResult.pass("Show Jenkins status section is closed.");				
+			}
 		}
+		else{
+			LogResult.pass("Show Jenkins status section is closed.");
+		}		
 	}
 	
 	/* Function to verify the jenkins Page Url */
@@ -202,7 +223,7 @@ public class BuildServersTab {
 		
 		String bgColor = driver.findElement(By.xpath("//div[@id='progressBar']/div/div[1]")).getCssValue("background-color");
 		
-		if(bgColor==greenColor){
+		if(bgColor.equals(greenColor)){
 			LogResult.pass("Progress bar is displayed correctly");
 		}
 		else{
@@ -219,29 +240,40 @@ public class BuildServersTab {
 	/* Function to open Manage Jenkins Slave Nodes section */
 	public void clickManageJenkinsSlaveNodesBtnToOpen(){
 		
-		manageJenkinsSlaveNodesBtn.click();
-		
 		if(listInstallRemoveSoftwareBtn.isDisplayed()){
-			LogResult.pass("Manage Jenkins Slave Nodes section' is expanded.");
+			LogResult.pass("Manage Jenkins Slave Nodes section' is Opened.");
 		}
 		else{
-			LogResult.fail("Manage Jenkins Slave Nodes section' is expanded.");
+			manageJenkinsSlaveNodesBtn.click();
+			
+			if(listInstallRemoveSoftwareBtn.isDisplayed()){
+				LogResult.pass("Manage Jenkins Slave Nodes section' is Opened.");
+			}
+			else{				
+				
+				LogResult.fail("Manage Jenkins Slave Nodes section' is expanded.");
+			}	
 		}
-		
 	}
 	
 	/**********************  List / Install / Remove software  *************************/
 	
 	/* Function to open List / Install / Remove software section */
-	public void clicListInstallRemoveSoftwareBtnToOpen(){
-		
-		listInstallRemoveSoftwareBtn.click();
+	public void clickListInstallRemoveSoftwareBtnToOpen(){		
 		
 		if(searchPkgSingleTxtBox.isDisplayed()){
 			LogResult.pass("List / Install / Remove software on a given build server' section is expanded.");
 		}
 		else{
-			LogResult.fail("List / Install / Remove software on a given build server' section is expanded.");
+			listInstallRemoveSoftwareBtn.click();
+			
+			if(searchPkgSingleTxtBox.isDisplayed()){	
+			
+			LogResult.pass("List / Install / Remove software on a given build server' section is expanded.");
+		}
+			else{
+				LogResult.fail("List / Install / Remove software on a given build server' section is expanded.");
+			}
 		}
 		
 	}
@@ -286,6 +318,17 @@ public class BuildServersTab {
 		driver.findElement(By.xpath(xpath)).click();
 		
 		LogResult.pass(buildServerName + " Build Server is selected");		
+	}
+	
+	/* Function to select Buildserver from dropdown */
+	public void selectFirstBuildServer(){
+		
+		buildServerBtn.click();
+		
+		String xpath = "//div[@id='manageSingleSlavePanel']//ul/li[1]/a/label/input";
+		driver.findElement(By.xpath(xpath)).click();
+		
+		LogResult.pass("First Build Server is selected");		
 	}
 	
 	/*Function to list down packages by clicking list button*/
@@ -368,7 +411,14 @@ public class BuildServersTab {
 	}
 	
 	/* Function to select the installed package to update */
-	public String selectPackageToUpdate(){
+	public String selectPackageToUpdate() throws InterruptedException{
+		
+		String firstElement = driver.findElement(By.xpath("//table[@id='singleServerPackageListTable']/tbody/tr[1]/td[5]")).getText();
+		
+		if(firstElement.equals("No")){
+			driver.findElement(By.xpath("//table[@id='singleServerPackageListTable']/thead/tr/th[5]/div[1]")).click();
+			Thread.sleep(3000);
+		}
 		
 		WebElement NApackagecheckbox =	driver.findElement(By.xpath("//table[@id='singleServerPackageListTable']/tbody/tr/td[5][text()[contains(.,'Yes')]]/preceding-sibling::td[4]/input"));
 		
@@ -641,17 +691,23 @@ public class BuildServersTab {
 	/***********************List / Install / Remove software using managed runtime services Functions***********************/
 	
 	/* Function to open List / Install / Remove software using managed runtime services section */
-	public void clickListInstallRemoveSoftwareUsingManagedServicesBtnToOpen(){
-		
-		listInstallRemoveSoftwareUsingManagedServicesBtn.click();
+	public void clickListInstallRemoveSoftwareUsingManagedServicesBtnToOpen(){	
 		
 		if(searchPkgMultipleTxtBox.isDisplayed()){
 			LogResult.pass("List / Install / Remove software using managed runtime services' section is expanded.");
 		}
-		else{
-			LogResult.fail("List / Install / Remove software using managed runtime services' section is expanded.");
-		}
-		
+		else
+		{			
+			listInstallRemoveSoftwareUsingManagedServicesBtn.click();
+			
+			if(searchPkgMultipleTxtBox.isDisplayed())
+			{
+				LogResult.pass("List / Install / Remove software using managed runtime services' section is expanded.");
+			}
+			else{
+				LogResult.fail("List / Install / Remove software using managed runtime services' section is expanded.");
+			}
+		}		
 	}
 	
 	/*Function to enter packagename to search */
@@ -880,7 +936,7 @@ public class BuildServersTab {
 				
 		packageChkBox.click();
 		
-		String version = driver.findElement(By.xpath("//table[@id='multiServerPackageListTable']/tbody/tr/td[2][text()[contains(.,'" + packagename + "')]]/ancestor::tr/td[3]")).getText();
+		String version = driver.findElement(By.xpath("//table[@id='multiServerPackageListTable']/tbody/tr/td[2][text()[contains(.,'" + packagename + "')]]/ancestor::tr/td[5]")).getText();
 		
 		if(packageChkBox.isSelected()){
 			LogResult.pass(packagename + " is selected.");
@@ -902,8 +958,8 @@ public class BuildServersTab {
 	}
 	
 	/* Function to verify that the pop up message stating eligible packages to add is displayed and accepted */
-	public void verifyAndAcceptAddPopup(String packageName, String version){
-		
+	public void verifyAndAcceptAddPopup(String packageName, String version) throws InterruptedException{
+		Thread.sleep(2000);
 		Alert alert = driver.switchTo().alert();
 		String alertmsg = alert.getText();
 		
@@ -913,7 +969,7 @@ public class BuildServersTab {
 		}
 		else{
 			LogResult.fail("Correct Pop up message stating the eligible package and version to add is displayed.");
-		alert.dismiss();
+		alert.accept();
 		}	
 		
 	}
@@ -1008,8 +1064,24 @@ public class BuildServersTab {
 	/****************************** Upload Packages To Repository *******************************/
 	
 	/* Function to click on Upload package to Repository button */
-	public void clickuploadPackagesToRepositoryBtn(){
-		uploadPackagesToRepositoryBtn.click();
+	public void clickuploadPackagesToRepositoryBtnToOpen(){		
+		
+		if(uploadPackageTextBox.isDisplayed()){
+			LogResult.pass("Upload package to repository section is expanded.");
+		}
+		else
+		{			
+			uploadPackagesToRepositoryBtn.click();
+			
+			if(uploadPackageTextBox.isDisplayed())
+			{
+				LogResult.pass("Upload package to repositorysection is expanded.");
+			}
+			else{
+				LogResult.fail("Upload package to repository section is not expanded.");
+			}
+		}		
+		
 	}
 	
 	/* Function to enter the package to upload */

@@ -1,7 +1,8 @@
 package com.autoport.testcases;
 
+import java.io.IOException;
+
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.FluentWait;
 import org.testng.annotations.*;
 
 import com.autoport.pageobjects.BuildServersTab;
@@ -11,30 +12,22 @@ import com.autoport.utilities.*;
 
 public class BS_UseCase_3{
 	
-	WebDriver driver;
-	FluentWait<WebDriver> FluentWait;
-	CommonFunctions functions;
+	WebDriver driver;		
 	HomePage homePage;
-	BuildServersTab buildServerTab;
-	
-	 //@Parameters({"browser"})
+	BuildServersTab buildServerTab;	
+	 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
-		 String browser = "firefox";
-		 functions = new CommonFunctions();
-		 functions.launchBrowser(browser);	
-		 
-		 driver = functions.driver;
-		 homePage = functions.homePage;
-		 buildServerTab = functions.buildServerTab;
-		 
-		 functions.openAutoport();
-		 functions.goTo_ListInstallSingleSoftwarSection();
+		// CommonFunctions.launchBrowser(); 
+		 driver = CommonFunctions.driver; 
+		 homePage = CommonFunctions.homePage;
+		 buildServerTab = CommonFunctions.buildServerTab; 		 	
+		 CommonFunctions.goTo_ListInstallSingleSoftwarSection();
 	  }	 	
 	
 	  @Test (priority=0, dataProvider = "buildServers")
-	  public void BS_Install_Package_On_Servers(String buildServer, String packagename) throws Exception{
-		  
+	  public void BS_Install_Package_On_Servers_004_008(String buildServer, String packagename) throws Exception{
+		  		 
 		  buildServerTab.enterPackageToSearch(packagename); 
 		  
 		  buildServerTab.selectBuildServer(buildServer);
@@ -57,13 +50,13 @@ public class BS_UseCase_3{
 		  
 		  buildServerTab.clickListBtn();
 		  
-		  buildServerTab.verifyInstalledVersionIsNotNA(packegeselected);		 
+		  buildServerTab.verifyInstalledVersionIsNotNA(packegeselected);
 	  }
 	  
 	  @Test (priority=1)
-	  public void BS_Install_Already_Installed_Package() throws Exception{
+	  public void BS_Install_Already_Installed_Package_009() throws Exception{
 		  
-		  buildServerTab.selectBuildServer("ppcle-ubuntu");
+		  buildServerTab.selectFirstBuildServer();
 		  
 		  buildServerTab.enterPackageToSearch(""); 
 		  
@@ -77,11 +70,11 @@ public class BS_UseCase_3{
 	  }	  
 	  
 	  @Test (priority=2)
-	  public void BS_Install_package_with_different_versions() throws Exception{
+	  public void BS_Install_package_with_different_versions_010() throws Exception{
 		  
 		  buildServerTab.enterPackageToSearch("apache-ant"); 
 		  
-		  buildServerTab.selectBuildServer("ppcle-ubuntu");
+		  buildServerTab.selectFirstBuildServer();
 		  		  
 		  buildServerTab.clickListBtn();
 		  
@@ -95,7 +88,7 @@ public class BS_UseCase_3{
 		  
 		  buildServerTab.enterPackageToSearch("apache-ant"); 
 			 
-		  buildServerTab.selectBuildServer("ppcle-ubuntu");
+		  buildServerTab.selectFirstBuildServer();
 		  
 		  buildServerTab.clickListBtn();
 		  
@@ -104,20 +97,16 @@ public class BS_UseCase_3{
 	  }
 	  
 	  @DataProvider(name = "buildServers")	  
-	  public static Object[][] listBuildServers() { 
+	  public Object[][] listBuildServers() throws IOException { 
+		  
+		  return ReadTestData.readCSV(this.getClass().getSimpleName());
 	 
-		  return new Object[][] {
+		  /*return new Object[][] {
 				  {"ppcle-ubuntu" ,"python-bson"},
 				  {"x86-ubuntu" ,"python-bson"}, 
 				  {"x86-64-rhel" ,"apache-ant"},
 				  {"ppc64le-rhel" ,"apache-ant"}
-				  };	 
+				  };	*/ 
 	  }	
-	
-	  @AfterTest
-	  public void afterClass() {
-		  
-		  driver.quit();
-	  }
-
+	  
 }

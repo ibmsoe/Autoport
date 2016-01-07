@@ -1,41 +1,34 @@
 package com.autoport.testcases;
 
+import java.io.IOException;
+
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.BuildServersTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class BS_UseCase_4 {
 	
 	WebDriver driver;
-	FluentWait<WebDriver> wait;
-	CommonFunctions functions;
 	HomePage homePage;
-	BuildServersTab buildServerTab;
-	
-	 @Parameters({"browser"})
+	BuildServersTab buildServerTab;	
+	 
 	 @BeforeTest
-	  public void beforeTest(String browser ) throws Exception {
-		 //String browser = "firefox";
-		 functions = new CommonFunctions();
-		 functions.launchBrowser(browser);	
-		 
-		 driver = functions.driver;
-		 homePage = functions.homePage;
-		 buildServerTab = functions.buildServerTab;
-		 
-		 functions.openAutoport();
-		 functions.goTo_ListInstallSingleSoftwarSection();	
+	  public void beforeTest() throws Exception {
+		 //CommonFunctions.launchBrowser(); 
+		 driver = CommonFunctions.driver; 
+		 homePage = CommonFunctions.homePage;
+		 buildServerTab = CommonFunctions.buildServerTab;		 
+		 CommonFunctions.goTo_ListInstallSingleSoftwarSection();		 
 	  }
+	 
 	 @Test (priority=0, dataProvider = "buildServers")
-	  public void BS_Update_Package_On_Servers(String buildServer) throws Exception{ 
+	  public void BS_Update_Package_On_Servers_011_015(String buildServer) throws Exception{ 
 		  		  
 		  buildServerTab.selectBuildServer(buildServer);
 		  
@@ -66,20 +59,15 @@ public class BS_UseCase_4 {
 	  }
 	 
 	 @DataProvider(name = "buildServers")	  
-	  public static Object[][] listBuildServers() { 
+	 public Object[][] listBuildServers() throws IOException { 
+		  
+		  return ReadTestData.readCSV(this.getClass().getSimpleName());
 	 
-		  return new Object[][] {
+		 /* return new Object[][] {
 				  {"ppcle-ubuntu"},
-				  {"x86-ubuntu"}, 
+				  {"x86-ubuntu"},
 				  {"x86-64-rhel"},
 				  {"ppc64le-rhel"}
-				  };	 
+				  };*/	 
 	  }	
-	 
-	 @AfterTest
-	  public void afterClass() {
-		  
-		  driver.quit();
-	  }
-
 }

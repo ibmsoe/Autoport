@@ -1,7 +1,8 @@
 package com.autoport.testcases;
 
+import java.io.IOException;
+
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.FluentWait;
 import org.testng.annotations.*;
 
 import com.autoport.pageobjects.BuildServersTab;
@@ -10,32 +11,25 @@ import com.autoport.utilities.*;
 
 public class BS_UseCase_2{
 	
-	WebDriver driver;
-	FluentWait<WebDriver> FluentWait;
-	CommonFunctions functions;
+	WebDriver driver;		
 	HomePage homePage;
-	BuildServersTab buildServerTab;
-	
-	 @Parameters({"browser"})
+	BuildServersTab buildServerTab;	
+	 
 	 @BeforeTest
-	  public void beforeTest(String browser) throws Exception {
-		 //String browser = "firefox";
+	  public void beforeTest() throws Exception {
 		 
-		 functions = new CommonFunctions();
-		 functions.launchBrowser(browser);
+		 //CommonFunctions.launchBrowser(); 
+		 driver = CommonFunctions.driver; 
+		 homePage = CommonFunctions.homePage;
+		 buildServerTab = CommonFunctions.buildServerTab; 
 		 
-		 driver = functions.driver; 
-		 homePage = functions.homePage;
-		 buildServerTab = functions.buildServerTab;
-		 
-		 functions.openAutoport();
-		 functions.goTo_ListInstallSingleSoftwarSection();
+		 CommonFunctions.goTo_ListInstallSingleSoftwarSection();
 	  }
 	 
 	 @Test  (priority=0, dataProvider = "buildServers")
-	  public void BS_List_Installed_Packages(String buildServer, String packagename) throws Exception{	 
-		  
-	 	  buildServerTab.verifyPlaceHolderTextForSearchBox();
+	  public void BS_List_Installed_Packages_002(String buildServer, String packagename) throws Exception{	 
+		  		 
+ 	      buildServerTab.verifyPlaceHolderTextForSearchBox();
 		  
 		  buildServerTab.selectBuildServer(buildServer);
 		  
@@ -49,7 +43,7 @@ public class BS_UseCase_2{
 	  }
 	
 	 @Test(priority=1, dataProvider = "buildServers")
-	  public void BS_List_Specific_Packages(String buildServer, String packagename) throws Exception{	  
+	  public void BS_List_Specific_Packages_003(String buildServer, String packagename) throws Exception{	  
 		  
 		  buildServerTab.enterPackageToSearch(packagename); 
 		 
@@ -65,20 +59,15 @@ public class BS_UseCase_2{
 	  }
 	  
 	  @DataProvider(name = "buildServers")	  
-	  public static Object[][] listBuildServers() { 
-	 
+	  public Object[][] listBuildServers() throws IOException { 
+		  
+		  return ReadTestData.readCSV(this.getClass().getSimpleName());
+		  /*
 		  return new Object[][] {
 				  {"ppcle-ubuntu" ,"python-bson"},
 				  {"x86-ubuntu" ,"python-bson"}, 
-				  {"x86-64-rhel" ,"apache-ant"}, 
+				  {"x86-64-rhel" ,"apache-ant"},
 				  {"ppc64le-rhel" ,"apache-ant"}
-				  };
-	  }	
-	
-	  @AfterTest
-	  public void afterClass() {
-		  
-		  driver.quit();
-	  }
-
+				  };*/
+	  }		
 }

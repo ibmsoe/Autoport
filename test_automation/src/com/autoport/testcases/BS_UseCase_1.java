@@ -1,44 +1,33 @@
 package com.autoport.testcases;
 
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
-
 import com.autoport.pageobjects.BuildServersTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.utilities.CommonFunctions;
 
 public class BS_UseCase_1 {
-	WebDriver driver;
-	FluentWait<WebDriver> fluentWait;
+	WebDriver driver;	
 	CommonFunctions functions;
 	HomePage homePage;
 	BuildServersTab buildServerTab;
-	
-	 @Parameters({"browser"})
+		 
 	 @BeforeTest
-	  public void beforeTest(String browser) throws Exception {
+	  public void beforeTest() throws Exception { 
+		 		 
+		 //CommonFunctions.launchBrowser(); 
+		 driver = CommonFunctions.driver; 
+		 homePage = CommonFunctions.homePage;
+		 buildServerTab = CommonFunctions.buildServerTab; 
 		 
-		 //String browser = "firefox";		 
-		 functions = new CommonFunctions();
-		 functions.launchBrowser(browser);
-		 
-		 driver = functions.driver; 
-		 homePage = functions.homePage;
-		 buildServerTab = functions.buildServerTab;
-		 
-		 functions.openAutoport();
-		 
-		 homePage.clickBuildServerTab();
+		 homePage.openBuildServerTab();
 	  }
 	 
 	 @Test(priority=0)
-	 public void BS_View_Jenkins_Status() throws Exception{
+	 public void BS_View_Jenkins_Status_001() throws Exception{
 		 
-		 buildServerTab.goTo_ShowJenkinsStatusSection();
+		 buildServerTab.openShowJenkinsStatusSection();
 		 
 		 buildServerTab.verifyJenkinsPageUrl("http://soe-test1.aus.stglabs.ibm.com:8080");
 		 
@@ -46,13 +35,8 @@ public class BS_UseCase_1 {
 		 
 		 buildServerTab.verifyJenkinsStatus();
 		 
-		 buildServerTab.VerifyProgressBar();		  
-	 }
-	 
-	 @AfterTest
-	  public void afterClass() {
-		  
-		  driver.quit();
-	  }
-
+		 buildServerTab.VerifyProgressBar();	
+		 
+		 buildServerTab.closeShowJenkinsStatusSection();
+	 }	 
 }

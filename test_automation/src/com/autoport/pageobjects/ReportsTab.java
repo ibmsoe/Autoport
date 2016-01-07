@@ -533,21 +533,20 @@ public class ReportsTab {
 		String firstdatestring = driver.findElement(By.xpath("//table[@id='testCompareSelectPanel']/tbody/tr[1]/td[7]")).getText();
 		String lastdatestring = driver.findElement(By.xpath("//table[@id='testCompareSelectPanel']/tbody/tr[last()]/td[7]")).getText();
 		
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss");	
-			
+		SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+		//SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss");			
+		//Tue Jan 5 16:11:44 2016 EEE MMM dd HH:mm:ss yyyy
 		try {
 
 			Date date1 = formatter.parse(firstdatestring);
 			Date date2 = formatter.parse(lastdatestring);
 			
-			if(date1.after(date2) || date1.equals(date2)){
+			if(date1.after(date2) || date1.equals(date2)){				
 				
-				System.out.println("Sorted descending");
 			}
 			else{				
 				driver.findElement(By.xpath("//table[@id='testCompareSelectPanel']/thead/tr/th[7]/div[1]")).click();
-				Thread.sleep(3000);
-				System.out.println("Sorted descending again");
+				Thread.sleep(3000);				
 			}
 			
 			/*System.out.println(formatter.format(date1));
@@ -1016,21 +1015,20 @@ public class ReportsTab {
 		String firstdatestring = driver.findElement(By.xpath("//table[@id='batchReportListSelectTable']/tbody/tr[1]/td[8]")).getText();
 		String lastdatestring = driver.findElement(By.xpath("//table[@id='batchReportListSelectTable']/tbody/tr[last()]/td[8]")).getText();
 		
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");	
+		SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
+		//SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");	
 			
 		try {
 
 			Date date1 = formatter.parse(firstdatestring);
 			Date date2 = formatter.parse(lastdatestring);
 			
-			if(date1.after(date2) || date1.equals(date2)){
+			if(date1.after(date2) || date1.equals(date2)){				
 				
-				System.out.println("Sorted descending");
 			}
 			else{				
 				driver.findElement(By.xpath("//table[@id='batchReportListSelectTable']/thead/tr/th[8]/div[1]")).click();
-				Thread.sleep(3000);
-				System.out.println("Sorted descending again");
+				Thread.sleep(3000);				
 			}
 
 		} catch (ParseException e) {

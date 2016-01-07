@@ -59,8 +59,14 @@ public class HomePage {
 	@FindBy(id = "reportsTab")
 	WebElement reportsTab;
 
+	@FindBy(id = "jobManageButton")
+	WebElement manageProjectResultsBtn;
+
 	@FindBy(id = "jenkinsTab")
 	WebElement buildServerTab;
+
+	@FindBy(id = "jenkinsManageButton")
+	WebElement showJenkinsStatusBtn
 
 	@FindBy(id = "modalLabel")
 	WebElement settingsHeader;
@@ -175,17 +181,40 @@ public class HomePage {
 			LogResult.fail("Batch Jobs tab is not displayed.");
 		}
 	}
-
-	// To verify if Reports tab is displayed
+	
+	/* Function to verify if Build Servers tab is opened */
 	public void openBuildServerTab() {
-		buildServerTab.click();
-		if (true) {
-			LogResult.pass("Build Server tab is displayed.");
-		} else {
-			LogResult.fail("Build Server tab is not displayed.");
+		if(showJenkinsStatusBtn.isDisplayed()){
+			LogResult.pass("Build Server tab is opened.");
 		}
+		else{
+			buildServerTab.click();
+			
+			if (showJenkinsStatusBtn.isDisplayed()) {
+				LogResult.pass("Build Server tab is opened.");
+			} else {
+				LogResult.fail("Build Server tab is not opened.");
+			}
+		}
+		
 	}
 
+	/* Function to verify if Reports tab is opened */
+	public void openReportsTab() {		
+		if(manageProjectResultsBtn.isDisplayed()){
+			LogResult.pass("Reports tab is opened.");
+		}
+		else{
+			reportsTab.click();
+		
+			if (manageProjectResultsBtn.isDisplayed()) {
+				LogResult.pass("Reports tab is opened.");
+			} else {
+				LogResult.fail("Reports tab is not opened.");
+			}
+		}
+	}	
+	
 	// To verify if Build Servers tab is displayed
 	public void clickReportsTab() {
 		reportsTab.click();

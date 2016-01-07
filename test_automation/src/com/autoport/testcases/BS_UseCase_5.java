@@ -1,42 +1,35 @@
 package com.autoport.testcases;
 
+import java.io.IOException;
+
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.support.ui.FluentWait;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.BuildServersTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class BS_UseCase_5 {
 	
 	WebDriver driver;
-	FluentWait<WebDriver> wait;
-	CommonFunctions functions;
 	HomePage homePage;
-	BuildServersTab buildServerTab;
-	
-	 @Parameters({"browser"})
+	BuildServersTab buildServerTab;	
+	 
 	 @BeforeTest
-	  public void beforeTest(String browser) throws Exception {
-		 //String browser = "firefox";
-		 functions = new CommonFunctions();
-		 functions.launchBrowser(browser);	
-		 
-		 driver = functions.driver;
-		 homePage = functions.homePage;
-		 buildServerTab = functions.buildServerTab;
-		 
-		 functions.openAutoport();
-		 functions.goTo_ListInstallSingleSoftwarSection();	
+	  public void beforeTest() throws Exception {
+		//CommonFunctions.launchBrowser(); 
+		 driver = CommonFunctions.driver; 
+		 homePage = CommonFunctions.homePage;
+		 buildServerTab = CommonFunctions.buildServerTab;		 
+		 CommonFunctions.goTo_ListInstallSingleSoftwarSection();
+		 	
 	  }
 	 
 	 @Test (priority=0, dataProvider = "buildServers")
-	  public void BS_Uninstall_Package_On_Servers(String buildServer, String packagename) throws Exception{
+	  public void BS_Uninstall_Package_On_Servers_016_020(String buildServer, String packagename) throws Exception{
 		  
 		  buildServerTab.enterPackageToSearch(packagename); 
 		  
@@ -60,17 +53,16 @@ public class BS_UseCase_5 {
 		  
 		  buildServerTab.clickListBtn();
 		  
-		  buildServerTab.verifyInstalledVersionIsNA(packagename);
-		  
+		  buildServerTab.verifyInstalledVersionIsNA(packagename);	  
 		  
 	  }
 	 
 	 @Test
-	  public void BS_Uninstall_Not_Installed_Package() throws Exception{
+	  public void BS_Uninstall_Not_Installed_Package_021() throws Exception{
 		  
 		  buildServerTab.enterPackageToSearch("python-bson"); 
 		  
-		  buildServerTab.selectBuildServer("ppcle-ubuntu");
+		  buildServerTab.selectFirstBuildServer();
 		  
 		  buildServerTab.clickListBtn();
 		  
@@ -87,20 +79,15 @@ public class BS_UseCase_5 {
 	  }
 	 
 	 @DataProvider(name = "buildServers")
-	  
-	  public static Object[][] listBuildServers() { 
+	 public Object[][] listBuildServers() throws IOException { 
+		  
+		  return ReadTestData.readCSV(this.getClass().getSimpleName());
 	 
-		  return new Object[][] {
+		 /* return new Object[][] {
 				  {"ppcle-ubuntu" ,"python-bson"},
 				  {"x86-ubuntu" ,"python-bson"}, 
-				  {"x86-64-rhel" ,"apache-ant"}, 
+				  {"x86-64-rhel" ,"apache-ant"},
 				  {"ppc64le-rhel" ,"apache-ant"}
-				  };	 
-	  }	
-	 
-	 @AfterTest
-	  public void afterClass() {
-		  
-		  driver.quit();
-	  }
+				  };	 */
+	  }	 
 }
