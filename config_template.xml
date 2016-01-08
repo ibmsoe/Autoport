@@ -337,12 +337,13 @@
                       JAVA_VERSION=`echo ${ADDR[1]}`
                   fi
                   if [ $JSTYPE ]; then
+                      # Expecting value of JSTYPE as 'ibm-sdk-nodejs,7' or ''
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
                       echo &quot;Sourcing JavaScript to $JSTYPE&quot;
-                      sudo chmod a+x $JSTYPE
-                      LEN=$((${#PATH}+1))
-                      source $JSTYPE
-                      LAST_NPATH=${PATH: $LEN}
-                      PATH=$LAST_NPATH:$PATH
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JSTYPE"
+                      JS_TYPE=`echo ${ADDR[0]}`
+                      JS_VERSION=`echo ${ADDR[1]}`
                   fi
                   source /etc/profile
                   ARTI=&quot;.autoport-scratch/build_result.arti&quot;
@@ -383,12 +384,13 @@
                       JAVA_VERSION=`echo ${ADDR[1]}`
                   fi
                   if [ $JSTYPE ]; then
+                      # Expecting value of JSTYPE as 'ibm-sdk-nodejs,7' or ''
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
                       echo &quot;Sourcing JavaScript to $JSTYPE&quot;
-                      sudo chmod a+x $JSTYPE
-                      LEN=$((${#PATH}+1))
-                      source $JSTYPE
-                      LAST_NPATH=${PATH: $LEN}
-                      PATH=$LAST_NPATH:$PATH
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JSTYPE"
+                      JS_TYPE=`echo ${ADDR[0]}`
+                      JS_VERSION=`echo ${ADDR[1]}`
                   fi
                   source /etc/profile
                   ARTI=&quot;.autoport-scratch/test_result.arti&quot;
@@ -429,12 +431,13 @@
                       JAVA_VERSION=`echo ${ADDR[1]}`
                   fi
                   if [ $JSTYPE ]; then
+                      # Expecting value of JSTYPE as 'ibm-sdk-nodejs,7' or ''
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
                       echo &quot;Sourcing JavaScript to $JSTYPE&quot;
-                      sudo chmod a+x $JSTYPE
-                      LEN=$((${#PATH}+1))
-                      source $JSTYPE
-                       LAST_NPATH=${PATH: $LEN}
-                      PATH=$LAST_NPATH:$PATH
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JSTYPE"
+                      JS_TYPE=`echo ${ADDR[0]}`
+                      JS_VERSION=`echo ${ADDR[1]}`
                   fi
                   source /etc/profile
                   ARTI=&quot;.autoport-scratch/install_result.arti&quot;

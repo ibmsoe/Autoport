@@ -310,7 +310,7 @@ class Batch:
 
         try:
             env = fileBuf['config']['javascript']
-            if env == "IBM SDK for Node.js":
+            if "ibm sdk nodejs" in env.lower().replace('-',' '):
                 environment = environment + " / IBM SDK for Node.js"
             else:
                 environment = environment + " / Node.js"

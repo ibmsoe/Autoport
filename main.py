@@ -1452,9 +1452,10 @@ def runBatchFile ():
     # Parse config data
     javaType = fileBuf['config']['java'].replace(' ',',')
 
-    javaScriptType = ""
-    if fileBuf['config']['javascript'] == "IBM SDK for Node.js":
-        javaScriptType = "/etc/profile.d/ibm-nodejs.sh"
+    javaScriptType = fileBuf['config']['javascript'].replace(' ',',')
+
+    if javaScriptType == 'nodejs':
+        javaScriptType = ''
 
     includeTestCmds = ""
     try:

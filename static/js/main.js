@@ -419,12 +419,7 @@ var batchState = {
         }
     },
     selectNodeJsType: function(ev, el) {
-        var selection = $(ev.target).text().toLowerCase();
-        if (selection === "ibm sdk for node.js") {
-            batchState.batchFile.config.javascript = "IBM SDK for Node.js";
-        } else if (selection === "node.js"){
-            batchState.batchFile.config.javascript = "Node.js";
-        }
+        batchState.batchFile.config.javascript = $(ev.target).text();;
         console.log("selectNodeJsType: setting javascript=", batchState.batchFile.config.javascript)
     },
     selectJavaType: function(ev, el) {
@@ -1006,6 +1001,8 @@ var detailState = {
     generatePie: null,
     supportedJavaList: [],
     supportedJavaListOptions: [],
+    supportedJavaScriptList: [],
+    supportedJavaScriptListOptions: [],
     //TODO - split single and generate out, this repetition is bad.  Pertains to two detail menus
     javaType: "openjdk 7",                            // OpenJDK or IBM Java
     javaTypeOptions: "",
@@ -1046,25 +1043,13 @@ var detailState = {
     // When the radio button is pressed update the server environment data
     selectJavaScriptType: function(ev) {
         var selection = $(ev.target).text().toLowerCase();
-        if (selection === "nodejs") {
-            detailState.javaScriptType = "nodejs";
-            detailState.javaScriptTypeOptions = "";
-        }
-        else if (selection === "ibm sdk for node.js") {
-            detailState.javaScriptType = "IBM SDK for Node.js";
-            detailState.javaScriptTypeOptions = "/etc/profile.d/ibm-nodejs.sh";
-        }
+        detailState.javaScriptType = $(ev.target).text();
+        detailState.javaScriptTypeOptions = '';
     },
     selectGenerateJavaScriptType: function(ev) {
         var selection = $(ev.target).text().toLowerCase();
-        if (selection === "nodejs") {
-            detailState.generateJavaScriptType = "nodejs";
-            detailState.generateJavaScriptTypeOptions = "";
-        }
-        else if (selection === "ibm sdk for node.js") {
-            detailState.generateJavaScriptType = "IBM SDK for Node.js";
-            detailState.generateJavaScriptTypeOptions = "/etc/profile.d/ibm-nodejs.sh";
-        }
+        detailState.generateJavaScriptType = $(ev.target).text();
+        detailState.generateJavaScriptTypeOptions = '';
     },
     changeBuildOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
@@ -2628,11 +2613,16 @@ function showDetail(data) {
                 var buildServers = getSelectedValues(el);
                 var javaType = detailState.javaType.split(' ')[0];
                 var javaVersion = (detailState.supportedJavaList[detailState.javaType])?detailState.supportedJavaList[detailState.javaType]:7;
-
+                var javaScriptType = detailState.javaScriptType.split(' ')[0];
+                var javaScriptVersion = (detailState.supportedJavaScriptList[detailState.javaScriptType])?detailState.supportedJavaScriptList[detailState.javaScriptType]:0;
+                var javaScriptTypeVersion = javaScriptType + ',' + javaScriptVersion;
+                if (javaScriptType == 'nodejs'){
+                    javaScriptTypeVersion = '';
+                }
                 for (var i=0; i < buildServers.length; i++) {
                     console.log(detailState.repo.useVersion + " version");
                     $.post("createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion,
-                           javaType: javaType+','+javaVersion, javaScriptType: detailState.javaScriptTypeOptions,
+                           javaType: javaType+','+javaVersion, javaScriptType: javaScriptTypeVersion,
                            node: buildServers[i], selectedBuild: selectedBuild,
                            selectedTest: selectedTest, selectedEnv: selectedEnv,
                            artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang},
@@ -2673,10 +2663,15 @@ function showDetail(data) {
                 var buildServers = getSelectedValues(el);
                 var javaType = detailState.generateRepo.javaType.split(' ')[0];
                 var javaVersion = (detailState.supportedJavaList[detailState.generateRepo.javaType])?detailState.supportedJavaList[detailState.generateRepo.javaType]:7;
-
+                var javaScriptType = detailState.generateJavaScriptType.split(' ')[0];
+                var javaScriptVersion = (detailState.supportedJavaScriptList[detailState.generateJavaScriptType])?detailState.supportedJavaScriptList[detailState.generateJavaScriptType]:0;
+                var javaScriptTypeVersion = javaScriptType + ',' + javaScriptVersion;
+                if (javaScriptType == 'nodejs'){
+                    javaScriptTypeVersion = '';
+                }
                 for (var i=0; i < buildServers.length; i++) {
                     $.post("createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion,
-                            javaType: javaType+','+javaVersion, javaScriptType: detailState.generateJavaScriptTypeOptions,
+                            javaType: javaType+','+javaVersion, javaScriptType: javaScriptTypeVersion,
                             node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest,
                             selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang},
                             addToJenkinsCallback, "json").fail(addToJenkinsCallback);
@@ -3807,42 +3802,51 @@ function CustomDateSorter(date1, date2){
     return dateObj1 - dateObj2
 }
 
-function populateJavaTypeDropdown(data){
+function populateDropDownsBasedOnLanguage(packageList){
+    // wanted to use switch case loop, but not sure how to switch in case of regular expressions hence going
+    // with traditional if/else.
+    var langKey = '';
+    var langVersion = '';
+    var supportedLangTypes = {};
+
+    for(var position = 0; position < packageList.length; position++){
+        // Get package Tag/name
+        if (packageList[position].tag !== undefined){
+            var packageName = packageList[position].tag.toLowerCase();
+        }else{
+            var packageName = packageList[position].name.toLowerCase();
+        }
+
+        if (packageName.startsWith('ibm-sdk-nodejs')){
+            langVersion = (packageList[position].version !== undefined)?packageList[position].version:0;
+            langKey = 'ibm-sdk-nodejs ' + langVersion;
+            detailState.supportedJavaScriptList[langKey] = langVersion;
+            detailState.supportedJavaScriptListOptions = Object.keys(detailState.supportedJavaScriptList);
+        }else if (packageName.startsWith('ibm-java-sdk') || packageName.startsWith('openjdk')){
+            langKey = 'openjdk';
+            langVersion = (packageList[position].version !== undefined)?packageList[position].version.split('.')[0]:7;
+            if (packageList[position].name.startsWith('ibm-java-sdk')){
+                langKey = 'ibm-java-sdk' + ' ' + langVersion;
+            }else if(packageList[position].name.startsWith('openjdk')){
+                langKey = 'openjdk' + ' ' + langVersion;
+            }
+            detailState.supportedJavaList[langKey] = langVersion;
+            detailState.supportedJavaListOptions = Object.keys(detailState.supportedJavaList);
+        }
+    }
+}
+
+function populateDropdown(data){
     // Assuming Ubuntu and RHEL will have same set of managed packages.
     var managedRuntimePackages = data.results.managedRuntime;
-    var supportedJavaTypes = {};
+    var supportedLangTypes = {};
     if (managedRuntimePackages && managedRuntimePackages.length > 0){
         var autoportChefPackages = managedRuntimePackages[0].autoportChefPackages;
         var autoportPackages = managedRuntimePackages[0].autoportPackages;
-        for(var i = 0; i < autoportPackages.length; i++){
-            var packageName = autoportPackages[i].name.toLowerCase();
-            if (packageName.startsWith('ibm-java-sdk') || packageName.startsWith('openjdk')){
-                var javaKey = 'openjdk';
-                var javaVersion = (autoportPackages[i].version !== undefined)?autoportPackages[i].version.split('.')[0]:7;
-                if (autoportPackages[i].name.startsWith('ibm-java-sdk')){
-                    javaKey = 'ibm-java-sdk' + ' ' + javaVersion;
-                }else if(autoportPackages[i].name.startsWith('openjdk')){
-                    javaKey = 'openjdk' + ' ' + javaVersion;
-                }
-                supportedJavaTypes[javaKey] = javaVersion;
-            }
-        }
-        for(var i = 0; i < autoportChefPackages.length; i++){
-            var packageName = autoportChefPackages[i].name.toLowerCase();
-            if (packageName.startsWith('ibm-java-sdk') || packageName.startsWith('openjdk')){
-                var javaVersion = (autoportChefPackages[i].version !== undefined)?autoportChefPackages[i].version.split('.')[0]:7;
-                var javaKey = 'openjdk';
-                if (autoportChefPackages[i].name.startsWith('ibm-java-sdk')){
-                    javaKey = 'ibm-java-sdk' + ' ' + javaVersion;
-                }else if(autoportChefPackages[i].name.startsWith('openjdk')){
-                    javaKey = 'openjdk' + ' ' + javaVersion;
-                }
-                supportedJavaTypes[javaKey] = javaVersion;
-            }
-        }
+        detailState.supportedJavaScriptList['nodejs'] = 0; // while initializing of nodejs array set the default values.
+        populateDropDownsBasedOnLanguage(autoportPackages);
+        populateDropDownsBasedOnLanguage(autoportChefPackages);
     }
-    detailState.supportedJavaList = supportedJavaTypes;
-    detailState.supportedJavaListOptions = Object.keys(supportedJavaTypes);
 }
 
 $(document).ready(function() {
@@ -3871,7 +3875,7 @@ $(document).ready(function() {
         type: 'GET',
         contentType: "application/json; charset=utf-8",
         url: "getManagedList",
-        success: populateJavaTypeDropdown,
+        success: populateDropdown,
         dataType: "json",
         async:true
     });

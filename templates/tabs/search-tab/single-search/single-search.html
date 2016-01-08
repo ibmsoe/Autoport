@@ -135,8 +135,9 @@
             <div class="dropdown">
               <button rv-show="detailState.repo.language | isJavaScript" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.javaScriptType } <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right">
-                <li rv-on-click="detailState.selectJavaScriptType"><a>nodejs</a></li>
-                <li rv-on-click="detailState.selectJavaScriptType"><a>IBM SDK for Node.js</a></li>
+                <li rv-on-click="detailState.selectJavaScriptType" rv-each-nodejs="detailState.supportedJavaScriptListOptions">
+                    <a><span rv-text="nodejs"></span></a>
+                </li>
               </ul>
             </div>
 

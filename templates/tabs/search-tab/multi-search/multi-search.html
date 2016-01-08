@@ -80,8 +80,9 @@
             <div class="dropdown">
               <button rv-show="detailState.generateRepo.language | isJavaScript" type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">Use { detailState.generateJavaScriptType } <span class="caret"></span></button>
               <ul class="dropdown-menu dropdown-menu-right" role="menu">
-                <li rv-on-click="detailState.selectGenerateJavaScriptType"><a>nodejs</a></li>
-                <li rv-on-click="detailState.selectGenerateJavaScriptType"><a>IBM SDK for Node.js</a></li>
+                <li rv-on-click="detailState.selectGenerateJavaScriptType" rv-each-nodejs="detailState.supportedJavaScriptListOptions">
+                    <a><span rv-text="nodejs"></span></a>
+                </li>
               </ul>
             </div>
 
