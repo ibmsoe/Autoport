@@ -479,6 +479,23 @@ class Batch:
         if batchList.get('gsa'):
             repos["gsa"] = self.getLocalProjectForGivenBatch(batchList.get('gsa', []), 'gsa')
 
+        repoData = repos[repos.keys()[0]]
+        batchNamesData = repoData.keys()
+
+        for proj1 in repoData[batchNamesData[0]]:
+            isMatchAvailable = False
+            proj1Name = projectResultPattern.match(proj1).group(4)
+            for proj2 in repoData[batchNamesData[1]]:
+                proj2Name = projectResultPattern.match(proj2).group(4)
+                if proj1Name == proj2Name:
+                    isMatchAvailable = True
+                if repos[repos.keys()[0]][batchNamesData[1]].index(proj2) == len(repos[repos.keys()[0]][batchNamesData[1]])-1 and not isMatchAvailable:
+                    repos[repos.keys()[0]][batchNamesData[1]].remove(proj2)
+            if not isMatchAvailable:
+                repos[repos.keys()[0]][batchNamesData[0]].remove(proj1)
+        if len(repos[repos.keys()[0]][batchNamesData[0]]) == 0:
+            return "No common projects available"
+
         project = Project(catalog)
         final_response = {"status": "ok"}
         for repo in repos:
@@ -639,6 +656,25 @@ class Batch:
         # get list of projects in a batch
         left_projects = self.getLocalProjectForGivenBatch([leftBatch], leftRepo)
         right_projects = self.getLocalProjectForGivenBatch([rightBatch], rightRepo)
+
+        batchNames = []
+        batchNames.extend(left_projects.keys())
+        batchNames.extend(right_projects.keys())
+
+        for proj1 in left_projects[batchNames[0]]:
+            isMatchAvailable = False
+            proj1Name = projectResultPattern.match(proj1).group(4)
+            for proj2 in right_projects[batchNames[1]]:
+                proj2Name = projectResultPattern.match(proj2).group(4)
+                if proj1Name == proj2Name:
+                    isMatchAvailable = True
+                if right_projects[batchNames[1]].index(proj2) == len(right_projects[batchNames[1]])-1 and not isMatchAvailable:
+                    right_projects[batchNames[1]].remove(proj2)
+            if not isMatchAvailable:
+                left_projects[batchNames[0]].remove(proj1)
+
+        if len(left_projects[batchNames[0]]) == 0 or len(right_projects[batchNames[1]]) == 0:
+            return "No common projects available"
 
         # Assuming both left and right project names will be same set of project names, only job names will differ.
         for batchName in left_projects:

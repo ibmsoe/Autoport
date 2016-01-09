@@ -2097,7 +2097,7 @@ def managePackageForSingleSlave():
            return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction,
                                buildStatus=buildStatus)
        else:
-           return json.jsonify(status="failure", error="Job failed", packageName=packageName, packageAction=packageAction, 
+           return json.jsonify(status="failure", error="Job failed", packageName=packageName, packageAction=packageAction,
                                buildStatus="FAILURE", logUrl=consoleLogUrl)
     else:
         # Read template XML file
@@ -2726,7 +2726,9 @@ def getDiffBatchLogResults():
 
     logs = batch.getBatchDiffLogResults(leftBatch, rightBatch, leftRepo, rightRepo, catalog, logFile)
 
-    if logs.has_key('error'):
+    if logs == "No common projects available":
+        return json.jsonify(status='failure', error = logs)
+    elif logs.has_key('error'):
         return json.jsonify(
             status = "failure",
             error = logs.get("error", "Something went wrong")
@@ -2904,7 +2906,9 @@ def uploadToRepo():
 def getBatchTestDetails():
     batchList = request.json['batchList']
     batchDetails = batch.getBatchTestDetails(batchList, catalog)
-    if batchDetails.has_key('error'):
+    if batchDetails == "No common projects available":
+        return json.jsonify(status='failure', error = batchDetails)
+    elif batchDetails.has_key('error'):
         return json.jsonify(status=batchDetails['status'], error = batchDetails['error']), 400
     else:
         return json.jsonify(status=batchDetails['status'], results = batchDetails)
