@@ -339,12 +339,14 @@ var batchState = {
     showListSelectTable: false, // Draw list/select table
     fileList: [],               // Stores batch files found in list/select
     selectedBatchFile: {},
+    batchListingRepo: "",
     listLocalBatchFiles: function(ev) {
         batchState.loading = true;
         batchState.showBatchReportsTable = false;
         batchState.showListSelectTable = false;
         batchState.showBatchFile = false;
         batchState.selectedBatchFile = {};
+        batchState.batchListingRepo = "local";
         $('#batch_file_archive').addClass('disabled');
         $('#batch_file_archive').show();
         $.getJSON("listBatchFiles/local", { filter: $("#batchFileFilter").val() },
@@ -356,6 +358,7 @@ var batchState = {
         batchState.showListSelectTable = false;
         batchState.selectedBatchFile = {};
         batchState.showBatchFile = false;
+        batchState.batchListingRepo = "gsa";
         $('#batch_file_archive').addClass('disabled');
         $('#batch_file_archive').hide();
         $.getJSON("listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
@@ -367,6 +370,7 @@ var batchState = {
         batchState.showListSelectTable = false;
         batchState.showBatchFile = false;
         batchState.selectedBatchFile = {};
+        batchState.batchListingRepo = "all";
         $('#batch_file_archive').addClass('disabled');
         $('#batch_file_archive').show();
         $.getJSON("listBatchFiles/all", { filter: $("#batchFileFilter").val() },
@@ -397,25 +401,30 @@ var batchState = {
         batchState.saveBatchFileName = $("#saveBatchFileFilter").val();
         batchState.batchFile.config.name = batchState.saveBatchFileName;
         if (batchState.includeTestCmds) {
-            batchState.batchFile.config.includeTestCmds = "True"
+            batchState.batchFile.config.includeTestCmds = "True";
         } else {
-            batchState.batchFile.config.includeTestCmds = "False"
+            batchState.batchFile.config.includeTestCmds = "False";
         }
         if (batchState.includeInstallCmds) {
-            batchState.batchFile.config.includeInstallCmds = "True"
+            batchState.batchFile.config.includeInstallCmds = "True";
         } else {
-            batchState.batchFile.config.includeInstallCmds = "False"
+            batchState.batchFile.config.includeInstallCmds = "False";
         }
-        console.log("In batchState.saveBatch, batchFile.config=", batchState.batchFile.config)
+        console.log("In batchState.saveBatch, batchFile.config=", batchState.batchFile.config);
+        for(var i=0; i<batchState.batchFile.packages.length; i++){
+            if(!batchState.batchFile.packages[i].build.isBuildParamatersUpdated){
+                delete batchState.batchFile.packages[i].build;
+            }
+        }
 
         if (batchState.saveBatchFileName == batchObj.name) {
             var file = JSON.stringify(batchState.batchFile, undefined, 2);
-            $.post("updateBatchFile", {name: batchObj.filename, file: file, location: batchObj.location},
-               batchSaveCallback, "json").fail(uploadBatchFileCallback);
+            $.post("updateBatchFile", {name: batchObj.filename, file: file, location: batchObj.location},function(data){
+               batchSaveCallback(data,batchState), "json"}).fail(uploadBatchFileCallback);
         } else {
             var file = JSON.stringify(batchState.batchFile, undefined, 2);
-            $.post("uploadBatchFile", {name: batchState.saveBatchFileName, file: file},
-               batchSaveCallback, "json").fail(uploadBatchFileCallback);
+            $.post("uploadBatchFile", {name: batchState.saveBatchFileName, file: file},function(data){
+                batchSaveCallback(data,batchState), "json"}).fail(uploadBatchFileCallback);
         }
     },
     selectNodeJsType: function(ev, el) {
@@ -435,6 +444,7 @@ var batchState = {
     resetEnviron: function(ev, el) {
         batchState.batchFile.config.java = batchState.javaType;
         batchState.batchFile.config.javascript = batchState.javaScriptType;
+        $('#batchSettingsTestCkBox').prop('checked', true);
         $.getJSON("parseBatchFile",
             {
                 batchName: batchState.selectedBatchFile.filename
@@ -450,6 +460,13 @@ var batchState = {
          $("#settingsBatchModal1").hide();
          $('#showModifyButton').hide();
          $("#batchBuildCommandBackButton").show();
+    },
+    onTestCheckBoxChanged: function(ev, el) {
+        if($("#batchSettingsTestCkBox").is(":checked")){
+            batchState.batchFile.config.includeTestCmds = "True";
+        }else {
+            batchState.batchFile.config.includeTestCmds = "False";
+        }
     },
     onBatchSettingsOwnerChange:function(ev, el) {
         if($('#batchSettingsOwner').val() != ""){
@@ -828,7 +845,7 @@ var batchReportState = {
                  }
           }
         batchReportState.selectedBatchJobs = selectedBatchJobs;
-        if (buttonID == "viewBatchBuildLogBtn" || buttonID == "viewBatchTestLogBtn") 
+        if (buttonID == "viewBatchBuildLogBtn" || buttonID == "viewBatchTestLogBtn")
               $('#tree2').treed();
         var leftProject = sel[selectedIndex][selectedJobIndex];
         var rightProject = sel[selectedIndex][selectedJobIndex];
@@ -2810,13 +2827,20 @@ function multipleSaveCallback(data) {
     clearBatchFile(searchState.multiple.batchFile);
 }
 
-function batchSaveCallback(data) {
+function batchSaveCallback(data, batchStateObj) {
     console.log("In batchSaveCallback");
     if (data.status !== "ok") {
         showAlert("", data);
     } else {
         showAlert("Batch file saved successfully");
         batchState.fileList.push(batchState.batchFile);
+        if(batchStateObj.batchListingRepo == "local"){
+            batchStateObj.listLocalBatchFiles();
+        }else if(batchStateObj.batchListingRepo == "gsa"){
+             batchStateObj.listArchivedBatchFiles();
+        }else{
+            batchStateObj.listAllBatchFiles();
+        }
     }
 }
 
@@ -2864,7 +2888,7 @@ function parseBatchFileCallback(data, batch_obj){
             batch_obj.includeInstallCmds = false;
         }
 
-        console.log("In parseBatchFileCallback, batchFile.config=", data.results.config); 
+        console.log("In parseBatchFileCallback, batchFile.config=", data.results.config);
 
         var buildInstallTable = $('<table border="1" class="table panel panel-default table-hover"></table>').attr({ id: "buildInstallTable" });
 
@@ -2877,6 +2901,9 @@ function parseBatchFileCallback(data, batch_obj){
             packageObj.testCommand = package.build.selectedTest;
             packageObj.gitURL = package.build.owner_url;
             packageObj.installCommand = package.build.selectedInstall;
+            if(package.build.isBuildParamatersUpdated == undefined){
+                package.build.isBuildParamatersUpdated = false;
+            }
 
             var packageNameRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Package Name').appendTo(packageNameRow);
@@ -3294,7 +3321,7 @@ function compareVersion(version1,version2){
 
 function toggleBatchReportButtons(){
     var selectedProjects = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-    if (selectedProjects.length === 2 && selectedProjects[0].batch_name == selectedProjects[1].batch_name) {
+    if (selectedProjects.length === 2) {
         $("#batch_report_compare").removeClass("disabled");
         $("#batch_report_compare_build_log").removeClass("disabled");
         $("#batch_report_compare_test_log").removeClass("disabled");
@@ -3444,6 +3471,11 @@ function generateOrganizedData(organizedData, data, batch_name, more_info, elemP
  * @param data
  */
 function processBatchCompare(data){
+    if(data.status == "failure"){
+        batchReportState.loading = false;
+        showAlert(data.error);
+        return;
+    }
     ProjectRegExp = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)/i;
     organizedData = {};
     if(data["results"]){
@@ -3489,6 +3521,12 @@ function processBatchCompare(data){
  * @param batch_report_obj
  */
 function processBatchTestLogCompare(data, batch_report_obj){
+    if(data.status == "failure"){
+        batch_report_obj.loading = false;
+        batchReportState.batchReportLogRequested = false;
+        showAlert(data.error);
+        return;
+    }
     if(data["results"]){
         // Hide listing of Batch jiobs before showing the batch details.
         batch_report_obj.showListSelectTable = false;
@@ -3783,17 +3821,21 @@ function checkIfBuildAndTestLogCreated(log_comparison_type){
 }
 function updateTestCommand(value, key){
     batchState.batchFile.packages[key].build.selectedTest = value;
+    batchState.batchFile.packages[key].build.isBuildParamatersUpdated = true;
 }
 
 function updateBuildCommand(value, key){
     batchState.batchFile.packages[key].build.selectedInstall = value;
+    batchState.batchFile.packages[key].build.isBuildParamatersUpdated = true;
 }
 function updateInstallCommand(value, key){
     batchState.batchFile.packages[key].build.selectedInstall = value;
+    batchState.batchFile.packages[key].build.isBuildParamatersUpdated = true;
 }
 
 function updateEnvVariable(value, key){
     batchState.batchFile.packages[key].build.selectedEnv = value;
+    batchState.batchFile.packages[key].build.isBuildParamatersUpdated = true;
 }
 
 function CustomDateSorter(date1, date2){

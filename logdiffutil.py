@@ -6,8 +6,10 @@ def renderline(text, errorWords, packageDict):
     # Check if it is a compiling command
     compilers = ['gcc', 'g++', 'clang', 'clang++', 'clips', 'erlang', 'javac', 'luac', 'scala']
     noEndsWithStr = '[~!@#$%^&*()_{}":;\']+$'
-    firstword = text.split(' ', 1)[0]
-    lastChar = firstword[len(firstword) - 1]
+    firstword = text.strip().split(' ', 1)[0]
+    lastChar = ""
+    if len(firstword)!=0:
+        lastChar = firstword[len(firstword) - 1]
     for compiler in compilers:
         if firstword.startswith(compiler) and not lastChar in noEndsWithStr:
             return text
