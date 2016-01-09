@@ -158,6 +158,12 @@
                           rc=0
                           args=$@
                           cmd=${args%% *}
+                          sudoarg=""
+                          if [ ${cmd:0:1} == "-" ]; then
+                              sudoarg="$cmd"
+                              args=${args#$cmd }
+                              cmd=${args%% *}
+                          fi
                           rest=""
                           if [ "$cmd" != "$args" ]; then
                               rest=${args#$cmd }
@@ -173,8 +179,13 @@
                               echo "Autoport RHEL WARNING Replace: sudo $*"
                               ;;
                           *)
-                              /usr/bin/sudo $cmd $rest
+                              cmd=`/usr/bin/which $cmd`
                               rc=$?
+                              echo "AUTOPORT INFO: /usr/bin/sudo $sudoarg $cmd $rest"
+                              if [ $rc == 0 ]; then
+                                  /usr/bin/sudo $sudoarg $cmd $rest
+                                  rc=$?
+                              fi
                               ;;
                           esac
                           return $rc
@@ -208,9 +219,14 @@
                       # against lock collisions as we allow multiple projects to build at the
                       # by retrying selected commands.  These commands come from TravisCI yml files.
                       function sudo() {
-                          rc=0
                           args=$@
                           cmd=${args%% *}
+                          sudoarg=""
+                          if [ ${cmd:0:1} == "-" ]; then
+                              sudoarg="$cmd"
+                              args=${args#$cmd }
+                              cmd=${args%% *}
+                          fi
                           rest=""
                           if [ "$cmd" != "$args" ]; then
                               rest=${args#$cmd }
@@ -226,31 +242,38 @@
                               if [ "$subCmd" == "update" ]; then
                                   echo "Autoport INFO: sudo $cmd $subCmd $rest"
                                   /usr/bin/sudo $cmd $subCmd $rest
+                                  rc=0
                               else
                                   sudoRetryRC 100 $cmd $subCmd $rest
+                                  rc=$?
                               fi
                               return $rc
                               ;;
                           "aptitude")
                               sudoRetryRC 255 $cmd $rest
-                              return $rc
+                              return $?
                               ;;
                           "dpkg")
                               sudoRetryRC 2 $cmd $rest
-                              return $rc
+                              return $?
                               ;;
                           "synaptic")
                               sudoRetryRC 1 $cmd $rest
-                              return $rc
+                              return $?
                               ;;
                           *)
                               # add-apt-repository does not appear to take any locks
-                              echo "Autoport INFO: sudo $cmd $rest"
-                              /usr/bin/sudo $cmd $rest
+
+                              cmd=`/usr/bin/which $cmd`
                               rc=$?
+                              echo "AUTOPORT INFO: /usr/bin/sudo $sudoarg $cmd $rest"
+                              if [ $rc == 0 ]; then
+                                  /usr/bin/sudo $sudoarg $cmd $rest
+                                  rc=$?
+                              fi
+                              return $rc
                               ;;
                           esac
-                          return $rc
                       }
                   fi
                   function travis_retry() {
@@ -319,7 +342,7 @@
                  ################################ End shell program to create autoport environment ###########################
 
                  # Dump to a bash script for execution
-                 echo "$bash_script_providing_builtin_autoport_functions" >.autoport-scratch/.autoportrc
+                 echo &quot;$bash_script_providing_builtin_autoport_functions&quot; >.autoport-scratch/.autoportrc
 
                  env</command>
         </hudson.tasks.Shell>
@@ -332,7 +355,7 @@
                       # i.e [name,major-version] derived from managed list which
                       # will populate the drop down.
                       echo &quot;Setting Java to $JAVATYPE&quot;
-                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JAVATYPE"
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JAVATYPE&quot;
                       JAVA_TYPE=`echo ${ADDR[0]}`
                       JAVA_VERSION=`echo ${ADDR[1]}`
                   fi
@@ -340,8 +363,8 @@
                       # Expecting value of JSTYPE as 'ibm-sdk-nodejs,7' or ''
                       # i.e [name,major-version] derived from managed list which
                       # will populate the drop down.
-                      echo &quot;Sourcing JavaScript to $JSTYPE&quot;
-                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JSTYPE"
+                      echo &quot;Setting JavaScript to $JSTYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JSTYPE&quot;
                       JS_TYPE=`echo ${ADDR[0]}`
                       JS_VERSION=`echo ${ADDR[1]}`
                   fi
@@ -356,18 +379,34 @@
                   echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
-                  echo &quot;Autoport CMD:         $CMD1&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport Build CMD:   $CMD1&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  type java &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`mvn --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`ant -version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`gradle --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
                   type node &gt;&gt; $ARTI
-                  NV=`node --version`
-                  echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
+                  V=`node --version`
+                  echo &quot;node version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type npm &gt;&gt; $ARTI
+                  V=`npm --version`
+                  echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo $CMD1 | tee .autoport-scratch/autoport_build_cmd;
                   chmod a+x .autoport-scratch/autoport_build_cmd;
                   source .autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                  rc=$?
+                  echo &quot;Autoport BUILD CMD RC=$rc&quot; &gt;&gt; $ARTI
+                  exit $rc
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
@@ -379,7 +418,7 @@
                       # i.e [name,major-version] derived from managed list which
                       # will populate the drop down.
                       echo &quot;Setting Java to $JAVATYPE&quot;
-                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JAVATYPE"
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JAVATYPE&quot;
                       JAVA_TYPE=`echo ${ADDR[0]}`
                       JAVA_VERSION=`echo ${ADDR[1]}`
                   fi
@@ -387,8 +426,8 @@
                       # Expecting value of JSTYPE as 'ibm-sdk-nodejs,7' or ''
                       # i.e [name,major-version] derived from managed list which
                       # will populate the drop down.
-                      echo &quot;Sourcing JavaScript to $JSTYPE&quot;
-                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JSTYPE"
+                      echo &quot;Setting JavaScript to $JSTYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JSTYPE&quot;
                       JS_TYPE=`echo ${ADDR[0]}`
                       JS_VERSION=`echo ${ADDR[1]}`
                   fi
@@ -403,18 +442,34 @@
                   echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
-                  echo &quot;Autoport CMD:         $CMD2&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport Test CMD:    $CMD2&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  type java &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`mvn --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`ant -version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`gradle --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
                   type node &gt;&gt; $ARTI
-                  NV=`node --version`
-                  echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
+                  V=`node --version`
+                  echo &quot;node version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type npm &gt;&gt; $ARTI
+                  V=`npm --version`
+                  echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo $CMD2 | tee .autoport-scratch/autoport_test_cmd;
                   chmod a+x .autoport-scratch/autoport_test_cmd;
                   source .autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                  rc=$?
+                  echo &quot;Autoport Test CMD RC=$rc&quot; &gt;&gt; $ARTI
+                  exit $rc
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
@@ -426,7 +481,7 @@
                       # i.e [name,major-version] derived from managed list which
                       # will populate the drop down.
                       echo &quot;Setting Java to $JAVATYPE&quot;
-                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JAVATYPE"
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JAVATYPE&quot;
                       JAVA_TYPE=`echo ${ADDR[0]}`
                       JAVA_VERSION=`echo ${ADDR[1]}`
                   fi
@@ -434,8 +489,8 @@
                       # Expecting value of JSTYPE as 'ibm-sdk-nodejs,7' or ''
                       # i.e [name,major-version] derived from managed list which
                       # will populate the drop down.
-                      echo &quot;Sourcing JavaScript to $JSTYPE&quot;
-                      IFS=',' read -ra ADDR &lt;&lt;&lt; "$JSTYPE"
+                      echo &quot;Setting JavaScript to $JSTYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JSTYPE&quot;
                       JS_TYPE=`echo ${ADDR[0]}`
                       JS_VERSION=`echo ${ADDR[1]}`
                   fi
@@ -450,18 +505,35 @@
                   echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
-                  echo &quot;Autoport CMD:         $CMD3&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport Install CMD: $CMD3&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  type java &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  type node &gt;&gt; $ARTI
-                  NV=`node --version`
-                  echo &quot;Node version: $NV&quot; &gt;&gt; $ARTI
+                  V=`mvn --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`ant -version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`gradle --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type node &gt;&gt; $ARTI
+                  V=`node --version`
+                  echo &quot;node version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type npm &gt;&gt; $ARTI
+                  V=`npm --version`
+                  echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+
                   echo $CMD3 | tee .autoport-scratch/autoport_install_cmd;
                   chmod a+x .autoport-scratch/autoport_install_cmd;
                   source .autoport-scratch/autoport_install_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                  rc=$?
+                  echo &quot;Autoport Install CMD RC=$rc&quot; &gt;&gt; $ARTI
+                  exit $rc
               fi</command>
         </hudson.tasks.Shell>
       </conditionalbuilders>

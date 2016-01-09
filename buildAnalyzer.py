@@ -189,8 +189,6 @@ def selectTravisMatrix(repo, matrix):
             linuxEnv = ""
             continue
 
-        logger.debug("selectTravisMatrix: proj=%s env=%s" % (repo.name, linuxEnv))
-
         # Convert it to a string for comparisons below
         if isinstance(linuxEnv, list):
             try:
@@ -207,7 +205,7 @@ def selectTravisMatrix(repo, matrix):
     if not linuxEnv:
         linuxEnv = lessEnv
 
-    logger.debug("selectTravisMatrix: proj=%s selectedEnv=%s" % (repo.name, linuxEnv))
+    logger.debug("Leaving selectTravisMatrix, proj=%s selectedEnv=%s" % (repo.name, linuxEnv))
 
     return linuxEnv
 
@@ -282,15 +280,28 @@ def interpretTravis(repo, travisFile, travis_def):
                 generalEnv = linuxEnv
 
             # Add TravisCI control variables that apply for our builds
-            generalEnv = "TRAVIS_OS_NAME='linux' PLATFORM='linux' " + generalEnv
+            generalEnv = "TRAVIS_OS_NAME=linux PLATFORM=linux " + generalEnv
 
             # Eliminate duplicate entries
             travis_def['env'] = eliminateDupEnv(generalEnv)
 
+            # Create directories that are listed in cache section
+            cacheCmds=""
+            if 'cache' in data and data['cache']:
+                cache=data['cache']
+                if 'directories' in cache:
+                    dirList = ' '.join(cache['directories'])
+                    if dirList:
+                        # Directories may be outside /home/jenkins, eg. /home/travis
+                        cacheCmds = "sudo mkdir -p " + dirList
+                        cacheCmds += "; sudo chown -R jenkins.jenkins " + dirList
+
+            logger.debug("interpretTravis: proj=%s directories=%s" % (repo.name, cacheCmds))
+
             # Add autoport build command which comes from yaml before_install and install
             privileged = ['apt', 'dpkg', 'yum', 'rpm', 'install']
             dontAddSudo = [ 'if', 'then', 'elif', 'else', 'fi', 'case', 'function', 'until',
-                            'for', 'while', 'do', 'done', 'true', 'false', 'in' ]
+                            'for', 'while', 'do', 'done', 'true', 'false', 'in', 'npm' ]
             beforeInstall = ""
             if 'before_install' in data and data['before_install']:
                 if isinstance(data['before_install'], list):
@@ -369,6 +380,10 @@ def interpretTravis(repo, travisFile, travis_def):
                 travis_def['test'] = travis_def['test'] + '; ' + cmdline
             else:
                 travis_def['test'] = cmdline
+
+            # If the cache section identified directories, include cmds to create them
+            if cacheCmds:
+                travis_def['build'] = cacheCmds + '; ' + travis_def['build']
 
             # If there is only one command, specify it as build.  A test command
             # may be generated based on the stack of commands that are independently
