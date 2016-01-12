@@ -2911,15 +2911,15 @@ function parseBatchFileCallback(data, batch_obj){
 
             var buildCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Build Command').appendTo(buildCommandRow);
-            $('<td></td>').html('<input type="text" style="width:350px;" value="'+package.build.selectedBuild+'" onBlur="updateBuildCommand(this.value,\''+index+'\')"/>').appendTo(buildCommandRow);
+            $('<td></td>').html('<textarea style="width:350px;height:60px" value="'+package.build.selectedBuild+'" onBlur="updateBuildCommand(this.value,\''+index+'\')">'+package.build.selectedBuild+'</textarea>').appendTo(buildCommandRow);
 
             var testCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Test Command').appendTo(testCommandRow);
-            $('<td></td>').html('<input type="text" style="width:350px;" value="'+package.build.selectedTest+'" onBlur="updateTestCommand(this.value,\''+index+'\')"/>').appendTo(testCommandRow);
+            $('<td></td>').html('<textarea style="width:350px;height:60px" value="'+package.build.selectedTest+'" onBlur="updateTestCommand(this.value,\''+index+'\')">'+package.build.selectedTest+'</textarea>').appendTo(testCommandRow);
 
             var installCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Install Command').appendTo(installCommandRow);
-            $('<td></td>').html('<input type="text" style="width:350px;" value="'+package.build.selectedInstall+'" onBlur="updateInstallCommand(this.value,\''+index+'\')"/>').appendTo(installCommandRow);
+            $('<td></td>').html('<textarea style="width:350px;height:60px" value="'+package.build.selectedInstall+'" onBlur="updateInstallCommand(this.value,\''+index+'\')">'+package.build.selectedInstall+'</textarea>').appendTo(installCommandRow);
 
             var envCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').html('<span>Environment Variable </span><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Environment variables separated by blanks or newlines applied as-is" ></span>').appendTo(envCommandRow);
