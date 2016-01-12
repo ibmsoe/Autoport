@@ -83,9 +83,9 @@
         <tbody id="batchFileTable" rv-each-package="searchState.single.batchFile.packages">
           <tr class="result-row">
             <td>
-              <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner"></a>
+              <a title="Owner" class="tip" rv-href="package.owner_url" rv-text="package.owner" target="_blank"></a>
               /
-              <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name"></a>
+              <a title="Repository" class="tip result-title" rv-href="package.url" rv-text="package.name" target="_blank"></a>
               <span title="Star count" class="tip label first-label" rv-classification="package.classifications.stars">
                 <span class="glyphicon glyphicon-star"></span>
                 { package.stars }
@@ -125,9 +125,9 @@
     <div id="singleDetailPanel" class="panel panel-default" rv-show="detailState.ready">
       <div class="panel-body">
         <h1>
-          <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner"></a>
+          <a title="Owner" class="small" rv-href="detailState.repo.owner_url" rv-text="detailState.repo.owner" target="_blank"></a>
           /
-          <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name"></a>
+          <a title="Repository" class="result-title" rv-href="detailState.repo.url" rv-text="detailState.repo.name" target="_blank"></a>
 
           <div class="dropdown buttonRight">
 
