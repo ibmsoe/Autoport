@@ -2905,7 +2905,8 @@ def uploadToRepo():
 @app.route('/autoport/getBatchTestDetails', methods=['GET', 'POST'])
 def getBatchTestDetails():
     batchList = request.json['batchList']
-    batchDetails = batch.getBatchTestDetails(batchList, catalog)
+    detailsType = request.json['detailsType']
+    batchDetails = batch.getBatchTestDetails(batchList, catalog, detailsType)
     if batchDetails == "No common projects available":
         return json.jsonify(status='failure', error = batchDetails)
     elif batchDetails.has_key('error'):

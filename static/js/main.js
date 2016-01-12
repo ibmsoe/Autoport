@@ -682,7 +682,8 @@ var batchReportState = {
                     contentType: "application/json; charset=utf-8",
                     url: "getBatchTestDetails",
                     data: JSON.stringify({
-                        batchList: query
+                        batchList: query,
+                        detailsType: 'history'
                     }),
                     success: function(data){
                         processBatchHistory(data, batchReportState);
@@ -802,7 +803,8 @@ var batchReportState = {
                 contentType: "application/json; charset=utf-8",
                 url: "getBatchTestDetails",
                 data: JSON.stringify({
-                    batchList: query
+                    batchList: query,
+                    detailsType: 'compare'
                 }),
                 success: function(data){
                     processBatchCompare(data, batchReportState);
@@ -913,7 +915,8 @@ var batchReportState = {
                 contentType: "application/json; charset=utf-8",
                 url: "getBatchTestDetails",
                 data: JSON.stringify({
-                    batchList: query
+                    batchList: query,
+                    detailsType: 'details'
                 }),
                 success: function(data){
                     processBatchDetails(data, batchReportState);

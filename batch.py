@@ -468,7 +468,7 @@ class Batch:
             logger.warning("disconnect: Error " +  str(e))
 
     # @TODO Below code for getting Batch Test Details and other functionality is in progress.
-    def getBatchTestDetails(self, batchList, catalog):
+    def getBatchTestDetails(self, batchList, catalog, type):
         # clear old records and continue with fresh data.
         catalog.cleanTmp()
         out = []
@@ -481,20 +481,20 @@ class Batch:
 
         repoData = repos[repos.keys()[0]]
         batchNamesData = repoData.keys()
-
-        for proj1 in repoData[batchNamesData[0]]:
-            isMatchAvailable = False
-            proj1Name = projectResultPattern.match(proj1).group(4)
-            for proj2 in repoData[batchNamesData[1]]:
-                proj2Name = projectResultPattern.match(proj2).group(4)
-                if proj1Name == proj2Name:
-                    isMatchAvailable = True
-                if repos[repos.keys()[0]][batchNamesData[1]].index(proj2) == len(repos[repos.keys()[0]][batchNamesData[1]])-1 and not isMatchAvailable:
-                    repos[repos.keys()[0]][batchNamesData[1]].remove(proj2)
-            if not isMatchAvailable:
-                repos[repos.keys()[0]][batchNamesData[0]].remove(proj1)
-        if len(repos[repos.keys()[0]][batchNamesData[0]]) == 0:
-            return "No common projects available"
+        if type == "compare":
+            for proj1 in repoData[batchNamesData[0]]:
+                isMatchAvailable = False
+                proj1Name = projectResultPattern.match(proj1).group(4)
+                for proj2 in repoData[batchNamesData[1]]:
+                    proj2Name = projectResultPattern.match(proj2).group(4)
+                    if proj1Name == proj2Name:
+                        isMatchAvailable = True
+                    if repos[repos.keys()[0]][batchNamesData[1]].index(proj2) == len(repos[repos.keys()[0]][batchNamesData[1]])-1 and not isMatchAvailable:
+                        repos[repos.keys()[0]][batchNamesData[1]].remove(proj2)
+                if not isMatchAvailable:
+                    repos[repos.keys()[0]][batchNamesData[0]].remove(proj1)
+            if len(repos[repos.keys()[0]][batchNamesData[0]]) == 0:
+                return "No common projects available"
 
         project = Project(catalog)
         final_response = {"status": "ok"}
