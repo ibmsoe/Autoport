@@ -3,6 +3,7 @@ import codecs
 import json
 import diff_match_patch
 import logdiffutil
+from log import logger
 
 class ResultParser:
     def MavenBuildSummary(self, logfilename):
@@ -433,7 +434,9 @@ class ResultParser:
             "results": {}
         }
         primaryLanguage = self.getPrimaryLanguageFromMeta(logFile)
-        if primaryLanguage:
+        if primaryLanguage and primaryLanguage in ('Perl', 'C', 'C++'):
+            return self.perlResultParser(logFile)
+        elif primaryLanguage:
             resultPatterns = self.getResultPattern(primaryLanguage)
         else:
             return totals
@@ -642,27 +645,6 @@ class ResultParser:
                 'delimiterOne': ',',
                 'delimiterTwo': ' '
             },
-            'Perl': {
-                'regex_list': [
-                    re.compile(r'')
-                 ],
-                'delimiterOne': ' ',
-                'delimiterTwo': ' '
-            },
-            'C': {
-                'regex_list': [
-                    re.compile(r'')
-                 ],
-                'delimiterOne': ' ',
-                'delimiterTwo': ' '
-            },
-            'C++': {
-                'regex_list': [
-                    re.compile(r'')
-                 ],
-                'delimiterOne': ' ',
-                'delimiterTwo': ' '
-            },
             'Java': {
                 'regex_list': [
                     re.compile(r'Tests run: (\d*), Failures: (\d*), Errors: (\d*), Skipped: (\d*), Time elapsed: (\d*\.?\d*) sec[ \<\<\< FAILURE\!]?')
@@ -673,3 +655,46 @@ class ResultParser:
         }
 
         return resultPattern.get(primaryLanguage, None)
+
+    def perlResultParser(self, logFile):
+        # Read line by line and search for pattern like "*.... ok"
+        # If ".... skipped" then add to skipped.
+        # If ".... error" then add to error.
+        # If ".... fail" then add to failure.
+        totals = {
+            "total": 0,
+            "failures": 0,
+            "errors": 0,
+            "skipped": 0,
+            "duration": 0,
+            "results": {}
+        }
+
+        try:
+            testLogFile = open(logFile)
+            logFileData = testLogFile.readlines()
+            for line in logFileData:
+                dataKey = None
+                if '.... fail' in line:
+                    dataKey = 'failures'
+                elif '.... error' in line:
+                    dataKey = 'error'
+                elif '.... skip' in line:
+                    dataKey = 'skipped'
+                elif 'Tests=' in line:
+                    try:
+                        totalStr = line[line.find('Tests='):].split(',')[0]
+                        totals['total'] = int(totalStr[totalStr.find('=')+1:])
+                    except Exception as e:
+                        logger.warning("perlResultParser:: Error: %s" , str(e))
+                    continue
+                else:
+                    continue
+
+                if dataKey:
+                    totals[dataKey] += 1
+        except Exception as e:
+            logger.warning("perlResultParser:: Error: %s" , str(e))
+        finally:
+            testLogFile.close()
+        return totals
