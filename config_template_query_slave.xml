@@ -99,7 +99,7 @@ case $ACTION in
                  cat /etc/issue
                  DISTRO=&apos;&quot;distro&quot;: &quot;UBUNTU&quot;&apos;
                  REL=`lsb_release -r | awk &apos;{print $2}&apos;`
-                 VER=`cat /etc/issue | awk &apos;{print $2}&apos;`
+                 VER=`cat /etc/issue | awk &apos;NR==1{print $2}&apos;`
                  ;;
         esac
 
