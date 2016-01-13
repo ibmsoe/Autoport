@@ -4,8 +4,9 @@
 <link href="{{ url_for('static', filename='css/lib/bootstrap-table.min.css') }}" rel="stylesheet"/>
 
 <!-- DataTables -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.10.4/css/jquery.dataTables.min.css"/>
-<link rel="stylesheet" href="https://cdn.datatables.net/plug-ins/9dcbecd42ad/integration/bootstrap/3/dataTables.bootstrap.css"/>
+
+<link href="{{ url_for('static', filename='css/lib/jquery.dataTables.min.css') }}" rel="stylesheet"/>
+<link href="{{ url_for('static', filename='css/lib/dataTables.bootstrap.css') }}" rel="stylesheet"/>
 
 <!--qtip2 -->
 <link href="{{ url_for('static', filename='css/lib/jquery.qtip.min.css') }}" rel="stylesheet"/>
@@ -15,3 +16,5 @@
 
 <!-- project specific -->
 <link href="{{ url_for('static', filename='css/main.css') }}" rel="stylesheet"/>
+
+
