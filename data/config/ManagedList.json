@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "17",
+    "sequence": "18",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -372,7 +372,7 @@
                 },
                 {
                     "name": "protobuf",
-                    "version": "2.6.1"
+                    "version": "2.5.0"
                 },
                 {
                     "name": "perl",
@@ -648,7 +648,7 @@
                 },
                 {
                     "name": "protobuf",
-                    "version": "2.6.1"
+                    "version": "2.5.0"
                 },
                 {
                     "name": "py",
@@ -943,7 +943,7 @@
                 },
                 {
                     "name": "protobuf",
-                    "version": "2.6.1"
+                    "version": "2.5.0"
                 },
                 {
                     "name": "py",

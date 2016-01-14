@@ -4,7 +4,7 @@ Chef::Recipe.send(:include, ArchiveLog)
 
 version        = node['buildServer']['protobuf']['version']
 source_dir     = node['buildServer']['protobuf']['source_dir']
-install_prefix = node['buildServer']['protobuf']['install_prefix']
+install_prefix = "#{node['buildServer']['protobuf']['install_prefix']}-#{version}"
 protobuf_pkg   = "protobuf-#{version}"
 ext            = node['buildServer']['protobuf']['ext']
 archive_dir    = node['buildServer']['download_location']
@@ -14,20 +14,20 @@ if ext.empty?
   ext = ArchiveLog.getExtension('protobuf', version)
 end
 
-file "#{archive_dir}/#{protobuf_pkg}#{ext}" do
-  action :delete
-  ignore_failure true
+[
+  "#{install_prefix}/bin/protoc",
+  "/etc/profile.d/protobuf.sh"
+].each do |fil|
+  file fil do
+    action :delete
+    ignore_failure true
+  end
 end
 
 directory "#{source_dir}/#{protobuf_pkg}" do
   action :delete
   recursive true
   notifies :delete, "file[#{install_prefix}/bin/protoc]", :immediately
-  ignore_failure true
-end
-
-file "#{install_prefix}/bin/protoc" do
-  action :nothing
   ignore_failure true
 end
 
