@@ -13,21 +13,23 @@ import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class BJ_Use_Case_005 {
 
 	WebDriver driver;
-	// CommonFunctions function;
+
 	HomePage homePage;
 	SearchTab searchTab;
 	BatchJobsTab batchJobsTab;
 	ReportsTab reportsTab;
 
-	// @Parameters({ "browser" })
+	String topRepositoryName;
+	String topRepositoryValue;
+
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-		// function = new CommonFunctions();
 		// CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
 
@@ -35,15 +37,17 @@ public class BJ_Use_Case_005 {
 		searchTab = CommonFunctions.searchTab;
 		batchJobsTab = CommonFunctions.batchJobsTab;
 		reportsTab = CommonFunctions.reportsTab;
-		// function.openAutoport();
 
-		// homePage.clickBatchJobsTab();
+		topRepositoryName = ReadTestData.readParameter("batchJobsTabData", "topRepositoryName");
+		topRepositoryValue = ReadTestData.readParameter("searchTabData", "topRepositoryValue");
+
+		homePage.clickBatchJobsTab();
 	}
 
 	@Test(priority = 0)
-	public void BJ_Build_Server_batch_file_results_view_017() {
+	public void BJ_Build_Server_batch_file_results_view_017() throws InterruptedException {
 
-		// batchJobsTab.clickListSelectBtn();
+		batchJobsTab.clickListSelectBtn();
 
 		batchJobsTab.clickOnListLocalBtn();
 
@@ -61,25 +65,17 @@ public class BJ_Use_Case_005 {
 	@Test(priority = 1)
 	public void BJ_Build_Test_batch_file_result_view_018() throws InterruptedException, ParseException {
 
-		// batchJobsTab.clickOnBuildServers();
-
-		// batchJobsTab.verifySelectionOfAllBuildServers();
-
-		// batchJobsTab.clickOnBuildServers();
-
-		// batchJobsTab.clickOnDateModifiedHeader();
-
 		batchJobsTab.selectFirstRow();
 
 		batchJobsTab.verifyBuildAndTestBtn();
 
 		searchTab.clickOnAlertCloseBtn();
 
-		homePage.clickReportsTab();
+		homePage.openReportsTab();
 
 		reportsTab.clickOnManageCompareBatchJobsResultsBtn();
 
-		reportsTab.enterBatchNameForSearch("spring-framework");
+		reportsTab.enterBatchNameForSearch(topRepositoryName);// spring-framework
 
 		reportsTab.clickOnBatchListLocalBtn();
 

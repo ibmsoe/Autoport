@@ -7,19 +7,25 @@ import org.testng.annotations.Test;
 import com.autoport.pageobjects.BuildServersTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class BS_UseCase_8 {
 	
 	WebDriver driver;
 	HomePage homePage;
 	BuildServersTab buildServerTab;
+	String rhelBuildServerToSync;
+	String ubuntuBuildServerToSync;
 	
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
 		//CommonFunctions.launchBrowser(); 
 		 driver = CommonFunctions.driver; 
 		 homePage = CommonFunctions.homePage;
-		 buildServerTab = CommonFunctions.buildServerTab;			 
+		 buildServerTab = CommonFunctions.buildServerTab;
+		 rhelBuildServerToSync = ReadTestData.readParameter("BS_UseCase_8", "rhelBuildServerToSync");
+		 ubuntuBuildServerToSync = ReadTestData.readParameter("BS_UseCase_8", "ubuntuBuildServerToSync");
+		 
 		 CommonFunctions.goTo_ListInstallUsingManagedServicesSection();	
 	  }
 	 
@@ -33,11 +39,11 @@ public class BS_UseCase_8 {
 		  
 		  buildServerTab.verifySelectBuildServerMsg();
 		  
-		  buildServerTab.selectBuildServerToSynch("ppc64le-rhel");
+		  buildServerTab.selectBuildServerToSynch(rhelBuildServerToSync);
 		  
 		  buildServerTab.clickSynchBtn();
 		  
-		  buildServerTab.verifyBackgroundInstallationPopup("ppc64le-rhel");
+		  buildServerTab.verifyBackgroundInstallationPopup(rhelBuildServerToSync);
 		  
 		  buildServerTab.verifySychSuccessPopUp();
 	  }
@@ -52,11 +58,11 @@ public class BS_UseCase_8 {
 		  
 		  buildServerTab.verifySelectBuildServerMsg();
 		  
-		  buildServerTab.selectBuildServerToSynch("ppcle-ubuntu");
+		  buildServerTab.selectBuildServerToSynch(ubuntuBuildServerToSync);
 		  
 		  buildServerTab.clickSynchBtn();
 		  
-		  buildServerTab.verifyBackgroundInstallationPopup("ppcle-ubuntu");
+		  buildServerTab.verifyBackgroundInstallationPopup(ubuntuBuildServerToSync);
 		  
 		  buildServerTab.verifySychSuccessPopUp();
 	  }	 

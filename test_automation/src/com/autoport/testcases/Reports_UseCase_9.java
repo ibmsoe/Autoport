@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class Reports_UseCase_9 {
 	WebDriver driver;
@@ -15,6 +16,8 @@ public class Reports_UseCase_9 {
 	CommonFunctions functions;
 	HomePage homePage;
 	ReportsTab reportsTab;	
+	String localProjectResult;
+	String archivedProjectResult;
 	 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
@@ -24,7 +27,11 @@ public class Reports_UseCase_9 {
 		 homePage = CommonFunctions.homePage;
 		 
 		 homePage = CommonFunctions.homePage;
-		 reportsTab = CommonFunctions.reportsTab;		 
+		 reportsTab = CommonFunctions.reportsTab;	
+		 
+		 localProjectResult = ReadTestData.readParameter("Reports_UseCase_9", "localProjectResultForWhichBuildIsSuccess");
+		 archivedProjectResult = ReadTestData.readParameter("Reports_UseCase_9", "archivedProjectResultForWhichBuildIsSuccess");
+		 
 		 
 		 homePage.openReportsTab();
 		 
@@ -34,13 +41,13 @@ public class Reports_UseCase_9 {
 	 @Test(priority=0)
 	 public void Reports_Test_History_View_Build_Logs_033() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(localProjectResult);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  
@@ -56,13 +63,13 @@ public class Reports_UseCase_9 {
 	 @Test(priority=1)
 	 public void Reports_Test_History_View_Test_Logs_034() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(localProjectResult);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  
@@ -78,13 +85,13 @@ public class Reports_UseCase_9 {
 	 @Test(priority=2)
 	 public void Reports_Test_Detail_View_Build_Logs_035() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(localProjectResult);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  
@@ -100,13 +107,13 @@ public class Reports_UseCase_9 {
 	 @Test(priority=3)
 	 public void Reports_Test_Detail_View_Test_Logs_036() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(localProjectResult);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  
@@ -122,15 +129,15 @@ public class Reports_UseCase_9 {
 	 @Test(priority=4)
 	 public void Reports_Test_Compare_View_Build_Logs_037() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
 		  reportsTab.sortResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectProjectResultsToCompare("bson");
+		  reportsTab.selectProjectResultsToCompare(localProjectResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForProjectResults();		  
 		  
@@ -146,15 +153,15 @@ public class Reports_UseCase_9 {
 	 @Test(priority=5)
 	 public void Reports_Test_Compare_View_Test_Logs_038() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
 		  reportsTab.sortResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectProjectResultsToCompare("bson");
+		  reportsTab.selectProjectResultsToCompare(localProjectResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForProjectResults();		  
 		  

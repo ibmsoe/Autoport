@@ -24,40 +24,35 @@ import org.openqa.selenium.support.ui.Select;
 
 import com.autoport.utilities.CommonFunctions;
 import com.autoport.utilities.LogResult;
+import com.autoport.utilities.ReadTestData;
 
 public class SearchTab {
 
 	WebDriver driver;
 	FluentWait<WebDriver> wait;
-	// CommonFunctions functions;
 
 	Actions action;
-	
-	private String buildClickTime; 
-	
-	private int selectedBuildServersCount;
-	// HomePage homePage;
 
-	
+	private String buildClickTime;
+	private int selectedBuildServersCount;
+	private String repositoryNameSingleProject;
+	private String repositoryNameCommonProject;
+	private String repositoryNameAddedToBatch;
+
+	String downloadFilePath = ReadTestData.readParameter("searchTabData", "downloadFilePath");
+
 	public SearchTab(WebDriver driver, FluentWait<WebDriver> wait) {
 
-		// functions= new CommonFunctions();
 		this.driver = driver;
 
 		this.wait = wait;
-		// wait = new WebDriverWait(driver, 30);
 
 		AjaxElementLocatorFactory factory = new AjaxElementLocatorFactory(driver, 10);
 		PageFactory.initElements(factory, this);
 
 		action = new Actions(driver);
 
-		// homePage = new HomePage(driver);
-
-		// homePage = functions.homePage;
-
 	}
-	
 
 	@FindBy(id = "singleSearchButton")
 	WebElement searchSingleProjectTab;
@@ -170,6 +165,12 @@ public class SearchTab {
 
 	@FindBy(xpath = "//div[@id='singleDetailPanel']/div/h1/div/button")
 	WebElement buildAndTestBtnForAutoResult;
+
+	@FindBy(xpath = "//tbody[@id='resultsTable'][1]/tr/td[1]/a[1]")
+	WebElement topOwnerNameInList;
+
+	@FindBy(xpath = "//tbody[@id='resultsTable'][1]/tr/td[1]/a[2]")
+	WebElement topRepositoryNameInList;
 
 	@FindBy(xpath = "//div[@id='singleDetailPanel']/div/span[7]/h3")
 	WebElement buildStepsHeader;
@@ -475,19 +476,22 @@ public class SearchTab {
 	@FindBy(id = "generateSelectedEnv")
 	WebElement commonProjectEnvironmentOptionsTbx;
 
-	@FindBy(xpath = "//tbody[@id='resultsTable']//td[2]/a/button")
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//td[2]/a/button")
 	WebElement commonProjectRepositoryDetailsList;
-	
-//	@FindBy(xpath = "//tbody[@id='resultsTable'][1]//td[2]/a/button")
-//	WebElement commonProjectFirstRepositoryDetailsList;
 
-	@FindBy(xpath = "//tbody[@id='resultsTable']//td[3]/a/button")
+	// @FindBy(xpath = "//tbody[@id='resultsTable'][1]//td[2]/a/button")
+	// WebElement commonProjectFirstRepositoryDetailsList;
+
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//td[3]/a/button")
 	WebElement commonProjectRemoveList;
 
 	@FindBy(id = "generateDetailBackButton")
 	WebElement commonProjectBackToResultsBtn;
 
-	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[1]//td[2]//button") 
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[1]//td[1]//a[2]")
+	WebElement commonProjectTopRepositoryNameInList;
+
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[1]//td[2]//button")
 	WebElement commonProjectRepositoryDetailBtn; // //tbody[@id='resultsTable'][1]/tr/td[2]/a/button
 
 	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[1]//td[3]//button") // //tbody[@id='resultsTable'][1]/tr/td[3]/a/button
@@ -503,10 +507,10 @@ public class SearchTab {
 	WebElement topRepositoryName;
 
 	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable'][1]/tr/td[1]/a[1]")
-	WebElement commonProjectOwnerList;
+	WebElement commonProjectTopOwnerList;
 
 	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable'][1]/tr/td[1]/a[2]")
-	WebElement commonProjectRepositoryList;
+	WebElement commonProjectTopRepositoryList;
 
 	@FindBy(xpath = "//div[@id='errorAlert']/div/div/div[1]")
 	WebElement alertMessage;
@@ -514,9 +518,35 @@ public class SearchTab {
 	@FindBy(xpath = "//div[@id='errorAlert']//button")
 	WebElement alertCloseBtn;
 
-	// To get the title
+	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable']//td[1]/a[1]")
+	WebElement commonProjectOwnerList;
+
+	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable']//td[1]/a[2]")
+	WebElement commonProjectRepositoryList;
+
+	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable']//td[1]/span[1]")
+	WebElement commonProjectStarCountList;
+
+	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable']//td[1]/span[2]")
+	WebElement commonProjectForkCountList;
+
+	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable']//td[1]/span[3]")
+	WebElement commonProjectPrimaryLanguageList;
+
+	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable']//td[1]/span[4]")
+	WebElement commonProjectRepositorySizeList;
+
+	@FindBy(xpath = "//div[@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable']//td[1]/span[5]")
+	WebElement commonProjectLastUpdatedList;
+
+	// To get the page title
 	public String getPageTitle() {
 		return driver.getTitle();
+	}
+
+	// To get the page url
+	public String getPageURL() {
+		return driver.getCurrentUrl();
 	}
 
 	// Clicking on browser refresh button for refreshing page
@@ -540,19 +570,25 @@ public class SearchTab {
 		wait.until(ExpectedConditions.visibilityOf(singleDetailPanel));
 	}
 
-	// Waiting for Result panel to appear
+	// Waiting for Result panel to appear in case of repository list
 	public void waitingForResultPanel() {
 		wait.until(ExpectedConditions.visibilityOf(resultsPanel));
 	}
 
 	// To verify expansion of Search for a single project button
 	public void clickOnSingleProjectBtn() {
-		searchSingleProjectTab.click();
 
 		if (searchSingleProjectQueryTbx.isDisplayed()) {
 			LogResult.pass("Search for a single project button is expanded.");
 		} else {
-			LogResult.fail("Search for a single project button is not expanded.");
+
+			searchSingleProjectTab.click();
+
+			if (searchSingleProjectQueryTbx.isDisplayed()) {
+				LogResult.pass("Search for a single project button is expanded.");
+			} else {
+				LogResult.fail("Search for a single project button is not expanded.");
+			}
 		}
 	}
 
@@ -593,9 +629,15 @@ public class SearchTab {
 
 		searchSingleProjectQueryTbx.sendKeys(query);
 
+		// searchSingleProjectQueryTbx.sendKeys(Keys.ENTER);
+
+	}
+
+	// Simulate Enter key press from keyboard
+	public void pressEnterKey() {
+
 		searchSingleProjectQueryTbx.sendKeys(Keys.ENTER);
-		
-		
+
 	}
 
 	// To verify results when sorted by relevance
@@ -1000,6 +1042,8 @@ public class SearchTab {
 	// To verify Repository column UI elements
 	public void verifyRepositoryColumnListUI() {
 
+		wait.until(ExpectedConditions.visibilityOf(ownerList));
+
 		if (ownerList.isDisplayed()) {
 			LogResult.pass("Owners are displayed.");
 		} else {
@@ -1073,32 +1117,69 @@ public class SearchTab {
 
 	// Verify Github website navigation upon owner click from detail view for
 	// Single project
-	public void clickOnOwner() {
+	public void clickOnOwner() throws InterruptedException {
+
+		String currentWindow = driver.getWindowHandle();
 
 		ownerDetail.click();
 
-		wait.until(ExpectedConditions.titleContains("Git"));
+		Thread.sleep(2000);
 
-		if (getPageTitle().contains("Git")) {
-			LogResult.pass("Owner details are displayed on GitHub website.");
-		} else {
-			LogResult.fail("Owner details are not displayed on GitHub website.");
+		Set<String> windowHandles = driver.getWindowHandles();
+
+		for (String window : windowHandles) {
+			// eliminate switching to current window
+			if (!window.equals(currentWindow)) {
+				// Now switchTo new Tab.
+				driver.switchTo().window(window);
+
+				wait.until(ExpectedConditions.urlContains("github.com"));// titleContains("Git")
+
+				if (getPageURL().contains("github.com")) {// getPageTitle()
+					LogResult.pass("Owner details are displayed on GitHub website.");
+				} else {
+					LogResult.fail("Owner details are not displayed on GitHub website.");
+				}
+
+				driver.close();
+
+			}
 		}
 
+		driver.switchTo().window(currentWindow);
 	}
 
 	// verify Github website navigation upon repository click from detail view
 	// for Single project
-	public void clickOnRepository() {
+	public void clickOnRepository() throws InterruptedException {
+
+		String currentWindow = driver.getWindowHandle();
+
 		repositoryDetail.click();
 
-		wait.until(ExpectedConditions.titleContains("Git"));
+		Thread.sleep(2000);
 
-		if (getPageTitle().contains("Git")) {
-			LogResult.pass("Repository details are displayed on Git.");
-		} else {
-			LogResult.fail("Repository details are not displayed on Git.");
+		Set<String> windowHandles = driver.getWindowHandles();
+
+		for (String window : windowHandles) {
+			// eliminate switching to current window
+			if (!window.equals(currentWindow)) {
+				// Now switchTo new Tab.
+				driver.switchTo().window(window);
+
+				wait.until(ExpectedConditions.urlContains("github.com"));
+
+				if (getPageURL().contains("github.com")) {
+					LogResult.pass("Repository details are displayed on GitHub website.");
+				} else {
+					LogResult.fail("Repository details are not displayed on GitHub website.");
+				}
+
+				driver.close();
+			}
 		}
+
+		driver.switchTo().window(currentWindow);
 	}
 
 	// To verify repository tooltips in detail panel
@@ -1169,8 +1250,10 @@ public class SearchTab {
 	}
 
 	// To verify the description of repository by hovering mouse over results
-	public void verifyRepositoryDescription() {
+	public void verifyRepositoryDescription() throws InterruptedException {
 		action.moveToElement(mouseHoverDescription).perform();
+
+		Thread.sleep(1000);
 
 		wait.until(ExpectedConditions.visibilityOf(mouseHoverDescription));
 
@@ -1206,6 +1289,10 @@ public class SearchTab {
 		} else {
 			LogResult.fail("Add to batch button is not clicked.");
 		}
+
+		repositoryNameAddedToBatch = batchFileRepoName.getText();
+
+		this.setRepositoryNameAddedToBatch(repositoryNameAddedToBatch);
 	}
 
 	// To verify UI elements for batch file Save,Export and Close section
@@ -1310,6 +1397,54 @@ public class SearchTab {
 
 	}
 
+	// To verify UI elements in Repository column for repository listing
+	public void verifyRepositoryColumnListUIForCommonProjects() {
+
+		wait.until(ExpectedConditions.visibilityOf(commonProjectOwnerList));
+
+		if (commonProjectOwnerList.isDisplayed()) {
+			LogResult.pass("Owners are displayed.");
+		} else {
+			LogResult.fail("Owners are not displayed.");
+		}
+
+		if (commonProjectRepositoryList.isDisplayed()) {
+			LogResult.pass("Repositories are displayed.");
+		} else {
+			LogResult.fail("Repositories are not displayed.");
+		}
+
+		if (commonProjectStarCountList.isDisplayed()) {
+			LogResult.pass("Star counts are displayed.");
+		} else {
+			LogResult.fail("Star counts are not displayed.");
+		}
+
+		if (commonProjectForkCountList.isDisplayed()) {
+			LogResult.pass("Fork counts are displayed.");
+		} else {
+			LogResult.fail("Fork counts are not displayed.");
+		}
+
+		if (commonProjectPrimaryLanguageList.isDisplayed()) {
+			LogResult.pass("Primary languages are displayed.");
+		} else {
+			LogResult.fail("Primary languages are not displayed.");
+		}
+
+		if (commonProjectRepositorySizeList.isDisplayed()) {
+			LogResult.pass("Repository sizes are displayed.");
+		} else {
+			LogResult.fail("Repository sizes are not displayed.");
+		}
+
+		if (commonProjectLastUpdatedList.isDisplayed()) {
+			LogResult.pass("Last updated details are displayed");
+		} else {
+			LogResult.fail("Last updated details are not displayed.");
+		}
+	}
+
 	// To verify the description of added Repository in Batch file repository
 	// panel
 	public void verifyBatchFileRepositoryDescription() {
@@ -1352,8 +1487,10 @@ public class SearchTab {
 
 	// For obtaining latest modified file within the directory
 	public File getLastModifiedFile() {
-		File file = new File("C:\\Users\\manish_kane\\Downloads"); // for linux
-																	// /root/Downloads
+		File file = new File(downloadFilePath);
+		// For Linux /root/Downloads
+		// For Windows C:\\Users\\manish_kane\\Downloads
+
 		File[] files = file.listFiles();
 		if (files == null || files.length == 0) {
 			return null;
@@ -1419,8 +1556,8 @@ public class SearchTab {
 	}
 
 	// To verify the values in Select build servers drop down along with
-	// selection/unselection of build servers
-	public void verifySelectBuildServer() {
+	// selection/deselection of build servers
+	public void verifySelectBuildServer() throws InterruptedException {
 
 		if (selectBuildServerForAutoResult.isDisplayed()) {
 			LogResult.pass("Select build servers drop down is displayed with values: ");
@@ -1451,17 +1588,17 @@ public class SearchTab {
 			}
 
 			List<WebElement> buildServerChkbx1 = buildServerListChkbx;
-		
-			int i=0;
-			
+
+			int i = 0;
+
 			for (WebElement item : buildServerChkbx1) {
 
 				item.click();
 				i++;
 			}
-			
+
 			this.setBuildServersCount(i);
-			
+
 			// Currently the build servers are dynamic hence checking for
 			// partial text and omitting the number in brackets
 			if (selectBuildServerForAutoResult.getText().contains("All selected")) {
@@ -1471,30 +1608,31 @@ public class SearchTab {
 						+ selectBuildServerForAutoResult.getText());
 			}
 
-			selectBuildServerForAutoResult.click();
+			// selectBuildServerForAutoResult.click();
+
+			Thread.sleep(2000);
 
 		} else {
 			LogResult.fail("Select build servers drop down is not displayed.");
 		}
 
 	}
-	
-	
-	public void setBuildServersCount(int buildServersCount){
-		this.selectedBuildServersCount=buildServersCount;
-		System.out.println(buildServersCount);
+
+	// Setting value for selected build server count
+	public void setBuildServersCount(int buildServersCount) {
+		this.selectedBuildServersCount = buildServersCount;
+		// System.out.println(buildServersCount);
 	}
-	
-	public int getBuildServersCount(){
+
+	// Fetching value for selected build server count
+	public int getBuildServersCount() {
 		return this.selectedBuildServersCount;
 	}
-	
-	
 
 	// Clicking on Build+Test button
 	public void clickOnBuildAndTestBtn() throws InterruptedException {
 
-		selectBuildServerForAutoResult.click();
+		// selectBuildServerForAutoResult.click();
 
 		ArrayList<String> buildServersArray = new ArrayList<String>();
 
@@ -1502,6 +1640,9 @@ public class SearchTab {
 
 			buildServersArray.add(i, buildServerList.get(i).getText());
 		}
+
+				
+		selectBuildServerForAutoResult.click();
 
 		// for (int i=0;i< buildServerList.size();i++) {
 		//
@@ -1513,10 +1654,10 @@ public class SearchTab {
 		String currentWindow = driver.getWindowHandle();
 
 		this.setBuildClickTime(getSystemTime());
-		
+
 		buildAndTestBtnForAutoResult.click();
 
-		Thread.sleep(5000);
+		Thread.sleep(20000);
 
 		driver.switchTo().window(currentWindow);
 
@@ -1555,7 +1696,7 @@ public class SearchTab {
 
 		}
 
-		Thread.sleep(10000); // wait till the job is completed
+		Thread.sleep(120000); // wait till the job is completed
 
 		for (String window : windowHandles) {
 
@@ -1572,18 +1713,18 @@ public class SearchTab {
 		driver.switchTo().window(currentWindow);
 
 	}
-	
-	public void setBuildClickTime(String buildClickTime){
-		this.buildClickTime=buildClickTime;
-		System.out.println(buildClickTime);
+
+	// Setting time before clicking Build+Test button
+	public void setBuildClickTime(String buildClickTime) {
+		this.buildClickTime = buildClickTime;
+		// System.out.println(buildClickTime);
 	}
-	
-	public String getBuildClickTime(){
+
+	// Fetching time set before clicking Build+Test button
+	public String getBuildClickTime() {
 		return this.buildClickTime;
 	}
 
-	
-	
 	// public String getJenkinsServerTime() {
 	//
 	// Date d = new Date();
@@ -1591,10 +1732,11 @@ public class SearchTab {
 	// format.setTimeZone(TimeZone.getTimeZone("CST")); //put server time zone
 	// return format.format(d);
 	// }
-	
-	public String getSystemTime(){
+
+	// Fetching current system time
+	public String getSystemTime() {
 		Date d = new Date();
-		DateFormat format = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss");
+		DateFormat format = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");// yyyy-MM-dd-'h'HH-'m'mm-'s'ss
 		String buildTime = format.format(d);
 		return buildTime;
 	}
@@ -1678,18 +1820,24 @@ public class SearchTab {
 	// To verify expansion of Search for Most commonly used projects button
 	public void clickOnMostCommonlyUsedProjectsBtn() {
 
-		if (searchSingleProjectQueryTbx.isDisplayed()) {
+		if (commonProjectsSearchBtn.isDisplayed()) {
 
-			searchSingleProjectTab.click();
-		}
-
-		searchCommonlyUsedProjectsTab.click();
-
-		if (searchCommonlyUsedProjectsTab.isDisplayed()) {
 			LogResult.pass("Search for most commonly used project tab is expanded.");
 		} else {
-			LogResult.fail("Search for most commonly used project tab is not expanded.");
+			if (searchSingleProjectQueryTbx.isDisplayed()) {
+
+				searchSingleProjectTab.click();
+			}
+
+			searchCommonlyUsedProjectsTab.click();
+
+			if (searchCommonlyUsedProjectsTab.isDisplayed()) {
+				LogResult.pass("Search for most commonly used project tab is expanded.");
+			} else {
+				LogResult.fail("Search for most commonly used project tab is not expanded.");
+			}
 		}
+
 	}
 
 	// To verify Most commonly used projects button contents
@@ -1889,15 +2037,17 @@ public class SearchTab {
 				s.selectByIndex(i);
 
 				commonProjectsSearchBtn.click();
+
 				wait.until(ExpectedConditions.visibilityOf(commonProjectSaveExportSection));
 
 				if (commonProjectSaveExportSection.isDisplayed()) {
 					LogResult.pass("Results sorted by: " + releaseOptions.get(i).getText());
+
 				} else {
 					LogResult.fail("Results sorted by: " + releaseOptions.get(i).getText());
 				}
 
-				wait.until(ExpectedConditions.visibilityOf(commonProjectRepositoryDetailsList));
+				// wait.until(ExpectedConditions.visibilityOf(commonProjectRepositoryDetailsList));
 
 				commonProjectRepositoryDetailBtn.click();
 
@@ -1994,9 +2144,14 @@ public class SearchTab {
 	public void enterNumOfTopRepositories(String num) throws InterruptedException {
 		commonProjectsTopRepositoriesValue.clear();
 
+		// adding 0 before actual limit due to some intermediate issues
+		// commonProjectsTopRepositoriesValue.sendKeys("0");
+
+		Thread.sleep(1000);
+
 		commonProjectsTopRepositoriesValue.sendKeys(num);
 
-		Thread.sleep(3000);
+		Thread.sleep(1000);
 
 		if (commonProjectsTopRepositoriesValue.getAttribute("value").contentEquals(num)) {
 			LogResult.pass("Top Repositories value entered as: " + num);
@@ -2070,19 +2225,26 @@ public class SearchTab {
 		}
 	}
 
-	// Clicking on Search button
+	// Clicking on Search button and setting top repository name in properties
+	// file
 	public void clickOnCommonlyUsedProjectSearch() {
 		wait.until(ExpectedConditions.visibilityOf(commonProjectsSearchBtn));
 
 		commonProjectsSearchBtn.click();
 
-		 wait.until(ExpectedConditions.elementToBeClickable(commonProjectResultsPanel));
+		wait.until(ExpectedConditions.elementToBeClickable(commonProjectResultsPanel));
 
 		if (commonProjectSaveExportSection.isDisplayed()) {
 			LogResult.pass("Search button clicked.");
 		} else {
 			LogResult.fail("Search button not clicked.");
 		}
+
+		repositoryNameCommonProject = commonProjectTopRepositoryNameInList.getText();
+
+		this.setRepositoryNameForCommonProject(repositoryNameCommonProject);
+
+		ReadTestData.writeParameter("batchJobsTabData", "topRepositoryName", repositoryNameCommonProject);
 	}
 
 	// To verify Batch File Save, Export UI for Most commonly used projects
@@ -2536,7 +2698,7 @@ public class SearchTab {
 
 	// To verify Select build servers value along with selection/unselection of
 	// build servers
-	public void verifySelectBuildServerForCommonProject() {
+	public void verifySelectBuildServerForCommonProject() throws InterruptedException {
 
 		if (commonProjectSelectBuildServer.isDisplayed()) {
 			LogResult.pass("Select build servers drop down is displayed with values: ");
@@ -2568,14 +2730,14 @@ public class SearchTab {
 
 			List<WebElement> buildServerChkbx1 = commonProjectBuildServerListChkbx;
 
-			int i=0;
-			
+			int i = 0;
+
 			for (WebElement item : buildServerChkbx1) {
 
 				item.click();
 				i++;
 			}
-			
+
 			this.setBuildServersCount(i);
 
 			// Currently the build servers are dynamic hence checking for
@@ -2587,7 +2749,9 @@ public class SearchTab {
 						+ commonProjectSelectBuildServer.getText());
 			}
 
-			commonProjectSelectBuildServer.click();
+			// commonProjectSelectBuildServer.click();
+
+			Thread.sleep(2000);
 
 		} else {
 			LogResult.fail("Select build servers drop down is not displayed.");
@@ -2598,29 +2762,29 @@ public class SearchTab {
 	// Clicking on Build+Test button for Most commonly used project
 	public void clickOnBuildAndTestBtnForCommonProject() throws InterruptedException {
 
-		commonProjectSelectBuildServer.click();
-
 		ArrayList<String> buildServersArray = new ArrayList<String>();
 
 		for (int i = 0; i < commonProjectBuildServerList.size(); i++) {
 
 			buildServersArray.add(i, commonProjectBuildServerList.get(i).getText());
 		}
-	
+		
+		commonProjectSelectBuildServer.click();
 
-//		 for (int i=0;i< buildServerList.size();i++) {
-//		
-//		 System.out.println("Value @ index: "+i+" is: "+commonProjectBuildServerList.get(i).getText());
-//		
-//		 }
+		// for (int i=0;i< buildServerList.size();i++) {
+		//
+		// System.out.println("Value @ index: "+i+" is:
+		// "+commonProjectBuildServerList.get(i).getText());
+		//
+		// }
 
 		String currentWindow = driver.getWindowHandle();
 
 		this.setBuildClickTime(getSystemTime());
-		
+
 		commonProjectBuildAndTestBtn.click();
 
-		Thread.sleep(5000);
+		Thread.sleep(20000);
 
 		driver.switchTo().window(currentWindow);
 
@@ -2659,7 +2823,7 @@ public class SearchTab {
 
 		}
 
-		Thread.sleep(10000); // wait till the job is completed
+		Thread.sleep(120000); // wait till the job is completed
 
 		for (String window : windowHandles) {
 
@@ -2682,7 +2846,7 @@ public class SearchTab {
 	public void verifyBuildStepsForCommonProject() {
 
 		wait.until(ExpectedConditions.visibilityOf(commonProjectSelectBuildOptions));
-		
+
 		if (commonProjectSelectBuildOptions.isDisplayed()) {
 			if (commonProjectSelectBuildOptions.getText().contentEquals("Select build options")) {
 				LogResult.pass("Select build options drop down has text: " + commonProjectSelectBuildOptions.getText());
@@ -2743,11 +2907,11 @@ public class SearchTab {
 	// commonly used project
 	public void clickOnOwnerForCommonProject() {
 
-		commonProjectOwnerList.click();
+		commonProjectTopOwnerList.click();
 
-		wait.until(ExpectedConditions.titleContains("Git"));
+		wait.until(ExpectedConditions.urlContains("github.com"));
 
-		if (getPageTitle().contains("Git")) {
+		if (getPageURL().contains("github.com")) {
 			LogResult.pass("Owner details are displayed on GitHub website.");
 		} else {
 			LogResult.fail("Owner details are not displayed on GitHub website.");
@@ -2758,20 +2922,72 @@ public class SearchTab {
 	// verify Github website navigation upon repository click from list view
 	// Most commonly used project
 	public void clickOnRepositoryForCommonProject() {
-		commonProjectRepositoryList.click();
+		commonProjectTopRepositoryList.click();
 
-		wait.until(ExpectedConditions.titleContains("Git"));
+		wait.until(ExpectedConditions.urlContains("github.com"));
 
-		if (getPageTitle().contains("Git")) {
+		if (getPageURL().contains("github.com")) {
 			LogResult.pass("Repository details are displayed on GitHub website.");
 		} else {
 			LogResult.fail("Repository details are not displayed on GitHub website.");
 		}
 	}
 
+	// Clicking on Details button of first repository row
 	public void clickOnFirstRepositoryDetailsBtn() {
 
+		repositoryNameSingleProject = topRepositoryNameInList.getText();
+
+		this.setRepositoryName(repositoryNameSingleProject);
+
 		firstRepositoryDetailsList.click();
+
+	}
+
+	// Setting repository name of first row in repository listing
+	public void setRepositoryName(String repositoryNameSingleProject) {
+		this.repositoryNameSingleProject = repositoryNameSingleProject;
+	}
+
+	// Fetching repository name of first row in repository listing
+	public String getRepositoryName() {
+		return this.repositoryNameSingleProject;
+	}
+
+	// Setting repository name of first row in repository listing for common
+	// project
+	public void setRepositoryNameForCommonProject(String repositoryNameCommonProject) {
+		this.repositoryNameCommonProject = repositoryNameCommonProject;
+	}
+
+	// Fetching repository name of first row in repository listing for common
+	// project
+	public String getRepositoryNameForCommonProject() {
+		return this.repositoryNameCommonProject;
+	}
+
+	// Setting repository name of repository added to batch file
+	public void setRepositoryNameAddedToBatch(String repositoryNameAddedToBatch) {
+		this.repositoryNameAddedToBatch = repositoryNameAddedToBatch;
+	}
+
+	// Fetching repository name of repository added to batch file
+	public String getRepositoryNameAddedToBatch() {
+		return this.repositoryNameAddedToBatch;
+	}
+
+	// To check if search result contains owner and repository name in top row
+	public void verifyOwnerRepositorySearch(String ownerName, String repositoryName) {
+
+		wait.until(ExpectedConditions.visibilityOf(resultsPanel));
+
+		if ((topOwnerNameInList.getText().contentEquals(ownerName))
+				&& (topRepositoryNameInList.getText().contentEquals(repositoryName))) {
+
+			LogResult.pass("Owner-Repository combine search is successfully verified.");
+		} else {
+			LogResult.fail("Owner-Repository combine search failed.");
+		}
 
 	}
 

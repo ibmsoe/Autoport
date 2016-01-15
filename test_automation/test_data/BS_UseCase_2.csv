@@ -1,0 +1,5 @@
+BuildServer,PackageToInstall
+ppcle-ubuntu,python-bson
+x86-ubuntu,python-bson
+x86-64-rhel,apache-ant
+ppc64le-rhel,apache-ant

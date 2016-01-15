@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class Reports_UseCase_4 {
 	WebDriver driver;
@@ -15,6 +16,8 @@ public class Reports_UseCase_4 {
 	CommonFunctions functions;
 	HomePage homePage;
 	ReportsTab reportsTab;	
+	String localProjectResult;
+	String archivedProjectResult;
 	 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
@@ -24,7 +27,11 @@ public class Reports_UseCase_4 {
 		 homePage = CommonFunctions.homePage;
 		 
 		 homePage = CommonFunctions.homePage;
-		 reportsTab = CommonFunctions.reportsTab;		 
+		 reportsTab = CommonFunctions.reportsTab;	
+		 
+		 localProjectResult = ReadTestData.readParameter("Reports_UseCase_4", "localProjectResultForWhichBuildIsSuccess");
+		 archivedProjectResult = ReadTestData.readParameter("Reports_UseCase_4", "archivedProjectResultForWhichBuildIsSuccess");
+		 
 		 
 		 homePage.openReportsTab();
 		 
@@ -34,15 +41,15 @@ public class Reports_UseCase_4 {
 	 @Test(priority=0)
 	 public void Reports_Test_Compare_Local_Project_Results_011() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("ant"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("ant");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
 		  reportsTab.sortResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectProjectResultsToCompare("ant");
+		  reportsTab.selectProjectResultsToCompare(localProjectResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForProjectResults();		  
 		  
@@ -51,20 +58,20 @@ public class Reports_UseCase_4 {
 		  reportsTab.clickBackToListButton();
 		  
 		  reportsTab.clearSearchedProjectResult();
-	 }	 
+	 }
 	 
 	 @Test(priority=1)
 	 public void Reports_Build_Log_Compare_Local_Project_Results_012() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("ant"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("ant");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
 		  reportsTab.sortResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectProjectResultsToCompare("ant");
+		  reportsTab.selectProjectResultsToCompare(localProjectResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForProjectResults();	
 		  
@@ -78,15 +85,15 @@ public class Reports_UseCase_4 {
 	 @Test(priority=2)
 	 public void Reports_Test_Log_compare_Local_Project_Results_013() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("ant"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("ant");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
 		  reportsTab.sortResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectProjectResultsToCompare("ant");
+		  reportsTab.selectProjectResultsToCompare(localProjectResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForProjectResults();	
 		  
@@ -100,15 +107,15 @@ public class Reports_UseCase_4 {
 	 @Test(priority=3)
 	 public void Reports_Test_Compare_Archived_Project_Results_014() throws Exception{		  
 		 
-		 reportsTab.enterProjectResultToSearch("ant"); 
+		 reportsTab.enterProjectResultToSearch(archivedProjectResult); 
 		  
 		  reportsTab.clickListArchivedProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("ant");	
+		  reportsTab.verifySearchResultsforProject(archivedProjectResult);	
 		  
 		  reportsTab.sortResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectProjectResultsToCompare("ant");
+		  reportsTab.selectProjectResultsToCompare(archivedProjectResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForProjectResults();		  
 		  
@@ -122,15 +129,15 @@ public class Reports_UseCase_4 {
 	 @Test(priority=4)
 	 public void Reports_Build_Log_Compare_Archived_Project_Results_015() throws Exception{		  
 		 
-		 reportsTab.enterProjectResultToSearch("ant"); 
+		 reportsTab.enterProjectResultToSearch(archivedProjectResult); 
 		  
 		  reportsTab.clickListArchivedProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("ant");	
+		  reportsTab.verifySearchResultsforProject(archivedProjectResult);	
 		  
 		  reportsTab.sortResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectProjectResultsToCompare("ant");
+		  reportsTab.selectProjectResultsToCompare(archivedProjectResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForProjectResults();	
 		  
@@ -144,15 +151,15 @@ public class Reports_UseCase_4 {
 	 @Test(priority=5)
 	 public void Reports_Test_Log_compare_Archived_Project_Results_016() throws Exception{		  
 		 
-		 reportsTab.enterProjectResultToSearch("ant"); 
+		 reportsTab.enterProjectResultToSearch(archivedProjectResult); 
 		  
 		  reportsTab.clickListArchivedProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("ant");	
+		  reportsTab.verifySearchResultsforProject(archivedProjectResult);	
 		  
 		  reportsTab.sortResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectProjectResultsToCompare("ant");
+		  reportsTab.selectProjectResultsToCompare(archivedProjectResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForProjectResults();	
 		  

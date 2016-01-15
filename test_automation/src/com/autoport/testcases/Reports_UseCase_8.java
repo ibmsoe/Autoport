@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class Reports_UseCase_8 {
 	
@@ -16,6 +17,8 @@ public class Reports_UseCase_8 {
 		CommonFunctions functions;
 		HomePage homePage;
 		ReportsTab reportsTab;	
+		String localBatchJobResult;
+		String archivedBatchJobResult;
 		 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
@@ -25,7 +28,11 @@ public class Reports_UseCase_8 {
 			 homePage = CommonFunctions.homePage;
 			 
 			 homePage = CommonFunctions.homePage;
-			 reportsTab = CommonFunctions.reportsTab;		 
+			 reportsTab = CommonFunctions.reportsTab;	
+			 
+			 localBatchJobResult = ReadTestData.readParameter("Reports_UseCase_8", "localBatchJobResultForWhichBuildIsSuccess");
+			 archivedBatchJobResult = ReadTestData.readParameter("Reports_UseCase_8", "archivedBatchJobResultForWhichBuildIsSuccess");
+			 
 			 
 			 homePage.openReportsTab();
 			 
@@ -35,15 +42,15 @@ public class Reports_UseCase_8 {
 	 @Test(priority=0)
 	 public void Reports_Test_Compare_Local_BatchJobs_Results_027() throws Exception{		  
 		 
-		  reportsTab.enterBatchJobResultToSearch("sunilBatchJobs"); 
+		  reportsTab.enterBatchJobResultToSearch(localBatchJobResult); 
 		  
 		  reportsTab.clickListLocalBatchJobResultsButton();
 		  
-		  reportsTab.verifySearchResultsforBatchJob("sunilBatchJobs");	
+		  reportsTab.verifySearchResultsforBatchJob(localBatchJobResult);	
 		  
 		  reportsTab.sortBatchJobsResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectBatchJobResultsToCompare("sunilBatchJobs");
+		  reportsTab.selectBatchJobResultsToCompare(localBatchJobResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForBatchJobsResults();		  
 		  
@@ -57,15 +64,15 @@ public class Reports_UseCase_8 {
 	 @Test(priority=1)
 	 public void Reports_Build_Log_Compare_Local_BatchJobs_Results_028() throws Exception{		  
 		 
-		 reportsTab.enterBatchJobResultToSearch("sunilBatchJobs"); 
+		 reportsTab.enterBatchJobResultToSearch(localBatchJobResult); 
 		  
 		  reportsTab.clickListLocalBatchJobResultsButton();
 		  
-		  reportsTab.verifySearchResultsforBatchJob("sunilBatchJobs");	
+		  reportsTab.verifySearchResultsforBatchJob(localBatchJobResult);	
 		  
 		  reportsTab.sortBatchJobsResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectBatchJobResultsToCompare("sunilBatchJobs");
+		  reportsTab.selectBatchJobResultsToCompare(localBatchJobResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForBatchJobsResults();
 		  
@@ -79,15 +86,15 @@ public class Reports_UseCase_8 {
 	 @Test(priority=2)
 	 public void Reports_Test_Log_compare_Local_BatchJobs_Results_029() throws Exception{		  
 		 
-		 reportsTab.enterBatchJobResultToSearch("sunilBatchJobs"); 
+		 reportsTab.enterBatchJobResultToSearch(localBatchJobResult); 
 		  
 		  reportsTab.clickListLocalBatchJobResultsButton();
 		  
-		  reportsTab.verifySearchResultsforBatchJob("sunilBatchJobs");	
+		  reportsTab.verifySearchResultsforBatchJob(localBatchJobResult);	
 		  
 		  reportsTab.sortBatchJobsResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectBatchJobResultsToCompare("sunilBatchJobs");
+		  reportsTab.selectBatchJobResultsToCompare(localBatchJobResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForBatchJobsResults();	
 		  
@@ -101,15 +108,15 @@ public class Reports_UseCase_8 {
 	 @Test(priority=3)
 	 public void Reports_Test_Compare_Archived_BatchJobs_Results_030() throws Exception{		  
 		 
-		 reportsTab.enterBatchJobResultToSearch("sunilBatchJobs"); 
+		 reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult); 
 		  
 		  reportsTab.clickArchiveBatchJobsResultsBtn();
 		  
-		  reportsTab.verifySearchResultsforBatchJob("sunilBatchJobs");	
+		  reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);	
 		  
 		  reportsTab.sortBatchJobsResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectBatchJobResultsToCompare("sunilBatchJobs");
+		  reportsTab.selectBatchJobResultsToCompare(archivedBatchJobResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForBatchJobsResults();		  
 		  
@@ -123,15 +130,15 @@ public class Reports_UseCase_8 {
 	 @Test(priority=4)
 	 public void Reports_Build_Log_Compare_Archived_BatchJobs_Results_031() throws Exception{		  
 		 
-		 reportsTab.enterBatchJobResultToSearch("sunilBatchJobs"); 
+		 reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult); 
 		  
 		  reportsTab.clickArchiveBatchJobsResultsBtn();
 		  
-		  reportsTab.verifySearchResultsforBatchJob("sunilBatchJobs");	
+		  reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);	
 		  
 		  reportsTab.sortBatchJobsResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectBatchJobResultsToCompare("sunilBatchJobs");
+		  reportsTab.selectBatchJobResultsToCompare(archivedBatchJobResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForBatchJobsResults();
 		  
@@ -145,15 +152,15 @@ public class Reports_UseCase_8 {
 	 @Test(priority=5)
 	 public void Reports_Test_Log_compare_Archived_BatchJobs_Results_032() throws Exception{		  
 		 
-		 reportsTab.enterBatchJobResultToSearch("sunilBatchJobs"); 
+		 reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult); 
 		  
 		  reportsTab.clickArchiveBatchJobsResultsBtn();
 		  
-		  reportsTab.verifySearchResultsforBatchJob("sunilBatchJobs");	
+		  reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);	
 		  
 		  reportsTab.sortBatchJobsResultsByDateCompletedDescending();
 		  
-		  reportsTab.selectBatchJobResultsToCompare("sunilBatchJobs");
+		  reportsTab.selectBatchJobResultsToCompare(archivedBatchJobResult);
 		  
 		  reportsTab.verifyCompareButtonsAreEnabledForBatchJobsResults();	
 		  
@@ -163,5 +170,4 @@ public class Reports_UseCase_8 {
 		  
 		  reportsTab.clearSearchedBatchJobResult();
 	 }
-
 }

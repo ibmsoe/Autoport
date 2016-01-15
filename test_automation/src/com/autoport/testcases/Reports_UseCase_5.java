@@ -7,11 +7,14 @@ import org.testng.annotations.Test;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class Reports_UseCase_5 {
 	WebDriver driver;
 	HomePage homePage;
 	ReportsTab reportsTab;	
+	String localBatchJobResult;
+	String archivedBatchJobResult;
 	 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
@@ -21,7 +24,11 @@ public class Reports_UseCase_5 {
 		 homePage = CommonFunctions.homePage;
 		 
 		 homePage = CommonFunctions.homePage;
-		 reportsTab = CommonFunctions.reportsTab;		 
+		 reportsTab = CommonFunctions.reportsTab;	
+		 
+		 localBatchJobResult = ReadTestData.readParameter("Reports_UseCase_5", "localBatchJobResultForWhichBuildIsSuccess");
+		 archivedBatchJobResult = ReadTestData.readParameter("Reports_UseCase_5", "archivedBatchJobResultForWhichBuildIsSuccess");
+		 
 		 
 		 homePage.openReportsTab();
 		 
@@ -35,11 +42,11 @@ public class Reports_UseCase_5 {
 		  
 		  reportsTab.verifyOnlyLocalBatchJobResultsDisplayed();
 		  
-		  reportsTab.enterBatchJobResultToSearch("sunilBatchJobs");
+		  reportsTab.enterBatchJobResultToSearch(localBatchJobResult);
 		  
 		  reportsTab.clickListLocalBatchJobResultsButton();
 		  
-		  reportsTab.verifySearchResultsforBatchJob("sunilBatchJobs");		  
+		  reportsTab.verifySearchResultsforBatchJob(localBatchJobResult);		  
 		  
 		  reportsTab.verifyOnlyLocalBatchJobResultsDisplayed();	
 		  
@@ -54,11 +61,11 @@ public class Reports_UseCase_5 {
 		  
 		  reportsTab.verifyOnlyArchivedBatchJobResultsDisplayed();
 		  
-		  reportsTab.enterBatchJobResultToSearch("bootstrap-05");
+		  reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult);
 		  
 		  reportsTab.clickListArchivedBatchJobsResultsButton();
 		  
-		  reportsTab.verifySearchResultsforBatchJob("bootstrap-05");		  
+		  reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);		  
 		  
 		  reportsTab.verifyOnlyArchivedBatchJobResultsDisplayed();	
 		  
@@ -72,11 +79,11 @@ public class Reports_UseCase_5 {
 		  
 		  reportsTab.verifyAllBatchJObResultsDisplayed();
 		  
-		  reportsTab.enterBatchJobResultToSearch("bootstrap-05");
+		  reportsTab.enterBatchJobResultToSearch(localBatchJobResult);
 		  
 		  reportsTab.clickListAllBatchJobsResultsButton();
 		  
-		  reportsTab.verifySearchResultsforBatchJob("bootstrap-05");		  
+		  reportsTab.verifySearchResultsforBatchJob(localBatchJobResult);		  
 		  
 		  reportsTab.verifyAllBatchJObResultsDisplayed();	
 		  

@@ -3,7 +3,6 @@
 <suite name="Batch Jobs tab test cases" parallel="false">
 
 	<test name="Verify Batch Jobs Tab content">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.Initialize" />
 			<class name="com.autoport.testcases.BJ_Use_Case_001" />
@@ -11,14 +10,12 @@
 	</test>
 
 	<test name="Importing saved Batch File">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.BJ_Use_Case_002" />
 		</classes>
 	</test>
 
 	<test name="Search or List local/archived/all batch files">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.BJ_Use_Case_003" />
 		</classes>
@@ -26,14 +23,12 @@
 
 	<test
 		name="Managing and performing operations for local/archived/all batch files">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.BJ_Use_Case_004" />
 		</classes>
 	</test>
 
 	<test name="Build and Test a packages under batch file">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.BJ_Use_Case_005" />
 		</classes>

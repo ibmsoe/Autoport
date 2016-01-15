@@ -10,6 +10,7 @@ import com.autoport.pageobjects.BatchJobsTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class SCH_Use_Case_8 {
 
@@ -20,11 +21,11 @@ public class SCH_Use_Case_8 {
 	HomePage homePage;
 	BatchJobsTab batchJobsTab;
 
-	// @Parameters({ "browser" })
+	String topRepositoryValue;
+
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-		// function = new CommonFunctions();
 		// CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
 
@@ -32,13 +33,14 @@ public class SCH_Use_Case_8 {
 		searchTab = CommonFunctions.searchTab;
 		batchJobsTab = CommonFunctions.batchJobsTab;
 
-		// function.openAutoport();
+		searchTab.clickOnMostCommonlyUsedProjectsBtn();
+
+		topRepositoryValue = ReadTestData.readParameter("searchTabData", "topRepositoryValue");
+
 	}
 
 	@Test(priority = 0)
 	public void SCH_Save_Batch_File_common_projects_041() throws InterruptedException {
-
-		// searchTab.clickOnMostCommonlyUsedProjectsBtn();
 
 		searchTab.clickOnCommonlyUsedProjectSearch();
 
@@ -50,7 +52,8 @@ public class SCH_Use_Case_8 {
 
 		batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.verifyLocallySavedBatchFile("spring-framework-3");
+		batchJobsTab
+				.verifyLocallySavedBatchFile(searchTab.getRepositoryNameForCommonProject() + "-" + topRepositoryValue);
 
 	}
 
@@ -65,7 +68,7 @@ public class SCH_Use_Case_8 {
 
 		Thread.sleep(2000);
 
-		searchTab.confirmFileDownload("spring-framework-3");
+		searchTab.confirmFileDownload(searchTab.getRepositoryNameForCommonProject() + "-" + topRepositoryValue);
 	}
 
 	@Test(priority = 2)

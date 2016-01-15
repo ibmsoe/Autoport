@@ -5,43 +5,46 @@ import java.text.ParseException;
 import org.openqa.selenium.WebDriver;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class SCH_Use_Case_6 {
 
 	WebDriver driver;
-	// CommonFunctions function;
+
 	HomePage homePage;
 	SearchTab searchTab;
 	ReportsTab reportsTab;
 
-	// @Parameters({ "browser" })
+	String buildAndTestRepositoryName;
+
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-		// function = new CommonFunctions();
-		// CommonFunctions.launchBrowser();
+//		 CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
 
 		homePage = CommonFunctions.homePage;
 		searchTab = CommonFunctions.searchTab;
 		reportsTab = CommonFunctions.reportsTab;
-		// function.openAutoport();
+
+		buildAndTestRepositoryName = ReadTestData.readParameter("searchTabData", "buildAndTestRepositoryName");
+
+		searchTab.clickOnSingleProjectBtn();
+
 	}
 
 	@Test(priority = 0)
 	public void SCH_Use_current_version_repository_details_single_project_024() {
-		// searchTab.clickOnSingleProjectBtn();
 
-		searchTab.searchForRepository("bson");
+		searchTab.searchForRepository(buildAndTestRepositoryName);
 
-		searchTab.verifyResultsSortByRelavance();
+		searchTab.pressEnterKey();
 
 		searchTab.waitingForResultPanel();
 
@@ -51,7 +54,7 @@ public class SCH_Use_Case_6 {
 	}
 
 	@Test(priority = 1)
-	public void SCH_Select_build_servers_repository_details_single_project_025() {
+	public void SCH_Select_build_servers_repository_details_single_project_025() throws InterruptedException {
 
 		searchTab.verifySelectBuildServer();
 	}
@@ -63,11 +66,11 @@ public class SCH_Use_Case_6 {
 
 		searchTab.clickOnAlertCloseBtn();
 
-		homePage.clickReportsTab();
+		homePage.openReportsTab();
 
 		reportsTab.clickOnManageCompareProjectResultsBtn();
 
-		reportsTab.enterProjectNameForSearch("rabl");
+		reportsTab.enterProjectNameForSearch(searchTab.getRepositoryName());
 
 		reportsTab.clickOnListLocalBtn();
 
@@ -81,6 +84,7 @@ public class SCH_Use_Case_6 {
 
 	@Test(priority = 3)
 	public void SCH_Build_Steps_repository_single_project_027() {
+
 		searchTab.verifyBuildSteps();
 	}
 

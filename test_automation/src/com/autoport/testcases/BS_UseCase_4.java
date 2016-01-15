@@ -29,6 +29,7 @@ public class BS_UseCase_4 {
 	 
 	 @Test (priority=0, dataProvider = "buildServers")
 	  public void BS_Update_Package_On_Servers_011_015(String buildServer) throws Exception{ 
+		  buildServerTab.enterPackageToSearch("");
 		  		  
 		  buildServerTab.selectBuildServer(buildServer);
 		  

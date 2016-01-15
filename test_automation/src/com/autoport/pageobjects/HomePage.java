@@ -59,14 +59,8 @@ public class HomePage {
 	@FindBy(id = "reportsTab")
 	WebElement reportsTab;
 
-	@FindBy(id = "jobManageButton")
-	WebElement manageProjectResultsBtn;
-
 	@FindBy(id = "jenkinsTab")
 	WebElement buildServerTab;
-
-	@FindBy(id = "jenkinsManageButton")
-	WebElement showJenkinsStatusBtn
 
 	@FindBy(id = "modalLabel")
 	WebElement settingsHeader;
@@ -146,6 +140,20 @@ public class HomePage {
 	@FindBy(xpath = "//div[@id='errorAlert']//button")
 	WebElement alertCloseBtn;
 
+	// Search web element to check if Search tab is already open
+	@FindBy(id = "singleSearchButton")
+	WebElement searchSingleProjectTab;
+
+	// Batch Jobs web element to check if Batch Jobs tab is already open
+	@FindBy(xpath = "//div[@id='batchPanel']/div[1]/div[1]")
+	WebElement importBtn;
+
+	@FindBy(id = "jenkinsManageButton")
+	WebElement showJenkinsStatusBtn;
+
+	@FindBy(id = "jobManageButton")
+	WebElement manageProjectResultsBtn;
+
 	// To verify initialization text while loading Autoport
 	public void initializeText() {
 
@@ -161,70 +169,87 @@ public class HomePage {
 
 	// To verify if Search tab is displayed
 	public void clickSearchTab() {
-		searchTab.click();
 
-		if (true) {
-			LogResult.pass("Search tab is displayed.");
+		if (searchSingleProjectTab.isDisplayed()) {
+			LogResult.pass("Search tab is opened.");
 		} else {
-			LogResult.fail("Search tab is not displayed.");
+			searchTab.click();
+			
+			wait.until(ExpectedConditions.visibilityOf(searchSingleProjectTab));
+
+			if (searchSingleProjectTab.isDisplayed()) {
+				LogResult.pass("Search tab is opened.");
+			} else {
+				LogResult.fail("Search tab is not opened.");
+			}
+
 		}
+
 	}
 
 	// To verify if Batch Jobs tab is displayed
 	public void clickBatchJobsTab() {
-
-		batchJobsTab.click();
-
-		if (true) {
-			LogResult.pass("Batch Jobs tab is displayed.");
+		if (importBtn.isDisplayed()) {
+			LogResult.pass("Batch Jobs tab is opened.");
 		} else {
-			LogResult.fail("Batch Jobs tab is not displayed.");
+			batchJobsTab.click();
+			
+			wait.until(ExpectedConditions.visibilityOf(importBtn));
+
+			if (importBtn.isDisplayed()) {
+				LogResult.pass("Batch Jobs tab is opened.");
+			} else {
+				LogResult.fail("Batch Jobs tab is not opened.");
+			}
 		}
+
 	}
-	
+
 	/* Function to verify if Build Servers tab is opened */
 	public void openBuildServerTab() {
-		if(showJenkinsStatusBtn.isDisplayed()){
+		if (showJenkinsStatusBtn.isDisplayed()) {
 			LogResult.pass("Build Server tab is opened.");
-		}
-		else{
+		} else {
 			buildServerTab.click();
-			
+
 			if (showJenkinsStatusBtn.isDisplayed()) {
 				LogResult.pass("Build Server tab is opened.");
 			} else {
 				LogResult.fail("Build Server tab is not opened.");
 			}
 		}
-		
+
 	}
 
 	/* Function to verify if Reports tab is opened */
-	public void openReportsTab() {		
-		if(manageProjectResultsBtn.isDisplayed()){
+	public void openReportsTab() {
+		if (manageProjectResultsBtn.isDisplayed()) {
 			LogResult.pass("Reports tab is opened.");
-		}
-		else{
+		} else {
 			reportsTab.click();
-		
+
+			wait.until(ExpectedConditions.visibilityOf(manageProjectResultsBtn));
+
 			if (manageProjectResultsBtn.isDisplayed()) {
 				LogResult.pass("Reports tab is opened.");
 			} else {
 				LogResult.fail("Reports tab is not opened.");
 			}
 		}
-	}	
-	
-	// To verify if Build Servers tab is displayed
-	public void clickReportsTab() {
-		reportsTab.click();
-
-		if (true) {
-			LogResult.pass("Reports tab is displayed.");
-		} else {
-			LogResult.fail("Reports tab is not displayed.");
-		}
 	}
+
+	/*
+	 * // To verify if Reports tab is displayed public void openBuildServerTab()
+	 * { buildServerTab.click(); if (true) { LogResult.pass(
+	 * "Build Server tab is displayed."); } else { LogResult.fail(
+	 * "Build Server tab is not displayed."); } }
+	 * 
+	 * // To verify if Build Servers tab is displayed public void
+	 * clickReportsTab() { reportsTab.click();
+	 * 
+	 * if (true) { LogResult.pass("Reports tab is displayed."); } else {
+	 * LogResult.fail("Reports tab is not displayed."); } }
+	 */
 
 	// To verify Home page elements
 	public void verifyHomePageUI() {
@@ -509,11 +534,13 @@ public class HomePage {
 
 	// To verify if Settings overlay popup is closed and user is navigated back
 	// to Home page
-	public void clickOnSettingsCloseBtn() {
+	public void clickOnSettingsCloseBtn() throws InterruptedException {
 
 		wait.until(ExpectedConditions.visibilityOf(settingsHeader));
 
 		closeBtn.click();
+		
+		Thread.sleep(2000);
 
 		if (autoportHeaderTx.getText().contains("AutoPort")) {
 			LogResult.pass("Settings popup closed.");

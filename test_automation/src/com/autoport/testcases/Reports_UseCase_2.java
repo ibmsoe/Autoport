@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class Reports_UseCase_2 {
 	WebDriver driver;
@@ -16,6 +17,9 @@ public class Reports_UseCase_2 {
 	HomePage homePage;
 	ReportsTab reportsTab;	
 	 
+	String localProjectResult;
+	String archivedProjectResult;
+	
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
 		 
@@ -24,7 +28,11 @@ public class Reports_UseCase_2 {
 		 homePage = CommonFunctions.homePage;
 		 
 		 homePage = CommonFunctions.homePage;
-		 reportsTab = CommonFunctions.reportsTab;		 
+		 reportsTab = CommonFunctions.reportsTab;		
+		 
+		 localProjectResult = ReadTestData.readParameter("Reports_UseCase_2", "localProjectResultForWhichBuildIsSuccess");
+		 archivedProjectResult = ReadTestData.readParameter("Reports_UseCase_2", "archivedProjectResultForWhichBuildIsSuccess");
+		 
 		 
 		 homePage.openReportsTab();
 		 
@@ -34,13 +42,13 @@ public class Reports_UseCase_2 {
 	 @Test(priority=0)
 	 public void Reports_View_Test_History_For_Local_Project_Result_004() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(localProjectResult);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  
@@ -54,13 +62,13 @@ public class Reports_UseCase_2 {
 	 @Test(priority=1)
 	 public void Reports_View_Test_Detail_For_Local_Project_Result_005() throws Exception{		  
 		  
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResult); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResult);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(localProjectResult);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  
@@ -74,13 +82,13 @@ public class Reports_UseCase_2 {
 	 @Test(priority=2)
 	 public void Reports_View_Test_History_For_Archived_Project_Result_006() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(archivedProjectResult); 
 		  
 		  reportsTab.clickListArchivedProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(archivedProjectResult);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(archivedProjectResult);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  
@@ -94,13 +102,13 @@ public class Reports_UseCase_2 {
 	 @Test(priority=3)
 	 public void Reports_View_Test_Detail_For_Archived_Project_Result_007() throws Exception{		  
 		  
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(archivedProjectResult); 
 		  
 		  reportsTab.clickListArchivedProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(archivedProjectResult);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(archivedProjectResult);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  

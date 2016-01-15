@@ -10,20 +10,22 @@ import com.autoport.pageobjects.BatchJobsTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class SCH_Use_Case_5 {
 
 	WebDriver driver;
-	// CommonFunctions function;
+
 	HomePage homePage;
 	SearchTab searchTab;
 	BatchJobsTab batchJobsTab;
 
-	// @Parameters({ "browser" })
+	String listOfRepositories;
+//	String savedBatchFileName;
+
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-		// function = new CommonFunctions();
 		// CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
 
@@ -31,14 +33,19 @@ public class SCH_Use_Case_5 {
 		searchTab = CommonFunctions.searchTab;
 		batchJobsTab = CommonFunctions.batchJobsTab;
 
-		// function.openAutoport();
+		listOfRepositories = ReadTestData.readParameter("searchTabData", "listOfRepositories");
+//		savedBatchFileName = ReadTestData.readParameter("SCH_Use_Case_5", "savedBatchFileName");
+
+		searchTab.clickOnSingleProjectBtn();
+
 	}
 
 	@Test(priority = 0)
 	public void SCH_Adding_repositories_batch_file_single_project_019() {
-		// searchTab.clickOnSingleProjectBtn();
 
-		searchTab.searchForRepository("Cassandra");
+		searchTab.searchForRepository(listOfRepositories);
+
+		searchTab.pressEnterKey();
 
 		searchTab.verifyResultsSortByRelavance();
 
@@ -60,7 +67,8 @@ public class SCH_Use_Case_5 {
 
 		batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.verifyLocallySavedBatchFile("cassandra-1");
+		batchJobsTab.verifyLocallySavedBatchFile(searchTab.getRepositoryNameAddedToBatch() + "-1");//cassandra-1
+																						
 	}
 
 	@Test(priority = 2)
@@ -78,7 +86,8 @@ public class SCH_Use_Case_5 {
 
 		Thread.sleep(2000);
 
-		searchTab.confirmFileDownload("cassandra-1");
+		searchTab.confirmFileDownload(searchTab.getRepositoryNameAddedToBatch() + "-1");// cassandra-1
+																						
 
 	}
 
@@ -102,7 +111,7 @@ public class SCH_Use_Case_5 {
 		searchTab.verifyBatchFileRepositoryPanelUI();
 
 		searchTab.verifyBatchFileRepositoryDescription();
-		
+
 		searchTab.clickOnBatchFileClearBtn();
 
 	}

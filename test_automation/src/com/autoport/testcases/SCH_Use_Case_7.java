@@ -8,24 +8,34 @@ import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class SCH_Use_Case_7 {
 
 	WebDriver driver;
-	// CommonFunctions function;
+
 	SearchTab searchTab;
 
-	// @Parameters({ "browser" })
+	String topRepositoryValue;
+	String sortByValue;
+	String programmingLanguageValue;
+	String releaseValue;
+	String popularityStarsValue;
+	String forksValue;
+
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-		// function = new CommonFunctions();
 		// CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
-
 		searchTab = CommonFunctions.searchTab;
 
-		// function.openAutoport();
+		topRepositoryValue = ReadTestData.readParameter("searchTabData", "topRepositoryValue");
+		sortByValue = ReadTestData.readParameter("searchTabData", "sortByValue");
+		programmingLanguageValue = ReadTestData.readParameter("searchTabData", "programmingLanguageValue");
+		releaseValue = ReadTestData.readParameter("searchTabData", "releaseValue");
+		popularityStarsValue = ReadTestData.readParameter("searchTabData", "popularityStarsValue");
+		forksValue = ReadTestData.readParameter("searchTabData", "forksValue");
 	}
 
 	@Test(priority = 0)
@@ -71,27 +81,27 @@ public class SCH_Use_Case_7 {
 	@Test(priority = 7)
 	public void SCH_Search_common_projects_035() throws InterruptedException {
 
-		searchTab.enterNumOfTopRepositories("3");
+		searchTab.enterNumOfTopRepositories(topRepositoryValue);
 
-		searchTab.selectSortByValue("Forks");
+		searchTab.selectSortByValue(sortByValue);
 
-		searchTab.selectProgrammingLanguage("Java");
+		searchTab.selectProgrammingLanguage(programmingLanguageValue);
 
-		searchTab.selectRelease("Current");
+		searchTab.selectRelease(releaseValue);
 
-		searchTab.enterPopularityStars("100");
+		searchTab.enterPopularityStars(popularityStarsValue);
 
-		searchTab.enterForks("100");
+		searchTab.enterForks(forksValue);
 
 		searchTab.clickOnCommonlyUsedProjectSearch();
 
 		searchTab.verifyCommonProjectBatchFileSaveExportUI();
 
-		searchTab.verifyNumOfRepositories(3);
+		searchTab.verifyNumOfRepositories(Integer.valueOf(topRepositoryValue));
 
 		searchTab.verifyCommonProjectRepositoryHeader();
 
-		searchTab.verifyRepositoryColumnListUI();
+		searchTab.verifyRepositoryColumnListUIForCommonProjects();
 
 		searchTab.verifyActionsColumnListUIForCommonProjects();
 
@@ -106,17 +116,17 @@ public class SCH_Use_Case_7 {
 
 		searchTab.clickOnMostCommonlyUsedProjectsBtn();
 
-		searchTab.enterNumOfTopRepositories("3");
+		searchTab.enterNumOfTopRepositories(topRepositoryValue);
 
-		searchTab.selectSortByValue("Forks");
+		searchTab.selectSortByValue(sortByValue);
 
-		searchTab.selectProgrammingLanguage("Java");
+		searchTab.selectProgrammingLanguage(programmingLanguageValue);
 
-		searchTab.selectRelease("Current");
+		searchTab.selectRelease(releaseValue);
 
-		searchTab.enterPopularityStars("100");
+		searchTab.enterPopularityStars(popularityStarsValue);
 
-		searchTab.enterForks("100");
+		searchTab.enterForks(forksValue);
 
 		searchTab.clickOnCommonlyUsedProjectSearch();
 
@@ -126,17 +136,17 @@ public class SCH_Use_Case_7 {
 
 		searchTab.clickOnMostCommonlyUsedProjectsBtn();
 
-		searchTab.enterNumOfTopRepositories("3");
+		searchTab.enterNumOfTopRepositories(topRepositoryValue);
 
-		searchTab.selectSortByValue("Forks");
+		searchTab.selectSortByValue(sortByValue);
 
-		searchTab.selectProgrammingLanguage("Java");
+		searchTab.selectProgrammingLanguage(programmingLanguageValue);
 
-		searchTab.selectRelease("Current");
+		searchTab.selectRelease(releaseValue);
 
-		searchTab.enterPopularityStars("100");
+		searchTab.enterPopularityStars(popularityStarsValue);
 
-		searchTab.enterForks("100");
+		searchTab.enterForks(forksValue);
 
 		searchTab.clickOnCommonlyUsedProjectSearch();
 
@@ -148,7 +158,7 @@ public class SCH_Use_Case_7 {
 	}
 
 	@Test(priority = 10)
-	public void SCH_Repository_Description_common_projects_038() {
+	public void SCH_Repository_Description_common_projects_038() throws InterruptedException {
 		searchTab.verifyRepositoryDescription();
 	}
 

@@ -10,41 +10,40 @@ import com.autoport.pageobjects.BatchJobsTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class BJ_Use_Case_004 {
 
 	WebDriver driver;
-	// CommonFunctions function;
+
 	HomePage homePage;
 	SearchTab searchTab;
 	BatchJobsTab batchJobsTab;
 
-	// @Parameters({ "browser" })
+	String topRepositoryName;
+	String topRepositoryValue;
+
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-		// function = new CommonFunctions();
 		// CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
-
-		// homePage = new HomePage(driver);
-		// searchTab = new SearchTab(driver);
-		// batchJobsTab = new BatchJobsTab(driver);
 
 		homePage = CommonFunctions.homePage;
 		searchTab = CommonFunctions.searchTab;
 		batchJobsTab = CommonFunctions.batchJobsTab;
 
-		// function.openAutoport();
+		topRepositoryName = ReadTestData.readParameter("batchJobsTabData", "topRepositoryName");
+		topRepositoryValue = ReadTestData.readParameter("searchTabData", "topRepositoryValue");
 
-		// homePage.clickBatchJobsTab();
+		homePage.clickBatchJobsTab();
 
 	}
 
 	@Test(priority = 0)
 	public void BJ_Batch_file_detail_UI_009() throws InterruptedException {
 
-		// batchJobsTab.clickListSelectBtn();
+		batchJobsTab.clickListSelectBtn();
 
 		batchJobsTab.clickOnListLocalBtn();
 
@@ -54,7 +53,7 @@ public class BJ_Use_Case_004 {
 
 		batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.verifyBatchFileDetailsUI("spring-framework-3");
+		batchJobsTab.verifyBatchFileDetailsUI(topRepositoryName + "-" + topRepositoryValue);// spring-framework-3
 
 		batchJobsTab.verifyBatchConfigTableHeaders();
 
@@ -63,13 +62,13 @@ public class BJ_Use_Case_004 {
 		batchJobsTab.verifyBatchRepoHeaders();
 
 		batchJobsTab.verifyBatchRepoActionsColumn();
-		
+
 		batchJobsTab.clickOnListLocalBtn();
-		
+
 		batchJobsTab.selectFirstRow();
-		
+
 		batchJobsTab.clickOnArchiveBtn();
-		
+
 		batchJobsTab.clickOnAlertCloseBtn();
 
 		batchJobsTab.clickOnListArchivedBtn();
@@ -78,7 +77,7 @@ public class BJ_Use_Case_004 {
 
 		batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.verifyBatchFileDetailsUI("spring-framework-3");
+		batchJobsTab.verifyBatchFileDetailsUI(topRepositoryName + "-" + topRepositoryValue);// spring-framework-3
 
 		batchJobsTab.verifyBatchConfigTableHeaders();
 
@@ -94,7 +93,7 @@ public class BJ_Use_Case_004 {
 
 		batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.verifyBatchFileDetailsUI("spring-framework-3");
+		batchJobsTab.verifyBatchFileDetailsUI(topRepositoryName + "-" + topRepositoryValue);// spring-framework-3
 
 		batchJobsTab.verifyBatchConfigTableHeaders();
 
@@ -107,23 +106,23 @@ public class BJ_Use_Case_004 {
 
 	@Test(priority = 1)
 	public void BJ_Save_batch_file_detailed_view_010() throws InterruptedException {
+
 		batchJobsTab.clickOnListLocalBtn();
 
 		batchJobsTab.selectFirstRow();
 
 		batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.saveBatchFileAs("spring-framework-03");
+		batchJobsTab.saveBatchFileAs(topRepositoryName + "-0" + topRepositoryValue);// spring-framework-03
 
 		batchJobsTab.clickOnSaveBatchDetailsBtn();
-		
+
 		batchJobsTab.clickOnAlertCloseBtn();
 
-		batchJobsTab.verifyBatchFileNameChangeInConfig();
+		// batchJobsTab.verifyBatchFileNameChangeInListing(topRepositoryName +
+		// "-0" + topRepositoryValue);
 
-		batchJobsTab.clickOnListLocalBtn();
-
-		batchJobsTab.newBatchFileCreationConfirmation("spring-framework-03");
+		batchJobsTab.newBatchFileCreationConfirmation(topRepositoryName + "-0" + topRepositoryValue);// spring-framework-03
 
 		batchJobsTab.clickOnListArchivedBtn();
 
@@ -131,17 +130,18 @@ public class BJ_Use_Case_004 {
 
 		batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.saveBatchFileAs("spring-framework-13");
+		batchJobsTab.saveBatchFileAs(topRepositoryName + "-1" + topRepositoryValue);// spring-framework-13
 
 		batchJobsTab.clickOnSaveBatchDetailsBtn();
-		
-		batchJobsTab.clickOnAlertCloseBtn();
 
-		batchJobsTab.verifyBatchFileNameChangeInConfig();
+		batchJobsTab.clickOnAlertCloseBtn();
 
 		batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.newBatchFileCreationConfirmation("spring-framework-13");
+		// batchJobsTab.verifyBatchFileNameChangeInListing(topRepositoryName +
+		// "-1" + topRepositoryValue);// spring-framework-13
+
+		batchJobsTab.newBatchFileCreationConfirmation(topRepositoryName + "-1" + topRepositoryValue);// spring-framework-13
 	}
 
 	@Test(priority = 2)
@@ -187,20 +187,40 @@ public class BJ_Use_Case_004 {
 	}
 
 	@Test(priority = 4)
-	public void BJ_Close_Reset_Save_batch_file_settings_013() throws InterruptedException {
+	public void BJ_Continue_Reset_Show_Modify_Commands_batch_file_settings_013() throws InterruptedException {
 
-		batchJobsTab.clickOnBatchConfigSettingsSaveBtn();
+		batchJobsTab.clickOnBatchConfigSettingsContinueBtn();
 
 		batchJobsTab.clickOnSettingsBtn();
 
 		batchJobsTab.clickOnBatchConfigSettingsResetBtn();
 
-		batchJobsTab.clickOnBatchConfigSettingsCloseBtn();
+		batchJobsTab.clickOnSettingsBtn();
+
+		batchJobsTab.clickOnBatchConfigSettingsShowModifyCommandsBtn();
 
 	}
 
 	@Test(priority = 5)
-	public void BJ_Move_delete_repository_batch_file_014() {
+	public void BJ_Show_Modify_Commands_UI_013a() {
+
+		batchJobsTab.verifyBatchConfigSettingsShowModifyCommandsUI();
+	}
+
+	@Test(priority = 6)
+	public void BJ_Continue_Reset_Back_Show_Modify_Commands_batch_file_settings_013b() {
+
+		batchJobsTab.clickOnShowModifyCommandsBackBtn();
+
+		batchJobsTab.clickOnBatchConfigSettingsShowModifyCommandsBtn();
+
+		batchJobsTab.clickOnShowModifyCommandsResetBtn();
+
+		batchJobsTab.clickOnShowModifyCommandsContinueBtn();
+	}
+
+	@Test(priority = 7)
+	public void BJ_Move_delete_repository_batch_file_014() throws InterruptedException {
 
 		batchJobsTab.verifyRepoUpMove();
 
@@ -210,7 +230,7 @@ public class BJ_Use_Case_004 {
 
 	}
 
-	@Test(priority = 6)
+	@Test(priority = 8)
 	public void BJ_Archive_local_batch_file_015() throws InterruptedException {
 
 		batchJobsTab.clickOnListLocalBtn();
@@ -218,13 +238,25 @@ public class BJ_Use_Case_004 {
 		batchJobsTab.selectFirstRow();
 
 		batchJobsTab.clickOnArchiveBtn();
-		
+
 		batchJobsTab.clickOnAlertCloseBtn();
+
+		batchJobsTab.enterBatchSearchTerm(topRepositoryName + "-1" + topRepositoryValue);
+
+		batchJobsTab.clickOnListArchivedBtn();
+
+		batchJobsTab.verifyArchivedBatchFile(topRepositoryName + "-1" + topRepositoryValue);
+
+		batchJobsTab.clearBatchFileSearchTbx();
 
 	}
 
-	@Test(priority = 7)
-	public void BJ_Remove_batch_file_016() {
+	@Test(priority = 9)
+	public void BJ_Remove_batch_file_016() throws InterruptedException {
+
+		batchJobsTab.clickOnListLocalBtn();
+
+		batchJobsTab.selectFirstRow();
 
 		batchJobsTab.clickOnRemoveBtn();
 

@@ -8,6 +8,7 @@ import org.testng.annotations.Test;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class Reports_UseCase_3 {
 	WebDriver driver;
@@ -15,6 +16,9 @@ public class Reports_UseCase_3 {
 	CommonFunctions functions;
 	HomePage homePage;
 	ReportsTab reportsTab;	
+	String localProjectResultToArchive;
+	String localProjectResultToRemove;
+	String archivedProjectResultToRemove;
 	 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
@@ -24,7 +28,11 @@ public class Reports_UseCase_3 {
 		 homePage = CommonFunctions.homePage;
 		 
 		 homePage = CommonFunctions.homePage;
-		 reportsTab = CommonFunctions.reportsTab;		 
+		 reportsTab = CommonFunctions.reportsTab;	
+		 
+		 localProjectResultToArchive = ReadTestData.readParameter("Reports_UseCase_3", "localProjectResultToArchive");
+		 localProjectResultToRemove = ReadTestData.readParameter("Reports_UseCase_3", "localProjectResultToRemove");
+		 archivedProjectResultToRemove = ReadTestData.readParameter("Reports_UseCase_3", "archivedProjectResultToRemove");
 		 
 		 homePage.openReportsTab();
 		 
@@ -34,30 +42,31 @@ public class Reports_UseCase_3 {
 	 @Test(priority=0)
 	 public void Reports_Archive_Local_Project_Result_008() throws Exception{			 
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResultToArchive); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResultToArchive);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(localProjectResultToArchive);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  
 		  reportsTab.clickArchiveProjectResultsBtn();
 		  
 		  reportsTab.clearSearchedProjectResult();
-	 }	 
+	 }
+	 
 	 @Test(priority=1)
-	 public void Reports_Remove_Local_Project_Resul_009() throws Exception{		  
+	 public void Reports_Remove_Local_Project_Result_009() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(localProjectResultToRemove); 
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(localProjectResultToRemove);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(localProjectResultToRemove);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  
@@ -67,16 +76,17 @@ public class Reports_UseCase_3 {
 		  
 		  reportsTab.clearSearchedProjectResult();
 	 }	 
+	 
 	 @Test(priority=2)
 	 public void Reports_Remove_Archived_Project_Result_010() throws Exception{		  
 		 
-		  reportsTab.enterProjectResultToSearch("bson"); 
+		  reportsTab.enterProjectResultToSearch(archivedProjectResultToRemove); 
 		  
 		  reportsTab.clickListArchivedProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");	
+		  reportsTab.verifySearchResultsforProject(archivedProjectResultToRemove);	
 		  
-		  reportsTab.selectCheckboxForPackage("bson");
+		  reportsTab.selectCheckboxForPackage(archivedProjectResultToRemove);
 		  
 		  reportsTab.verifyButtonsAreEnabled();
 		  

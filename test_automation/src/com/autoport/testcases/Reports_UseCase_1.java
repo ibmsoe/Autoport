@@ -11,12 +11,15 @@ import com.autoport.pageobjects.BuildServersTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class Reports_UseCase_1 {
 	WebDriver driver;
 	HomePage homePage;
 	ReportsTab reportsTab;	
-	 
+	String localProjectResult;
+	String archivedProjectResult;
+	
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
 		 
@@ -25,7 +28,9 @@ public class Reports_UseCase_1 {
 		 homePage = CommonFunctions.homePage;
 		 
 		 homePage = CommonFunctions.homePage;
-		 reportsTab = CommonFunctions.reportsTab;		 
+		 reportsTab = CommonFunctions.reportsTab;
+		 localProjectResult = ReadTestData.readParameter("Reports_UseCase_1", "localProjectResultForWhichBuildIsSuccess");
+		 archivedProjectResult = ReadTestData.readParameter("Reports_UseCase_1", "archivedProjectResultForWhichBuildIsSuccess");
 		 
 		 homePage.openReportsTab();
 		 
@@ -39,11 +44,11 @@ public class Reports_UseCase_1 {
 		  
 		  reportsTab.verifyOnlyLocalProjectResultsDisplayed();
 		  
-		  reportsTab.enterProjectResultToSearch("bson");
+		  reportsTab.enterProjectResultToSearch(localProjectResult);
 		  
 		  reportsTab.clickListLocalProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");		  
+		  reportsTab.verifySearchResultsforProject(localProjectResult);		  
 		  
 		  reportsTab.verifyOnlyLocalProjectResultsDisplayed();	
 		  
@@ -58,11 +63,11 @@ public class Reports_UseCase_1 {
 		  
 		  reportsTab.verifyOnlyArchivedProjectResultsDisplayed();
 		  
-		  reportsTab.enterProjectResultToSearch("bson");
+		  reportsTab.enterProjectResultToSearch(archivedProjectResult);
 		  
 		  reportsTab.clickListArchivedProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");		  
+		  reportsTab.verifySearchResultsforProject(archivedProjectResult);		  
 		  
 		  reportsTab.verifyOnlyArchivedProjectResultsDisplayed();		  
 		  
@@ -76,14 +81,14 @@ public class Reports_UseCase_1 {
 		  
 		  reportsTab.verifyAllProjectResultsDisplayed();
 		  
-		  reportsTab.enterProjectResultToSearch("bson");
+		  reportsTab.enterProjectResultToSearch(localProjectResult);
 		  
 		  reportsTab.clickListAllProjectResultsButton();
 		  
-		  reportsTab.verifySearchResultsforProject("bson");		  
+		  reportsTab.verifySearchResultsforProject(localProjectResult);		  
 		  
 		  reportsTab.verifyAllProjectResultsDisplayed();  
 		  
 		  reportsTab.clearSearchedProjectResult();
-	 } 	
+	 }
 }

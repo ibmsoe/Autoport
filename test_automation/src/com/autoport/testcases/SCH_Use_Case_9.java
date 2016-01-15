@@ -12,28 +12,24 @@ import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class SCH_Use_Case_9 {
 
 	WebDriver driver;
-	// CommonFunctions function;
 
 	HomePage homePage;
 	SearchTab searchTab;
 	ReportsTab reportsTab;
 
-	// @Parameters({ "browser" })
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-		// function = new CommonFunctions();
 		// CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
-
 		homePage = CommonFunctions.homePage;
 		searchTab = CommonFunctions.searchTab;
 		reportsTab = CommonFunctions.reportsTab;
-		// function.openAutoport();
 	}
 
 	@Test(priority = 0)
@@ -49,7 +45,7 @@ public class SCH_Use_Case_9 {
 	}
 
 	@Test(priority = 1)
-	public void SCH_Select_build_servers_repository_details_common_projects_045() {
+	public void SCH_Select_build_servers_repository_details_common_projects_045() throws InterruptedException {
 
 		searchTab.verifySelectBuildServerForCommonProject();
 
@@ -62,11 +58,11 @@ public class SCH_Use_Case_9 {
 
 		searchTab.clickOnAlertCloseBtn();
 
-		homePage.clickReportsTab();
+		homePage.openReportsTab();
 
 		reportsTab.clickOnManageCompareProjectResultsBtn();
 
-		reportsTab.enterProjectNameForSearch("spring-framework");// bootstrap
+		reportsTab.enterProjectNameForSearch(searchTab.getRepositoryNameForCommonProject());// bootstrap
 
 		reportsTab.clickOnListLocalBtn();
 

@@ -14,14 +14,17 @@ public class BS_UseCase_3{
 	
 	WebDriver driver;		
 	HomePage homePage;
-	BuildServersTab buildServerTab;	
+	BuildServersTab buildServerTab;
+	String packageHavingTwoVersions;
 	 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
-		// CommonFunctions.launchBrowser(); 
+		 //CommonFunctions.launchBrowser(); 
 		 driver = CommonFunctions.driver; 
 		 homePage = CommonFunctions.homePage;
-		 buildServerTab = CommonFunctions.buildServerTab; 		 	
+		 buildServerTab = CommonFunctions.buildServerTab; 		
+		 packageHavingTwoVersions = ReadTestData.readParameter("BS_UseCase_3", "packageNameHavingTwoVersionsAvailable");
+		 
 		 CommonFunctions.goTo_ListInstallSingleSoftwarSection();
 	  }	 	
 	
@@ -72,27 +75,27 @@ public class BS_UseCase_3{
 	  @Test (priority=2)
 	  public void BS_Install_package_with_different_versions_010() throws Exception{
 		  
-		  buildServerTab.enterPackageToSearch("apache-ant"); 
+		  buildServerTab.enterPackageToSearch(packageHavingTwoVersions); 
 		  
 		  buildServerTab.selectFirstBuildServer();
 		  		  
 		  buildServerTab.clickListBtn();
 		  
-		  String firstVersion = buildServerTab.selectTwoVersionsToInstall("apache-ant");
+		  String firstVersion = buildServerTab.selectTwoVersionsToInstall(packageHavingTwoVersions);
 		  
 		  buildServerTab.clickInstallUpdateBtn();
 		  
-		  buildServerTab.verifyTwoVersionMessage("apache-ant", firstVersion);
+		  buildServerTab.verifyTwoVersionMessage(packageHavingTwoVersions, firstVersion);
 		  
-		  buildServerTab.verifyInstallationSuccessPopUp("apache-ant");		  
+		  buildServerTab.verifyInstallationSuccessPopUp(packageHavingTwoVersions);		  
 		  
-		  buildServerTab.enterPackageToSearch("apache-ant"); 
+		  buildServerTab.enterPackageToSearch(packageHavingTwoVersions); 
 			 
 		  buildServerTab.selectFirstBuildServer();
 		  
 		  buildServerTab.clickListBtn();
 		  
-		  buildServerTab.verifyInstalledVersionIsNotNA("apache-ant");
+		  buildServerTab.verifyInstalledVersionIsNotNA(packageHavingTwoVersions);
 		  
 	  }
 	  

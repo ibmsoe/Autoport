@@ -135,8 +135,8 @@ public class BuildServersTab {
 	
 	@FindBy(xpath="//div[@id='jenkinsStatus']/div[3]/div[2]/div[5]/div")	 
     WebElement uploadBtn;	
-	
-	@FindBy(xpath="//div[@id='jenkinsStatus']/div[3]/div[2]/div[@style='']/span/div/button")	 
+		
+	@FindBy(xpath="//div[@id='jenkinsStatus']/div[3]/div[2]/div[not(@style) or @style='']/span/div/button")	
     WebElement packageTypeBtn;
 	
 	
@@ -630,8 +630,8 @@ public class BuildServersTab {
 	}
 	
 	/* Function to verify that correct message is displayed when two versions of same package are selected for installation */
-	public void verifyTwoVersionMessage(String packagename, String version){
-		
+	public void verifyTwoVersionMessage(String packagename, String version) throws InterruptedException{
+		Thread.sleep(2000);
 		Alert alert = driver.switchTo().alert();
 		String alertmsg = alert.getText();
 		
@@ -1101,7 +1101,7 @@ public class BuildServersTab {
 		
 		packageTypeBtn.click();	
 		
-		String packageTypeXpath1 = "//div[@id='jenkinsStatus']/div[3]/div[2]/div[@style='']/span/div/ul/li[1]/a/label/input";
+		String packageTypeXpath1 = "//div[@id='jenkinsStatus']/div[3]/div[2]/div[not(@style) or @style='']/span/div/ul/li[1]/a/label/input";
 		
 		driver.findElement(By.xpath(packageTypeXpath1)).click();		
 	}

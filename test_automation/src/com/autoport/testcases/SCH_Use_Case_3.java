@@ -12,18 +12,16 @@ import com.autoport.utilities.CommonFunctions;
 public class SCH_Use_Case_3 {
 
 	WebDriver driver;
-	// CommonFunctions function;
+
 	HomePage homePage;
 
-	// @Parameters({ "browser" })
 	@BeforeTest
 	public void beforeTest() throws Exception {
-		// function = new CommonFunctions();
+
 		// CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
 		homePage = CommonFunctions.homePage;
 
-		// function.openAutoport();
 	}
 
 	@Test

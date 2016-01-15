@@ -19,6 +19,7 @@ public class BS_UseCase_9 {
 	 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
+		 
 		 //CommonFunctions.launchBrowser(); 
 		 driver = CommonFunctions.driver; 
 		 homePage = CommonFunctions.homePage;
@@ -35,7 +36,7 @@ public class BS_UseCase_9 {
 		 
 		 buildServerTab.clickUploadBtn();
 		 
-		 buildServerTab.verifyUploadedSuccessfullyMessage();	 
+		 buildServerTab.verifyUploadedSuccessfullyMessage();	
 		 		 
 	  }
 	 

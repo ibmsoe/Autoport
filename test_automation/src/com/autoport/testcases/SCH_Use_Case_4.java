@@ -3,35 +3,44 @@ package com.autoport.testcases;
 import org.openqa.selenium.WebDriver;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.BatchJobsTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
+import com.autoport.utilities.ReadTestData;
 
 public class SCH_Use_Case_4 {
 
 	WebDriver driver;
-	// CommonFunctions function;
+
 	HomePage homePage;
 	SearchTab searchTab;
 	BatchJobsTab batchJobsTab;
 
-	// @Parameters({ "browser" })
+	String autoSelectedRepository;
+	String listOfRepositories;
+	String ownerForOwnerRepositorySearch;
+	String repositoryForOwnerRepositorySearch;
+	String numOfRepositories;
+
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-		// function = new CommonFunctions();
 		// CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
-
 		homePage = CommonFunctions.homePage;
 		searchTab = CommonFunctions.searchTab;
 		batchJobsTab = CommonFunctions.batchJobsTab;
 
-		// function.openAutoport();
+		autoSelectedRepository = ReadTestData.readParameter("searchTabData", "autoSelectedRepository");
+		listOfRepositories = ReadTestData.readParameter("searchTabData", "listOfRepositories");
+		ownerForOwnerRepositorySearch = ReadTestData.readParameter("searchTabData", "ownerForOwnerRepositorySearch");
+		repositoryForOwnerRepositorySearch = ReadTestData.readParameter("searchTabData",
+				"repositoryForOwnerRepositorySearch");
+		numOfRepositories = ReadTestData.readParameter("searchTabData", "numOfRepositories");
+
 	}
 
 	@Test(priority = 0)
@@ -49,9 +58,11 @@ public class SCH_Use_Case_4 {
 	}
 
 	@Test(priority = 2)
-	public void SCH_Search_Results_verification_010() {
+	public void SCH_Search_Results_verification_owner_010() {
 
-		searchTab.searchForRepository("Cassandra");
+		searchTab.searchForRepository(listOfRepositories);
+
+		searchTab.pressEnterKey();
 
 		searchTab.verifyResultsSortByRelavance();
 
@@ -75,9 +86,23 @@ public class SCH_Use_Case_4 {
 	}
 
 	@Test(priority = 3)
+	public void SCH_Search_Results_verification_owner_repository_010a() {
+
+		searchTab.searchForRepository(ownerForOwnerRepositorySearch + "/" + repositoryForOwnerRepositorySearch);
+
+		searchTab.pressEnterKey();
+
+		searchTab.verifyResultsSortByRelavance();
+
+		searchTab.verifyOwnerRepositorySearch(ownerForOwnerRepositorySearch, repositoryForOwnerRepositorySearch);
+	}
+
+	@Test(priority = 4)
 	public void SCH_Search_Results_UI_auto_selected_repository_011() {
 
-		searchTab.searchForRepository("cassandra");
+		searchTab.searchForRepository(autoSelectedRepository);
+
+		searchTab.pressEnterKey();
 
 		searchTab.verifyResultsSortByRelavance();
 
@@ -89,14 +114,14 @@ public class SCH_Use_Case_4 {
 
 	}
 
-	@Test(priority = 4)
+	@Test(priority = 5)
 	public void SCH_See_all_results_012() {
 
 		searchTab.clickOnSeeAllResultsBtn();
 
 		searchTab.waitingForResultPanel();
 
-		searchTab.verifyNumOfRepositories(10);
+		searchTab.verifyNumOfRepositories(Integer.parseInt(numOfRepositories));
 
 		searchTab.verifyRepositoryHeader();
 
@@ -105,10 +130,12 @@ public class SCH_Use_Case_4 {
 		searchTab.verifyActionsColumnListUI();
 	}
 
-	@Test(priority = 5)
+	@Test(priority = 6)
 	public void SCH_Search_Result_UI_list_repositories_013() {
 
-		searchTab.searchForRepository("Cassandra");
+		searchTab.searchForRepository(listOfRepositories);
+
+		searchTab.pressEnterKey();
 
 		searchTab.verifyResultsSortByRelavance();
 
@@ -122,10 +149,12 @@ public class SCH_Use_Case_4 {
 
 	}
 
-	@Test(priority = 6)
-	public void SCH_Owner_Repository_single_project_014() {
+	@Test(priority = 7)
+	public void SCH_Owner_Repository_single_project_014() throws InterruptedException {
 
-		searchTab.searchForRepository("cassandra");
+		searchTab.searchForRepository(autoSelectedRepository);
+
+		searchTab.pressEnterKey();
 
 		searchTab.verifyResultsSortByRelavance();
 
@@ -133,35 +162,28 @@ public class SCH_Use_Case_4 {
 
 		searchTab.clickOnOwner();
 
-		searchTab.browserNavigateBack();
-
-		// searchTab.browserPageRefresh();
-
-		searchTab.clickOnSingleProjectBtn();
-
-		// searchTab.searchForRepository("cassandra");
-
-		searchTab.verifyResultsSortByPopularityStars();
-
-		searchTab.waitingForSingleProjectResultPanel();
+		// searchTab.browserNavigateBack();
+		//
+		// searchTab.clickOnSingleProjectBtn();
+		//
+		// searchTab.verifyResultsSortByPopularityStars();
+		//
+		// searchTab.waitingForSingleProjectResultPanel();
 
 		searchTab.clickOnRepository();
 
-		searchTab.browserNavigateBack();
+		// searchTab.browserNavigateBack();
 
 	}
 
-	@Test(priority = 7)
+	@Test(priority = 8)
 	public void SCH_Tooltip_single_project_015() {
-		// searchTab.browserPageRefresh();
 
-		searchTab.clickOnSingleProjectBtn();
-
-		// searchTab.searchForRepository("cassandra");
-
-		searchTab.verifyResultsSortByPopularityStars();
-
-		searchTab.waitingForSingleProjectResultPanel();
+		// searchTab.clickOnSingleProjectBtn();
+		//
+		// searchTab.verifyResultsSortByPopularityStars();
+		//
+		// searchTab.waitingForSingleProjectResultPanel();
 
 		searchTab.verifyRepositoryDetailsTooltip();
 
@@ -171,12 +193,13 @@ public class SCH_Use_Case_4 {
 
 	}
 
-	@Test(priority = 8)
-	public void SCH_Repository_description_single_project_016() {
+	@Test(priority = 9)
+	public void SCH_Repository_description_single_project_016() throws InterruptedException {
+
 		searchTab.verifyRepositoryDescription();
 	}
 
-	@Test(priority = 9)
+	@Test(priority = 10)
 	public void SCH_Repository_details_single_project_017() {
 
 		searchTab.clickOnRepositoryDetailsBtn();
@@ -189,8 +212,9 @@ public class SCH_Use_Case_4 {
 
 	}
 
-	@Test(priority = 10)
+	@Test(priority = 11)
 	public void SCH_back_to_results_single_project_018() {
+
 		searchTab.clickOnBackToResults();
 	}
 

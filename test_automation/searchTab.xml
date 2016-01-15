@@ -3,7 +3,6 @@
 <suite name="Search tab test cases" parallel="false">
 
 	<test name="Launching of AutoPort Tool">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.Initialize" />
 			<class name="com.autoport.testcases.SCH_Use_Case_1" />
@@ -11,49 +10,43 @@
 	</test>
 
 	<test name="Configuring options on Settings button">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.SCH_Use_Case_2" />
 		</classes>
 	</test>
 
 	<test name="Hide Help Button Toggle">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.SCH_Use_Case_3" />
 		</classes>
 	</test>
 
 	<test name="Searching for a single project">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.SCH_Use_Case_4" />
 		</classes>
 	</test>
 
 	<test name="Creating Batch File after single project search">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.SCH_Use_Case_5" />
 		</classes>
 	</test>
 
 	<test name="Building and Testing package post single project search">
-		<parameter name="browser" value="firefox" />
 		<classes>
+
 			<class name="com.autoport.testcases.SCH_Use_Case_6" />
 		</classes>
 	</test>
 
 	<test name="Searching for most commonly used Projects">
-		<parameter name="browser" value="firefox" />
-		<classes>			
+		<classes>
 			<class name="com.autoport.testcases.SCH_Use_Case_7" />
 		</classes>
 	</test>
 
 	<test name="Creating Batch File after most commonly used projects search">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.SCH_Use_Case_8" />
 		</classes>
@@ -61,7 +54,6 @@
 
 	<test
 		name="Building and Testing package post most commonly used project search">
-		<parameter name="browser" value="firefox" />
 		<classes>
 			<class name="com.autoport.testcases.SCH_Use_Case_9" />
 		</classes>

@@ -4,7 +4,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoAlertPresentException;
@@ -16,12 +15,9 @@ import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.pagefactory.AjaxElementLocatorFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
-
+import org.testng.Assert;
 import com.autoport.utilities.LogResult;
-import com.thoughtworks.selenium.webdriven.commands.AlertOverride;
-	
-	
-	
+
 public class ReportsTab {
 	WebDriver driver;
 	FluentWait<WebDriver> wait;
@@ -30,105 +26,104 @@ public class ReportsTab {
 		this.driver = driver;
 		this.wait = fluintWait;
 		AjaxElementLocatorFactory factory = new AjaxElementLocatorFactory(driver, 5);
-		PageFactory.initElements(factory, this);			 
-	}	
+		PageFactory.initElements(factory, this);
+	}
 	
-	/* */
-	@FindBy(id="jobManageButton")	 
+	@FindBy(id="jobManageButton")
     WebElement manageCompareProjectResults;
 	
-	@FindBy(id="projectFilter")	 
+	@FindBy(id="projectFilter")
     WebElement projectResultTextBox;
 	
-	@FindBy(xpath="//div[@id='jobManagePanel']/div[1]/div[2]/a[1]/button")	 
+	@FindBy(xpath="//div[@id='jobManagePanel']/div[1]/div[2]/a[1]/button")
     WebElement projectListLocalBtn;
 	
-	@FindBy(xpath="//div[@id='jobManagePanel']/div[1]/div[2]/a[2]/button")	 
+	@FindBy(xpath="//div[@id='jobManagePanel']/div[1]/div[2]/a[2]/button")
     WebElement projectListArchivedBtn;
 	
-	@FindBy(xpath="//div[@id='jobManagePanel']/div[1]/div[2]/a[3]/button")	 
+	@FindBy(xpath="//div[@id='jobManagePanel']/div[1]/div[2]/a[3]/button")
     WebElement projectListAllBtn;
 	
-	@FindBy(id="testCompareRunAlert")	 
+	@FindBy(id="testCompareRunAlert")
     WebElement listInformationMessage;
 	
-	@FindBy(id="testCompareSelectPanel")	 
+	@FindBy(id="testCompareSelectPanel")
     WebElement projectResultsTable;
 	
-	@FindBy(xpath="//div[@id='jobManagePanel']//span[@class='page-list']/span/button")	 
+	@FindBy(xpath="//div[@id='jobManagePanel']//span[@class='page-list']/span/button")
     WebElement noOfRecordsBtn;
 	
-	@FindBy(id="testHistoryBtn")	 
+	@FindBy(id="testHistoryBtn")
     WebElement projectTestHistoryBtn;
 	
-	@FindBy(id="testDetailBtn")	 
+	@FindBy(id="testDetailBtn")
     WebElement projectTestDetailBtn;
 	
-	@FindBy(id="compareResultsBtn")	 
+	@FindBy(id="compareResultsBtn")
     WebElement projectTestCompareBtn;
 	
-	@FindBy(id="testResultsTable")	 
+	@FindBy(id="testResultsTable")
     WebElement ProjectTestCompareTable;
 	
-	@FindBy(id="compareBuildLogsBtn")	 
+	@FindBy(id="compareBuildLogsBtn")
     WebElement projectBuildLogCompareBtn;
 	
-	@FindBy(id="logdiffModal")	 
+	@FindBy(id="logdiffModal")
     WebElement projectBuildLogCompareTable;
 	
-	@FindBy(id="compareTestLogsBtn")	 
+	@FindBy(id="compareTestLogsBtn")
     WebElement projectTestLogCompareBtn;
 	
-	@FindBy(id="logdiffModal")	 
+	@FindBy(id="logdiffModal")
     WebElement projectTestLogCompareTable;
 	
-	@FindBy(id="resultArchiveBtn")	 
+	@FindBy(id="resultArchiveBtn")
     WebElement projectResultArchiveBtn;
 	
-	@FindBy(id="resultRemoveBtn")	 
+	@FindBy(id="resultRemoveBtn")
     WebElement projectResultRemoveBtn;
 	
-	@FindBy(id="testResultsTable")	 
+	@FindBy(id="testResultsTable")
     WebElement ProjectTestHistoryTable;
 	
-	@FindBy(id="testResultsTable")	 
+	@FindBy(id="testResultsTable")
     WebElement ProjectTestDetailTable;
 	
-	@FindBy(xpath="//div[@id='testCompareTablePanel']/div[2]/div[1]/a/button")	 
+	@FindBy(xpath="//div[@id='testCompareTablePanel']/div[2]/div[1]/a/button")
     WebElement backToListBtn;
 	
-	@FindBy(xpath="//div[@id='errorAlert']/div/div/div[3]/button")	 
+	@FindBy(xpath="//div[@id='errorAlert']/div/div/div[3]/button")
     WebElement errorCloseBtn;
 	
-	@FindBy(id="viewBuildLogBtn")	 
+	@FindBy(id="viewBuildLogBtn")
     WebElement viewBuildLogBtn;
 	
-	@FindBy(id="logdiffModal")	 
+	@FindBy(id="logdiffModal")
     WebElement projectBuildLogTable;
 	
-	@FindBy(id="viewTestLogBtn")	 
+	@FindBy(id="viewTestLogBtn")
     WebElement viewTestLogBtn;
 	
-	@FindBy(id="logdiffModal")	 
+	@FindBy(id="logdiffModal")
     WebElement projectTestLogTable;
 	
-	/* */
-	@FindBy(id="testResultsButton")	 
+	/* WebElements for batch job section */
+	@FindBy(id="testResultsButton")
     WebElement manageCompareBatchJobResults;
 	
-	@FindBy(id="batchReportFilter")	 
+	@FindBy(id="batchReportFilter")
     WebElement BatchJobResultsTextBox;
 		
-	@FindBy(xpath="//div[@id='testResultsPanel']/div[1]/div[2]/a[1]/button")	 
+	@FindBy(xpath="//div[@id='testResultsPanel']/div[1]/div[2]/a[1]/button")
     WebElement batchJobListLocalBtn;
 	
-	@FindBy(xpath="//div[@id='testResultsPanel']/div[1]/div[2]/a[2]/button")	 
+	@FindBy(xpath="//div[@id='testResultsPanel']/div[1]/div[2]/a[2]/button")
     WebElement batchJobListArchivedBtn;
 	
-	@FindBy(xpath="//div[@id='testResultsPanel']/div[1]/div[2]/a[3]/button")	 
+	@FindBy(xpath="//div[@id='testResultsPanel']/div[1]/div[2]/a[3]/button")
     WebElement batchJobListAllBtn;
 	
-	@FindBy(id="batchReportListSelectTable")	 
+	@FindBy(id="batchReportListSelectTable")
     WebElement batchJobsSearchResultsTable;
 	
 	@FindBy(id="batch_report_history")	 
@@ -173,10 +168,8 @@ public class ReportsTab {
 	@FindBy(xpath="//div[@id='testBatchCompareLog']/a/button")	 
     WebElement batchJobsBackToComparisonBtn;
 	
-	/* Manish WebElements */
-	
 	@FindBy(id = "jobManageButton")
-	WebElement manageProjectResults;	
+	WebElement manageProjectResults;
 
 	@FindBy(id = "batchReportFilter")
 	WebElement batchResultTextBox;
@@ -228,13 +221,12 @@ public class ReportsTab {
 
 	@FindBy(xpath = "//table[@id='batchReportListSelectTable']/tbody/tr/td[2]")
 	List<WebElement> manageBatchJobResultsBatchNameColumnValue;
-	
-	/* Manish WebElements */
+
 	
 	/***********************************************************************/
 	
 	/* Function to click on Manage/Compare project results section */
-	public void clickManageCompareProjectResultsButton(){		
+	public void clickManageCompareProjectResultsButton(){
 		if(projectResultTextBox.isDisplayed()){
 			LogResult.pass("Manage/Compare project results is opened");
 		}
@@ -250,8 +242,7 @@ public class ReportsTab {
 	}
 	
 	/* Function to enter project results to search in Search project results text box*/
-	public void enterProjectResultToSearch(String projectResult) throws InterruptedException{
-			
+	public void enterProjectResultToSearch(String projectResult) throws InterruptedException{		
 		projectResultTextBox.clear();
 		projectResultTextBox.sendKeys(projectResult);	
 		Thread.sleep(1000);
@@ -442,41 +433,52 @@ public class ReportsTab {
 	/*Function to click on TestHistory Button */
 	public void clickTestHistoryButton(){
 		
-		projectTestHistoryBtn.click();
-		
-		wait.until(ExpectedConditions.presenceOfElementLocated(By.id("testResultsTable")));
-		
-		if(ProjectTestHistoryTable.isDisplayed()){
-			LogResult.pass("Project Test History is displayed in table");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Build is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+		projectTestHistoryBtn.click();		
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testResultsTable")));
+			
+			if(ProjectTestHistoryTable.isDisplayed()){
+				LogResult.pass("Project Test History is displayed in table");
 			}
 			else
-			LogResult.fail("Project Test History is not displayed in table");
-		}		
+				LogResult.fail("Project Test History is not displayed in table");			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	}
 	
-	/*Function to click on TestHistory Button */
+	/*Function to click on Test Detail Button */
 	public void clickTestDetailButton(){
 		
-		projectTestDetailBtn.click();
+		projectTestDetailBtn.click();	
 		
-		wait.until(ExpectedConditions.presenceOfElementLocated(By.id("testResultsTable")));
-		
-		if(ProjectTestDetailTable.isDisplayed()){
-			LogResult.pass("Project Test Details are displayed in table");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Build is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testResultsTable")));
+			
+			if(ProjectTestDetailTable.isDisplayed()){
+				LogResult.pass("Project Test Details are displayed in table");
 			}
 			else
-			LogResult.fail("Project Test Details are displayed in table");
-		}		
+				LogResult.fail("Project Test Details are displayed in table");			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	}
 	
 	public void clickBackToListButton(){		
@@ -489,13 +491,14 @@ public class ReportsTab {
 	/*Function to click on Archive Projects results button */
 	public void clickArchiveProjectResultsBtn(){
 		
-		projectResultArchiveBtn.click();		
+		projectResultArchiveBtn.click();
 	}
 	
 	/*Function to click on remove Projects results button*/
-	public void clickRemoveProjectResultsBtn(){
+	public void clickRemoveProjectResultsBtn() throws InterruptedException{
 		
 		projectResultRemoveBtn.click();
+		Thread.sleep(2000);
 		
 		try{
 			Alert alert = driver.switchTo().alert();
@@ -510,7 +513,7 @@ public class ReportsTab {
 	/* Function to verify if deleted successfully pop up message is displayed correctly */	
 	public void verifyDeletedSuccessfullyMsg(){
 		
-		wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[@id='errorAlert']/div/div/div[1]")));
+		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='errorAlert']/div/div/div[1]")));
 		
 		String message = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div/div[1]")).getText();
 		
@@ -526,16 +529,13 @@ public class ReportsTab {
 	/*Function to sort results by date completed */
 	public void sortResultsByDateCompletedDescending() throws InterruptedException{
 		
-		driver.findElement(By.xpath("//table[@id='testCompareSelectPanel']/thead/tr/th[7]/div[1]")).click();
-		
+		driver.findElement(By.xpath("//table[@id='testCompareSelectPanel']/thead/tr/th[7]/div[1]")).click();	
 		Thread.sleep(3000);
 		
 		String firstdatestring = driver.findElement(By.xpath("//table[@id='testCompareSelectPanel']/tbody/tr[1]/td[7]")).getText();
 		String lastdatestring = driver.findElement(By.xpath("//table[@id='testCompareSelectPanel']/tbody/tr[last()]/td[7]")).getText();
 		
 		SimpleDateFormat formatter = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");
-		//SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss");			
-		//Tue Jan 5 16:11:44 2016 EEE MMM dd HH:mm:ss yyyy
 		try {
 
 			Date date1 = formatter.parse(firstdatestring);
@@ -548,10 +548,6 @@ public class ReportsTab {
 				driver.findElement(By.xpath("//table[@id='testCompareSelectPanel']/thead/tr/th[7]/div[1]")).click();
 				Thread.sleep(3000);				
 			}
-			
-			/*System.out.println(formatter.format(date1));
-			System.out.println(formatter.format(date2));*/
-
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -581,104 +577,134 @@ public class ReportsTab {
 	
 	/* Function to click on Test compare button for project results */
 	public void clickTestCompareForProjectresults(){
-		projectTestCompareBtn.click();
-		
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testResultsTable")));
-		
-		if(ProjectTestDetailTable.isDisplayed()){
-			LogResult.pass("Project Test Compare Details are displayed in table");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Build is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+		projectTestCompareBtn.click();		
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testResultsTable")));
+			if(ProjectTestDetailTable.isDisplayed()){
+				LogResult.pass("Project Test Compare Details are displayed in table");
 			}
 			else
-			LogResult.fail("Project Test Compare Details are not displayed in table");
-		}		
+				LogResult.fail("Project Test Compare Details are not displayed in table");			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}	
 	}
 	
 	/* Function to click on Build Log compare button for project results */
 	public void clickBuildLogCompareForProjectresults(){
-		projectBuildLogCompareBtn.click();
+		projectBuildLogCompareBtn.click();	
 		
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("logdiffModal")));
-		
-		if(projectBuildLogCompareTable.isDisplayed()){
-			LogResult.pass("Project Build Log Compare Details are displayed in Panel");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Build is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("logdiffModal")));
+			
+			if(projectBuildLogCompareTable.isDisplayed()){
+				LogResult.pass("Project Build Log Compare Details are displayed in Panel");
 			}
 			else
-			LogResult.fail("Project Build Log Compare Details are not displayed in Panel");
-		}		
+				LogResult.fail("Project Test Compare Details are not displayed in table");
+			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	}
 	
 	/* Function to click on Build Log compare button for project results */
 	public void clickTestLogCompareForProjectresults(){
 		projectTestLogCompareBtn.click();
 		
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("logdiffModal")));
-		
-		if(projectTestLogCompareTable.isDisplayed()){
-			LogResult.pass("Project Test Log Compare Details are displayed in Panel");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Build is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("logdiffModal")));
+			
+			if(projectTestLogCompareTable.isDisplayed()){
+				LogResult.pass("Project Test Log Compare Details are displayed in Panel");
 			}
 			else
-			LogResult.fail("Project Test Log Compare Details are not displayed in Panel");
+				LogResult.fail("Project Test Log Compare Details are not displayed in Panel");
+			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
 		}		
 	}
 	
 	/* Function to to verify log comparision for project results and close the panel*/
 	 public void verifyAndCloseLogCompareForProjectresults(){
-		driver.findElement(By.xpath("//div[@id='logdiffModal']/div/div/div[3]/button")).click();
-		 
+		driver.findElement(By.xpath("//div[@id='logdiffModal']/div/div/div[3]/button")).click();		 
 	}
 	 
 	 /*Function to click on View Build Logs Button*/
-	 public void clickViewBuildLogBtn(){
-		 viewBuildLogBtn.click();
-		 
-		 wait.until(ExpectedConditions.presenceOfElementLocated(By.id("logdiffModal")));
+	 public void clickViewBuildLogBtn() throws InterruptedException{
+	 viewBuildLogBtn.click(); 
+	 Thread.sleep(4000);
+	 	try{
+	 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("logdiffModal")));
 			
 			if(projectBuildLogTable.isDisplayed()){
 				LogResult.pass("Project Build Logs are displayed in the table.");
 			}
-			else{
-				if(errorCloseBtn.isDisplayed()){
-					LogResult.fail("Build is failed and error messages are displayed in Popup");
-					errorCloseBtn.click();
-				}
-				else
+			else
 				LogResult.fail("Project Build Logs are not displayed in the table.");
-			}	
-	 }
-	 
+			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
+			
+	 }	 
 	 
 	 /*Function to click on View Test Logs Button*/
-	 public void clickViewTestLogBtn(){
-		 viewTestLogBtn.click();
-		 
-		 wait.until(ExpectedConditions.presenceOfElementLocated(By.id("logdiffModal")));
+	 public void clickViewTestLogBtn() throws InterruptedException{
+		viewTestLogBtn.click();
+		 Thread.sleep(4000);
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("logdiffModal")));
 			
 			if(projectTestLogTable.isDisplayed()){
 				LogResult.pass("Project Test Logs are displayed in the table.");
 			}
-			else{
-				if(errorCloseBtn.isDisplayed()){
-					LogResult.fail("Build is failed and error messages are displayed in Popup");
-					errorCloseBtn.click();
-				}
-				else
-				LogResult.fail("Project Test Logs are not displayed in the table.");
-			}	
+			else
+				LogResult.fail("Project Test Logs are not displayed in the table.");			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	 }
 	 
 	 /* Function to to close log table for project results*/
@@ -906,21 +932,27 @@ public class ReportsTab {
 	/*Function to click on TestHistory Button for batch job */
 	public void clickTestHistoryButtonForBatchJobs(){
 		
-		batchJobsTestHistoryBtn.click();
-		
-		wait.until(ExpectedConditions.presenceOfElementLocated(By.id("testBatchResultsTable")));
-		
-		if(batchJobsTestHistoryTable.isDisplayed()){
-			LogResult.pass("Batch Job Test History is displayed in table");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Build is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+		batchJobsTestHistoryBtn.click();		
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testBatchResultsTable")));
+			
+			if(batchJobsTestHistoryTable.isDisplayed()){
+				LogResult.pass("Batch Job Test History is displayed in table");
 			}
 			else
-			LogResult.fail("Batch Job Test History is not displayed in table");
-		}		
+				LogResult.fail("Batch Job Test History is not displayed in table");
+			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	}
 	
 	/*Function to click on Test Detail Button for batch Jobs */
@@ -928,19 +960,26 @@ public class ReportsTab {
 		
 		batchJobsTestDetailsBtn.click();
 		
-		wait.until(ExpectedConditions.presenceOfElementLocated(By.id("testBatchResultsTable")));
-		
-		if(batchJobsTestDetailsTable.isDisplayed()){
-			LogResult.pass("Batch Job Test Details are displayed in table");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Build is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testBatchResultsTable")));
+			
+			if(batchJobsTestDetailsTable.isDisplayed()){
+				LogResult.pass("Batch Job Test Details are displayed in table");
 			}
 			else
-			LogResult.fail("Batch Job Test Details are displayed in table");
-		}		
+				LogResult.fail("Batch Job Test Details are displayed in table");
+			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	}
 	
 	public void clickBackToListButtonForBatchJobs(){		
@@ -957,9 +996,10 @@ public class ReportsTab {
 	}
 	
 	/*Function to click on remove Batch Jobs results button*/
-	public void clickRemoveBatchJobsResultsBtn(){
+	public void clickRemoveBatchJobsResultsBtn() throws InterruptedException{
 		
 		batchJobsRemoveBtn.click();
+		Thread.sleep(2000);
 		
 		try{
 			Alert alert = driver.switchTo().alert();
@@ -968,13 +1008,14 @@ public class ReportsTab {
 		}
 		catch(NoAlertPresentException e){
 			e.printStackTrace();
+			Assert.fail();
 		}		
 	}
 	
 	/* Function to verify if Batch job deleted successfully pop up message is displayed correctly */	
 	public void verifyBatchJobDeletedSuccessfullyMsg(){
 		
-		wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[@id='errorAlert']/div/div/div[1]")));
+		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='errorAlert']/div/div/div[1]")));
 		
 		String message = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div/div[1]")).getText();
 		
@@ -990,7 +1031,7 @@ public class ReportsTab {
 	/* Function to verify if Batch job archived successfully pop up message is displayed correctly */	
 	public void verifyBatchJobArchivedSuccessfullyMsg(){
 		
-		wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath("//div[@id='errorAlert']/div/div/div[1]")));
+		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='errorAlert']/div/div/div[1]")));
 		
 		String message = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div/div[1]")).getText();
 		
@@ -1061,58 +1102,77 @@ public class ReportsTab {
 	/* Function to click on Test compare button for Batch Jobs results */
 	public void clickTestCompareForBatchJobresults() throws InterruptedException{
 		batchJobsTestCompareBtn.click();
-		Thread.sleep(4000);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testBatchResultsTable")));
-		
-		if(batchJobsTestCompareTable.isDisplayed()){
-			LogResult.pass("Batch Jobs Test Compare Details are displayed in table");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Build is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+		Thread.sleep(4000); 
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testBatchResultsTable")));
+			
+			if(batchJobsTestCompareTable.isDisplayed()){
+				LogResult.pass("Batch Jobs Test Compare Details are displayed in table");
 			}
 			else
-			LogResult.fail("Batch Jobs Test Compare Details are not displayed in table");
-		}		
+				LogResult.fail("Batch Jobs Test Compare Details are not displayed in table");			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	}
 	
 	/* Function to click on Build Log compare button for Batch Jobs results */
 	public void clickBuildLogCompareForBatchJobsresults() throws InterruptedException{
 		batchJobsBuildLogCompareBtn.click();
 		Thread.sleep(4000);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testBatchLogResultsTable")));
-		
-		if(batchJobsBuildLogCompareTable.isDisplayed()){
-			LogResult.pass("Batch Jobs Build Log Compare Details are displayed in Panel");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Build is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testBatchLogResultsTable")));
+			
+			if(batchJobsBuildLogCompareTable.isDisplayed()){
+				LogResult.pass("Batch Jobs Build Log Compare Details are displayed in Panel");
 			}
 			else
-			LogResult.fail("Batch Jobs Build Log Compare Details are not displayed in Panel");
-		}		
+				LogResult.fail("Batch Jobs Build Log Compare Details are not displayed in Panel");			
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	}
 	
 	/* Function to click on Test Log compare button for project results */
 	public void clickTestLogCompareForBatchJobsresults() throws InterruptedException{
 		batchJobsTestLogCompareBtn.click();
 		Thread.sleep(4000);
-        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testBatchLogResultsTable")));
-		
-		if(batchJobsTestLogCompareTable.isDisplayed()){
-			LogResult.pass("Batch Jobs Test Log Compare Details are displayed in Panel");
-		}
-		else{
-			if(errorCloseBtn.isDisplayed()){
-				LogResult.fail("Batch Jobs is failed and error messages are displayed in Popup");
-				errorCloseBtn.click();
+        
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testBatchLogResultsTable")));
+			
+			if(batchJobsTestLogCompareTable.isDisplayed()){
+				LogResult.pass("Batch Jobs Test Log Compare Details are displayed in Panel");
 			}
 			else
-			LogResult.fail("Batch Jobs Test Log Compare Details are not displayed in Panel");
-		}		
+				LogResult.fail("Batch Jobs Test Log Compare Details are not displayed in Panel");
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	}
 	
 	/* Function to to click back to comparison button*/
@@ -1121,15 +1181,19 @@ public class ReportsTab {
 		 Thread.sleep(3000);
 	}
 	 /************************ Manish Functions **************************************/
-	 
-	 public void enterProjectNameForSearch(String searchTerm) {
+
+		public void enterProjectNameForSearch(String searchTerm) {
 			wait.until(ExpectedConditions.visibilityOf(projectResultTextBox));
+
+			projectResultTextBox.clear();
 
 			projectResultTextBox.sendKeys(searchTerm);
 		}
 
 		public void enterBatchNameForSearch(String searchTerm) {
 			wait.until(ExpectedConditions.visibilityOf(batchResultTextBox));
+
+			batchResultTextBox.clear();
 
 			batchResultTextBox.sendKeys(searchTerm);
 		}
@@ -1168,12 +1232,16 @@ public class ReportsTab {
 
 		public void clickOnDateCompletedHeader() {
 
+			wait.until(ExpectedConditions.visibilityOf(dateCompletedHeader));
+			
 			dateCompletedHeader.click();
 
 			LogResult.pass("Date Completed header is clicked.");
 		}
 
 		public void clickOnDateSubmittedHeader() {
+			
+			wait.until(ExpectedConditions.visibilityOf(dateSubmittedHeader));
 
 			dateSubmittedHeader.click();
 
@@ -1185,12 +1253,10 @@ public class ReportsTab {
 
 			int i = 0;
 
-			Date temp = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss").parse(buildClickTime);
-
+			Date temp = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(buildClickTime); // yyyy-MM-dd-'h'HH-'m'mm-'s'ss
 			for (WebElement item : dateCompletedColumnValues) {
 
-				Date temp1 = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss").parse(item.getText());
-
+				Date temp1 = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(item.getText()); // yyyy-MM-dd-'h'HH-'m'mm-'s'ss
 				if (temp.before(temp1)) {
 					i++;
 				}
@@ -1247,12 +1313,11 @@ public class ReportsTab {
 
 			int i = 0;
 
-			Date temp = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss").parse(buildClickTime);
-
+			Date temp = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(buildClickTime);// yyyy-MM-dd-'h'HH-'m'mm-'s'ss
 			for (WebElement item : dateSubmittedColumnValues) {
 
-				Date temp1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(item.getText());
-
+				Date temp1 = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(item.getText());// yyyy-MM-dd
+				// HH:mm:ss
 				if (temp.before(temp1)) {
 					i++;
 				}
@@ -1304,7 +1369,7 @@ public class ReportsTab {
 
 		}
 	 
-	 /************************************* Manish Functions ************************************/
+	 /************************************************************************/
 }
 
 

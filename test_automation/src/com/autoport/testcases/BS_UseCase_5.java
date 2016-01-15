@@ -16,14 +16,17 @@ public class BS_UseCase_5 {
 	
 	WebDriver driver;
 	HomePage homePage;
-	BuildServersTab buildServerTab;	
+	BuildServersTab buildServerTab;
+	String notInstalledPackage;
 	 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
-		//CommonFunctions.launchBrowser(); 
+		 //CommonFunctions.launchBrowser(); 
 		 driver = CommonFunctions.driver; 
 		 homePage = CommonFunctions.homePage;
-		 buildServerTab = CommonFunctions.buildServerTab;		 
+		 buildServerTab = CommonFunctions.buildServerTab;
+		 notInstalledPackage = ReadTestData.readParameter("BS_UseCase_5", "notInstalledPackage");
+		 
 		 CommonFunctions.goTo_ListInstallSingleSoftwarSection();
 		 	
 	  }
@@ -57,10 +60,10 @@ public class BS_UseCase_5 {
 		  
 	  }
 	 
-	 @Test
+	 @Test(priority=1)
 	  public void BS_Uninstall_Not_Installed_Package_021() throws Exception{
 		  
-		  buildServerTab.enterPackageToSearch("python-bson"); 
+		  buildServerTab.enterPackageToSearch(notInstalledPackage); 
 		  
 		  buildServerTab.selectFirstBuildServer();
 		  

@@ -31,13 +31,11 @@ public class BatchJobsTab {
 
 		this.driver = driver;
 		this.wait = wait;
-		// wait = new WebDriverWait(driver, 30);
 
 		AjaxElementLocatorFactory factory = new AjaxElementLocatorFactory(driver, 10);
 		PageFactory.initElements(factory, this);
 	}
 
-	// @FindBy(className="btn btn-default btn-block")
 	@FindBy(xpath = "//div[@id='batchTabHeader']/p[1]")
 	WebElement batchJobHelpTx;
 
@@ -47,7 +45,6 @@ public class BatchJobsTab {
 	@FindBy(id = "uploadFilename")
 	WebElement uploadFileDisplayBox;
 
-	//// div[@id='batchPanel']/div[1]/div[2]/div[1]/div
 	@FindBy(xpath = "/html/body/div[2]/div[3]/div/div[2]/div[1]/div[2]/div[1]/div/input")
 	WebElement selectFileBtn;
 
@@ -186,6 +183,12 @@ public class BatchJobsTab {
 	WebElement batchConfigJava;
 
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[1]//th[4]")
+	WebElement batchConfigJsHeader;
+
+	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[1]//td[4]")
+	WebElement batchConfigJs;
+
+	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[1]//th[5]")
 	WebElement batchConfigActionsHeader;
 
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[1]//td[5]/button")
@@ -202,29 +205,29 @@ public class BatchJobsTab {
 
 	// Up button for all repositories in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]//td[3]/a[1]/button")
-	WebElement batchRepoUpBtn;
+	WebElement batchRepoUpArrowBtn;
 
 	// Down button for all repositories in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]//td[3]/a[2]/button")
-	WebElement batchRepoDownBtn;
+	WebElement batchRepoDownArrowBtn;
 
 	// Remove button for all repositories in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]//td[3]/a[3]/button")
-	WebElement batchRepoRemoveBtn;
+	WebElement batchRepoCrossBtn;
 
 	// First repository name in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]/tbody[1]/tr/td[1]")
 	WebElement batchFirstRepoName;
 
-	// Up button for first repository in batch file
+	// Up(Arrow) button for first repository in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]/tbody[1]//td[3]/a[1]/button")
 	WebElement batchFirstRepoUpBtn;
 
-	// Down button for first repository in batch file
+	// Down(Arrow) button for first repository in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]/tbody[1]//td[3]/a[2]/button")
 	WebElement batchFirstRepoDownBtn;
 
-	// Remove button for first repository in batch file
+	// Remove(Cross) button for first repository in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]/tbody[1]//td[3]/a[3]/button")
 	WebElement batchFirstRepoRemoveBtn;
 
@@ -232,15 +235,15 @@ public class BatchJobsTab {
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]/tbody[2]/tr/td[1]")
 	WebElement batchSecondRepoName;
 
-	// Up button for Second repository in batch file
+	// Up(Arrow) button for Second repository in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]/tbody[2]//td[3]/a[1]/button")
 	WebElement batchSecondRepoUpBtn;
 
-	// Down button for Second repository in batch file
+	// Down(Arrow) button for Second repository in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]/tbody[2]//td[3]/a[2]/button")
 	WebElement batchSecondRepoDownBtn;
 
-	// Remove button for Second repository in batch file
+	// Remove(Cross) button for Second repository in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]/tbody[2]//td[3]/a[3]/button")
 	WebElement batchSecondRepoRemoveBtn;
 
@@ -256,24 +259,60 @@ public class BatchJobsTab {
 	@FindBy(xpath = "//table[@id='batchListSelectTable']/tbody/tr/td")
 	WebElement noRecordsFound;
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal']//h4")
+	@FindBy(xpath = "//div[@id='settingsBatchModal']//h2")
 	WebElement batchConfigSettingsHeader;
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal']/div/div/div[2]//button")
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[1]//h4")
+	WebElement batchConfigSettingsEnvironmentHeader;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[4]//h4")
+	WebElement batchConfigSettingsOptionsHeader;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[1]//button")
 	WebElement batchConfigSettingsJDK;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[2]//button")
+	WebElement batchConfigSettingsJs;
 
 	// Changed as per new UI
 	// @FindBy(xpath = "//div[@id='settingsBatchModal']/div/div/div[2]//li/a")
 	// List<WebElement> batchConfigSettingsJDKValues;
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal']/div/div/div[2]/div/div[2]/div/div[1]//a")
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[1]//a")
 	List<WebElement> batchConfigSettingsJDKValues;
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal']/div/div/div[2]//li[1]/a")
-	WebElement batchConfigSettingsOpenJDK;
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[1]//li[1]/a")
+	WebElement batchConfigSettingsOpenJDK7; // batchConfigSettingsOpenJDK
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal']/div/div/div[2]//li[2]/a")
-	WebElement batchConfigSettingsIBMJDK;
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[1]//li[4]/a")
+	WebElement batchConfigSettingsOpenJDK8; // batchConfigSettingsIBMJDK
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[2]//a")
+	List<WebElement> batchConfigSettingsNodeJsValues;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[2]//li[1]/a")
+	WebElement batchConfigSettingsNodeJs;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[2]//li[2]/a")
+	WebElement batchConfigSettingsIBMNodeJs;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[5]//label")
+	WebElement batchConfigSettingsEnableTestLabel;
+
+	@FindBy(id = "batchSettingsTestCkBox")
+	WebElement batchConfigSettingsEnableTestChkBx;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[5]//label")
+	WebElement batchConfigSettingsEnableInstallLabel;
+
+	@FindBy(id = "batchSettingsInstallCkBox")
+	WebElement batchConfigSettingsEnableInstallChkBx;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[7]//label")
+	WebElement batchConfigSettingsOwnerLabel;
+
+	@FindBy(id = "batchSettingsOwner")
+	WebElement batchConfigSettingsOwnerTbx;
 
 	// New UI change, hence commented
 	// @FindBy(xpath =
@@ -299,7 +338,47 @@ public class BatchJobsTab {
 	@FindBy(id = "showModifyButton")
 	WebElement batchConfigSettingsShowModifyCommandsBtn;
 
-	// div[starts-with(@class, 'btn btn'-)]/h2
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[1]/td[1]")
+	WebElement batchConfigSettingsShowModifyCommandsPackageNameLabel;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[2]/td[1]")
+	WebElement batchConfigSettingsShowModifyCommandsBuildCommandLabel;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[3]/td[1]")
+	WebElement batchConfigSettingsShowModifyCommandsTestCommandLabel;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[4]/td[1]")
+	WebElement batchConfigSettingsShowModifyCommandsInstallCommandLabel;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[5]/td[1]")
+	WebElement batchConfigSettingsShowModifyCommandsEnvironmentVariableLabel;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[1]//a")
+	WebElement batchConfigSettingsShowModifyCommandsPackageName;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[2]//textarea") 
+	WebElement batchConfigSettingsShowModifyCommandsBuildCommandTxtArea;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[3]//textarea")
+	WebElement batchConfigSettingsShowModifyCommandsTestCommandTxtArea;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[4]//textarea")
+	WebElement batchConfigSettingsShowModifyCommandsInstallCommandTxtArea;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//tr[5]//textarea")
+	WebElement batchConfigSettingsShowModifyCommandsEnvironmentVariableTxtArea;
+
+	@FindBy(xpath = "//div[@id='batchCommandsTableContanier']//a")
+	List<WebElement> batchConfigSettingsShowModifyCommandsPackageNameList;
+
+	@FindBy(id = "batchBuildCommandBackButton")
+	WebElement batchConfigSettingsShowModifyCommandsBackBtn;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal']//button[2]")
+	WebElement batchConfigSettingsShowModifyCommandsResetBtn;
+
+	@FindBy(xpath = "//div[@id='settingsBatchModal']//button[3]")
+	WebElement batchConfigSettingsShowModifyCommandsContinueBtn;
 
 	// To verify expansion of 'Import' button
 	public void clickImportBtn() {
@@ -319,14 +398,20 @@ public class BatchJobsTab {
 	// To verify expansion of 'List/Select' button
 	public void clickListSelectBtn() {
 
-		wait.until(ExpectedConditions.visibilityOf(listSelectBtn));
-
-		listSelectBtn.click();
+		// wait.until(ExpectedConditions.visibilityOf(listSelectBtn));
 
 		if (batchFileTbx.isDisplayed()) {
-			LogResult.pass("List/Select button is clicked.");
+			LogResult.pass("List/Select button is open.");
 		} else {
-			LogResult.fail("List/Select button is not clicked.");
+			listSelectBtn.click();
+
+			wait.until(ExpectedConditions.visibilityOf(batchFileTbx));
+
+			if (batchFileTbx.isDisplayed()) {
+				LogResult.pass("List/Select button is clicked.");
+			} else {
+				LogResult.fail("List/Select button is not clicked.");
+			}
 		}
 
 	}
@@ -344,13 +429,27 @@ public class BatchJobsTab {
 	}
 
 	// Clicking on List Local button
-	public void clickOnListLocalBtn() {
+	public void clickOnListLocalBtn() throws InterruptedException {
 
-		wait.until(ExpectedConditions.visibilityOf(listLocalBtn));
+		// wait.until(ExpectedConditions.visibilityOf(listLocalBtn));
 
 		listLocalBtn.click();
 
-		wait.until(ExpectedConditions.visibilityOf(batchFilesPanel));
+		Thread.sleep(2000);
+
+		// checking here if list out of index messsage is displayed or not, if
+		// displayed closing the alert and then again clicking on List Local
+		// button
+		if (alertCloseBtn.isDisplayed()) {
+
+			alertCloseBtn.click();
+
+			Thread.sleep(2000);
+
+			listLocalBtn.click();
+			
+			wait.until(ExpectedConditions.visibilityOf(batchFilesPanel));
+		}
 
 		if (batchFilesPanel.isDisplayed()) {
 			LogResult.pass("List local button is clicked.");
@@ -386,6 +485,17 @@ public class BatchJobsTab {
 		} else {
 			LogResult.fail("List archived button is not clicked.");
 		}
+	}
+
+	// To verify the presence of archived file
+	public void verifyArchivedBatchFile(String batchFileName) {
+
+		if (firstRowLocalBatchFileName.getText().contains(batchFileName)) {
+			LogResult.pass("Batch file successfully archived.");
+		} else {
+			LogResult.fail("Batch file not archived.");
+		}
+
 	}
 
 	// Clicking on List All button
@@ -499,13 +609,24 @@ public class BatchJobsTab {
 		}
 	}
 
-	// Clicking Upload button
+	// Clicking Upload button and verifying appearance of alert along with
+	// message
 	public void clickOnUploadBtn() {
 		uploadBtn.click();
 
-		LogResult.pass("Upload button is clicked");
-
 		wait.until(ExpectedConditions.visibilityOf(alertCloseBtn));
+
+		if (alertCloseBtn.isDisplayed()) {
+			LogResult.pass("Upload button is clicked.");
+
+			if (alertMessage.getText().contentEquals("Batch file uploaded successfully!")) {
+				LogResult.pass("Batch file uploaded successfully! alert message is displayed.");
+			} else {
+				LogResult.fail("Improper message is displayed. Displayed message is: " + alertMessage.getText());
+			}
+		} else {
+			LogResult.fail("Upload button is not clicked.");
+		}
 
 	}
 
@@ -536,8 +657,7 @@ public class BatchJobsTab {
 		}
 	}
 
-	// To verify results UI when after clicking on List local/List archived/List
-	// all buttons
+	// To verify results UI after clicking on List local/List all buttons
 	public void verifyListBatchResultsUI() {
 		if (listDetailsBtn.isDisplayed()) {
 			LogResult.pass("Details button is displayed.");
@@ -571,9 +691,6 @@ public class BatchJobsTab {
 			LogResult.pass("Archive button is displayed.");
 
 			if (listArchiveBtn.isEnabled()) {
-				// boolean removeBtnStatus = listRemoveBtn.isEnabled();
-				// System.out.println(removeBtnStatus);
-
 				LogResult.fail("Archive button is enabled.");
 			} else {
 				LogResult.pass("Archive button is disabled.");
@@ -586,8 +703,6 @@ public class BatchJobsTab {
 			LogResult.pass("Remove button is displayed.");
 
 			if (listRemoveBtn.isEnabled()) {
-				// boolean removeBtnStatus = listRemoveBtn.isEnabled();
-				// System.out.println(removeBtnStatus);
 
 				LogResult.fail("Remove button is enabled.");
 			} else {
@@ -612,15 +727,69 @@ public class BatchJobsTab {
 		}
 
 		if (listRemoveBtn.isEnabled()) {
-			// boolean removeBtnStatus = listRemoveBtn.isEnabled();
-			// System.out.println(removeBtnStatus);
 
 			LogResult.pass("Remove button is enabled.");
 		} else {
 			LogResult.fail("Remove button is disabled.");
 		}
 
-		firstRowCheckbx.click();
+	}
+
+	// To verify results UI after clicking on List Archived button
+	public void verifyListArchivedBatchResultsUI() {
+		if (listDetailsBtn.isDisplayed()) {
+			LogResult.pass("Details button is displayed.");
+		} else {
+			LogResult.fail("Details button is not displayed.");
+		}
+
+		if (listBuildServersBtn.isDisplayed()) {
+			LogResult.pass("Build Servers button is displayed.");
+		} else {
+			LogResult.fail("Build Servers button is not displayed.");
+		}
+
+		if (listBuildAndTestBtn.isDisplayed()) {
+			LogResult.pass("Build+Test button is displayed.");
+
+			if (listBuildAndTestBtn.isEnabled()) {
+				LogResult.fail("Build+Test button is enabled.");
+			} else {
+				LogResult.pass("Build+Test button is disabled.");
+			}
+
+		} else {
+			LogResult.fail("Build+Test button is not displayed.");
+		}
+
+		if (listRemoveBtn.isDisplayed()) {
+			LogResult.pass("Remove button is displayed.");
+
+			if (listRemoveBtn.isEnabled()) {
+
+				LogResult.fail("Remove button is enabled.");
+			} else {
+				LogResult.pass("Remove button is disabled.");
+			}
+		} else {
+			LogResult.fail("Remove button is not displayed.");
+		}
+
+		selectFirstRow();
+
+		if (listBuildAndTestBtn.isEnabled()) {
+			LogResult.pass("Build+Test button is enabled.");
+		} else {
+			LogResult.fail("Build+Test button is disabled.");
+		}
+
+		if (listRemoveBtn.isEnabled()) {
+
+			LogResult.pass("Remove button is enabled.");
+		} else {
+			LogResult.fail("Remove button is disabled.");
+		}
+
 	}
 
 	// To verify Batch file listing table headers
@@ -692,10 +861,12 @@ public class BatchJobsTab {
 		}
 	}
 
+	// Clearing value entered in Batch file search text field
 	public void clearBatchFileSearchTbx() {
 		batchFileTbx.clear();
 	}
 
+	// Entering value in Batch file search text field
 	public void enterBatchSearchTerm(String searchTerm) {
 
 		batchFileTbx.sendKeys(searchTerm);
@@ -707,6 +878,7 @@ public class BatchJobsTab {
 		}
 	}
 
+	// To check if search term is present in all the column values
 	public void verifyResultForBatchFileSearch(String searchTerm) {
 		int j = 0;
 
@@ -863,7 +1035,7 @@ public class BatchJobsTab {
 		if (saveDetailsTbx.isDisplayed()) {
 			LogResult.pass("Details text box is displayed.");
 		} else {
-			LogResult.fail("Details text box is not clicked.");
+			LogResult.fail("Details text box is not displayed.");
 		}
 
 		String saveDetailsTbxValue = saveDetailsTbx.getAttribute("value");
@@ -938,6 +1110,17 @@ public class BatchJobsTab {
 		}
 
 		if (batchConfigFileNameHeader.isDisplayed()) {
+			LogResult.pass("Java header is displayed.");
+			if (batchConfigJavaHeader.getText().contentEquals("Java")) {
+				LogResult.pass("Java header text is displayed as: " + batchConfigJavaHeader.getText());
+			} else {
+				LogResult.fail("Java header text is displayed as: " + batchConfigJavaHeader.getText());
+			}
+		} else {
+			LogResult.fail("Java header is not displayed.");
+		}
+
+		if (batchConfigFileNameHeader.isDisplayed()) {
 			LogResult.pass("Actions header is displayed.");
 			if (batchConfigActionsHeader.getText().contentEquals("Actions")) {
 				LogResult.pass("Actions header text is displayed as: " + batchConfigActionsHeader.getText());
@@ -997,48 +1180,48 @@ public class BatchJobsTab {
 
 	// To verify presence of Up, Down and Remove button
 	public void verifyBatchRepoActionsColumn() {
-		if (batchRepoUpBtn.isDisplayed()) {
+		if (batchRepoUpArrowBtn.isDisplayed()) {
 			LogResult.pass("Up button is displayed in Actions.");
 		} else {
 			LogResult.fail("Up button is not displayed in Actions.");
 		}
 
-		if (batchRepoDownBtn.isDisplayed()) {
+		if (batchRepoDownArrowBtn.isDisplayed()) {
 			LogResult.pass("Down button is displayed in Actions.");
 		} else {
 			LogResult.fail("Down button is not displayed in Actions.");
 		}
 
-		if (batchRepoRemoveBtn.isDisplayed()) {
+		if (batchRepoCrossBtn.isDisplayed()) {
 			LogResult.pass("Remove button is displayed in Actions.");
 		} else {
 			LogResult.fail("Remove button is not displayed in Actions.");
 		}
 	}
 
-	// To verify archived button functionality
-	public void clickOnArchiveBtn() throws InterruptedException {
+	// Clicking on archived button and verifying appearance of alert along with
+	// message
+	public void clickOnArchiveBtn() {
 		listArchiveBtn.click();
 
 		wait.until(ExpectedConditions.visibilityOf(alertCloseBtn));
 
-		String alertMsg = "Archived successfully";
-
 		if (alertCloseBtn.isDisplayed()) {
-			LogResult.pass("Archive button is clicked");
+			LogResult.pass("Archive button is clicked.");
 
-			if (alertMessage.getText().contentEquals(alertMsg)) {
-				LogResult.pass("Batch job is successfully archived.");
+			if (alertMessage.getText().contentEquals("Archived successfully")) {
+				LogResult.pass("Archived successfully alert message is displayed.");
 			} else {
-				LogResult.fail("Batch job is not successfully archived. Alert message: " + alertMessage.getText());
+				LogResult.fail("Improper message is displayed. Displayed message is: " + alertMessage.getText());
 			}
 		} else {
 
-			LogResult.fail("Archive button is not clicked");
+			LogResult.fail("Archive button is not clicked.");
 		}
 
 	}
 
+	// Closing the alert pop up
 	public void clickOnAlertCloseBtn() throws InterruptedException {
 
 		alertCloseBtn.click();
@@ -1048,7 +1231,7 @@ public class BatchJobsTab {
 		if (alertCloseBtn.isDisplayed()) {
 			LogResult.fail("Close button is not clicked.");
 		} else {
-			LogResult.pass("Close button is clicked.");
+			LogResult.pass("Close button is clicked. Alert is dismissed.");
 		}
 
 	}
@@ -1066,21 +1249,36 @@ public class BatchJobsTab {
 
 		wait.until(ExpectedConditions.visibilityOf(alertCloseBtn));
 
+		if (alertCloseBtn.isDisplayed()) {
+			LogResult.pass("Save button is clicked");
+
+			if (alertMessage.getText().contentEquals("Batch file saved successfully")) {
+				LogResult.pass("Batch file saved successfully alert message is displayed.");
+			} else {
+				LogResult.fail("Improper message is displayed. Displayed message is: " + alertMessage.getText());
+			}
+		} else {
+
+			LogResult.fail("Save button is not clicked");
+		}
 	}
 
-	// To verify for change in batch file name in batch file configuration
-	// settings panel
-	public void verifyBatchFileNameChangeInConfig() {
-		String batchFileName = saveDetailsTbx.getAttribute("value");
+	/*// To verify for change in batch file name in config settings
+	public void verifyBatchFileNameChangeInListing() {
 
+		wait.until(ExpectedConditions.visibilityOf(batchConfigFileName));
+
+		String batchFileName = saveDetailsTbx.getAttribute("value");
+		
 		if (batchConfigFileName.getText().contentEquals(batchFileName)) {
 			LogResult.pass("Batch file name in configuration settings changed successfully.");
 		} else {
 			LogResult.fail("Batch file name in configuration settings not changed. Save button functionality failed.");
 		}
-	}
+		
+	}*/
 
-	// To verify if new Batch file is created
+	// To verify if new Batch file is created after batch file name change
 	public void newBatchFileCreationConfirmation(String newBatchFileName) {
 		if (firstRowLocalBatchFileName.getText().contentEquals(newBatchFileName)) {
 			LogResult.pass("New Batch file is created successfully.");
@@ -1111,12 +1309,13 @@ public class BatchJobsTab {
 
 	// Clicking on Batch config settings button
 	public void clickOnSettingsBtn() {
+
 		batchConfigSettingsBtn.click();
 
 		wait.until(ExpectedConditions.visibilityOf(batchConfigSettingsHeader));
 
 		if (batchConfigSettingsHeader.isDisplayed()) {
-			LogResult.pass("Batch config settings button is clicked.");
+			LogResult.pass("Batch config settings button is clicked. Batch Settings pop up is displayed.");
 		} else {
 			LogResult.fail("Batch config settings button is not clicked.");
 		}
@@ -1127,15 +1326,26 @@ public class BatchJobsTab {
 	public void verifyBatchConfigSettingsUI() {
 		if (batchConfigSettingsHeader.isDisplayed()) {
 			LogResult.pass("Batch config settings pop up header is displayed.");
-			if (batchConfigSettingsHeader.getText().contentEquals("Set Environment")) {
-				LogResult.pass(
-						"Batch config settings pop up header is displayed as: " + batchConfigSettingsHeader.getText());
+			if (batchConfigSettingsHeader.getText().contentEquals("Batch Settings")) {
+				LogResult.pass("Batch config settings pop up header is displayed as Batch Settings");
 			} else {
 				LogResult.fail(
 						"Batch config settings pop up header is displayed as: " + batchConfigSettingsHeader.getText());
 			}
 		} else {
 			LogResult.fail("Batch config settings pop up header is not displayed.");
+		}
+
+		if (batchConfigSettingsEnvironmentHeader.isDisplayed()) {
+			LogResult.pass("Batch config settings Set Environment section header is displayed.");
+			if (batchConfigSettingsEnvironmentHeader.getText().contentEquals("Set Environment")) {
+				LogResult.pass("Batch config settings Set Environment section header is displayed as Set Environment");
+			} else {
+				LogResult.fail("Batch config settings Set Environment section header is displayed as: "
+						+ batchConfigSettingsEnvironmentHeader.getText());
+			}
+		} else {
+			LogResult.fail("Batch config settings Set Environment section header is not displayed.");
 		}
 
 		if (batchConfigSettingsJDK.isDisplayed()) {
@@ -1153,65 +1363,157 @@ public class BatchJobsTab {
 			LogResult.fail("Use JDK drop down is not displayed");
 		}
 
-		if (batchConfigSettingsContinueBtn.isDisplayed()) {
-			LogResult.pass("Save Changes button is displayed.");
+		if (batchConfigSettingsJs.isDisplayed()) {
+			LogResult.pass("Use Node.js drop down is displayed with values: ");
+
+			batchConfigSettingsJs.click();
+
+			for (WebElement item : batchConfigSettingsNodeJsValues) {
+				LogResult.pass(item.getText());
+			}
+
+			batchConfigSettingsNodeJs.click();
+
 		} else {
-			LogResult.fail("Save Changes button is not displayed.");
+			LogResult.fail("Use Node.js drop down is not displayed.");
+		}
+
+		if (batchConfigSettingsOptionsHeader.isDisplayed()) {
+			LogResult.pass("Batch config settings Set Batch Options section header is displayed.");
+			if (batchConfigSettingsOptionsHeader.getText().contentEquals("Set Batch Options")) {
+				LogResult.pass(
+						"Batch config settings Set Batch Options section header is displayed as Set Batch Options");
+			} else {
+				LogResult.fail("Batch config settings Set Batch Options section header is displayed as: "
+						+ batchConfigSettingsOptionsHeader.getText());
+			}
+		} else {
+			LogResult.fail("Batch config settings Set Batch Options section header is not displayed.");
+		}
+
+		if (batchConfigSettingsEnableTestLabel.isDisplayed()) {
+			LogResult.pass("Enable test label is displayed.");
+		} else {
+			LogResult.fail("Enable test label is not displayed.");
+		}
+
+		if (batchConfigSettingsEnableTestChkBx.isDisplayed()) {
+			LogResult.pass("Enable test check box is displayed.");
+			if (batchConfigSettingsEnableTestChkBx.isSelected()) {
+				LogResult.pass("Enable test check box is selected.");
+			} else {
+				LogResult.fail("Enable test check box is not selected.");
+			}
+		} else {
+			LogResult.fail("Enable test label is not displayed.");
+		}
+
+		if (batchConfigSettingsEnableInstallLabel.isDisplayed()) {
+			LogResult.pass("Enable install label is displayed.");
+		} else {
+			LogResult.fail("Enable install label is not displayed.");
+		}
+
+		if (batchConfigSettingsEnableInstallChkBx.isDisplayed()) {
+			LogResult.pass("Enable install check box is displayed.");
+			if (batchConfigSettingsEnableInstallChkBx.isSelected()) {
+				LogResult.fail("Enable install check box is selected.");
+			} else {
+				LogResult.pass("Enable install check box is not selected.");
+			}
+		} else {
+			LogResult.fail("Enable install check box is not displayed.");
+		}
+
+		if (batchConfigSettingsOwnerLabel.isDisplayed()) {
+			LogResult.pass("Owner label is displayed.");
+		} else {
+			LogResult.fail("Owner label is not displayed.");
+		}
+
+		if (batchConfigSettingsOwnerTbx.isDisplayed()) {
+			LogResult.pass("Owner text box is displayed with values as: " + batchConfigSettingsOwnerTbx.getText());
+
+		} else {
+			LogResult.fail("Owner text box is not selected.");
+		}
+
+		if (batchConfigSettingsContinueBtn.isDisplayed()) {
+			LogResult.pass("Continue button is displayed.");
+		} else {
+			LogResult.fail("Continue button is not displayed.");
 		}
 
 		if (batchConfigSettingsResetBtn.isDisplayed()) {
-			LogResult.pass("Reset to Default button is displayed.");
+			LogResult.pass("Reset button is displayed.");
 		} else {
-			LogResult.fail("Reset to Default button is not displayed.");
+			LogResult.fail("Reset button is not displayed.");
 		}
 
 		if (batchConfigSettingsShowModifyCommandsBtn.isDisplayed()) {
-			LogResult.pass("Close button is displayed.");
+			LogResult.pass("Show/Modify Commands button is displayed.");
 		} else {
-			LogResult.fail("Close button is not displayed.");
+			LogResult.fail("Show/Modify Commands button is not displayed.");
 		}
 
 	}
 
-	// Clicking on Save button for Batch config settings pop up
-	public void clickOnBatchConfigSettingsSaveBtn() throws InterruptedException {
+	// Clicking on Continue button for Batch config settings pop up
+	public void clickOnBatchConfigSettingsContinueBtn() throws InterruptedException {// clickOnBatchConfigSettingsSaveBtn()
 
 		batchConfigSettingsJDK.click();
 
-		batchConfigSettingsIBMJDK.click();
+		batchConfigSettingsOpenJDK8.click();
 
-		if (batchConfigSettingsJDK.getText().contentEquals("Use IBM Java")) {
-			LogResult.pass("Environment is set to IBM Java.");
+		if (batchConfigSettingsJDK.getText().contentEquals("Use openjdk 8")) {
+			LogResult.pass("Environment is set to openjdk 8.");
 		} else {
-			LogResult.fail("Environment is not set to IBM Java.");
+			LogResult.fail("Environment is not set to openjdk 8.");
+		}
+
+		batchConfigSettingsJs.click();
+
+		batchConfigSettingsIBMNodeJs.click();
+
+		if (batchConfigSettingsJs.getText().contentEquals("Use ibm-sdk-nodejs 4.2.2")) {
+			LogResult.pass("Environment is set to IBM SDK for Node.js.");
+		} else {
+			LogResult.fail("Environment is not set to IBM SDK for Node.js.");
 		}
 
 		batchConfigSettingsContinueBtn.click();
 
-		if (batchConfigJava.getText().contentEquals("IBM Java")) {
-			LogResult.pass("Save Changes button is clicked.");
+		if (batchConfigJava.getText().contentEquals("openjdk 8")
+				&& batchConfigJs.getText().contentEquals("ibm-sdk-nodejs 4.2.2")) {
+			LogResult.pass("Continue button is clicked and functionality verified.");
 		} else {
-			LogResult.fail("Save Changes button is not clicked.");
+			LogResult.fail("Continue button is not clicked.");
 		}
 
 		Thread.sleep(2000);
 	}
 
 	// Clicking on Reset button for Batch config settings pop up
-	public void clickOnBatchConfigSettingsResetBtn() {
+	public void clickOnBatchConfigSettingsResetBtn() throws InterruptedException {
 
 		batchConfigSettingsResetBtn.click();
 
-		if (batchConfigSettingsJDK.getText().contentEquals("Use OpenJDK")) {
-			LogResult.pass("Reset to Default button is clicked.");
+		batchConfigSettingsContinueBtn.click();
+
+		Thread.sleep(2000);
+
+		// checking only for node instead of node.js since value is saved as
+		// nodejs instead of Node.js
+		if (batchConfigJava.getText().contentEquals("openjdk 7") && batchConfigJs.getText().contains("node")) {
+			LogResult.pass("Reset button is clicked and functionality verified.");
 		} else {
-			LogResult.fail("Reset to Default button is not clicked.");
+			LogResult.fail("Reset button is not clicked.");
 		}
 
 	}
 
-	// Clicking on Close button for Batch config settings pop up
-	public void clickOnBatchConfigSettingsCloseBtn() {
+	// Clicking on Show/Modify Commands button for Batch config settings pop up
+	public void clickOnBatchConfigSettingsShowModifyCommandsBtn() {// clickOnBatchConfigSettingsCloseBtn
 
 		wait.until(ExpectedConditions.visibilityOf(batchConfigSettingsShowModifyCommandsBtn));
 
@@ -1227,11 +1529,156 @@ public class BatchJobsTab {
 		// LogResult.fail("Close button is not clicked.");
 		// }
 
-		batchConfigSettingsContinueBtn.click();
+		// batchConfigSettingsContinueBtn.click();
+	}
+
+	
+	//To verify UI for Show/Modify Commands for Batch config settings pop up 
+	public void verifyBatchConfigSettingsShowModifyCommandsUI() {
+
+		if (batchConfigSettingsShowModifyCommandsPackageNameLabel.getText().contentEquals("Package Name")) {
+			LogResult.pass("Package Name label is displayed.");
+		} else {
+			LogResult.fail("Package Name label is not displayed. Label is: "
+					+ batchConfigSettingsShowModifyCommandsPackageNameLabel.getText());
+		}
+
+		if (batchConfigSettingsShowModifyCommandsPackageName.isDisplayed()) {
+			LogResult.pass("Package Name is displayed.");
+		} else {
+			LogResult.fail("Package Name is not displayed.");
+		}
+
+		if (batchConfigSettingsShowModifyCommandsBuildCommandLabel.getText().contentEquals("Build Command")) {
+			LogResult.pass("Build Command label is displayed.");
+		} else {
+			LogResult.fail("Build Command label is not displayed. Label is: "
+					+ batchConfigSettingsShowModifyCommandsBuildCommandLabel.getText());
+		}
+
+		if (batchConfigSettingsShowModifyCommandsBuildCommandTxtArea.isDisplayed()) {
+			LogResult.pass("Build Command text box is displayed.");
+		} else {
+			LogResult.fail("Build Command text box is not displayed.");
+		}
+
+		if (batchConfigSettingsShowModifyCommandsTestCommandLabel.getText().contentEquals("Test Command")) {
+			LogResult.pass("Test Command label is displayed.");
+		} else {
+			LogResult.fail("Test Command label is not displayed. Label is: "
+					+ batchConfigSettingsShowModifyCommandsTestCommandLabel.getText());
+		}
+
+		if (batchConfigSettingsShowModifyCommandsTestCommandTxtArea.isDisplayed()) {
+			LogResult.pass("Test Command text box is displayed.");
+		} else {
+			LogResult.fail("Test Command text box is not displayed.");
+		}
+
+		if (batchConfigSettingsShowModifyCommandsInstallCommandLabel.getText().contentEquals("Install Command")) {
+			LogResult.pass("Install Command label is displayed.");
+		} else {
+			LogResult.fail("Install Command label is not displayed. Label is: "
+					+ batchConfigSettingsShowModifyCommandsInstallCommandLabel.getText());
+		}
+
+		if (batchConfigSettingsShowModifyCommandsInstallCommandTxtArea.isDisplayed()) {
+			LogResult.pass("Install Command text box is displayed.");
+		} else {
+			LogResult.fail("Install Command text box is not displayed.");
+		}
+
+		if (batchConfigSettingsShowModifyCommandsEnvironmentVariableLabel.getText()
+				.contentEquals("Environment Variable")) {
+			LogResult.pass("Environment Variable label is displayed.");
+		} else {
+			LogResult.fail("Environment Variable label is not displayed. Label is: "
+					+ batchConfigSettingsShowModifyCommandsEnvironmentVariableLabel.getText());
+		}
+
+		if (batchConfigSettingsShowModifyCommandsEnvironmentVariableTxtArea.isDisplayed()) {
+			LogResult.pass("Environment Variable text area is displayed.");
+		} else {
+			LogResult.fail("Environment Variable text area is not displayed.");
+		}
+
+		LogResult.pass("Packages displayed are:");
+
+		for (WebElement item : batchConfigSettingsShowModifyCommandsPackageNameList) {
+			LogResult.pass(item.getText());
+		}
+
+		if (batchConfigSettingsShowModifyCommandsBackBtn.isDisplayed()) {
+			LogResult.pass("Back button is displayed.");
+		} else {
+			LogResult.fail("Back button is not displayed.");
+		}
+
+		if (batchConfigSettingsShowModifyCommandsResetBtn.isDisplayed()) {
+			LogResult.pass("Reset button is displayed.");
+		} else {
+			LogResult.fail("Reset button is not displayed.");
+		}
+
+		if (batchConfigSettingsShowModifyCommandsContinueBtn.isDisplayed()) {
+			LogResult.pass("Continue button is displayed.");
+		} else {
+			LogResult.fail("Continue button is not displayed.");
+		}
+
+	}
+
+	// Clicking Show/Modify Commands button on Batch Config settings pop up
+	public void clickOnShowModifyCommandsBackBtn() {
+
+		batchConfigSettingsShowModifyCommandsBackBtn.click();
+
+		if (batchConfigSettingsShowModifyCommandsBtn.isDisplayed()) {
+			LogResult.pass("Show/Modify Commands UI Back button is clicked.");
+		} else {
+			LogResult.fail("Show/Modify Commands UI Back button is clicked.");
+		}
+	}
+
+	// To verify for Show/Modify Commands Reset button functionality on Batch
+	// Config settings pop up
+	public void clickOnShowModifyCommandsResetBtn() {
+
+		String testCommandTxt = batchConfigSettingsShowModifyCommandsTestCommandTxtArea.getText();
+
+		batchConfigSettingsShowModifyCommandsTestCommandTxtArea.clear();
+
+		batchConfigSettingsShowModifyCommandsTestCommandTxtArea.sendKeys("abc");
+
+		batchConfigSettingsShowModifyCommandsResetBtn.click();
+
+		if (batchConfigSettingsShowModifyCommandsTestCommandTxtArea.getText().contentEquals(testCommandTxt)) {
+			LogResult.pass("Show/Modify Commands UI Reset button is clicked and functionality verified.");
+		} else {
+			LogResult.fail("Show/Modify Commands UI Reset button is not clicked.");
+		}
+
+	}
+
+	// Clicking on Show/Modify Commands Continue button on Batch Config settings
+	// pop up
+	public void clickOnShowModifyCommandsContinueBtn() {
+
+		batchConfigSettingsShowModifyCommandsContinueBtn.click();
+
+		if (batchConfigSettingsBtn.isDisplayed()) {
+			LogResult.pass("Show/Modify Commands UI Continue button is clicked.");
+		} else {
+			LogResult.fail("Show/Modify Commands UI Continue button is clicked.");
+		}
+		
+		
 	}
 
 	// To verify repository movement upwards
-	public void verifyRepoUpMove() {
+	public void verifyRepoUpMove() throws InterruptedException {
+		
+		Thread.sleep(2000);
 
 		String secondRepository = batchSecondRepoName.getText();
 
@@ -1249,6 +1696,8 @@ public class BatchJobsTab {
 	// To verify repository movement downwards
 	public void verifyRepoDownMove() {
 
+		wait.until(ExpectedConditions.visibilityOf(batchFirstRepoDownBtn));
+		
 		String firstRepository = batchFirstRepoName.getText();
 
 		// System.out.println(firstRepository);
@@ -1283,7 +1732,7 @@ public class BatchJobsTab {
 	}
 
 	// To verify remove button functionality
-	public void clickOnRemoveBtn() {
+	public void clickOnRemoveBtn() throws InterruptedException {
 
 		String batchFileDate = firstRowLocalBatchFileDate.getText();
 
@@ -1294,8 +1743,12 @@ public class BatchJobsTab {
 		Alert alert = driver.switchTo().alert();
 
 		alert.accept();
+		
+		Thread.sleep(2000);
 
 		alertCloseBtn.click();
+		
+		Thread.sleep(2000);
 
 		if (firstRowLocalBatchFileDate.getText().contentEquals(batchFileDate)) {
 			LogResult.fail("Batch file not deleted successfully.");
@@ -1304,10 +1757,12 @@ public class BatchJobsTab {
 		}
 	}
 
+	// Clicking Build Servers dropd down
 	public void clickOnBuildServers() {
 		listBuildServersBtn.click();
 	}
 
+	// To verify Build Server nodes present in Build Servers drop down
 	public void verifyBuildServersNodes() {
 
 		LogResult.pass("Build servers drop down contains following values: ");
@@ -1320,6 +1775,7 @@ public class BatchJobsTab {
 
 	}
 
+	// To verify selection of all selected build servers
 	public void verifySelectionOfAllBuildServers() {
 
 		int i = 0;
@@ -1343,6 +1799,7 @@ public class BatchJobsTab {
 
 	}
 
+	// To verify deselection of all selected build servers
 	public void verifyDeSelectionOfAllBuildServers() {
 
 		for (WebElement item : listBuildServersChkbx) {
@@ -1360,11 +1817,13 @@ public class BatchJobsTab {
 
 	}
 
+	// Setting value for selected build server count
 	public void setBuildServersCount(int buildServersCount) {
 		this.selectedBuildServersCount = buildServersCount;
 		// System.out.println(buildServersCount);
 	}
 
+	// Fetching value for selected build server count
 	public int getBuildServersCount() {
 		return this.selectedBuildServersCount;
 	}
@@ -1376,34 +1835,11 @@ public class BatchJobsTab {
 
 		verifySelectionOfAllBuildServers();
 
-		/*
-		 * ArrayList<String> buildServersArray = new ArrayList<String>();
-		 * 
-		 * for (int i = 0; i < listBuildServersNodes.size(); i++) {
-		 * 
-		 * buildServersArray.add(i, listBuildServersNodes.get(i).getText()); }
-		 */
-
-		// for (int i=0;i< buildServerList.size();i++) {
-		//
-		// System.out.println("Value @ index: "+i+" is: "+
-		// buildServerList.get(i).getText());
-		//
-		// }
-
-		/* String currentWindow = driver.getWindowHandle(); */
-
 		this.setBuildClickTime(getSystemTime());
 
 		listBuildAndTestBtn.click();
 
-		/*
-		 * Thread.sleep(10000);
-		 * 
-		 * driver.switchTo().window(currentWindow);
-		 */
-
-		Thread.sleep(60000); // wait till the build+test is complete
+		Thread.sleep(60000); // wait till the job is submitted
 
 		wait.until(ExpectedConditions.visibilityOf(alertCloseBtn));
 
@@ -1420,53 +1856,24 @@ public class BatchJobsTab {
 			LogResult.fail("Build+Test button is not clicked.");
 		}
 
-		/*
-		 * Set<String> windowHandles = driver.getWindowHandles();
-		 * 
-		 * for (String window : windowHandles) { // eliminate switching to
-		 * current window if (!window.equals(currentWindow)) { // Now switchTo
-		 * new Tab. driver.switchTo().window(window);
-		 * 
-		 * for (String item : buildServersArray) {
-		 * 
-		 * if (driver.getTitle().contains(item)) {
-		 * 
-		 * LogResult.pass("Jenkins page opened for build server: " + item); }
-		 * 
-		 * }
-		 * 
-		 * }
-		 * 
-		 * }
-		 */
-
-		/*
-		 * for (String window : windowHandles) {
-		 * 
-		 * // eliminate switching to current window if
-		 * (!window.equals(currentWindow)) { // Now switchTo new Tab.
-		 * driver.switchTo().window(window);
-		 * 
-		 * driver.close();
-		 * 
-		 * } }
-		 * 
-		 * driver.switchTo().window(currentWindow);
-		 */
 	}
 
+	// Setting time before clicking Build+Test button
 	public void setBuildClickTime(String buildClickTime) {
 		this.buildClickTime = buildClickTime;
 		// System.out.println(buildClickTime);
 	}
 
+	// Fetching time set before clicking Build+Test button
 	public String getBuildClickTime() {
 		return this.buildClickTime;
 	}
 
+	// Fetching current system time
 	public String getSystemTime() {
+
 		Date d = new Date();
-		DateFormat format = new SimpleDateFormat("yyyy-MM-dd-'h'HH-'m'mm-'s'ss");
+		DateFormat format = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy");// yyyy-MM-dd-'h'HH-'m'mm-'s'ss
 		String buildTime = format.format(d);
 		return buildTime;
 	}

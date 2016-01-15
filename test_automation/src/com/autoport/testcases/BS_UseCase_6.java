@@ -63,5 +63,5 @@ public class BS_UseCase_6 {
 		  buildServerTab.verifyPopulatedBuildServers("All");
 		  
 		  buildServerTab.verifySearchResultsForManagedServicesList("All");
-	  }	 
+	  }
 }
