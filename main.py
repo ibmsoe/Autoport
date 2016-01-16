@@ -75,6 +75,31 @@ app = Flask(__name__, static_url_path='/autoport')
 #
 resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
+# Statistics are relative to timeStarted as main program may be started multiple times for fixes
+timeStarted = strftime("%m/%d/%Y %H:%M:%S", localtime())
+
+# Usage statistics
+searchProjects = 0                             # Single project tasks
+buildProjects = 0
+archiveProjectResults = 0
+removeProjectResults = 0
+historyDetailReports = 0
+compareReports = 0
+logdiffBuilds = 0
+logdiffTests = 0
+searchTopNProjects = 0
+totalProjectsSearched = 0                     # Total including single search and top-N search
+createBatchFiles = 0                          # Batch tasks
+removeBatchFiles = 0
+archiveBatchFiles = 0
+buildBatchFiles = 0
+totalBatchProjectsBuilt = 0
+archiveBatchResults = 0                       # Batch result tasks
+removeBatchResults = 0
+batchReports = 0                              # History, detail, and compare batch reports
+logdiffBatchBuildResults = 0
+logdiffBatchTestResults = 0
+
 # Main page - just serve up main.html
 @app.route("/autoport/")
 def main():
@@ -210,6 +235,9 @@ def getJenkinsNodeDetails():
     logger.info("All nodes: " + str(nodeLabels))
     logger.info("Ubuntu nodes: " + str(nodeUbuntu))
     logger.info("RHEL nodes: " + str(nodeRHEL))
+
+    logger.info("Stat[1]: timeStarted=%s, totalProjectsSearched=%d, buildProjects=%d, totalBatchProjectsBuilt=%d" %
+                (timeStarted, totalProjectsSearched, buildProjects, totalBatchProjectsBuilt))
 
     return json.jsonify(status="ok", details=nodeDetails, ubuntu=nodeUbuntu, rhel=nodeRHEL)
 
@@ -395,13 +423,24 @@ def search():
     if numResults > maxResults:
         numResults = maxResults
 
+    global searchProjects
+    searchProjects += 1
+
+    global totalProjectsSearched
+    totalProjectsSearched += 1
+
+    logger.info("Stat[2]: timeStarted=%s, searchProjects=%d, searchTopNProjects=%d, totalProjectsSearched=%d" %
+                (timeStarted, searchProjects, searchTopNProjects, totalProjectsSearched))
+
     for repo in repos[:numResults]:
         globals.cache.cacheRepo(repo)
+
         # If this is the top hit, and the name matches exactly, and
         # it has greater than 500 stars, then just assume that's the
         # repo the user is looking for
         if autoselect and isFirst and repo.name == query.strip() and repo.stargazers_count > 500:
             return detail(repo.id, repo)
+
         isFirst = False
         # Otherwise add the repo to the list of results and move on
         results.append({
@@ -418,6 +457,7 @@ def search():
             "description": repo.description,
             "classifications": classify(repo)
         })
+
     return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
 
 # Detail - returns a JSON file with detailed information about the repo
@@ -623,6 +663,14 @@ def search_repositories():
     if results:
         cnt = limit - remaining
         logger.debug("/search/repositories Requested = " + str(limit) + " Returned = " + str(cnt))
+
+        global searchTopNProjects
+        global totalProjectsSearched
+        searchTopNProjects += 1
+        totalProjectsSearched += cnt
+        logger.info("Stat[2]: timeStarted=%s, searchProjects=%d, searchTopNProjects=%d, totalProjectsSearched=%d" %
+                    (timeStarted, searchProjects, searchTopNProjects, totalProjectsSearched))
+
         return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
 
     return json.jsonify(status="failure",
@@ -704,6 +752,12 @@ def uploadBatchFile():
     sftp.close()
     transport.close()
     '''
+
+    global createBatchFiles
+    createBatchFiles += 1
+    logger.info("Stat[4]: timeStarted=%s, createBatchFiles=%d, buildBatchFiles=%d, "\
+                "archiveBatchFiles=%d, removeBatchFiles=%d, totalBatchProjectsBuilt=%d" %
+                (timeStarted, createBatchFiles, buildBatchFiles, archiveBatchFiles, removeBatchFiles, totalBatchProjectsBuilt))
 
     return json.jsonify(status="ok")
 
@@ -1167,11 +1221,18 @@ def createJob(i_id = None,
         rc = createJob_common(localtime(), uid, id, tag, node, javaType, javaScriptType, selectedBuild,
                               selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang)
         rcstatus = rc['status']
+
+        global buildProjects
+        buildProjects += 1
+        logger.info("Stat[3]: timeStarted=%s, buildProjects=%d, historyDetailReports=%d, "\
+                    "compareReports=%d, logdiffBuilds=%d, logdiffTestResults=%d, archiveProjectResults=%d" %
+                    (timeStarted, buildProjects, historyDetailReports, compareReports, logdiffBuilds, logdiffTests, archiveProjectResults))
     except KeyError:
         logger.debug("createJob: jobId=%s, Error rc=%s" % (id, rc))
         return json.jsonify(status='failure', error="Failed to launch a Jenkins job"), 401
     except Exception as ex:
         logger.debug("createJob: Error=%s" % str(ex))
+
     try:
         jobName = rc['jobName']
     except KeyError:
@@ -1576,6 +1637,13 @@ def runBatchFile ():
     logger.debug("Leaving runBatchFile, batchName=%s" % batchName)
 
     if jobs:
+        global buildBatchFiles
+        global totalBatchProjectsBuilt
+        buildBatchFiles += 1
+        totalBatchProjectsBuilt += len(jobs)
+        logger.info("Stat[4]: timeStarted=%s, createBatchFiles=%d, buildBatchFiles=%d, "\
+                    "archiveBatchFiles=%d, removeBatchFiles=%d, totalBatchProjectsBuilt=%d" %
+                    (timeStarted, createBatchFiles, buildBatchFiles, archiveBatchFiles, removeBatchFiles, totalBatchProjectsBuilt))
         return json.jsonify(status="ok")
     else:
         shutil.rmtree(batchDirName, ignore_errors=True)
@@ -1626,6 +1694,13 @@ def removeBatchFile():
 
     if res != None:
         return json.jsonify(status="failure", error=res['error'])
+
+    global removeBatchFiles
+    removeBatchFiles += 1
+    logger.info("Stat[4]: timeStarted=%s, createBatchFiles=%d, buildBatchFiles=%d, "\
+                "archiveBatchFiles=%d, removeBatchFiles=%d, totalBatchProjectsBuilt=%d" %
+                (timeStarted, createBatchFiles, buildBatchFiles, archiveBatchFiles, removeBatchFiles, totalBatchProjectsBuilt))
+
     return json.jsonify(status="ok")
 
 # List available batch files
@@ -1673,6 +1748,10 @@ def archiveBatchReports():
                 return json.jsonify(status="failure", error=errors), 400
             archiveRes = batch.archiveBatchReports(report)
             result[report] = archiveRes
+        global archiveBatchResults
+        archiveBatchResults += len(reports)
+        logger.info("Stat[5]: timeStarted=%s, logdiffBatchBuildResults=%d, logdiffBatchTestResults=%d, archiveBatchResults=%d, removeBatchResults=%d" %
+                    (timeStarted, logdiffBatchBuildResults, logdiffBatchTestResults, archiveBatchResults, removeBatchResults))
         return json.jsonify(status="ok", results=result), 200
     except Exception as e:
         return json.jsonify(status="failure", error=str(e)), 401
@@ -1684,6 +1763,10 @@ def removeBatchReports():
         reports = request.json['reports']
         logger.debug("In removeBatchReports, reports=" + str(reports))
         batch.removeBatchReportsData(reports, catalog)
+        global removeBatchResults
+        removeBatchResults += 1
+        logger.info("Stat[5]: timeStarted=%s, logdiffBatchBuildResults=%d, logdiffBatchTestResults=%d, archiveBatchResults=%d, removeBatchResults=%d" %
+                    (timeStarted, logdiffBatchBuildResults, logdiffBatchTestResults, archiveBatchResults, removeBatchResults))
         return json.jsonify(status="ok"), 200
     except Exception as e:
         return json.jsonify(status="failure", error=str(e)), 401
@@ -2627,6 +2710,7 @@ def removeProjects():
         project = Project(catalog)
         projects = request.json['projects']
         catalog.removeProjectsData(projects, project)
+        removeProjectResults += len(projects)
         return json.jsonify(status="ok"), 200
     except Exception as e:
         return json.jsonify(status="failure", error=str(e)), 401
@@ -2684,6 +2768,13 @@ def getTestResults():
         lf.close()
 
     catalog.cleanTmp()
+
+    global compareReports
+    compareReports += 1
+    logger.info("Stat[3]: timeStarted=%s, buildProjects=%d, historyDetailReports=%d, "\
+                "compareReports=%d, logdiffBuilds=%d, logdiffTestResults=%d, archiveProjectResults=%d" %
+                (timeStarted, buildProjects, historyDetailReports, compareReports, logdiffBuilds, logdiffTests, archiveProjectResults))
+
     return json.jsonify(status = "ok",
                         leftCol = leftname,
                         rightCol = rightname,
@@ -2707,13 +2798,24 @@ def getDiffLogResults():
             status = "failure",
             error = logs.get("error", "Something went wrong")
         ), logs.get("http_code", 500)
+
+    if logFile == "test_result.arti":
+        global logdiffBuilds
+        logdiffBuilds += 1
     else:
-        return json.jsonify(
-            status = "ok",
-            leftCol = logs.get("leftCol", []),
-            rightCol = logs.get("rightCol", []),
-            results = logs.get("results", [])
-        )
+        global logdiffTests
+        logdiffTests += 1
+
+    logger.info("Stat[3]: timeStarted=%s, buildProjects=%d, historyDetailReports=%d, "\
+                "compareReports=%d, logdiffBuilds=%d, logdiffTestResults=%d, archiveProjectResults=%d" %
+                (timeStarted, buildProjects, historyDetailReports, compareReports, logdiffBuilds, logdiffTests, archiveProjectResults))
+
+    return json.jsonify(
+        status = "ok",
+        leftCol = logs.get("leftCol", []),
+        rightCol = logs.get("rightCol", []),
+        results = logs.get("results", [])
+    )
 
 # Get diff log output
 @app.route("/autoport/getDiffBatchLogResults", methods=["POST"])
@@ -2734,6 +2836,16 @@ def getDiffBatchLogResults():
             error = logs.get("error", "Something went wrong")
         ), logs.get("http_code", 500)
     else:
+        if logFile == "test_result.arti":
+            global logdiffBatchTestResults
+            logdiffBatchTestResults += 1
+        else:
+            global logdiffBatchBuildResults
+            logdiffBatchBuildResults += 1
+
+        logger.info("Stat[5]: timeStarted=%s, logdiffBatchBuildResults=%d, logdiffBatchTestResults=%d, archiveBatchResults=%d, removeBatchResults=%d" %
+                    (timeStarted, logdiffBatchBuildResults, logdiffBatchTestResults, archiveBatchResults, removeBatchResults))
+
         return json.jsonify(
             status = "ok",
             results = logs
@@ -2803,6 +2915,13 @@ def getTestHistory():
     if not out:
         return json.jsonify(status="failure", error="build failed, no test results"), 500
 
+    global historyDetailReports
+    historyDetailReports += 1
+
+    logger.info("Stat[3]: timeStarted=%s, buildProjects=%d, historyDetailReports=%d, "\
+                "compareReports=%d, logdiffBuilds=%d, logdiffTestResults=%d, archiveProjectResults=%d" %
+                (timeStarted, buildProjects, historyDetailReports, compareReports, logdiffBuilds, logdiffTests, archiveProjectResults))
+
     return json.jsonify(status = "ok", results = out)
 
 @app.route("/autoport/getTestDetail", methods=["POST"])
@@ -2842,6 +2961,14 @@ def getTestDetail():
                      "results": res, "project": meta, "repository": repo })
         logger.debug("getTestDetail: name=%s, results=%s" % (projectName, res))
     catalog.cleanTmp()
+
+    global historyDetailReports
+    historyDetailReports += 1
+
+    logger.info("Stat[3]: timeStarted=%s, buildProjects=%d, historyDetailReports=%d, "\
+                "compareReports=%d, logdiffBuilds=%d, logdiffTestResults=%d, archiveProjectResults=%d" %
+                (timeStarted, buildProjects, historyDetailReports, compareReports, logdiffBuilds, logdiffTests, archiveProjectResults))
+
     return json.jsonify(status = "ok", results = out)
 
 @app.route("/autoport/archiveBatchFile", methods=["POST"])
@@ -2855,12 +2982,27 @@ def archiveBatchFile():
 
     if res != None:
         return json.jsonify(status="failure", error=res['error'])
+
+    global archiveBatchFiles
+    archiveBatchFiles += 1
+
+    logger.info("Stat[4]: timeStarted=%s, createBatchFiles=%d, buildBatchFiles=%d, "\
+                "archiveBatchFiles=%d, removeBatchFiles=%d, totalBatchProjectsBuilt=%d" %
+                (timeStarted, createBatchFiles, buildBatchFiles, archiveBatchFiles, removeBatchFiles, totalBatchProjectsBuilt))
+
     return json.jsonify(status="ok")
 
 @app.route("/autoport/archiveProjects", methods=["POST"])
 def archiveProjects():
     projects = request.json['projects']
+
     status, errors, alreadyThere = catalog.archiveResults(projects)
+
+    cnt = len(projects) - len(alreadyThere)
+    if status == 'ok' and cnt > 0:
+        global archiveProjectResults
+        archiveProjectResults += cnt
+
     return json.jsonify(status=status, error=errors, alreadyThere=alreadyThere)
 
 # Returns a comma separated list of package names from the Managed List json file
@@ -2906,10 +3048,19 @@ def uploadToRepo():
 def getBatchTestDetails():
     batchList = request.json['batchList']
     detailsType = request.json['detailsType']
+
     batchDetails = batch.getBatchTestDetails(batchList, catalog, detailsType)
     if batchDetails == "No common projects available":
         return json.jsonify(status='failure', error = batchDetails)
-    elif batchDetails.has_key('error'):
+
+    global batchReports
+    batchReports += 1
+
+    logger.info("Stat[5]: timeStarted=%s, batchReports=%d, logdiffBatchBuildResults=%d, logdiffBatchTestResults=%d, "\
+                "archiveBatchResults=%d, removeBatchResults=%d" %
+                (timeStarted, batchReports, logdiffBatchBuildResults, logdiffBatchTestResults, archiveBatchResults, removeBatchResults))
+
+    if batchDetails.has_key('error'):
         return json.jsonify(status=batchDetails['status'], error = batchDetails['error']), 400
     else:
         return json.jsonify(status=batchDetails['status'], results = batchDetails)
@@ -2950,6 +3101,7 @@ def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
     # XXX catalog needs a disconnect
 
 if __name__ == "__main__":
+
     # When the server instance is freshly started clear up all the /tmp/ directories created by the application
     # in previous run, that were not cleaned up.
     for dirname, dirnames, filenames in os.walk('/tmp/'):
@@ -2987,3 +3139,18 @@ if __name__ == "__main__":
         app.run(threaded=True, host='0.0.0.0')
     else:
         app.run(debug = args.debug, threaded=True)
+
+    logger.info("Stat[1]: timeStarted=%s, totalProjectsSearched=%d, buildProjects=%d, totalBatchProjectsBuilt=%d" %
+                (timeStarted, totalProjectsSearched, buildProjects, totalBatchProjectsBuilt))
+    logger.info("Stat[2]: timeStarted=%s, searchProjects=%d, searchTopNProjects=%d, totalProjectsSearched=%d" %
+                (timeStarted, searchProjects, searchTopNProjects, totalProjectsSearched))
+    logger.info("Stat[3]: timeStarted=%s, buildProjects=%d, historyDetailReports=%d, "\
+                "compareReports=%d, logdiffBuilds=%d, logdiffTestResults=%d, archiveProjectResults=%d" %
+                (timeStarted, buildProjects, historyDetailReports, compareReports, logdiffBuilds, logdiffTests, archiveProjectResults))
+    logger.info("Stat[4]: timeStarted=%s, createBatchFiles=%d, buildBatchFiles=%d, "\
+                "archiveBatchFiles=%d, removeBatchFiles=%d, totalBatchProjectsBuilt=%d" %
+                (timeStarted, createBatchFiles, buildBatchFiles, archiveBatchFiles, removeBatchFiles, totalBatchProjectsBuilt))
+    logger.info("Stat[5]: timeStarted=%s, batchReports=%d, logdiffBatchBuildResults=%d, logdiffBatchTestResults=%d, "\
+                "archiveBatchResults=%d, removeBatchResults=%d" %
+                (timeStarted, batchReports, logdiffBatchBuildResults, logdiffBatchTestResults, archiveBatchResults, removeBatchResults))
+
