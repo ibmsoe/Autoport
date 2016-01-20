@@ -65,7 +65,9 @@ echo &quot;NODE: &quot; $NODE
 echo &quot;ACTION: &quot; $ACTION
 
 DISTRIBUTION=&quot;UBUNTU&quot;
-if [ -e /etc/redhat-release ] ; then
+if [ -e /etc/centos-release ] ; then
+    DISTRIBUTION=&quot;CENTOS&quot;
+elif [ -e /etc/redhat-release ] ; then
     DISTRIBUTION=&quot;RHEL&quot;
 fi
 
@@ -85,6 +87,12 @@ EOF
 case $ACTION in
     &quot;query-os&quot;)
         case $DISTRIBUTION in
+             &quot;CENTOS&quot;)
+                 cat /etc/centos-release
+                 DISTRO=&apos;&quot;distro&quot;: &quot;CentOS&quot;&apos;
+                 REL=`cat /etc/centos-release | awk &apos;{print $4}&apos;`
+                 VER=`cat /etc/centos-release | awk &apos;{print $4}&apos;`
+                 ;;
              &quot;RHEL&quot;)
                  cat /etc/redhat-release
                  rpm -qa | grep redhat-release

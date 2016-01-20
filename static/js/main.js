@@ -1178,6 +1178,7 @@ var jenkinsState = {
     nodeLabels: [],
     nodeUbuntu: [],
     nodeRHEL: [],
+    nodeCentOS: [],
     nodeDetails: [],
     jenkinsPanel: false,
     jenkinsSlavePanel: false,
@@ -2770,6 +2771,7 @@ function settingsCallback(data) {
             jenkinsState.nodeLabels = [];
             jenkinsState.nodeDetails = [];
             jenkinsState.nodeRHEL = [];
+            jenkinsState.nodeCentOS = [];
             jenkinsState.nodeUbuntu = [];
             getJenkinsNodesCallback(data);
             getJenkinsNodeDetailsCallback(data);
@@ -3062,8 +3064,10 @@ function getJenkinsNodeDetailsCallback(data) {
         jenkinsState.nodeDetails = data.details;
         jenkinsState.nodeUbuntu = data.ubuntu;
         jenkinsState.nodeRHEL = data.rhel;
+        jenkinsState.nodeCentOS = data.centos;
         console.log("Ubuntu nodes: ", jenkinsState.nodeUbuntu);
         console.log("RHEL nodes: ", jenkinsState.nodeRHEL);
+        console.log("CentOS nodes: ", jenkinsState.nodeCentOS);
         for (i = 0; i < jenkinsState.nodeDetails.length; i++) {
             console.log("Node details: ", jenkinsState.nodeDetails[i]);
         }

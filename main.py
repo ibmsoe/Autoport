@@ -159,6 +159,7 @@ def getJenkinsNodeDetails_init():
     del globals.nodeDetails[:]
     del globals.nodeUbuntu[:]
     del globals.nodeRHEL[:]
+    del globals.nodeCentOS[:]
     del globals.nodeOSes[:]
     del globals.nodeHosts[:]
     del globals.nodeIPs[:]
@@ -177,6 +178,9 @@ def getJenkinsNodeDetails_init():
             elif detail['distro'] == "RHEL":
                 globals.nodeRHEL.append(nodeLabel)
                 osName = "RHEL"
+            elif detail['distro'] == "CentOS":
+                globals.nodeCentOS.append(nodeLabel)
+                osName = "CentOS"
             globals.nodeOSes.append(osName + ' ' + detail['version'] + ' ' + detail['arch'].upper())
             globals.nodeHosts.append(detail['hostname'])
             globals.nodeIPs.append(detail['ipaddress'])
@@ -197,6 +201,7 @@ def getJenkinsNodeDetails_init():
     logger.info("All IPs: " + str(globals.nodeIPs))
     logger.info("Ubuntu nodes: " + str(globals.nodeUbuntu))
     logger.info("RHEL nodes: " + str(globals.nodeRHEL))
+    logger.info("CentOS nodes: " + str(globals.nodeCentOS))
 
 @app.route("/autoport/getJenkinsNodeDetails", methods=["POST"])
 def getJenkinsNodeDetails():
@@ -218,6 +223,7 @@ def getJenkinsNodeDetails():
     nodeDetails = []
     nodeUbuntu = []
     nodeRHEL = []
+    nodeCentOS = []
     for node in nodeLabels:
         if not node in globals.nodeLabels:
             logger.info("getJenkinsNodeDetails, new node=%s" % node)
@@ -228,6 +234,8 @@ def getJenkinsNodeDetails():
             nodeUbuntu.append(node)
         elif node in globals.nodeRHEL:
             nodeRHEL.append(node)
+        elif node in globals.nodeCentOS:
+            nodeCentOS.append(node)
 
         i = globals.nodeLabels.index(node)
         nodeDetails.append(globals.nodeDetails[i])
@@ -235,11 +243,12 @@ def getJenkinsNodeDetails():
     logger.info("All nodes: " + str(nodeLabels))
     logger.info("Ubuntu nodes: " + str(nodeUbuntu))
     logger.info("RHEL nodes: " + str(nodeRHEL))
+    logger.info("CentOS nodes: " + str(nodeCentOS))
 
     logger.info("Stat[1]: timeStarted=%s, totalProjectsSearched=%d, buildProjects=%d, totalBatchProjectsBuilt=%d" %
                 (timeStarted, totalProjectsSearched, buildProjects, totalBatchProjectsBuilt))
 
-    return json.jsonify(status="ok", details=nodeDetails, ubuntu=nodeUbuntu, rhel=nodeRHEL)
+    return json.jsonify(status="ok", details=nodeDetails, ubuntu=nodeUbuntu, rhel=nodeRHEL, centos=nodeCentOS)
 
 # Settings function
 @app.route("/autoport/settings", methods=['POST'])
@@ -346,7 +355,7 @@ def settings():
     return json.jsonify(status="ok", gsaConnected=globals.gsaConnected,
                         nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels,
                         details=globals.nodeDetails, ubuntu=globals.nodeUbuntu,
-                        rhel=globals.nodeRHEL)
+                        rhel=globals.nodeRHEL, centos=globals.nodeCentOS)
 
 @app.route("/autoport/progress")
 def progress():
@@ -2393,6 +2402,8 @@ def listManagedPackages():
         nodes = globals.nodeUbuntu
     elif distro == "RHEL":
         nodes = globals.nodeRHEL
+    elif distro == "CentOS":
+        nodes = globals.nodeCentOS
     else:
         nodes = globals.nodeLabels
 

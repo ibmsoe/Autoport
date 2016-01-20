@@ -90,6 +90,7 @@ def init():
     global nodeDetails
     global nodeUbuntu
     global nodeRHEL
+    global nodeCentOS
     global sshClient
     global ftpClient
     global threadPool
@@ -133,6 +134,7 @@ def init():
     nodeDetails = []
     nodeUbuntu = []
     nodeRHEL = []
+    nodeCentOS = []
     nodeOSes = []
     nodeHosts = []
 
