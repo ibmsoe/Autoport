@@ -192,7 +192,7 @@ def getJenkinsNodeDetails_init():
             elif e.args[0] == 'hostname':
                 logger.warning("No hostname information for node " + node)
             else:
-                logger.warning(e.message)
+                logger.warning("Unsupported O/S on node " + node)
             pass
 
     logger.info("All nodes: " + str(globals.nodeLabels))
