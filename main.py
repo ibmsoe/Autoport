@@ -45,7 +45,7 @@ from requests.exceptions import MissingSchema
 from project import Project
 
 # Constants
-maxResults = 10
+maxResults = 25
 
 # Initialize autoport framework
 catalog = Catalog()
@@ -400,6 +400,7 @@ def search():
     # Query Github and return a JSON file with results
     results = []
     isFirst = True
+    localMaxResults = maxResults
 
     try:
         q = "fork:true " + query
@@ -412,6 +413,8 @@ def search():
         if numResults == 0:
             q = query.strip().split("/")
             if len(q) == 1 or q[1] == "":       # if '/' not present or last character in string
+                # If user is looking in a directory, then increase the limit to 100
+                localMaxResults = 100
                 q = "fork:true user:%s" % q[0]
             else:
                 q = "fork:true repo:%s" % "/".join(q)
@@ -429,8 +432,8 @@ def search():
                    "does not exist or you don't have access rights to view it.&nbsp;&nbsp;&nbsp;You "
                    "may specify a different github token via the Settings Menu"), 418
 
-    if numResults > maxResults:
-        numResults = maxResults
+    if numResults > localMaxResults:
+        numResults = localMaxResults
 
     global searchProjects
     searchProjects += 1
@@ -466,6 +469,9 @@ def search():
             "description": repo.description,
             "classifications": classify(repo)
         })
+
+    if autoselect and len(results) == 1:
+        return detail(repo.id, repo)
 
     return json.jsonify(status="ok", results=results, type="multiple", panel=panel)
 
