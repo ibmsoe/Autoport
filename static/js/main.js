@@ -1177,6 +1177,7 @@ var jenkinsState = {
     nodeNames: [],
     nodeLabels: [],
     nodeUbuntu: [],
+    nodeCentOS: [],
     nodeRHEL: [],
     nodeCentOS: [],
     nodeDetails: [],
@@ -1386,8 +1387,16 @@ var jenkinsState = {
                 jenkinsState.serverGroup = "UBUNTU";
                 buildServersToSync = jenkinsState.nodeUbuntu;
             }
+        } else if (id === "mlCentOS") {
+            if (jenkinsState.nodeUbuntu.length == 0) {
+                showAlert("No Centos build servers available");
+                return false;
+            } else {
+                jenkinsState.serverGroup = "CENTOS";
+                buildServersToSync = jenkinsState.nodeCentos;
+            }
         } else {
-            if (jenkinsState.nodeRHEL.length == 0 && jenkinsState.nodeUbuntu.length == 0) {
+            if (jenkinsState.nodeRHEL.length == 0 && jenkinsState.nodeUbuntu.length == 0 && jenkinsState.nodeCentos.length == 0) {
                 showAlert("No build slaves available");
                 return false;
             } else {
@@ -1397,6 +1406,7 @@ var jenkinsState = {
         }
         $("#mlRHEL").addClass("disabled");
         $("#mlUbuntu").addClass("disabled");
+        $("#mlCentOS").addClass("disabled");
         $("#mlAll").addClass("disabled");
         jenkinsState.managedPackageTableReady = false;
         $("#addToManagedList").addClass("disabled");
@@ -2773,6 +2783,7 @@ function settingsCallback(data) {
             jenkinsState.nodeRHEL = [];
             jenkinsState.nodeCentOS = [];
             jenkinsState.nodeUbuntu = [];
+            jenkinsState.nodeCentOS = [];
             getJenkinsNodesCallback(data);
             getJenkinsNodeDetailsCallback(data);
             showAlert("Updated successfully");
@@ -3063,6 +3074,7 @@ function getJenkinsNodeDetailsCallback(data) {
     if (data.status === "ok") {
         jenkinsState.nodeDetails = data.details;
         jenkinsState.nodeUbuntu = data.ubuntu;
+        jenkinsState.nodeCentOS = data.centos;
         jenkinsState.nodeRHEL = data.rhel;
         jenkinsState.nodeCentOS = data.centos;
         console.log("Ubuntu nodes: ", jenkinsState.nodeUbuntu);
@@ -3180,6 +3192,7 @@ function listManagedPackagesCallback(data) {
     }
      $("#mlRHEL").removeClass("disabled");
      $("#mlUbuntu").removeClass("disabled");
+     $("#mlCentOS").removeClass("disabled");
      $("#mlAll").removeClass("disabled");
 }
 

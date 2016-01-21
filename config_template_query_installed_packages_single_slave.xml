@@ -65,6 +65,9 @@ set +o noclobber # Allow overwrite of files just in case it is set to off
 arch_packages=''
 
 case $DISTRIBUTION in
+    "CentOS")
+        echo "Executing same set of commands as RHEL as yum is supported on CentOS also"
+    ;&amp;
     "RHEL")
         echo "#### Getting a list of all installed packages using command rpm -qa --queryformat '%{NAME}.%{ARCH}\t%{VERSION}-%{RELEASE}   %{SUMMARY}\n' | sed \"s/\"/'/g\" "
         # get information about all installed packages

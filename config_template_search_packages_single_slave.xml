@@ -261,6 +261,9 @@ case $DISTRIBUTION in
         echo "#### Completed fetching data for all packages."
         rm -f AllPackagesInfo.txt
     ;;
+    "CentOS")
+        echo "Executing same set of commands as RHEL as yum is supported on CentOS also"
+    ;&amp;
     "RHEL")
         # get search keyword and fetch all the packages matching given keyword, dump the result for later use.
         echo "#### Getting a list of all installed or available packages matching the filter $PACKAGE_NAME_FILTER"
@@ -430,6 +433,8 @@ if [ $can_continue -ne 0 ]; then
         "UBUNTU")
             sudo apt-get -y --force-yes install wget
         ;;
+        "CentOS")
+        ;&amp;
         "RHEL")
             yum -y install wget
         ;;
