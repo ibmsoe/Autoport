@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "18",
+    "sequence": "19",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -13,6 +13,9 @@
                 },
                 {
                     "name": "antlr"
+                },
+                {
+                    "name": "ant-optional"
                 },
                 {
                     "name": "autoconf"
@@ -393,6 +396,9 @@
                     "name": "ant"
                 },
                 {
+                    "name": "ant-junit"
+                },
+                {
                     "name": "atlas-devel"
                 },
                 {
@@ -686,6 +692,9 @@
             "autoportPackages": [
                 {
                     "name": "ant"
+                },
+                {
+                    "name": "ant-junit"
                 },
                 {
                     "name": "atlas-devel"
