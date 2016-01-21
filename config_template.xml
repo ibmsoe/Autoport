@@ -135,24 +135,24 @@
                   ################################ Shell program to create autoport environment ###########################
 
                   bash_script_providing_builtin_autoport_functions='#!/bin/bash
-                  if [ -x /usr/bin/yum ]; then
+                  if [ -e /etc/redhat-release ]; then
                       function add-apt-repository() {
-                          echo "Autoport RHEL WARNING Replace: add-apt-repository $*"
+                          echo "Autoport RHEL/CentOS WARNING Replace: add-apt-repository $*"
                       }
                       function apt-cache() {
-                          echo "Autoport RHEL WARNING Replace: apt-cache $*"
+                          echo "Autoport RHEL/CentOS WARNING Replace: apt-cache $*"
                       }
                       function apt-get() {
-                          echo "Autoport RHEL WARNING Replace: apt-get $*"
+                          echo "Autoport RHEL/CentOS WARNING Replace: apt-get $*"
                       }
                       function aptitude() {
-                          echo "Autoport RHEL WARNING Replace: aptitude $*"
+                          echo "Autoport RHEL/CentOS WARNING Replace: aptitude $*"
                       }
                       function dpkg() {
-                          echo "Autoport RHEL WARNING Replace: dpkg $*"
+                          echo "Autoport RHEL/CentOS WARNING Replace: dpkg $*"
                       }
                       function synaptic() {
-                          echo "Autoport RHEL WARNING Replace: synaptic $*"
+                          echo "Autoport RHEL/CentOS WARNING Replace: synaptic $*"
                       }
                       function sudo() {
                           rc=0
@@ -170,13 +170,13 @@
                           fi
                           case $cmd in
                           "dpkg")
-                              echo "Autoport RHEL WARNING Replace: sudo $*"
+                              echo "Autoport RHEL/CentOS WARNING Replace: sudo $*"
                               ;;
                           "apt"*)
-                              echo "Autoport RHEL WARNING Replace: sudo $*"
+                              echo "Autoport RHEL/CentOS WARNING Replace: sudo $*"
                               ;;
                           "add-apt"*)
-                              echo "Autoport RHEL WARNING Replace: sudo $*"
+                              echo "Autoport RHEL/CentOS WARNING Replace: sudo $*"
                               ;;
                           *)
                               cmd=`/usr/bin/which $cmd`
@@ -297,7 +297,7 @@
                                   echo "Autoport INFO: travis_retry sudo $cmd $rest"
                                   /usr/bin/sudo $cmd $rest
                               else
-                                  echo "Autoport RHEL WARNING Replace: travis_retry sudo $cmd $rest"
+                                  echo "Autoport RHEL/CentOS WARNING Replace: travis_retry sudo $cmd $rest"
                                   rc=0
                               fi
                           else
@@ -330,7 +330,7 @@
                               echo "travis_retry sudo $cmd $rest"
                               /usr/bin/sudo $cmd $rest
                           else
-                              echo "Autoport RHEL WARNING Replace: travis_wait sudo $cmd $rest"
+                              echo "Autoport RHEL/CentOS WARNING Replace: travis_wait sudo $cmd $rest"
                               rc=0
                           fi
                       else
