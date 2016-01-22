@@ -33,37 +33,37 @@ exists() {
     # in autoport repository (or) via opscode.com using standard installation.
 
     ARCH=$(uname -m)
-    if [ -f /etc/redhat-release ] ; then
-      DIST='redhat'
-      yum -y install wget
-      VERSION=$(cat /etc/redhat-release | awk {"print \$7"})
-      VER=$(echo $VERSION | awk -F"." {"print \$1"})
-    elif [ -f /etc/centos-release ]; then
+    if [ -f /etc/centos-release ]; then
       DIST='centos'
       yum -y install wget
       VERSION=$(cat /etc/centos-release | awk {"print \$4"})
       IFS='.' read -ra VER <<< $VERSION
+    elif [ -f /etc/redhat-release ] ; then
+      DIST='redhat'
+      yum -y install wget
+      VERSION=$(cat /etc/redhat-release | awk {"print \$7"})
+      VER=$(echo $VERSION | awk -F"." {"print \$1"})
     elif [ -f /etc/debian_version ] ; then
       DIST=`grep DISTRIB_ID /etc/lsb-release | cut -d "=" -f 2 | tr '[A-Z]' '[a-z]'`
       apt-get -y -q install wget
       CODENAME=$(lsb_release -c | awk {"print \$2"})
     fi
 
-    if [[ $DIST = 'redhat' && $ARCH = 'ppc64le' ]]; then
-      # Installing ppc64le specific rpm for chef-client from autoport_repo.
-      # autoport_repo url is resolved as current hostname, considering that chef-workstation
-      # and autoport_repo are on same node, i.e. Jenkins Master.
-
-      wget <%= Socket.ip_address_list[1].ip_address %>:90/autoport_repo/rpms/rhel/${VER[0]}/$chef_ppc_rpm
-      sudo rpm -Uvh $chef_ppc_rpm
-      sudo rm -rf $chef_ppc_rpm
-
-    elif [[ $DIST = 'centos' && $ARCH = 'ppc64le' ]]; then
+    if [[ $DIST = 'centos' && $ARCH = 'ppc64le' ]]; then
       # Installing ppc64le specific rpm for chef-client from autoport_repo.
       # autoport_repo url is resolved as current hostname, considering that chef-workstation
       # and autoport_repo are on same node, i.e. Jenkins Master.
 
       wget <%= Socket.ip_address_list[1].ip_address %>:90/autoport_repo/rpms/centos/${VER[0]}/$chef_ppc_rpm
+      sudo rpm -Uvh $chef_ppc_rpm
+      sudo rm -rf $chef_ppc_rpm
+
+    elif [[ $DIST = 'redhat' && $ARCH = 'ppc64le' ]]; then
+      # Installing ppc64le specific rpm for chef-client from autoport_repo.
+      # autoport_repo url is resolved as current hostname, considering that chef-workstation
+      # and autoport_repo are on same node, i.e. Jenkins Master.
+
+      wget <%= Socket.ip_address_list[1].ip_address %>:90/autoport_repo/rpms/rhel/${VER[0]}/$chef_ppc_rpm
       sudo rpm -Uvh $chef_ppc_rpm
       sudo rm -rf $chef_ppc_rpm
 
