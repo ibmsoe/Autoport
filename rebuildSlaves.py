@@ -55,6 +55,7 @@ def initial():
     with nvclient.Client(2, globals.os_username, globals.os_password, globals.os_tenant_name, globals.os_auth_url) as nova:
         stack_id = getstackIdbyIp(nova,floating_ip)
         instances = getinstancesbyStackId(nova,stack_id)
+
     nodes_info={}
     for instance in instances:
         instance_info={}
@@ -66,12 +67,12 @@ def initial():
                 instance_info['original_image_id'] = instance.image['id']
                 nodes_info[ip]=instance_info
                 break
-
     with open(nodes_info_file,mode='w') as f:
         json.dump(nodes_info,f)
         f.close()
+    return nodes_info
 
 if __name__ == "__main__":
-    initial()
+    nodes_info = initial()
 #    createSnapshot('192.168.1.213')
 #    rebuildServer('192.168.1.110')

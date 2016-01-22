@@ -148,7 +148,8 @@
           </div>
 
           <!-- START MULTI SERVER PACKAGE LIST TABLE -->
-          <table class="table panel panel-default" id="multiServerPackageListTable" data-sort-name="packageName" data-pagination="true" data-click-to-select="true" data-maintain-selected="true" data-toolbar="#multiServerPackageListToolbar">
+          <table class="table panel panel-default" id="multiServerPackageListTable" data-sort-name="packageName"
+                 data-pagination="true" data-click-to-select="true" data-maintain-selected="true" data-toolbar="#multiServerPackageListToolbar">
             <thead>
               <tr>
                 <th data-field="state" data-checkbox="true" data-formatter="jenkinsState.stateFormatter"></th>
@@ -168,24 +169,44 @@
       </div>
     </div>
     <!--List / Install / Remove software across build servers END-->
-    <!--   Re-build slaves using managed runtime services START-->
+    <!--   Show / Clean build slaves using managed runtime services START-->
     <div class="jumbotron embedded-panel">
-      <div class="btn btn-default btn-block"  id="managerebootServerButton"  rv-on-click="jenkinsState.setManageRebootSlave">
-        <h2 class="text-center">Re-build slaves using managed runtime services</h2>
+
+      <!-- This the cloud option (rv-hide when cloud data is empty) which boots a snap-shotted image guaranteeing a clean environment -->
+      <div rv-hide="globalState.cloudNodeInfo | isEmptyObject" class="btn btn-default btn-block"
+           id="managerebootServerButton" rv-on-click="jenkinsState.setManageRebootSlave">
+        <h2 class="text-center">Show / Clean build slaves using managed runtime services</h2>
       </div>
+
+      <!-- This the non-cloud option (rv-show when cloud data is empty). It does not guarantee a clean environment -->
+      <div rv-show="globalState.cloudNodeInfo | isEmptyObject" class="btn btn-default btn-block"
+           id="managerebootServerButton" rv-on-click="jenkinsState.setManageRebootSlave">
+        <h2 class="text-center">Show / Synch build slaves using managed runtime services</h2>
+      </div>
+
       <div id="rebootServerPanel" class="jumbotron-button-content" rv-show="jenkinsState.manageManageRebootSlave">
            <div class="alert alert-success">
-               This tool allows a user to re-build the slaves and synch them to the latest managed runtime.
+               If you see inconsistent build or test results, you may want to restore the managed runtime
+               environment of the build server.&nbsp;&nbsp;&nbsp; Before attempting to re-sync the server, you should
+               ensure that the server is not busy.&nbsp;&nbsp;&nbsp; The <b>Jenkins Slave link</b> may be used for this purpose.
            </div>
           <div id="rebootServerToolbar" class="btn-group">
           <a >
-            <button type="button" class="btn btn-primary" id="rebootSync" rv-on-click="jenkinsState.rebuildSync" rv-disabled="jenkinsState.reBuildSlave">
+            <button rv-show="globalState.cloudNodeInfo | isEmptyObject" type="button" class="btn btn-primary"
+                    id="rebootSync" rv-on-click="jenkinsState.rebuildSync" rv-disabled="jenkinsState.reBuildSlave">
+              Sync
+            </button>
+          </a>
+          <a >
+            <button rv-hide="globalState.cloudNodeInfo | isEmptyObject" type="button" class="btn btn-primary"
+                    id="rebootSync" rv-on-click="jenkinsState.rebuildSync" rv-disabled="jenkinsState.reBuildSlave">
               Reboot + Sync
             </button>
           </a>
       </div>
           <!-- START REBUILD SLAVE LIST TABLE -->
-          <table class="table panel panel-default" id="rebootServerListTable" data-single-select="true" data-pagination="false" data-click-to-select="false" data-maintain-selected="true" data-toolbar="#rebootServerToolbar">
+          <table class="table panel panel-default" id="rebootServerListTable" data-single-select="true" data-pagination="false"
+                 data-click-to-select="false" data-maintain-selected="true" data-toolbar="#rebootServerToolbar">
             <thead>
               <tr>
                 <th data-field="state" data-checkbox="true" ></th>

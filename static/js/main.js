@@ -2,6 +2,7 @@ google.load('search', '1');
 
 var globalState = {
     hasInit: false,
+    cloudNodeInfo: [],
 
     jenkinsUrlInit: "",
     localPathForTestResultsInit: "",
@@ -2783,7 +2784,9 @@ function initCallback(data) {
     if (data.status !== "ok") {
         showAlert("Bad response from /init!", data);
     }
+    console.log("In initCallBack, cloudNodeInfo=", data.cloudNodeInfo);
     globalState.hasInit = true;
+    globalState.cloudNodeInfo = data.cloudNodeInfo;
     globalState.jenkinsUrlInit = data.jenkinsUrl;
     globalState.localPathForTestResultsInit = data.localPathForTestResults;
     globalState.pathForTestResultsInit = data.pathForTestResults;
@@ -2824,7 +2827,7 @@ function settingsCallback(data) {
     if (data.status != "ok") {
         showAlert("Bad response from /settings!", data);
     } else {
-        if(globalState.tempJenkinsUrl != $('#url').val()){
+        if (globalState.tempJenkinsUrl != $('#url').val()){
             jenkinsState.nodeNames = [];
             jenkinsState.nodeLabels = [];
             jenkinsState.nodeDetails = [];

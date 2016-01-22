@@ -100,6 +100,8 @@ logdiffBatchTestResults = 0
 totalProjectsSearched = 0                     # Total including single search and top-N search
 totalProjectsBuilt = 0                        # Total including individual and batch
 
+cloudNodeInfo = []
+
 # Main page - just serve up main.html
 @app.route("/autoport/")
 def main():
@@ -117,7 +119,8 @@ def init():
                         configPassword=globals.configPassword,
                         useTextAnalytics=globals.useTextAnalytics,
                         logLevel=globals.logLevel,
-                        gsaConnected=globals.gsaConnected)
+                        gsaConnected=globals.gsaConnected,
+                        cloudNodeInfo=cloudNodeInfo)
 
 def getJenkinsNodes_init():
     nodeNames = []
@@ -2522,8 +2525,8 @@ def synchManagedPackageList():
 @app.route("/autoport/rebuildSlave")
 def rebuildSlave():
     try:
-        logger.debug("In rebuildSlave, serverNodeCSV=%s " % (request.args.get("serverNodeCSV", "")))
         nodes = request.args.get("serverNodeCSV", "")
+        logger.debug("In rebuildSlave, serverNodeCSV=%s" % (nodes))
     except KeyError:
         return json.jsonify(status="failure", error="missing serverNodeCSV argument"), 400
 
@@ -3149,7 +3152,8 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
 def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
     try:
         import rebuildSlaves
-        rebuildSlaves.initial()
+        global cloudNodeInfo
+        cloudNodeInfo = rebuildSlaves.initial()
     except Exception as ex:
         logger.debug("autoportUserInit: rebuildSlaves initial Error: %s", ex)
     if hostname and configUsername and configPassword :
@@ -3159,7 +3163,6 @@ def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
         if jenkinsUrl:
             catalog.connect(hostname, urlparse(jenkinsUrl).hostname, archiveUser=configUsername, archivePassword=configPassword)
         batch.connect(hostname, globals.port, archiveUser=configUsername, archivePassword=configPassword)
-    # XXX catalog needs a disconnect
 
 if __name__ == "__main__":
 
