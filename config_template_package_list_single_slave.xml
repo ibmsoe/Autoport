@@ -137,7 +137,7 @@ totalCsvPackages=${#array[@]}
 
 echo "#### Iterating through the list of packages"
 
-if [ $DISTRIBUTION == "RHEL" ]; then
+if [ $DISTRIBUTION == "RHEL" -o  $DISTRIBUTION == "CentOS" ]; then
 
     installedPkgs="$(rpm -qa --queryformat '%{name} %{version} %{arch}\n')"
     updatePkgs="$(yum -q check-update)"
@@ -283,7 +283,7 @@ if [ $can_continue -ne 0 ]; then
         "UBUNTU")
             sudo apt-get -y --force-yes install wget
         ;;
-        "RHEL")
+        "RHEL"|"CentOS")
             yum -y install wget
         ;;
     esac

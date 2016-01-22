@@ -94,25 +94,15 @@
           </div>
 
           <div class="col-lg-4">
-            <a>
-              <button id="mlRHEL" type="button" class="btn btn-primary" rv-on-click="jenkinsState.listManagedPackages">
-                List RHEL
-              </button>
-            </a>
-            <a>
-              <button id="mlUbuntu" type="button" class="btn btn-primary" rv-on-click="jenkinsState.listManagedPackages">
-                List Ubuntu
-              </button>
-            </a>
-            <a>
-              <button id="mlCentOS" type="button" class="btn btn-primary" rv-on-click="jenkinsState.listManagedPackages">
-                List CentOS
-              </button>
-            </a>
-            <a>
-              <button id="mlAll" type="button" class="btn btn-primary" rv-on-click="jenkinsState.listManagedPackages">
-                List All
-              </button>
+            <span>
+              <select id="buildServersOSes" size="2">
+                  <option rv-each-nodeos="jenkinsState.nodeOSes"  rv-value="nodeos">{nodeos}</option>
+              </select>
+            </span>
+            <a rv-on-click="jenkinsState.listManagedPackages">
+              <button id="managedListBtn" type="button" class="btn btn-primary">
+                List
+               </button>
             </a>
           </div>
         </div>

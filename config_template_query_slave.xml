@@ -78,7 +78,7 @@ import socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 # Does not send packets, just creates a connection to
 # DNS server of Google
-s.connect(( &quot;8.8.8.8&quot;, 80))
+s.connect(( &quot;www.github.com&quot;, 80))
 print s.getsockname()[0]
 s.close
 EOF
