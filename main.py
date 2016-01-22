@@ -192,7 +192,7 @@ def getJenkinsNodeDetails_init():
             elif e.args[0] == 'hostname':
                 logger.warning("No hostname information for node " + node)
             else:
-                logger.warning("Unsupported O/S on node " + node)
+                logger.warning(e.message)
             pass
 
     logger.info("All nodes: " + str(globals.nodeLabels))
@@ -2432,7 +2432,7 @@ def listManagedPackages():
 
     # If no packages in query string parameters then retrieving the packages CSV from ManagedList.json
     if package == "":
-        distroType = distro if distro=="UBUNTU" or distro=="RHEL" else 'All'
+        distroType = distro if distro=="UBUNTU" or distro=="RHEL" or distro=="CentOS" else 'All'
         packageNames = getPackagesCSVFromManagedList(distroType, ml);
     else:
         configXmlFilePath = "./config_template_search_packages_single_slave.xml"
@@ -2688,7 +2688,7 @@ def monitorChefJobs(jobName, sync=False):
             building = False
 
     consoleLog = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/consoleText"
-    log = str(requests.get(consoleLog).text)
+    log = (requests.get(consoleLog).text).encode('utf-8')
     logfile = open(globals.localPathForChefLogs + jobName, 'w')
     logfile.write(log)
     logfile.close()

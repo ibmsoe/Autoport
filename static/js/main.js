@@ -1177,10 +1177,10 @@ var jenkinsState = {
     nodeNames: [],
     nodeLabels: [],
     nodeUbuntu: [],
-    nodeCentOS: [],
     nodeRHEL: [],
     nodeCentOS: [],
     nodeDetails: [],
+    nodeOSes: [],
     jenkinsPanel: false,
     jenkinsSlavePanel: false,
     manageSingleSlavePanel: false,
@@ -1364,57 +1364,38 @@ var jenkinsState = {
 
     serverGroup: "",                   // Takes value All or UBUNTU or RHEL depending on the "List x" button clicked. Variable to be used during Synch operation.
     listManagedPackages: function(ev) {
-        var id = ev.target.id;
+        var id = $("#buildServersOSes").find(":selected").text();
         jenkinsState.selectedMultiSlavePackage = [];
         jenkinsState.serverGroup = "All";
         jenkinsState.managedPackageTableReady = false;
         $("#addToManagedList").addClass("disabled");
         $("#removeFromManagedList").addClass("disabled");
         buildServersToSync = [];
-        if (id === "mlRHEL") {
-            if (jenkinsState.nodeRHEL.length == 0) {
-                showAlert("No RHEL build servers available");
-                return false;
-            } else {
-                jenkinsState.serverGroup = "RHEL";
-                buildServersToSync = jenkinsState.nodeRHEL;
-            }
-        } else if (id === "mlUbuntu") {
-            if (jenkinsState.nodeUbuntu.length == 0) {
-                showAlert("No Ubuntu build servers available");
-                return false;
-            } else {
-                jenkinsState.serverGroup = "UBUNTU";
-                buildServersToSync = jenkinsState.nodeUbuntu;
-            }
-        } else if (id === "mlCentOS") {
-            if (jenkinsState.nodeUbuntu.length == 0) {
-                showAlert("No Centos build servers available");
-                return false;
-            } else {
-                jenkinsState.serverGroup = "CENTOS";
-                buildServersToSync = jenkinsState.nodeCentos;
-            }
-        } else {
-            if (jenkinsState.nodeRHEL.length == 0 && jenkinsState.nodeUbuntu.length == 0 && jenkinsState.nodeCentos.length == 0) {
-                showAlert("No build slaves available");
-                return false;
-            } else {
-                jenkinsState.serverGroup = "All";
-                buildServersToSync = jenkinsState.nodeLabels;
-            }
+        if (id == undefined || id == "") {
+           showAlert("Please select distribution");
+           return false;
         }
-        $("#mlRHEL").addClass("disabled");
-        $("#mlUbuntu").addClass("disabled");
-        $("#mlCentOS").addClass("disabled");
-        $("#mlAll").addClass("disabled");
+        if (id === "RHEL") {
+            jenkinsState.serverGroup = "RHEL";
+            buildServersToSync = jenkinsState.nodeRHEL;
+        } else if (id === "Ubuntu") {
+            jenkinsState.serverGroup = "UBUNTU";
+            buildServersToSync = jenkinsState.nodeUbuntu;
+        } else if (id === "CentOS") {
+            jenkinsState.serverGroup = "CentOS";
+            buildServersToSync = jenkinsState.nodeCentOS;
+        } else {
+            jenkinsState.serverGroup = "All";
+            buildServersToSync = jenkinsState.nodeLabels;
+        }
+        $("#managedListBtn").addClass("disabled");
         jenkinsState.managedPackageTableReady = false;
         $("#addToManagedList").addClass("disabled");
         $("#removeFromManagedList").addClass("disabled");
         jenkinsState.loadingState.managedPackageListLoading = true;
         buildServerJsonObj = [];
-        for(var  buildIndex in  buildServersToSync){
-            var buildServObj = buildServersToSync[buildIndex];
+        for (var i = 0; i<buildServersToSync.length;i++) {
+            var buildServObj = buildServersToSync[i];
             item = {}
             item ["value"] = buildServObj;
             item ["label"] = buildServObj;
@@ -2783,7 +2764,6 @@ function settingsCallback(data) {
             jenkinsState.nodeRHEL = [];
             jenkinsState.nodeCentOS = [];
             jenkinsState.nodeUbuntu = [];
-            jenkinsState.nodeCentOS = [];
             getJenkinsNodesCallback(data);
             getJenkinsNodeDetailsCallback(data);
             showAlert("Updated successfully");
@@ -3074,9 +3054,18 @@ function getJenkinsNodeDetailsCallback(data) {
     if (data.status === "ok") {
         jenkinsState.nodeDetails = data.details;
         jenkinsState.nodeUbuntu = data.ubuntu;
-        jenkinsState.nodeCentOS = data.centos;
         jenkinsState.nodeRHEL = data.rhel;
         jenkinsState.nodeCentOS = data.centos;
+        if(jenkinsState.nodeUbuntu.length > 0) {
+            jenkinsState.nodeOSes = ['Ubuntu'];
+        }
+        if (jenkinsState.nodeRHEL.length > 0){
+            jenkinsState.nodeOSes.push('RHEL');
+        } 
+        if (jenkinsState.nodeCentOS.length > 0){
+            jenkinsState.nodeOSes.push('CentOS');
+        }
+        jenkinsState.nodeOSes.push('ALL')
         console.log("Ubuntu nodes: ", jenkinsState.nodeUbuntu);
         console.log("RHEL nodes: ", jenkinsState.nodeRHEL);
         console.log("CentOS nodes: ", jenkinsState.nodeCentOS);
@@ -3097,6 +3086,11 @@ function updateDropdownsWithNodeDetails(){
     $('#singleJenkinsBuildServers+div>button>span').text('Build Servers');
     $('#singleJenkinsBuildServers+div>button').addClass('btn btn-primary');
 
+    $('#buildServersOSes').multiselect('refresh');
+    $('#buildServersOSes').multiselect('destroy');
+    $('#buildServersOSes').multiselect('deselect', jenkinsState.nodeOSes);
+    $('#buildServersOSes+div>button>span').text('Select Distribution');
+    $('#buildServersOSes+div>button').addClass('btn btn-primary');
 
     $('#singleBuildServers').multiselect('refresh');
     $('#singleBuildServers').multiselect('destroy');
@@ -3190,10 +3184,7 @@ function listManagedPackagesCallback(data) {
     } else {
         showAlert("Error!", data);
     }
-     $("#mlRHEL").removeClass("disabled");
-     $("#mlUbuntu").removeClass("disabled");
-     $("#mlCentOS").removeClass("disabled");
-     $("#mlAll").removeClass("disabled");
+     $("#managedListBtn").removeClass("disabled");
 }
 
 function editManagedListCallback(data) {

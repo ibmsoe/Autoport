@@ -284,7 +284,7 @@ class SharedData:
         extension = self.getPkgExtensions(filename)
 
         # details would hold a string in format of os/os-release
-        # e.g "ubuntu/trusty" or "rhel/7.1"
+        # e.g "ubuntu/trusty" or "rhel/7"
 
         if extension == '.rpm':
             os = details.split("/")[0]

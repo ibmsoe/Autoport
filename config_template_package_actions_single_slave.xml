@@ -61,7 +61,7 @@
 actionSuccess=false
 
 case $DISTRIBUTION in
-    "RHEL")
+    "RHEL"|"CentOS")
         # Concatenate the package name and the version so that we install/remove/update the exact version as shown to the user in the UI.
         # If the PACKAGE_NAME = dos2unix.ppc64 and PACKAGE_VERSION = 3.1-37.el64 , then
         # FULL_PACKAGE_NAME = dos2unix-3.1-37.el64.ppc64 . This is the format used by the yum install, remove and update-to commands.
