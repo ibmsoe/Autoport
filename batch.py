@@ -4,6 +4,7 @@ import re
 import paramiko
 import tempfile
 import ntpath
+import errno
 from log import logger
 from buildAnalyzer import inferBuildSteps
 from stat import ST_SIZE, ST_MTIME
@@ -78,6 +79,9 @@ class Batch:
                     self.ftp_client.get(filename, putdir + "/" + filename)
                     filteredList.append(self.parseBatchFileList(putdir + "/" + filename, "gsa"))
         except IOError as e:
+            # if the directory doesn't exist, return null
+            if e.errno == errno.ENOENT:
+                return filteredList
             assert(False), str(e)
         except AttributeError:
             assert(False), "Connection error to archive storage.  Use settings menu to configure!"
@@ -160,6 +164,9 @@ class Batch:
         except AttributeError:
             assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         except Exception as e:
+            # if the directory doesn't exist, return null
+            if e.errno == errno.ENOENT:
+                return filteredList
             logger.warning("listGSABatchReports: Error %s" % str(e))
             assert(False), str(e)
         return filteredList

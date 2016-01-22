@@ -5,6 +5,7 @@ import os
 import re
 import shutil
 import time
+import errno
 import globals
 from stat import S_ISDIR
 from log import logger
@@ -147,6 +148,9 @@ class Catalog:
                 if filt in item.lower() or filt == "":
                     filteredList.append([item, "gsa"])
         except IOError as e:
+            # if the directory doesn't exist, return null
+            if e.errno == errno.ENOENT:
+                return filteredList
             msg = "listGSAJobResults: " + str(e)
             logger.warning(msg)
             assert(False), msg
