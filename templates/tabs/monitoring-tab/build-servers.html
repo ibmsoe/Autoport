@@ -28,8 +28,8 @@
                 <option rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
               </select>
             </span>
-            <a rv-on-click="jenkinsState.listPackageForSingleSlave">
-              <button id="singleSlaveListBtn" type="button" class="btn btn-primary">
+            <a >
+              <button id="singleSlaveListBtn" type="button" class="btn btn-primary" rv-on-click="jenkinsState.listPackageForSingleSlave">
                 List
                </button>
             </a>
@@ -44,13 +44,13 @@
             <div>Actions taken on the list below apply only to the chosen build server.  The managed package list is not updated. In this way you may customize the runtime environment of a given build server to facilitate a specific porting effort. When you are done, use the install services provided below to restore the managed runtime environment.</div>
           </div>
           <div id="singleServerPackageListToolbar" class="btn-group">
-              <a rv-on-click="jenkinsState.installPackageForSingleSlave">
-                <button type="button" class="btn btn-primary" id="singlePanelInstallBtn">
+              <a >
+                <button type="button" class="btn btn-primary" id="singlePanelInstallBtn" rv-on-click="jenkinsState.installPackageForSingleSlave">
                   Install / Update
                 </button>
               </a>
-              <a rv-on-click="jenkinsState.removePackageForSingleSlave">
-                <button type="button" class="btn btn-primary"  id="singlePanelRemoveBtn">
+              <a >
+                <button type="button" class="btn btn-primary"  id="singlePanelRemoveBtn" rv-on-click="jenkinsState.removePackageForSingleSlave">
                   Remove
                 </button>
               </a>
@@ -99,8 +99,8 @@
                   <option rv-each-nodeos="jenkinsState.nodeOSes"  rv-value="nodeos">{nodeos}</option>
               </select>
             </span>
-            <a rv-on-click="jenkinsState.listManagedPackages">
-              <button id="managedListBtn" type="button" class="btn btn-primary">
+            <a >
+              <button  rv-on-click="jenkinsState.listManagedPackages" id="managedListBtn" type="button" class="btn btn-primary">
                 List
                </button>
             </a>
@@ -135,13 +135,13 @@
           <!-- START MULTIPLE SERVER PACKAGE LIST TABLE -->
           <div id="manageRuntime" >
           <div id="multiServerPackageListToolbar" class="btn-group">
-              <a rv-on-click="jenkinsState.addToManagedList">
-                <button type="button" class="btn btn-primary" id="addToManagedList">
+              <a >
+                <button type="button" class="btn btn-primary" id="addToManagedList" rv-on-click="jenkinsState.addToManagedList">
                   Add
                 </button>
               </a>
-              <a  rv-on-click="jenkinsState.removeFromManagedList">
-                <button id="removeFromManagedList" type="button" class="btn btn-primary">
+              <a >
+                <button id="removeFromManagedList" type="button" class="btn btn-primary" rv-on-click="jenkinsState.removeFromManagedList">
                   Remove
                 </button>
               </a>
@@ -168,5 +168,39 @@
       </div>
     </div>
     <!--List / Install / Remove software across build servers END-->
+    <!--   Re-build slaves using managed runtime services START-->
+    <div class="jumbotron embedded-panel">
+      <div class="btn btn-default btn-block"  id="managerebootServerButton"  rv-on-click="jenkinsState.setManageRebootSlave">
+        <h2 class="text-center">Re-build slaves using managed runtime services</h2>
+      </div>
+      <div id="rebootServerPanel" class="jumbotron-button-content" rv-show="jenkinsState.manageManageRebootSlave">
+           <div class="alert alert-success">
+               This tool allows a user to re-build the slaves and synch them to the latest managed runtime.
+           </div>
+          <div id="rebootServerToolbar" class="btn-group">
+          <a >
+            <button type="button" class="btn btn-primary" id="rebootSync" rv-on-click="jenkinsState.rebuildSync" rv-disabled="jenkinsState.reBuildSlave">
+              Reboot + Sync
+            </button>
+          </a>
+      </div>
+          <!-- START REBUILD SLAVE LIST TABLE -->
+          <table class="table panel panel-default" id="rebootServerListTable" data-single-select="true" data-pagination="false" data-click-to-select="false" data-maintain-selected="true" data-toolbar="#rebootServerToolbar">
+            <thead>
+              <tr>
+                <th data-field="state" data-checkbox="true" ></th>
+                <th data-field="nodelabel">Build Server</th>
+                <th data-field="hostname">Hostname</th>
+                <th data-field="ipaddress">IP Address</th>
+                <th data-field="os">OS</th>
+                <th data-field="status">Status</th>
+                <th data-field="jenkinsSlaveLink" >Jenkins slave link</th>
+              </tr>
+            </thead>
+          </table>
+          <!-- END REBUILD SLAVE PACKAGE LIST TABLE -->
+          </div>
+    </div>
+    <!--   Re-boot slaves using managed runtime services END-->
   </div>
 </div>

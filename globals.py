@@ -150,3 +150,14 @@ def init():
     jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
     localTarRepoLocation = '/var/opt/autoport/'
     gsaConnected = False
+
+    # used for rebuilding jenkins slaves
+    global os_username
+    global os_password
+    global os_tenant_name
+    global os_auth_url
+
+    os_username = configOptions['os_username']
+    os_password = configOptions['os_password']
+    os_tenant_name = configOptions['os_tenant_name']
+    os_auth_url = configOptions['os_auth_url']

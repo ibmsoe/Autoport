@@ -2518,6 +2518,30 @@ def synchManagedPackageList():
     return json.jsonify(status="ok",
            message= str(len(jobs)) + " installation job(s) initiated in the background...", jobList = jobNode)
 
+# Rebuild a slave
+@app.route("/autoport/rebuildSlave")
+def rebuildSlave():
+    try:
+        logger.debug("In rebuildSlave, serverNodeCSV=%s " % (request.args.get("serverNodeCSV", "")))
+        nodes = request.args.get("serverNodeCSV", "")
+    except KeyError:
+        return json.jsonify(status="failure", error="missing serverNodeCSV argument"), 400
+
+    if nodes == "":
+        return json.jsonify(status="failure", error="No node selected"), 400
+
+    nodeIP = ""
+    for node in globals.nodeDetails:
+        if node['nodelabel'] == nodes:
+            nodeIP = node['ipaddress']
+            logger.debug("rebuildSlave: %s",nodeIP)
+            try:
+                import rebuildSlaves
+                rebuildSlaves.rebuildServer(nodeIP)
+            except Exception as ex:
+                logger.debug("rebuildSlave: Error: %s", ex)
+    return json.jsonify(status="ok", node=nodeIP)
+
 def createSynchJobs(nodes):
     '''
     This routine is responsible to get appropriate chef-attributes
@@ -3123,6 +3147,11 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
         chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
 
 def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
+    try:
+        import rebuildSlaves
+        rebuildSlaves.initial()
+    except Exception as ex:
+        logger.debug("autoportUserInit: rebuildSlaves initial Error: %s", ex)
     if hostname and configUsername and configPassword :
         if globals.gsaConnected:
             catalog.close()

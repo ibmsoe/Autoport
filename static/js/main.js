@@ -1185,11 +1185,13 @@ var jenkinsState = {
     jenkinsSlavePanel: false,
     manageSingleSlavePanel: false,
     manageMultipleSlavePanel: false,
+    manageManageRebootSlave: false,
     manageManagePanelFilter: false,
     uploadPackagePanel: false,
     showPackageTypeSelector: false,
     showDebSelector: false,
     showRpmSelector: false,
+    reBuildSlave: false,
     setJenkinsPanel: function(ev) {
         jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
     },
@@ -1201,6 +1203,17 @@ var jenkinsState = {
     },
     setManageMultipleSlavePanel: function(ev) {
         jenkinsState.manageMultipleSlavePanel = (jenkinsState.manageMultipleSlavePanel) ? false : true;
+    },
+    setManageRebootSlave: function(ev) {
+        jenkinsState.manageManageRebootSlave = (jenkinsState.manageManageRebootSlave) ? false : true;
+        if (jenkinsState.manageManageRebootSlave) {
+            //var nodeDetails = jenkinsState.nodeDetails;
+            for(var i=0; i<jenkinsState.nodeDetails.length; i++){
+                jenkinsState.nodeDetails[i]['os'] = jenkinsState.nodeDetails[i]['distro'] + ' ' + jenkinsState.nodeDetails[i]['rel'] + ' ' + jenkinsState.nodeDetails[i]['arch'];
+                jenkinsState.nodeDetails[i]['jenkinsSlaveLink'] = '<a target="_blank" href="' + globalState.jenkinsUrl + '/computer/' + jenkinsState.nodeDetails[i]['hostname'] +'/">Click here</a>';
+            }
+            $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+        }
     },
     setUploadPackagePanel: function(ev) {
         jenkinsState.uploadPackagePanel = (jenkinsState.uploadPackagePanel) ? false : true;
@@ -1356,6 +1369,60 @@ var jenkinsState = {
     },
     removePackageForSingleSlave: function(ev) {
          jenkinsState.performActionOnSingleSlave('remove');
+    },
+    rebuildSync: function(ev) {
+        console.log("rebootSync: Inside rebootSync");
+        var selectedBuildServer = $('#rebootServerListTable').bootstrapTable('getSelections');
+        var selectedBuildServerCsv = "";
+        jenkinsState.reBuildSlave = true;
+        $(selectedBuildServer).each(function(index, brand){
+            selectedBuildServerCsv = $(this)[0].nodelabel;
+            var nodeindex = jenkinsState.nodeLabels.indexOf($(this)[0].nodelabel);
+            jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span><span class='text-danger'>Disconnected</span>";
+            $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+            // Rebuild each slave
+            $.getJSON("rebuildSlave", { serverNodeCSV: selectedBuildServerCsv }, function(data){
+                    if (data.status === "ok") {
+                        jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span><span class='text-warning'>Syncing</span>";
+                        $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+                        console.log("Start syncing..",  jenkinsState.nodeDetails[nodeindex].nodelabel);
+                        // On completion of Rebuild, Sync Managed packages on the newly built slave..
+                        // so that build slave is at the latest Managed version
+                        $.getJSON("synchManagedPackageList", { serverNodeCSV: jenkinsState.nodeDetails[nodeindex].nodelabel },
+                                 function(data){
+                                    if (data.status === "ok") {
+                                        var pollObj = new pollingState();
+                                        if (data.jobList.length > 0){
+                                            for (var i=0; i< data.jobList.length; i++) {
+                                                var dataJob = data.jobList[i];
+                                                pollObj.setData(dataJob);
+                                                // Poll for sync status
+                                                setTimeout(
+                                                    pollObj.poll(
+                                                        function(){
+                                                                jenkinsState.reBuildSlave = false;
+                                                                jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
+                                                                $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+                                                   })
+                                                  ,5000);
+                                            }
+                                        }
+                                    } else {
+                                        showAlert("Error!", data);
+                              }
+                        })
+                        .fail(function(){
+                            jenkinsState.reBuildSlave = false;
+                            jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
+                        });
+                    }
+                },nodeindex)
+                .fail(function(data){});
+        });
+        if (selectedBuildServerCsv == undefined || selectedBuildServerCsv == "") {
+            showAlert("Please select build server!");
+            return false;
+        }
     },
     managedPackageTableReady: false,   // Draw managed package table if true
     managedPackageList: [],            // Managed Package list
@@ -3203,6 +3270,7 @@ var pollingState =  function(){
    var timeInterval = 60000; // polling interval in milliseconds
    var pollAttempts = 20;    // # of polling attempts
    var pollmessage = "";
+   var pollstatus = false;
    return {
        // function setData sets the data that needs to be passed to the server during polling
        setData: function(data) {
@@ -3221,14 +3289,14 @@ var pollingState =  function(){
            showAlert(this.pollmessage);
        },
        // function poll: polls server using ajax
-       poll: function() {
+       poll: function(cb) {
            console.log("polling....."+JSON.stringify(dataJob));
            if (pollCounter < pollAttempts) {
                if (dataJob.jobName != undefined) {
                    jenkinsState.loadingState.managedPackageActionLoading = true;
                    $("#syncManagedPackageButton").addClass("disabled");
 
-                   $.getJSON("monitorJob", dataJob, notificationCallback(this)).fail(notificationCallback(this));
+                   $.getJSON("monitorJob", dataJob, notificationCallback(this,cb)).fail(notificationCallback(this,cb));
                    pollCounter++;
                }
            }
@@ -3246,12 +3314,12 @@ var pollingState =  function(){
     };
 };
 
-function notificationCallback(obj){
+function notificationCallback(obj, cb){
     var title = "", message = "",type="", classcss="";
 
     return function(data) {
         if (data.jobstatus) {
-            title =data.jobstatus;
+            title = (data.jobstatus) ? data.jobstatus : '';
             if (data.jobstatus == "SUCCESS") {
                 type = "success";
                 classcss = "text-success";
@@ -3263,8 +3331,9 @@ function notificationCallback(obj){
                 message= "<br/><span class='"+classcss+"'>Sync completed with few errors on  " +
                 data.nodeLabel+" .Please check the <a href='" +
                 data.logUrl+"' target='_blank'  style='text-decoration: underline' >log</a> for details"+"</span>";
-
             }
+            if(cb!= undefined)
+                cb();
             /*$.notify({
                  title: "<strong>"+title+"</strong> ",
                  message: message
@@ -4068,6 +4137,9 @@ $(document).ready(function() {
     });
     // Initializes an empty package list table on the Managed Slave panel
     $('#multiServerPackageListTable').bootstrapTable({
+        data: []
+    });
+    $('#rebootServerListTable').bootstrapTable({
         data: []
     });
     $('#multiServerPackageListTable').on('check.bs.table', function (e, row) {
