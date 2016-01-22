@@ -11,7 +11,7 @@ when 'ubuntu'
     ]
   end
   opt = '--force-yes'
-when 'redhat'
+when 'redhat', 'centos'
   protobuf_pkgs = [
     'protobuf',
     'protobuf-devel',

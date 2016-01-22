@@ -3,7 +3,7 @@
 case node['platform']
 when 'ubuntu'
   opt = '--force-yes'
-when 'redhat'
+when 'redhat', 'centos'
   opt = ''
 end
 

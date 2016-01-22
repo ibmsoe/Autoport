@@ -9,7 +9,7 @@ include_recipe 'buildServer::java'
 distro = node['platform']
 src_install = node['buildServer']['gradle']['source_install']
 
-if distro == 'redhat' || src_install == 'true'
+if [ 'redhat', 'centos' ].include?(distro) || src_install == 'true'
   include_recipe 'buildServer::gradle_binary'
 else
   opt = ''

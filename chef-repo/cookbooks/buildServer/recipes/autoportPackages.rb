@@ -6,7 +6,7 @@ case node['platform']
 when 'ubuntu'
   pkgs = node['buildServer']['debs']
   opt = '--force-yes'
-when 'redhat'
+when 'redhat', 'centos'
   pkgs = node['buildServer']['rpms']
   opt = ''
 end

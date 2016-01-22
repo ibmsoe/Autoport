@@ -8,7 +8,7 @@ src_install = node['buildServer']['scala']['source_install']
 opt = ''
 opt = '--force-yes' if distro == 'ubuntu'
 
-if (arch == 'ppc64le' && distro == 'redhat') || src_install == 'true'
+if (arch == 'ppc64le' && [ 'redhat', 'centos' ].include?(distro)) || src_install == 'true'
   include_recipe 'buildServer::scala_binary'
 else
   package 'scala' do

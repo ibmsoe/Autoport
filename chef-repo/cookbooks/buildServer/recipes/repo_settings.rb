@@ -9,6 +9,9 @@ case node_os
 when 'ubuntu'
   repo_file = "#{repo_name}.list"
   file_path = '/etc/apt/sources.list.d'
+when 'centos'
+  repo_file = "#{repo_name}.repo"
+  file_path = '/etc/yum.repos.d'
 when 'redhat'
   repo_file = "#{repo_name}.repo"
   file_path = '/etc/yum.repos.d'

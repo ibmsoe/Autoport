@@ -28,7 +28,7 @@ case node['platform']
   when 'ubuntu'
     record = "YAML-Tiny,#{yt_version},perl_modules,libyaml-tiny-perl,\
 #{arch},#{yt_ext},YAML-Tiny-#{yt_version}#{yt_ext}"
-  when 'redhat'
+  when 'redhat', 'centos'
     record = "YAML-Tiny,#{yt_version},perl_modules,perl-yaml-tiny,\
 #{arch},#{yt_ext},YAML-Tiny-#{yt_version}#{yt_ext}"
 end

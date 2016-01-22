@@ -25,7 +25,7 @@ when 'ubuntu'
     end
   end
   opt = '--force-yes'
-when 'redhat'
+when 'redhat', 'centos'
   if version_arr.kind_of?(Array) and version_arr.any?
     version_arr.each do |version|
       java_packages[version] = {
