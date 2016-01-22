@@ -3,5 +3,6 @@
 
 module Resolver
   Chef.set_resource_priority_array(:package, [ Chef::Resource::YumPackage ], platform: 'redhat')
+  Chef.set_resource_priority_array(:package, [ Chef::Resource::YumPackage ], platform: 'centos')
   Chef.set_resource_priority_array(:package, [ Chef::Resource::AptPackage ], platform: 'ubuntu')
 end

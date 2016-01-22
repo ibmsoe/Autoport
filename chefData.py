@@ -63,7 +63,7 @@ class ChefData:
                     for pkg in runtime['autoportPackages']:
                         if distro in ('UBUNTU', 'Debian'):
                             key = 'debs'
-                        elif distro in ('RHEL', 'Fedora', 'openSUSE', 'AIX'):
+                        elif distro in ('RHEL', 'Fedora', 'openSUSE', 'AIX', 'CentOS'):
                             key = 'rpms'
                         pkgKey = pkg['name']
                         numberOfInstalls = numberOfInstalls + 1

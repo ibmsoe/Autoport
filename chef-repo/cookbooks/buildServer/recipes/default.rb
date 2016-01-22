@@ -17,7 +17,7 @@ include_recipe 'buildServer::gradle_binary'
 include_recipe 'buildServer::perl'
 include_recipe 'buildServer::strict-perl'
 case node['platform']
-  when 'redhat'
+  when 'redhat', 'centos'
     include_recipe 'buildServer::module-install'
     include_recipe 'buildServer::test-strict'
     include_recipe 'buildServer::yaml-tiny'

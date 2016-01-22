@@ -28,7 +28,7 @@ case node['platform']
   when 'ubuntu'
     record = "Test-Strict,#{ts_version},perl_modules,libtest-strict-perl,\
 #{arch},#{ts_ext},Test-Strict-#{ts_version}#{ts_ext}"
-  when 'redhat'
+  when 'redhat', 'centos'
     record = "Test-Strict,#{ts_version},perl_modules,perl-test-strict,\
 #{arch},#{ts_ext},Test-Strict-#{ts_version}#{ts_ext}"
 end

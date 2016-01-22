@@ -13,7 +13,7 @@ case node['platform']
            'File-Remove' => 'libfile-remove-perl',
            'Module-Install' => 'libmodule-install-perl'
           }
-  when 'redhat'
+  when 'redhat', 'centos'
      tag = {
            'File-Remove' => 'perl-File-Remove',
            'Module-Install' => 'perl-Module-Install'

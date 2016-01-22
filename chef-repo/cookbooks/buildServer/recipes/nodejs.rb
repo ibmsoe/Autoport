@@ -13,7 +13,7 @@ else
   when 'ubuntu'
     setup_file = 'setup_deb'
     opt = '--force-yes'
-  when 'redhat'
+  when 'redhat', 'centos'
     setup_file = 'setup_rpm'
     opt = ''
   end

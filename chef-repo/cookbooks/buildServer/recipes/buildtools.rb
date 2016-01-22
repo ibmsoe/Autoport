@@ -8,7 +8,7 @@ if node['kernel']['machine'] == 'x86_64'
     package 'build-essential' do
       ignore_failure true
     end
-  when 'redhat'
+  when 'redhat', 'centos'
     yum_cmd = 'yum groupinstall'
     execute 'Installing development tools' do
       command "#{yum_cmd} 'Development Tools' -y"
