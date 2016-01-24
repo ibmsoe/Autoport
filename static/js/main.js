@@ -2991,6 +2991,8 @@ function parseBatchFileCallback(data, batch_obj){
             $('<td></td>').html('<span>Environment Variable </span><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Environment variables separated by blanks or newlines applied as-is" ></span>').appendTo(envCommandRow);
             $('<td></td>').html('<textarea style="width:350px;height:60px" value="'+package.build.selectedEnv+'" onBlur="updateEnvVariable(this.value,\''+index+'\')">'+package.build.selectedEnv+'</textarea>').appendTo(envCommandRow);
 
+            index = index + 1
+
             package.down = function (ev) {
                 var i = data.results.packages.indexOf(package);
                 if (i < data.results.packages.length - 1) {
