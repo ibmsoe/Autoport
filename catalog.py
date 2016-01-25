@@ -90,33 +90,38 @@ class Catalog:
             assert(False), msg
 
         for jobDesc in jobs:
-             job = jobDesc[0]
-             repo = jobDesc[1]
+            try:
+                job = jobDesc[0]
+                repo = jobDesc[1]
 
-             # Validate that the directory looks like a test result
-             try:
-                 nodeLabel = resultPattern.match(job).group(3)
-                 pkgName = resultPattern.match(job).group(4)
-                 pkgVer = resultPattern.match(job).group(5)
-                 date = time.asctime(time.strptime(resultPattern.match(job).group(6),"%Y-%m-%d-h%H-m%M-s%S"))
-             except AttributeError:
-                 continue
+                # Validate that the directory looks like a test result
+                try:
+                    nodeLabel = resultPattern.match(job).group(3)
+                    pkgName = resultPattern.match(job).group(4)
+                    pkgVer = resultPattern.match(job).group(5)
+                    date = time.asctime(time.strptime(resultPattern.match(job).group(6),"%Y-%m-%d-h%H-m%M-s%S"))
+                except AttributeError:
+                    continue
 
-             # The node may not be known to this autoport instance.  Jobs
-             # are aggregated in gsa.  Jenkin build nodes may be retired
-             if nodeLabel in globals.nodeLabels:
-                 i = globals.nodeLabels.index(nodeLabel)
-                 distro = globals.nodeOSes[i]
-             else:
-                 distro = nodeLabel
+                # The node may not be known to this autoport instance.  Jobs
+                # are aggregated in gsa.  Jenkin build nodes may be retired
+                if nodeLabel in globals.nodeLabels:
+                    i = globals.nodeLabels.index(nodeLabel)
+                    distro = globals.nodeOSes[i]
+                else:
+                    distro = nodeLabel
 
-             results.append({'fullName': job,
+                results.append({'fullName': job,
                              'name': pkgName,
                              'version': pkgVer,
                              'os': distro,
                              'repository': repo,
                              'completed': date,
                              'server': nodeLabel})
+            except IndexError as e:
+                # Log and propagate the error with message to be displayed on UI.
+                logger.warning('In listJobResults: %s' % str(e))
+                raise IndexError, "Cannot display the list, please try again."
         logger.debug("Leaving listJobResults: results[0..3]=%s" % str(results[:3]))
         return results
 
@@ -308,11 +313,13 @@ class Catalog:
 
             # Flush removed folders from list.
             for i in file_position_cleared:
-                logger.info("Clearing directory: " + self.__tmpdirs[i])
-                del self.__tmpdirs[i]
+                logger.info("Clearing directory: " + self.__tmpdirs[0])
+                del self.__tmpdirs[0]
 
         except ValueError as ex:
             logger.warning("CleanTmp: " + str(ex))
+        except IndexError as indexError:
+            logger.warning("CleanTmp: " + str(indexError))
 
     def newTmpDirectoryAdded(self, dirname = None):
         if dirname:
