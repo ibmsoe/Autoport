@@ -163,10 +163,11 @@ class Batch:
                         self.catalog.cleanTmp()
         except AttributeError:
             assert(False), "Connection error to archive storage.  Use settings menu to configure!"
-        except Exception as e:
+        except IOError as e:
             # if the directory doesn't exist, return null
             if e.errno == errno.ENOENT:
                 return filteredList
+        except Exception as e:
             logger.warning("listGSABatchReports: Error %s" % str(e))
             assert(False), str(e)
         return filteredList
@@ -198,10 +199,19 @@ class Batch:
     # TODO - Give the user a popup to confirm overwrite
     def archiveBatchFile(self, filename):
         try:
-            self.ftp_client.chdir(globals.pathForBatchFiles)
-            self.ftp_client.put(filename, ntpath.basename(filename))
+            self.ftp_client.stat(globals.pathForBatchFiles)
         except AttributeError:
             return {"error": "Connection error to archive storage.  Use settings menu to configure!" }
+        except IOError as e:
+            if e.errno == errno.ENOENT:
+                try:
+                    self.ftp_client.mkdir(globals.pathForBatchFiles)
+                except:
+                    return {"error": "Could not mkdir %s on archive storage " % (globals.pathForBatchFiles)  }
+
+        try:
+            self.ftp_client.chdir(globals.pathForBatchFiles)
+            self.ftp_client.put(filename, ntpath.basename(filename))
         except:
             return {"error": "Could not archive batch file " + filename }
 
