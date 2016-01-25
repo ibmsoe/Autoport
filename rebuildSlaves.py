@@ -5,9 +5,9 @@ import globals
 from novaclient import client as nvclient
 #from log import logger
 import json
+from urlparse import urlparse
 
 nodes_info_file = './data/config/nodes_info.json'
-floating_ip_file = './data/floating_ip.data' # This file contains the floating ip address of the jenkins master. Created atcluster is created.
 
 def rebuildServer(ip):
     with open(nodes_info_file,'r') as f:
@@ -36,9 +36,7 @@ def getstackIdbyIp(nova,ip):
     return ""
 
 def getfloatingIp():
-    with open(floating_ip_file,'r') as f:
-        ip = f.read().rstrip('\n').rstrip()
-        f.close()
+    ip = urlparse(globals.jenkinsUrl).hostname
     return ip
 
 def getinstancesbyStackId(nova,stack_id):
