@@ -71,6 +71,7 @@ def initial():
     return nodes_info
 
 if __name__ == "__main__":
+    globals.init()
     nodes_info = initial()
 #    createSnapshot('192.168.1.213')
 #    rebuildServer('192.168.1.110')
