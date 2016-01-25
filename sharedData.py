@@ -108,7 +108,7 @@ class SharedData:
         self.__localDataDir = globals.localPathForConfig
         self.__localPackageDir = globals.localPathForPackages
         self.__localHostName = globals.localHostName
-        self.__userName = userName 
+        self.__userName = userName
 
         logger.info("Connecting to jenkins master " + jenkinsHost)
 
@@ -247,6 +247,15 @@ class SharedData:
         except Exception as e:
             assert(False), str(e)
 
+    def removeRemoteFile(self, remotePath, filename):
+        # Delete file from remote path on Jenkins master.
+        try:
+            remotePath = os.path.join(remotePath, filename)
+            self.__jenkinsFtpClient.remove(remotePath)
+        except Exception as e:
+            logger.debug("removeRemoteFile: Error %s" % str(e))
+            assert(False), str(e)
+
     def executeSharedCommand(self, command):
         # Execute remote commands on Jenkins Master to manipulate shared data
         stderr = ''
@@ -376,6 +385,9 @@ class SharedData:
         # existing repository.
         exit_status, stderr = self.executeSharedCommand(command)
         if exit_status:
+            # Removing the file from remotePath, since there
+            # are issues adding file to the repository.
+            self.removeRemoteFile(remotePath, file.filename)
             return stderr
 
     def uploadChefData(self):

@@ -1242,11 +1242,17 @@ var jenkinsState = {
         }
     },
     clearPackage: function(){
+        $("#debSelector").multiselect("clearSelection");
+        $("#debSelector").multiselect('refresh');
+        $("#rpmSelector").multiselect("clearSelection");
+        $("#rpmSelector").multiselect('refresh');
+        $("#packageTypeOnPackageUpload").multiselect("clearSelection");
+        $("#packageTypeOnPackageUpload").multiselect('refresh');
         jenkinsState.showPackageTypeSelector = false;
         jenkinsState.showDebSelector = false
         jenkinsState.showRpmSelector = false;
+        $("#packageFile").val('');
         $("#uploadPackageName").val('');
-        $('#packageFile').val('');
     },
     loadingState: {
         packageListLoading: false,
@@ -2863,11 +2869,7 @@ function uploadBatchFileCallback(data) {
 
 function uploadPackageCallback(data) {
     jenkinsState.loadingState.packageUploadLoading = false;
-    $("#uploadPackageName").val('');
-    jenkinsState.showPackageTypeSelector = false;
-    jenkinsState.showDebSelector = false;
-    jenkinsState.showRpmSelector = false;
-    $("#packageTypeOnPackageUpload option").multiselect("clearSelection");
+    jenkinsState.clearPackage();
     console.log("In uploadPackageCallback");
     if (data.status !== "ok") {
         showAlert("", data);
@@ -3133,7 +3135,7 @@ function getJenkinsNodeDetailsCallback(data) {
         }
         if (jenkinsState.nodeRHEL.length > 0){
             jenkinsState.nodeOSes.push('RHEL');
-        } 
+        }
         if (jenkinsState.nodeCentOS.length > 0){
             jenkinsState.nodeOSes.push('CentOS');
         }
