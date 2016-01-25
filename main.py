@@ -43,6 +43,7 @@ from github import Github
 from cache import Cache
 from requests.exceptions import MissingSchema
 from project import Project
+from flask.ext.compress import Compress
 
 # Constants
 maxResults = 25
@@ -58,7 +59,7 @@ resParser = ResultParser()
 
 # Initialize web application framework
 app = Flask(__name__, static_url_path='/autoport')
-
+Compress(app)
 # Be sure to update project.py, batch.py, and catalog.py also
 #
 # job result sample "hostname.181259.x86-ubuntu-14.04.junit.current.2015-04-24-h12-m23-s15/"
