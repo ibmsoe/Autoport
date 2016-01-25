@@ -22,6 +22,8 @@ Install [pip](https://pip.pypa.io/en/latest/installing.html) and then run these 
     pip install threadpool
     pip install diff-match-patch
     pip install PyYaml
+    pip install flask-compress
+    pip install novaclient
 
 Setup
 ========
