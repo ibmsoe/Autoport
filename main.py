@@ -406,6 +406,8 @@ def search():
     isFirst = True
     localMaxResults = maxResults
 
+    logger.debug('In search, query="%s"' % (q))
+
     try:
         q = "fork:true " + query
         repos = globals.github.search_repositories(q, **searchArgs)
@@ -413,7 +415,9 @@ def search():
             numResults = repos.totalCount
         except:
             numResults = 0
-        logger.debug('In search, query="%s", numResults=%d' % (q, numResults))
+
+        logger.debug('search: query="%s", numResults=%d' % (q, numResults))
+
         if numResults == 0:
             q = query.strip().split("/")
             if len(q) == 1 or q[1] == "":       # if '/' not present or last character in string
@@ -482,10 +486,13 @@ def search():
 # Detail - returns a JSON file with detailed information about the repo
 @app.route("/autoport/detail/<int:id>")
 def detail(id, repo=None):
+
     panel = request.args.get("panel", "")
     version = request.args.get("version", "")
     if panel == "":
         return json.jsonify(status="failure", error="missing panel"), 400
+
+    logger.debug('In detail, panel=%s, version=%s' % (panel, version))
 
     # Get the repo if it wasn't passed in (from Search auto picking one)
     if repo is None:
@@ -494,8 +501,10 @@ def detail(id, repo=None):
         except ValueError:
             return json.jsonify(status="failure", error="bad id"), 400
         repo = globals.cache.getRepo(id)
+
     # Get language data
     languages = globals.cache.getLang(repo)
+
     # Transform so it's ready to graph on client side
     colorDataFile = open('language_colors.json')
     colorData = json.load(colorDataFile)
@@ -544,6 +553,7 @@ def detail(id, repo=None):
         "tags": tags,
         "useVersion": useVersion
     }
+
     # Send
     return json.jsonify(status="ok", repo=repoData, type="detail", panel=panel)
 
@@ -581,7 +591,9 @@ def search_repositories():
     versiontag = request.args.get("version", "")
     if not versiontag:
         versiontag = "current"
-    logger.debug('Search repository: query=' + str(q) + " version="+ str(versiontag))
+
+    logger.debug('In search_repositories, query=' + str(q) + " version="+ str(versiontag))
+
     # AutoPort parameters
     limit = int(request.args.get("limit", "25"))
     panel = request.args.get("panel", "")
@@ -1305,7 +1317,7 @@ def moveArtifacts(jobName, localDir, moverCv=None):
             checkQueueUrl = globals.jenkinsUrl + "/job/" + jobName + "/api/json"
             queued = True
 
-            count = 0;
+            count = 0
             while queued and count < 20:
                 logger.debug("moveArtifacts: sleep 10 build is queued - not started")
                 sleep(10)
@@ -3154,7 +3166,7 @@ def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
     try:
         import rebuildSlaves
         global cloudNodeInfo
-        cloudNodeInfo = rebuildSlaves.initial()
+        cloudNodeInfo = rebuildSlaves.cloudInit()
     except Exception as ex:
         logger.debug("autoportUserInit: rebuildSlaves initial Error: %s", ex)
     if hostname and configUsername and configPassword :
