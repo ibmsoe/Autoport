@@ -406,10 +406,9 @@ def search():
     isFirst = True
     localMaxResults = maxResults
 
-    logger.debug('In search, query="%s"' % (q))
-
     try:
         q = "fork:true " + query
+        logger.debug('In search, query="%s", searchArgs=%s' % (q, str(searchArgs)))
         repos = globals.github.search_repositories(q, **searchArgs)
         try:
             numResults = repos.totalCount
