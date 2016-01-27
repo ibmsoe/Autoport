@@ -438,7 +438,14 @@ class Batch:
             try:
                 selectedBuild = package['build']['selectedBuild']
             except KeyError:
-                package['build'] = inferBuildSteps(globals.cache.getDir(repo), repo)
+                buildInfo = inferBuildSteps(globals.cache.getDir(repo), repo)
+                package['build'] = {}
+                if buildInfo:
+                    package['build']['artifacts'] = buildInfo['artifacts']
+                    package['build']['selectedBuild'] = buildInfo['selectedBuild']
+                    package['build']['selectedEnv'] = buildInfo['selectedEnv']
+                    package['build']['selectedTest'] = buildInfo['selectedTest']
+                    package['build']['selectedInstall'] = buildInfo['selectedInstall']
 
             try:
                 selectedBuild = package['build']['selectedBuild']

@@ -557,7 +557,6 @@ def detail(id, repo=None):
     return json.jsonify(status="ok", repo=repoData, type="detail", panel=panel)
 
 
-
 # This function recomputes the search criteria for multi-project search
 def changeQuery(q, key, newval):
     newq = []
@@ -721,6 +720,8 @@ def uploadBatchFile():
     except KeyError:
         return json.jsonify(status="failure", error="missing file"), 404
 
+    logger.debug("In uploadBatchFile, name=%s" % name)
+
     if not os.path.exists(globals.localPathForBatchFiles):
         os.makedirs(globals.localPathForBatchFiles)
 
@@ -738,7 +739,7 @@ def uploadBatchFile():
         f.write(fileStr)
         f.close()
     except Exception as ex:
-        print "Error: ", str(ex)
+        logger.debug("uploadBatchFile: 1 Error=%s" % str(ex))
 
     # Open Batch details file and update the owner to Logged in GSA user or Anonymous.
     batch_data_file, batch_detail_file = None, None
@@ -751,7 +752,7 @@ def uploadBatchFile():
             batch_detail_file = open(openPath, 'w')
             batch_detail_file.write(json.dumps(batch_info, indent=4, sort_keys=True))
     except Exception as ex:
-        print "Error: ", str(ex)
+        logger.debug("uploadBatchFile: 2 Error=%s" % str(ex))
     finally:
         # Close the files if the were opened in try block
         if isinstance(batch_data_file, file):
@@ -759,31 +760,6 @@ def uploadBatchFile():
 
         if isinstance(batch_detail_file, file):
             batch_detail_file.close()
-
-    # We don't want to automatically be uploading to remote location, this code needs
-    # to be moved into the batch table as an action for each individual batch file
-    '''
-    # Copy batch file to a predetermined spot in a shared file system or external object storage
-    # This portion of code requires paramiko installed.
-    port = 22
-    localpath = os.getcwd() + "/data/batch_files/" + name
-
-    # Unfortunately, this will not create a folder that is not already in the gsa.
-    # Having stfp trying to create a folder with the same name everytime does not work either.
-    remotepath = globals.pathForBatchFiles + name
-
-    transport = None
-    try:
-        transport = paramiko.Transport((globals.hostname, port))
-        transport.connect(username=globals.configUsername, password=globals.configPassword)
-    except paramiko.AuthenticationException:
-        return json.jsonify(status="failure", error="Authentication Failed")
-
-    sftp = paramiko.SFTPClient.from_transport(transport)
-    sftp.put(localpath, remotepath)
-    sftp.close()
-    transport.close()
-    '''
 
     global createBatchFiles
     createBatchFiles += 1
@@ -816,10 +792,12 @@ def updateBatchFile():
     except KeyError:
         return json.jsonify(status="failure", error="missing file data"), 404
 
+    logger.debug("In updateBatchFile, fileStr=%s" % str(fileStr))
+
     try:
         batch.updateBatchFile(openPath, fileStr, location)
     except Exception as e:
-        logger.debug("UpdateBatchFile : error = %s," %str(e))
+        logger.debug("updateBatchFile: Error=%s" % str(e))
         return json.jsonify(status="failure", error=str(e)), 400
 
     return json.jsonify(status="ok")
@@ -1326,7 +1304,7 @@ def moveArtifacts(jobName, localDir, moverCv=None):
                     inQueue = projectInfo['inQueue']
                 # if it's not in the queue and not building something went wrong
                 except ValueError:
-                    logger.debug("moveArtifacts: project failed to start building/queuing" + jobName)
+                    logger.debug("moveArtifacts: project failed to start building/queueing %s" % jobName)
                 count += 1
             if count == 20:
                 return outDir
@@ -1749,7 +1727,7 @@ def listBatchFiles(repositoryType):
             return json.jsonify(status="failure", error="Invalid repository type"), 400
         return json.jsonify(status="ok", results=batch.listBatchFiles(repositoryType, filt.lower()))
     except Exception as e:
-        print e
+        logger.debug("listBatchFiles: Error=%s" % str(e))
         return json.jsonify(status="failure", error=str(e)), 401
 
 # List available batch Results
@@ -1764,7 +1742,7 @@ def listBatchReports(repositoryType):
             return json.jsonify(status="failure", error="Invalid repository type"), 400
         return json.jsonify(status="ok", results=batch.listBatchReports(repositoryType, filt.lower()))
     except Exception as e:
-        print "Error: ", str(e)
+        logger.debug("listBatchReports: Error=%s" % str(e))
         return json.jsonify(status="failure", error=str(e)), 401
 
 # Archive batch reports data to GSA
@@ -2221,7 +2199,7 @@ def managePackageForSingleSlave():
            if job['status'] == "success":
                buildStatus, consoleLogUrl = monitorChefJobs(job['jobName'], sync = True)
        except KeyError as e:
-           print str(e)
+           logger.debug("managePackageForSingleSlave: Error=%s" % str(e))
            assert(False)
        if buildStatus == "SUCCESS":
            return json.jsonify(status="ok", packageName=packageName, packageAction=packageAction,
@@ -2309,7 +2287,7 @@ def managePackageForSingleSlave():
                             inQueue = projectInfo['inQueue']
                         # if it's not in the queue and not building something went wrong
                         except ValueError:
-                            print "project failed to start building/queuing" + jobName
+                            logger.debug("managePackageSingle: project failed to start building/queueing %s" % jobName)
                         count += 1
                     building = False
 
@@ -2586,10 +2564,10 @@ def createSynchJobs(nodes):
                             jobNode.append({'jobName':job['jobName'], 'nodeLabel': node['nodelabel'],\
                                             'install': numberOfInstalls, 'uninstalls':numberOfUnInstalls })
                     except KeyError as e:
-                        print str(e)
+                        logger.debug("createSynchJobs: 1 Error=%s" % str(e))
                         assert(False)
     except KeyError as e:
-        print str(e)
+        logger.debug("createSynchJobs: 2 Error=%s" % str(e))
         assert(False)
 
     # Invoking the routine to monitor the chef jobs created above as
@@ -2719,7 +2697,7 @@ def monitorChefJobs(jobName, sync=False):
                     inQueue = projectInfo['inQueue']
                 # if it's not in the queue and not building something went wrong
                 except ValueError:
-                    print "project failed to start building/queuing" + jobName
+                    logger.debug("monitorChefJobs: project failed to start building/queueing %s" % jobName)
                     if sync == True:
                     #emit('my response', {'data': 'FAILURE'})
                         return "FAILURE"
