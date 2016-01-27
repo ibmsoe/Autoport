@@ -247,6 +247,7 @@
                   </div>
               </div>
               <div class="clearfix span2"></div>
+              <br />
               <div class="row">
                 <div class="col-md-12">
                   <h4 class="modal-title" id="modalLabel">Set Batch Options</h4>
@@ -271,6 +272,16 @@
                 </div>
                </div>
               </div>
+              <div>
+              <br />
+              <small>Enable <b>install</b> to <i>sequentially</i> process projects.&nbsp;&nbsp;&nbsp;Processing
+              is halted on first error.&nbsp;&nbsp;&nbsp;If a project's install commands are known, they will be
+              run.&nbsp;&nbsp;&nbsp;You may define them below via <b>Show/Modify commands</b>.&nbsp;&nbsp;&nbsp;If
+              install is not enabled, projects will be processed in parallel and install commands will not be
+              run.&nbsp;&nbsp;&nbsp;In this mode, projects are assumed not to be prerequisite to each other
+              and all projects are processed.</small>
+              <br />
+              </div
              </div>
 
               <!-- Dropdown box for choosing what kind of JavaScript to use. -->
@@ -281,7 +292,7 @@
           <div class="modal-footer">
 
             <a href="#" class="btn btn-primary pull-left" style="display:none" rv-on-click="batchState.displayBatchSettings" id="batchBuildCommandBackButton"><span class="glyphicon glyphicon-chevron-left"></span> Back</a>
-            <button type="button" id="showModifyButton" rv-on-click="batchState.displayBatchCommandsTable" class="btn btn-primary">Show/Modify Commands</button>
+            <button type="button" id="showModifyButton" rv-on-click="batchState.displayBatchCommandsTable" class="btn btn-primary">Show/Modify commands</button>
             <button rv-on-click="batchState.resetEnviron" type="button"
               class="btn btn-primary">Reset</button>
             <button rv-on-click="batchState.updateEnviron" type="button"
