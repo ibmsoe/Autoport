@@ -17,11 +17,9 @@ end
 cmake_data_path = [
                     '/usr/share/cmake',
                     '/usr/share/cmake-*'
-                  ]
 
-# Extract the exact name of cmake folder located in /usr/share directory.
-# On RHEL it appears to be created with name 'cmake' whereas on 'cmake-<version>'
-cmake_root = Dir.glob(cmake_data_path)
+                  ]
+cmake_root = []
 
 template '/etc/profile.d/cmake.sh' do
   owner 'root'
@@ -32,5 +30,10 @@ template '/etc/profile.d/cmake.sh' do
     cmake_root: cmake_root[0]
   )
   ignore_failure true
-  only_if { cmake_root.kind_of?(Array) and cmake_root.any? }
+  only_if do
+    # Extract the exact name of cmake folder located in /usr/share directory.
+    # On RHEL it appears to be created with name 'cmake' whereas on 'cmake-<version>'
+    cmake_root = Dir.glob(cmake_data_path)
+    cmake_root.kind_of?(Array) and cmake_root.any?
+  end
 end

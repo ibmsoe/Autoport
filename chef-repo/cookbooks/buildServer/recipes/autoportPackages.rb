@@ -2,6 +2,7 @@
 # using package manager (apt/yum).
 # This maps to the packages in the autoportPackages section of ManagedList.json
 
+pkgs = {}
 case node['platform']
 when 'ubuntu'
   pkgs = node['buildServer']['debs']

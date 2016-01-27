@@ -8,14 +8,20 @@ node_os = node['platform']
 case node_os
 when 'ubuntu'
   repo_file = "#{repo_name}.list"
+  update_command = "apt-get -y autoclean && apt-get -y update && apt-get -y autoremove"
   file_path = '/etc/apt/sources.list.d'
+  execute "rm -rf #{file_path}/*" do
+    ignore_failure true
+  end
 when 'centos'
   repo_file = "#{repo_name}.repo"
   file_path = '/etc/yum.repos.d'
+  update_command = "yum clean expire-cache"
 when 'redhat'
   repo_file = "#{repo_name}.repo"
   file_path = '/etc/yum.repos.d'
   node_os   = 'rhel'
+  update_command = "yum clean expire-cache"
 end
 
 # node['lsb']['codename'] gives the release name ,
@@ -33,5 +39,9 @@ template "#{file_path}/#{repo_file}" do
     osrelease: node['lsb']['codename'],
     platform_version: node['platform_version'].split(".")[0],
   )
+  ignore_failure true
+end
+
+execute update_command do
   ignore_failure true
 end
