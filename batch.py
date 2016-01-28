@@ -786,3 +786,12 @@ class Batch:
             finally:
                 if isinstance(batch_detail_file, file):
                     batch_detail_file.close();
+
+    def close(self):
+        try:
+            self.ssh_client.close()
+        except Exception as e:
+            logger.warning("In Batch Close: %s" % str(e))
+
+    def __del__(self):
+        self.close()

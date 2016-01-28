@@ -102,9 +102,9 @@ class Project:
     # Sub-Routine which deletes files and folders recursively from remote directory
     # @Param - remotepath, which represents the GSA folder
     # @Param - ftp_client, which represents paramiko SFTP object
-    def removeDirFromGSA(self, ftp_client, remotepath):
+    def removeDirFromGSA(self, ftpClient, remotepath):
         logger.debug("In removeDirFromGSA, remotepath=%s" % remotepath)
-        ftp_client = ftp_client.open_sftp()
+        ftp_client = ftpClient.open_sftp()
         try:
             for file in ftp_client.listdir(remotepath):
                 try:
@@ -118,6 +118,11 @@ class Project:
             ftp_client.rmdir(remotepath)
         except IOError as e:
             logger.warning("Can't remove directory" + str(e))
+        finally:
+            try:
+                ftp_client.close()
+            except Exception as e:
+                logger.warning('In Project:removeDirFromGSA %s' % str(e))
 
     def stripDataFromJobName(self, jobFileName):
         jobName = self.projectResultPattern.match(jobFileName).group(2)                     # uuid field
