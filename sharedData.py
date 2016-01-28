@@ -820,7 +820,7 @@ class SharedData:
         try:
             self.__jenkinsFtpClient.close()
         except Exception as e:
-            logger.warning('In SharedData:close: %s' % str(e))
+            logger.warning('In sharedData:close, Error=%s' % str(e))
 
     def __del__(self):
         self.close()

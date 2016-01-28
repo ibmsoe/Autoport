@@ -1500,27 +1500,40 @@ def runBatchFile ():
         if not batchName:
             return json.jsonify(status="failure", error="Please select a batch file!"), 400
     except KeyError:
-        return json.jsonify(status="failure", error="Please select a batch file!"), 400
+        return json.jsonify(status="failure", error="Please select a batch file!"), 401
 
     # Get the batch file name from POST
     try:
         nodeCSV = request.form["nodeCSV"]
         if not nodeCSV:
-            return json.jsonify(status="failure", error="Please select at least one build server!"), 400
+            return json.jsonify(status="failure", error="Please select at least one build server!"), 402
     except KeyError:
-        return json.jsonify(status="failure", error="Please select at least one build server!"), 400
+        return json.jsonify(status="failure", error="Please select at least one build server!"), 403
 
     logger.debug("In runBatchFile, batchName=%s, nodeCSV=%s" % (batchName, nodeCSV))
+
+    try:
+        batchList = batchName.split('.')
+        createdTime = batchList[-1]
+        batchNameOnly = ".".join(batchList[1:-1])
+        batchDirName = "%s.%s" % (
+            globals.localPathForBatchTestResults + ntpath.basename(batchNameOnly),
+            createdTime
+        )
+    except ValueError:
+        return json.jsonify(status="failure", error="Invalid batch name!"), 404
+
+    logger.debug("runBatchFile: batchDirName=%s" % batchDirName)
 
     results = batch.parseBatchFile(batchName)
     try:
         fileBuf = results['fileBuf']
     except KeyError:
-        return json.jsonify(status="failure", error=results['error']), 400
+        return json.jsonify(status="failure", error=results['error']), 405
 
     try:
         error = fileBuf['error']
-        return json.jsonify(status="failure", error=error), 401
+        return json.jsonify(status="failure", error=error), 406
     except KeyError:
         pass
 
@@ -1549,15 +1562,6 @@ def runBatchFile ():
     logger.debug("runBatchFile: javaType=%s, javaScriptType=%s, includeTestCmds=%s, includeInstallCmds=%s, nodeCSV=%s" %
                 (javaType, javaScriptType, includeTestCmds, includeInstallCmds, nodeCSV))
 
-    try:
-        temp, batchNameOnly, createdTime = batchName.split('.')
-        batchDirName = "%s.%s" % (
-            globals.localPathForBatchTestResults + ntpath.basename(batchNameOnly),
-            createdTime
-        )
-    except ValueError:
-        batchDirName = globals.localPathForBatchTestResults + ntpath.basename(batchName) + '.' + createdTime
-
     jobs = []
     nodeList = nodeCSV.split(',')
     for node in nodeList:
@@ -1578,6 +1582,8 @@ def runBatchFile ():
         except ValueError:
             newBatchName = globals.localPathForBatchTestResults + batchDirName + '/' + \
                            ntpath.basename(batchName) + '.' + uid + '.' + submissionTime
+
+        logger.debug("runBatchFile: newBatchName=%s" % newBatchName)
 
         if not os.path.exists(batchDirName):
             os.makedirs(batchDirName)
@@ -1668,7 +1674,7 @@ def runBatchFile ():
 
     logger.debug("runBatch Error: No project buildable in batch file (%s)!" % batchName)
 
-    return json.jsonify(status="failure", error="Autoport does not know how to build any project in the Batch File!"), 404
+    return json.jsonify(status="failure", error="Autoport does not know how to build any project in the Batch File!"), 407
 
 @app.route("/autoport/getBatchResults", methods=["GET", "POST"])
 def getBatchResults():

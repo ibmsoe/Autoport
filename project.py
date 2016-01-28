@@ -122,7 +122,7 @@ class Project:
             try:
                 ftp_client.close()
             except Exception as e:
-                logger.warning('In Project:removeDirFromGSA %s' % str(e))
+                logger.warning('project:removeDirFromGSA, Error=%s' % str(e))
 
     def stripDataFromJobName(self, jobFileName):
         jobName = self.projectResultPattern.match(jobFileName).group(2)                     # uuid field

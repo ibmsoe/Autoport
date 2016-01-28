@@ -38,7 +38,7 @@ class Batch:
         except paramiko.SSHException:
             pass                  # error message already displayed in catalog.py
         except IOError as e:
-            logger.warning("batch connect Error=" + str(e))
+            logger.warning("batch connect Error=%s" % str(e))
 
     def listBatchFiles(self, repoType, filt):
         logger.debug("In listBatchFiles: repoType=%s filt=%s" % (repoType, filt))
@@ -156,7 +156,7 @@ class Batch:
                             if parsedResult:
                                 filteredList.append(parsedResult)
                     except Exception as ex:
-                        logger.warning("listGSABatchReports: Error %s" % str(ex))
+                        logger.warning("listGSABatchReports: Error=%s" % str(ex))
                     finally:
                         if isinstance(batchTestReportFile, file):
                             batchTestReportFile.close()
@@ -168,7 +168,7 @@ class Batch:
             if e.errno == errno.ENOENT:
                 return filteredList
         except Exception as e:
-            logger.warning("listGSABatchReports: Error %s" % str(e))
+            logger.warning("listGSABatchReports: Error=%s" % str(e))
             assert(False), str(e)
         return filteredList
 
@@ -229,28 +229,34 @@ class Batch:
             "build_log_count": 'Not Available',
             "test_log_count": 'Not Available'
         }
+
         try:
             batchStats = os.stat(filename)
             batchCreationTime = asctime(localtime(batchStats[ST_MTIME]))
         except OSError:
             batchCreationTime = "-"
+
         try:
-            batchFile = open(filename)
-            batchName, batchUID, batchSubmissionTimeObj = ntpath.basename(filename).split('.')
+            batchList = ntpath.basename(filename).split('.')
+            batchSubmissionTimeObj = batchList[-1]
+            batchName = ".".join(batchList[:-2])
+
             # knowing that date format will be "%Y-%m-%d-h%H-m%M-s%S"
             # Converting it to "%Y-%m-%d-%H-%M-%S"
-            #batchSubmissionTimeObj = strptime(batchSubmissionTime, "%Y-%m-%d-h%H-m%M-s%S")
             batchSubmissionTime = asctime(strptime(batchSubmissionTimeObj, "%Y-%m-%d-h%H-m%M-s%S"))
+
+            batchFile = open(filename)
             jobNames = batchFile.readlines()
             buildAndTestLogs = self.getLocalBuildAndTestLogs(jobNames, location, tmpDir)
             project_count = len(jobNames)
+
             buildServer = None
             if len(jobNames):
                 # All the jobs will be for same build server, hence only checking for the first entry
                 buildServer = projectResultPattern.match(jobNames[0]).group(3)
 
             if not project_count and not buildServer:
-                logger.debug("Skipping batchFile: \"%s\" as there is no build server or projects in the batch.", filename)
+                logger.debug("parseBatchReportList: skipping batchFile: \"%s\" as there is no build server or projects in the batch.", filename)
                 return None
 
             return_data.update({
@@ -265,10 +271,11 @@ class Batch:
                 "test_log_count": buildAndTestLogs['test_logs'] or 'Not Available'
             })
         except Exception as ex:
-            logger.warning("parseBatchReportList Error: " + str(ex))
+            logger.warning("parseBatchReportList Error=%s" % str(ex))
         finally:
             if isinstance(batchFile, file):
                 batchFile.close()
+
         return return_data
 
     # Gets number of build logs and test logs for given batch,
@@ -353,7 +360,7 @@ class Batch:
         try:
             fileBuf = json.load(f)
         except ValueError, ex:
-            logger.warning("parseBatchFile: Error " + str(ex))
+            logger.warning("parseBatchFile: Error=%s" % str(ex))
             f.close()
             return {"error": "Could not read file" + filename }
         f.close()
@@ -489,7 +496,7 @@ class Batch:
         try:
             self.ftp_client.close()
         except Exception as e:
-            logger.warning("disconnect: Error " +  str(e))
+            logger.warning("In batch:disconnect, Error=%s" %  str(e))
 
     # @TODO Below code for getting Batch Test Details and other functionality is in progress.
     def getBatchTestDetails(self, batchList, catalog, type):
@@ -557,7 +564,7 @@ class Batch:
                             projects[filename].extend([i.strip() for i in batchFile.readlines()])
                             batchFile.close()
         except Exception as ex:
-            logger.warning("getLocalProjectForGivenBatch: Error " +  str(ex))
+            logger.warning("getLocalProjectForGivenBatch: Error=%s" % str(ex))
 
         return projects
 
@@ -590,9 +597,9 @@ class Batch:
                         # Batch report removal from GSA
                         self.ftp_client.rmdir(os.path.dirname(filepath))
             except IOError as e:
-                logger.debug("removeBatchReportsData: I/O Error %s" % str(e))
+                logger.debug("removeBatchReportsData: I/O Error=%s" % str(e))
             except Exception as e:
-                logger.debug("removeBatchReportsData: Error %s" % str(e))
+                logger.debug("removeBatchReportsData: Error=%s" % str(e))
         logger.debug("Leaving removeBatchReportsData")
 
     # Archive Batch Reports Data to GSA
@@ -760,7 +767,7 @@ class Batch:
                 batch_detail_file = open(filePath, 'w')
                 batch_detail_file.write(fileContent)
             except Exception as e:
-                logger.debug("updateBatchFile: Error %s" % str(e))
+                logger.debug("updateBatchFile: Error=%s" % str(e))
                 assert(False), str(e)
             finally:
                 if isinstance(batch_detail_file, file):
@@ -771,7 +778,7 @@ class Batch:
                 f = self.ftp_client.open(filePath, 'w')
                 f.write(fileContent)
             except Exception as e:
-                logger.debug("updateBatchFile: Error %s" % str(e))
+                logger.debug("updateBatchFile: Error=%s" % str(e))
                 assert(False), str(e)
             finally:
                 if isinstance(f, file):
@@ -781,7 +788,7 @@ class Batch:
                 batch_detail_file = open(filePath, 'w')
                 batch_detail_file.write(fileContent)
             except Exception as e:
-                logger.debug("updateBatchFile: Error %s" % str(e))
+                logger.debug("updateBatchFile: Error=%s" % str(e))
                 assert(False), str(e)
             finally:
                 if isinstance(batch_detail_file, file):
@@ -791,7 +798,7 @@ class Batch:
         try:
             self.ssh_client.close()
         except Exception as e:
-            logger.warning("In Batch Close: %s" % str(e))
+            logger.warning("In batch:close, Error=%s" % str(e))
 
     def __del__(self):
         self.close()

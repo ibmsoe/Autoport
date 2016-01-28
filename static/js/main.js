@@ -557,14 +557,14 @@ var batchState = {
         internal["packages"].forEach(function(entry) {
             var packagesElement = {};
             packagesElement["id"] = entry["id"];
-            packagesElement["name"] = entry["owner"] + "/" + entry["name"];
-            if (entry["useVersion"] != undefined) {
+            if (entry["useVersion"] != undefined) {              // Called from search/detail.  Input is repo
                 packagesElement["tag"] = entry["useVersion"];
-            } else {
+                packagesElement["name"] = entry["owner"] + "/" + entry["name"];
+            } else {                                             // Called from batch.   Input is a batch File
                 packagesElement["tag"] = entry["tag"];
+                packagesElement["name"] = entry["name"];
             }
-            if (entry["build"])
-            {
+            if (entry["build"]) {
                 packagesElement["build"] = {};
                 packagesElement["build"]["artifacts"] = entry["build"]["artifacts"];
                 packagesElement["build"]["selectedBuild"] = entry["build"]["selectedBuild"];
@@ -986,11 +986,12 @@ var batchReportState = {
         internal["packages"].forEach(function(entry) {
             var packagesElement = {};
             packagesElement["id"] = entry["id"];
-            packagesElement["name"] = entry["owner"] + "/" + entry["name"];
-            if (entry["useVersion"] != undefined) {
+            if (entry["useVersion"] != undefined) {              // Called from search/detail.  Input is repo
                 packagesElement["tag"] = entry["useVersion"];
-            } else {
+                packagesElement["name"] = entry["owner"] + "/" + entry["name"];
+            } else {                                             // Called from batch.   Input is a batch File
                 packagesElement["tag"] = entry["tag"];
+                packagesElement["name"] = entry["name"];
             }
             if (entry["build"])
             {
