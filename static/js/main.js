@@ -3308,15 +3308,15 @@ var pollingState =  function(){
        },
        // function setMessage:  sets the message
        setMessage: function(data) {
-           this.pollmessage = data;
+           pollmessage = data;
        },
        // function appendMessage: appends message to the previous message
        appendMessage: function(data) {
-           this.pollmessage += data;
+           pollmessage += data;
        },
        // function displayMessage:  displays message
        displayMessage: function(data) {
-           showAlert(this.pollmessage);
+           showAlert(pollmessage);
        },
        // function poll: polls server using ajax
        poll: function(cb) {
