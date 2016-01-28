@@ -6,6 +6,7 @@ from novaclient import client as nvclient
 import json
 from urlparse import urlparse
 
+
 nodes_info_file = './data/config/cloudNodeInfo.json'
 
 cmdInvocation = False
@@ -13,6 +14,7 @@ cmdInvocation = False
 def rebuildServer(ip):
 
     if not cmdInvocation:
+        from log import logger
         logger.debug("rebuildServer: ip=%s" % ip)
 
     with open(nodes_info_file,'r') as f:
@@ -68,11 +70,25 @@ def getinstancesbyStackId(nova,stack_id):
     return instances_ret
 
 def cloudInit():
+    nodes_info={}
+
+    if not cmdInvocation:
+        from log import logger
+        logger.debug("In cloudInit")
+    if os.path.exists(nodes_info_file):
+        logger.debug("cloudInit: nodeInfoFile Exists.")
+        with open(nodes_info_file,mode='r') as f:
+            nodes_info=json.load(f)
+        f.close()
+        if not cmdInvocation:
+            logger.debug("cloudInit: nodes_info=%s" % str(nodes_info))
+        if  len(nodes_info.keys()) > 0:
+            return nodes_info
+
     floating_ip = getfloatingIp()
     instances = []
 
     if not cmdInvocation:
-        from log import logger
         logger.debug("In cloudInit, floating_ip=%s" % floating_ip)
 
     with nvclient.Client(2, globals.os_username, globals.os_password, globals.os_tenant_name, globals.os_auth_url) as nova:
@@ -80,9 +96,8 @@ def cloudInit():
         instances = getinstancesbyStackId(nova,stack_id)
 
     if not cmdInvocation:
-        logger.debug("cloudInit: instances=%s" % str(initial))
+        logger.debug("cloudInit: instances=%s" % str(instances))
 
-    nodes_info={}
     for instance in instances:
         instance_info={}
         for ip in globals.nodeIPs:
@@ -106,6 +121,7 @@ def cloudInit():
 if __name__ == "__main__":
     cmdInvocation = True
     globals.init()
+    logger = log.init()
     nodes_info = cloudInit()
 #    createSnapshot('192.168.1.213')
 #    rebuildServer('192.168.1.110')
