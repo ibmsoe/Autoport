@@ -324,26 +324,21 @@ class Batch:
             name = "{ MISSING NAME }"
 
         try:
-            env = fileBuf['config']['java']
-            if "ibm java" in env.lower().replace('-',' '):
-                environment = "IBM Java"
-            else:
-                environment = "OpenJDK"
+            environment = fileBuf['config']['java']
         except KeyError:
-            environment = "OpenJDK"
+            environment = "openjdk 7"
 
         try:
             env = fileBuf['config']['javascript']
-            if "ibm sdk nodejs" in env.lower().replace('-',' '):
-                environment = environment + " / IBM SDK for Node.js"
-            else:
-                environment = environment + " / Node.js"
+            if not env:
+                env = "nodejs"
+            environment += ", " + env
         except KeyError:
-            environment = environment + " / Node.js"
+            environment += ", nodejs"
 
         try:
             owner = fileBuf['config']['owner']
-            if owner == "":
+            if owner == "" or "<" in owner:
                 owner = "Anonymous"
         except KeyError:
             owner = "Anonymous"
