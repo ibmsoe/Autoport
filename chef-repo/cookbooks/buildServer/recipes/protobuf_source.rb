@@ -21,7 +21,7 @@ remote_file "#{archive_dir}/#{protobuf_pkg}#{ext}" do
   owner 'root'
   group 'root'
   action :create
-  mode '0644'
+  mode '0655'
   ignore_failure true
 end
 
@@ -60,6 +60,12 @@ execute 'ldconfig' do
   action :nothing
   ignore_failure true
   only_if { Dir.exist?("#{source_dir}/#{protobuf_pkg}") }
+end
+
+execute 'Setting permissions' do
+  command "chmod -R 755 #{install_prefix}/"
+  ignore_failure true
+  only_if { Dir.exist?("#{install_prefix}") }
 end
 
 template '/etc/profile.d/protobuf.sh' do

@@ -22,6 +22,7 @@ action :add do
       owner  'root'
       group  'root'
       action :create
+      mode   '0755'
       ignore_failure true
     end
   end

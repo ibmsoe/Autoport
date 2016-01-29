@@ -25,7 +25,7 @@ remote_file "#{archive_dir}/#{ant_pkg}-bin#{ext}" do
   owner 'root'
   group 'root'
   action :create
-  mode '0644'
+  mode '0655'
   ignore_failure true
 end
 
