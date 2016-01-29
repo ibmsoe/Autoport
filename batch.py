@@ -440,8 +440,11 @@ class Batch:
             except KeyError:
                 package['tag'] = "current"
 
-            # Build information is lazily calculated for searches that yield multiple
-            # projects to ensure fast searches.
+            # Build information is calculated just in time to facilitate testing
+            # of master branch as the source code and build instructions may
+            # change daily.
+
+            buildInfo = {}
             try:
                 selectedBuild = package['build']['selectedBuild']
             except KeyError:
@@ -453,36 +456,45 @@ class Batch:
                     package['build']['selectedEnv'] = buildInfo['selectedEnv']
                     package['build']['selectedTest'] = buildInfo['selectedTest']
                     package['build']['selectedInstall'] = buildInfo['selectedInstall']
+                    package['build']['primaryLang'] = buildInfo['primaryLang']
 
-            try:
-                selectedBuild = package['build']['selectedBuild']
-            except KeyError:
-                package['build']['selectedBuild'] = ""
+            # Trust data provided by inferBuildSteps
+            if not buildInfo:
+                try:
+                    selectedBuild = package['build']['selectedBuild']
+                except KeyError:
+                    package['build']['selectedBuild'] = ""
 
-            try:
-                selectedTest = package['build']['selectedTest']
-            except KeyError:
-                package['build']['selectedTest'] = ""
+                try:
+                    selectedTest = package['build']['selectedTest']
+                except KeyError:
+                    package['build']['selectedTest'] = ""
 
-            try:
-                selectedInstall = package['build']['selectedInstall']
-            except KeyError:
-                package['build']['selectedInstall'] = ""
+                try:
+                    selectedInstall = package['build']['selectedInstall']
+                except KeyError:
+                    package['build']['selectedInstall'] = ""
 
-            try:
-                selectedEnv = package['build']['selectedEnv']
-            except KeyError:
-                package['build']['selectedEnv'] = ""
+                try:
+                    selectedEnv = package['build']['selectedEnv']
+                except KeyError:
+                    package['build']['selectedEnv'] = ""
 
-            try:
-                artifacts = package['build']['artifacts']
-            except KeyError:
-                package['build']['artifacts'] = ""
+                try:
+                    artifacts = package['build']['artifacts']
+                except KeyError:
+                    package['build']['artifacts'] = ""
 
-            try:
-                primaryLang = package['build']['primaryLang']
-            except KeyError:
-                package['build']['primaryLang'] = ""
+                try:
+                    primaryLang = package['build']['primaryLang']
+                except KeyError:
+                    # Lang is not set if project is a book, tar file, etc.
+                    if repo.language:
+                        package['build']['primaryLang'] = repo.language
+                    else:
+                        package['build']['primaryLang'] = ""
+
+            # Not provided by inferBuildSteps and not included in batch file
 
             try:
                 package['build']['owner_url'] = repo.owner.html_url
