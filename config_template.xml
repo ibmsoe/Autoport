@@ -598,7 +598,7 @@
     </EnvInjectBuildWrapper>
     <hudson.plugins.build__timeout.BuildTimeoutWrapper plugin="build-timeout@1.15.1">
         <strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy">
-            <timeoutMinutes>90</timeoutMinutes>
+            <timeoutMinutes>720</timeoutMinutes>
         </strategy>
         <operationList/>
     </hudson.plugins.build__timeout.BuildTimeoutWrapper>
