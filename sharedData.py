@@ -575,6 +575,37 @@ class SharedData:
 
         return data
 
+    def getManagedPackages(self, managedList, node):
+        # Allow user to pass in managedList in case he needs to perform multiple lookups
+        if not managedList:
+            managedList = topology.getManagedList()
+
+        distroName, distroRel, distroVersion = self.getDistro(node)
+
+        logger.debug("In getManagedPackages, node=%s, distroName=%s, distroRel=%s, distroVersion=%s" %
+                     (node, distroName, distroRel, distroVersion))
+
+        uniquePackages = set()
+        for runtime in managedList['managedRuntime']:
+
+            if runtime['distro'] != distroName:
+                continue
+
+            if runtime['distroVersion'] != distroRel and runtime['distroVersion'] != distroVersion:
+                continue
+
+            for package in runtime['autoportPackages']:
+                uniquePackages.add(package['name']);
+            for package in runtime['autoportChefPackages']:
+                uniquePackages.add(package['name']);
+            for package in runtime['userPackages']:
+                uniquePackages.add(package['name']);
+
+        packages = ",".join(list(uniquePackages))
+
+        logger.debug("Leaving getManagedPackages, node=%s, cnt packages[]=%d, packages=%s" % (node, len(uniquePackages), packages))
+
+        return packages;
 
     def getManagedPackage(self, managedList, pkg, node):
         # Allow user to pass in managedList in case he needs to perform multiple lookups
@@ -600,8 +631,8 @@ class SharedData:
             if runtime['distroVersion'] != distroRel and runtime['distroVersion'] != distroVersion:
                 continue
             for package in runtime['autoportChefPackages']:
-                if package['name'] == pkg['packageName'] or \
-                   ("tagName" in package and package["tagName"] == pkg['packageName']):
+                if package['name'] == packageName or \
+                   ("tagName" in package and package["tagName"] == packageName):
                     removablePackage = "No"
                     if "arch" in package and package['arch'] == pkg['arch']:
                         if "version" in package:
@@ -617,7 +648,7 @@ class SharedData:
                     break
             if not pkgVersion:
                 for package in runtime['autoportPackages']:
-                    if package['name'] == pkg['packageName']:
+                    if package['name'] == packageName:
                         removablePackage = "No"
                         if "arch" in package and package['arch'] == pkg['arch']:
                             if "version" in package:

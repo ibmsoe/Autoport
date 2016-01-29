@@ -2429,25 +2429,24 @@ def listManagedPackages():
     else:
         nodes = globals.nodeLabels
 
-    # If no packages in query string parameters then retrieving the packages CSV from ManagedList.json
+    # Setup static arguments for node based calls below
     if package == "":
-        distroType = distro if distro=="UBUNTU" or distro=="RHEL" or distro=="CentOS" else 'All'
-        packageNames = getPackagesCSVFromManagedList(distroType, ml);
+        methodName = listPackageForSingleSlave_common
     else:
         configXmlFilePath = "./config_template_search_packages_single_slave.xml"
         jobNameSuffix = "listAllManagePackageByFilter"
+        methodName = createJob_SingleSlavePanel_Common
 
     arg_list = []
     for node in nodes:
         cv['cnt'] += 1
         if  package == "":
+            packageNames = sharedData.getManagedPackages(ml, node)
             arg_list.append(([packageNames, node, cv], {}))
-            methodName = listPackageForSingleSlave_common
         else:
             arg_list.append(([node, package, configXmlFilePath, jobNameSuffix, cv],{}))
-            methodName = createJob_SingleSlavePanel_Common
 
-    logger.debug("listManagedPackages, methodName=%s arg_list=%s" % (methodName, arg_list))
+    logger.debug("listManagedPackages: methodName=%s arg_list=%s" % (methodName, arg_list))
 
     threadRequests = makeRequests(methodName, arg_list, listCallback)
 
@@ -3058,20 +3057,6 @@ def archiveProjects():
                  logdiffBuilds, logdiffTests, archiveProjectResults))
 
     return json.jsonify(status=status, error=errors, alreadyThere=alreadyThere)
-
-# Returns a comma separated list of package names from the Managed List json file
-def getPackagesCSVFromManagedList(slaveNodeDistro, mljson):
-    uniquePackages = set()
-    for runtime in mljson['managedRuntime']:
-        if runtime['distro'] == slaveNodeDistro or slaveNodeDistro == "All":
-            for package in runtime['autoportPackages']:
-                uniquePackages.add(package['name']);
-            for package in runtime['autoportChefPackages']:
-                uniquePackages.add(package['name']);
-            for package in runtime['userPackages']:
-                uniquePackages.add(package['name']);
-    packagesCSV = ",".join(list(uniquePackages))
-    return packagesCSV;
 
 #Upload rpms debs and archives to custom repository
 @app.route('/autoport/uploadToRepo', methods=['GET','POST'])
