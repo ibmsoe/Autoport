@@ -2042,7 +2042,7 @@ function removeBatchReportsCallback(data){
         showAlert("Deleted Successfully !");
         if (batchReportState.listingRepo == "local") {
             batchReportState.listLocalBatch();
-        } else if (batchReportState.listingRepo == "archived") {
+        } else if (batchReportState.listingRepo == "gsa") {
             batchReportState.listGSABatch();
         } else {
             batchReportState.listAllBatch();
