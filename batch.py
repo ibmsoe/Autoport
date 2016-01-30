@@ -455,6 +455,8 @@ class Batch:
 
             # Trust data provided by inferBuildSteps
             if not buildInfo:
+                package['build']['userDefined'] = "True"
+
                 try:
                     selectedBuild = package['build']['selectedBuild']
                 except KeyError:

@@ -413,7 +413,7 @@ var batchState = {
         }
         console.log("In batchState.saveBatch, batchFile.config=", batchState.batchFile.config);
         for (var i=0; i<batchState.batchFile.packages.length; i++){
-            if (!batchState.batchFile.packages[i].build.isBuildParamatersUpdated){
+            if (batchState.batchFile.packages[i].build.userDefined != "True") {
                 delete batchState.batchFile.packages[i].build;
             }
         }
@@ -564,7 +564,7 @@ var batchState = {
                 packagesElement["tag"] = entry["tag"];
                 packagesElement["name"] = entry["name"];
             }
-            if (entry["build"]) {
+            if (entry["build"] && entry["build"]["userDefined"]) {
                 packagesElement["build"] = {};
                 packagesElement["build"]["artifacts"] = entry["build"]["artifacts"];
                 packagesElement["build"]["selectedBuild"] = entry["build"]["selectedBuild"];
@@ -993,8 +993,7 @@ var batchReportState = {
                 packagesElement["tag"] = entry["tag"];
                 packagesElement["name"] = entry["name"];
             }
-            if (entry["build"])
-            {
+            if (entry["build"] && entry["build"]["userDefined"]) {
                 packagesElement["build"] = {};
                 packagesElement["build"]["artifacts"] = entry["build"]["artifacts"];
                 packagesElement["build"]["selectedBuild"] = entry["build"]["selectedBuild"];
@@ -2987,19 +2986,10 @@ function parseBatchFileCallback(data, batch_obj){
         // Defined the behaviour for moving packages up/down/remove if batchState object
         var index = 0;
         data.results.packages.forEach(function(package) {
-            var packageObj = {};
-            packageObj.name = package.name;
-            packageObj.buildCommand = package.build.selectedBuild;
-            packageObj.testCommand = package.build.selectedTest;
-            packageObj.gitURL = package.build.owner_url;
-            packageObj.installCommand = package.build.selectedInstall;
-            if (package.build.isBuildParamatersUpdated == undefined){
-                package.build.isBuildParamatersUpdated = false;
-            }
 
             var packageNameRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Package Name').appendTo(packageNameRow);
-            $('<td></td>').html('<a href="'+package.build.owner_url+'" target="_blank">'+packageObj.name+'</a>').appendTo(packageNameRow);
+            $('<td></td>').html('<a href="'+package.build.owner_url+'" target="_blank">'+package.name+'</a>').appendTo(packageNameRow);
 
             var buildCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
             $('<td></td>').text('Build Command').appendTo(buildCommandRow);
@@ -3939,21 +3929,22 @@ function checkIfBuildAndTestLogCreated(log_comparison_type){
 }
 function updateTestCommand(value, key){
     batchState.batchFile.packages[key].build.selectedTest = value;
-    batchState.batchFile.packages[key].build.isBuildParamatersUpdated = true;
+    batchState.batchFile.packages[key].build.userDefined = "True";
 }
 
 function updateBuildCommand(value, key){
     batchState.batchFile.packages[key].build.selectedInstall = value;
-    batchState.batchFile.packages[key].build.isBuildParamatersUpdated = true;
+    batchState.batchFile.packages[key].build.userDefined = "True";
 }
+
 function updateInstallCommand(value, key){
     batchState.batchFile.packages[key].build.selectedInstall = value;
-    batchState.batchFile.packages[key].build.isBuildParamatersUpdated = true;
+    batchState.batchFile.packages[key].build.userDefined = "True";
 }
 
 function updateEnvVariable(value, key){
     batchState.batchFile.packages[key].build.selectedEnv = value;
-    batchState.batchFile.packages[key].build.isBuildParamatersUpdated = true;
+    batchState.batchFile.packages[key].build.userDefined = "True";
 }
 
 function CustomDateSorter(date1, date2){
