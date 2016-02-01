@@ -172,7 +172,7 @@ class Project:
         try:
             res = self.resParser.ResLogCompare(logFile, leftName, leftDir, rightName, rightDir)
         except BaseException as e:
-            return {"error": str(e), "http_code": 500}
+            return {"error": "No test logs found!", "http_code": 500}
 
         leftCol = {
             'log': logFile,
