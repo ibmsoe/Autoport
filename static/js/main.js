@@ -1541,6 +1541,7 @@ var jenkinsState = {
                 'package_version': selectedPackageList[obj].updateVersion,
                 'extension': selectedPackageList[obj].packageExt,
                 'distro': selectedPackageList[obj].distro,
+                'rel': selectedPackageList[obj].rel,
                 'arch': selectedPackageList[obj].arch,
                 'removable': selectedPackageList[obj].removablePackage,
                 'package_type': selectedPackageList[obj].packageType,

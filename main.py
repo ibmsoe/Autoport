@@ -2339,6 +2339,7 @@ def listManagedPackages():
                     pkg['nodeLabel'] = data['node']
                     pkg['distro'] = globals.nodeDetails[i]['distro']
                     pkg['arch'] = globals.nodeDetails[i]['arch']
+                    pkg['rel'] = globals.nodeDetails[i]['rel']
                     pkg['os_arch'] = globals.nodeOSes[i]              # This is O/S Description for UI
 
                     # package_name is set to archive name to distinguish between multiple extensions,

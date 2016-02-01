@@ -691,11 +691,12 @@ class SharedData:
             elif 'extension' in pkgData:
                 extension = pkgData['extension']
             distro = pkgData['distro']
+            rel = pkgData['rel']
             arch = pkgData['arch']
             packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
 
             for sharedRuntime in localManagedListFileData['managedRuntime']:
-                if sharedRuntime['distro'] == distro:
+                if sharedRuntime['distro'] == distro and sharedRuntime['distroVersion'] == rel:
                     addFlag = True
                     for package in sharedRuntime['userPackages']:
                         if package['name'] == packageName and \
@@ -734,6 +735,7 @@ class SharedData:
                 packageName = pkgData['package_name']
                 packageVersion =  pkgData['installed_version']
                 distro = pkgData['distro']
+                rel = pkgData['rel']
                 arch =  pkgData['arch']
                 packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
                 extension = ''
@@ -743,7 +745,7 @@ class SharedData:
                     extension = pkgData['extension']
                 if pkgData['removable'] == 'No':
                   continue
-                if sharedRuntime['distro'] == distro:
+                if sharedRuntime['distro'] == distro and sharedRuntime['distroVersion'] == rel:
                     addFlag = True
                     for package in sharedRuntime['userPackages']:
                         if package['name'] == packageName and \
