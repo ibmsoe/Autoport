@@ -39,6 +39,7 @@ remote_file "#{archive_dir}/#{gradle_pkg}" do
   owner 'root'
   group 'root'
   action :create
+  mode   '0755'
   ignore_failure true
 end
 

@@ -21,7 +21,7 @@ remote_file "#{archive_dir}/#{scala_pkg}#{ext}" do
   owner 'root'
   group 'root'
   action :create
-  mode '0655'
+  mode '0755'
   ignore_failure true
 end
 

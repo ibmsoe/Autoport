@@ -28,7 +28,7 @@ remote_file "#{download_loc}/#{perl_package}" do
   source "#{repo_url}/archives/#{perl_package}"
   owner 'root'
   group 'root'
-  mode '0655'
+  mode '0755'
   action :create
   ignore_failure true
 end
