@@ -2657,6 +2657,7 @@ function processTestHistory(data) {
 function archiveCallback(data) {
     projectReportState.loadingState.diffLoading = false;
     if (data.status === "ok" ) {
+        showAlert("Archived successfully");
         var errors = data.error;
         var alreadyThere = data.alreadyThere;
         var text = "The selected results have been archived.";
