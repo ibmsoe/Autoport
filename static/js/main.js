@@ -604,6 +604,7 @@ var batchReportState = {
     loading: false,
     listingRepo: "",
     comparison: false,
+    hideArchive: false,
     listLocalBatch: function(ev) {
         // reset report state to initial state so that data reflected is correctly on fresh canvas.
         batchReportState.reset();
@@ -611,6 +612,7 @@ var batchReportState = {
         batchReportState.showListSelectTable = false;
         batchReportState.loading = true;
         batchReportState.listingRepo = "local"
+        batchReportState.hideArchive = false
         // callback to render data to Batch Report table
         $.getJSON("listBatchReports/local", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
@@ -622,6 +624,7 @@ var batchReportState = {
         batchReportState.showListSelectTable = false;
         batchReportState.loading = true;
         batchReportState.listingRepo = "gsa"
+        batchReportState.hideArchive = true
         // callback to render data to Batch Report table
         $.getJSON("listBatchReports/gsa", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
@@ -633,6 +636,7 @@ var batchReportState = {
         batchReportState.showListSelectTable = false;
         batchReportState.loading = true;
         batchReportState.listingRepo = "all"
+        batchReportState.hideArchive = false
         // callback to render data to Batch Report table
         $.getJSON("listBatchReports/all", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
