@@ -27,13 +27,16 @@ template '/etc/profile.d/cmake.sh' do
   source 'cmake.sh.erb'
   mode '0644'
   variables(
-    cmake_root: cmake_root[0]
+    lazy {
+      { cmake_root: cmake_root[0] }
+    }
   )
   ignore_failure true
   only_if do
     # Extract the exact name of cmake folder located in /usr/share directory.
-    # On RHEL it appears to be created with name 'cmake' whereas on 'cmake-<version>'
+    # On RHEL it appears to be created with name 'cmake' whereas on ubuntu 'cmake-<version>'
     cmake_root = Dir.glob(cmake_data_path)
     cmake_root.kind_of?(Array) and cmake_root.any?
   end
 end
+
