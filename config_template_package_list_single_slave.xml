@@ -140,8 +140,8 @@ echo "#### Iterating through the list of packages"
 if [ $DISTRIBUTION == "RHEL" -o  $DISTRIBUTION == "CentOS" ]; then
 
     installedPkgs="$(rpm -qa --queryformat '%{name} %{version} %{arch}\n')"
-    updatePkgs="$(yum -q check-update)"
-    availablePkgs="$(yum -q list available)"
+    updatePkgs="$(sudo yum -q check-update)"
+    availablePkgs="$(sudo yum -q list available)"
 
     for packageElement in "${array[@]}"
     do
@@ -224,7 +224,7 @@ elif [ $DISTRIBUTION == "UBUNTU" ]; then
         # Set variables
         lineNumber=1
         echo "#### Searching for Package "$PACKAGE_NAME" on "$DISTRIBUTION
-        apt-cache policy $PACKAGE_NAME > singlePackageInformation.txt
+        sudo apt-cache policy $PACKAGE_NAME > singlePackageInformation.txt
 
         while read i
         do
@@ -284,7 +284,7 @@ if [ $can_continue -ne 0 ]; then
             sudo apt-get -y --force-yes install wget
         ;;
         "RHEL"|"CentOS")
-            yum -y install wget
+            sudo yum -y install wget
         ;;
     esac
 fi

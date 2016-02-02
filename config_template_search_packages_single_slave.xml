@@ -190,14 +190,14 @@ case $DISTRIBUTION in
     "UBUNTU")
        echo "#### Getting a list of all installed or available packages matching the filter $PACKAGE_NAME_FILTER"
        echo "#### The command used is apt-cache search $PACKAGE_NAME_FILTER | grep $PACKAGE_NAME_FILTER | sed \"s/\"/'/g\" "
-       apt-cache search $PACKAGE_NAME_FILTER | grep -i $PACKAGE_NAME_FILTER | sed "s/\"/'/g"  > AllPackagesInfo.txt # List of all packages matching the filter
+       sudo apt-cache search $PACKAGE_NAME_FILTER | grep -i $PACKAGE_NAME_FILTER | sed "s/\"/'/g"  > AllPackagesInfo.txt # List of all packages matching the filter
 
        # In case package is not found while searching update the repo list and retry searching again.
        if [ $? != 0 ] || [ ! -e AllPackagesInfo.txt ] || [ ! -s AllPackagesInfo.txt ]; then
             echo "Package Not found trying to update repo list."
             sudo apt-get update
             # List of all packages matching the filter after updating
-            apt-cache search $PACKAGE_NAME_FILTER | grep -i $PACKAGE_NAME_FILTER | sed "s/\"/'/g"  > AllPackagesInfo.txt
+            sudo apt-cache search $PACKAGE_NAME_FILTER | grep -i $PACKAGE_NAME_FILTER | sed "s/\"/'/g"  > AllPackagesInfo.txt
        fi
 
         echo "#### Iterating over the packages matching the filter and generating data for each."
@@ -215,7 +215,7 @@ case $DISTRIBUTION in
 
             packageName=${line%% -*}
             summary=${line#*- }
-            apt-cache policy $packageName > singlePackageInformation.txt
+            sudo apt-cache policy $packageName > singlePackageInformation.txt
 
             while read i
             do
@@ -436,7 +436,7 @@ if [ $can_continue -ne 0 ]; then
         "CentOS")
         ;&amp;
         "RHEL")
-            yum -y install wget
+            sudo yum -y install wget
         ;;
     esac
 fi

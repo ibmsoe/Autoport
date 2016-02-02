@@ -76,7 +76,7 @@ case $DISTRIBUTION in
 
         # Get information about updates for installed packages
         echo "#### Getting a list of updates available for the installed packages. The command is yum list updates"
-        yum list updates > UpdatesForInstalledPackages.txt
+        sudo yum list updates > UpdatesForInstalledPackages.txt
         # get line number of the line where string "Updated Packages" is present. We want only those lines which come after this line.
         lineNumber=$(cat -n UpdatesForInstalledPackages.txt | grep "Updated Packages" | awk '{print $1;}')  
         if [ "$lineNumber" != "" ]; then
@@ -152,7 +152,7 @@ case $DISTRIBUTION in
             # The last part of the command replaces all double quotes to single quotes in dpkg output.
 
             echo "#### Getting a list of updates available for the installed packages. The command is apt-show-versions -u"
-            apt-show-versions -u > UpdatesForInstalledPackages.txt  # get information about updates for installed packages
+            sudo apt-show-versions -u > UpdatesForInstalledPackages.txt  # get information about updates for installed packages
 
             echo "#### Iterating over the packages in the installed list and generating data for each."
             echo '[' > packageListSingleSlave.json
