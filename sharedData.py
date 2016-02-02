@@ -516,18 +516,19 @@ class SharedData:
                         logger.error(msg)
                         assert(False), msg
 
-    def getDistro(self, buildServer):
+    def getDistroArch(self, buildServer):
         distroName = ""
         distroRelease = ""
         distroVersion = ""
+        arch = ""
         for node in globals.nodeDetails:
             if node['nodelabel'] == buildServer:
                 distroName = node['distro']
                 distroRelease = node['rel']
                 distroVersion = node['version']
+                arch = node['arch']
                 break
-
-        return (distroName, distroRelease, distroVersion)
+        return (distroName, distroRelease, distroVersion, arch)
 
     def getManagedList(self):
         localData = self.getLocalData("ManagedList.json")
@@ -580,7 +581,7 @@ class SharedData:
         if not managedList:
             managedList = topology.getManagedList()
 
-        distroName, distroRel, distroVersion = self.getDistro(node)
+        distroName, distroRel, distroVersion, arch = self.getDistroArch(node)
 
         logger.debug("In getManagedPackages, node=%s, distroName=%s, distroRel=%s, distroVersion=%s" %
                      (node, distroName, distroRel, distroVersion))
@@ -599,7 +600,8 @@ class SharedData:
             for package in runtime['autoportChefPackages']:
                 uniquePackages.add(package['name']);
             for package in runtime['userPackages']:
-                uniquePackages.add(package['name']);
+                if package['arch'] and package['arch'] == arch:
+                    uniquePackages.add(package['name']);
 
         packages = ",".join(list(uniquePackages))
 
@@ -612,7 +614,7 @@ class SharedData:
         if not managedList:
             managedList = topology.getManagedList()
 
-        distroName, distroRel, distroVersion = self.getDistro(node)
+        distroName, distroRel, distroVersion, arch = self.getDistroArch(node)
 
         # The version becomes managed version if it satisfies the below cases
         # case 1: If the jenkins returned package arch matches with arch of ManagedList and version

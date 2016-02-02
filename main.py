@@ -1880,7 +1880,7 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
 
     # Add the values for the Jenkins Job parameters
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
-    buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
+    buildServerDistribution, buildServerDistroRel, buildServerDistroVers, arch = sharedData.getDistroArch(selectedBuildServer)
 
     # add parameters information
     job_input_param_number = 1
@@ -2094,7 +2094,7 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer, cv=None):
     # Modify selected elements
     xml_node.text = selectedBuildServer
 
-    buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
+    buildServerDistribution, buildServerDistroRel, buildServerDistroVers, arch = sharedData.getDistroArch(selectedBuildServer)
 
     # add parameters information
     job_input_param_number = 1
@@ -2225,7 +2225,7 @@ def managePackageForSingleSlave():
         # Modify selected elements
         xml_node.text = selectedBuildServer
 
-        buildServerDistribution, buildServerDistroRel, buildServerDistroVers = sharedData.getDistro(selectedBuildServer)
+        buildServerDistribution, buildServerDistroRel, buildServerDistroVers, arch = sharedData.getDistroArch(selectedBuildServer)
 
         # add parameters information
         i = 1
