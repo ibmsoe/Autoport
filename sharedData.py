@@ -600,8 +600,11 @@ class SharedData:
             for package in runtime['autoportChefPackages']:
                 uniquePackages.add(package['name']);
             for package in runtime['userPackages']:
-                if package['arch'] and package['arch'] == arch:
-                    uniquePackages.add(package['name']);
+                if 'arch' in package:
+                    if package['arch'] == arch:
+                        uniquePackages.add(package['name'])
+                else:
+                    uniquePackages.add(package['name'])
 
         packages = ",".join(list(uniquePackages))
 

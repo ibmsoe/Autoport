@@ -1557,7 +1557,7 @@ var jenkinsState = {
         if(message != "") {
             var confRes = confirm(message);
             if(!confRes){
-                return [];
+                return "Cancelled";
             }
         }
         return packageListObj;
