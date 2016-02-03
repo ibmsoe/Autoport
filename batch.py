@@ -771,6 +771,7 @@ class Batch:
     # If batch file exists in local / archive already this will overwrite it.
     def updateBatchFile(self, filePath, fileContent, location):
         logger.debug("In updateBatchFile, filename = %s" % str(filePath))
+        batch_detail_file = None
         if location=="local":
             try:
                 batch_detail_file = open(filePath, 'w')
@@ -783,8 +784,8 @@ class Batch:
                     batch_detail_file.close();
         elif location=="gsa":
             try:
-                filePath = globals.pathForBatchFiles + ntpath.basename(filePath)
-                f = self.ftp_client.open(filePath, 'w')
+                gsafilePath = globals.pathForBatchFiles + ntpath.basename(filePath)
+                f = self.ftp_client.open(gsafilePath, 'w')
                 f.write(fileContent)
             except Exception as e:
                 logger.debug("updateBatchFile: Error=%s" % str(e))
