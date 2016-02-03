@@ -263,7 +263,7 @@ def interpretTravis(repo, travisFile, travis_def):
                         generalEnv = ' '.join(data['env'])
                     else:
                         logger.debug("interpretTravis: skipping env proj=%s env=%s" % (repo.name, item))
-                else:
+                elif isinstance(data['env'], basestring):
                     generalEnv = data['env']
 
                 logger.debug("interpretTravis: proj=%s generalEnv=%s" % (repo.name, generalEnv))
@@ -316,7 +316,7 @@ def interpretTravis(repo, travisFile, travis_def):
                         else:
                             newCmds.append(cmdline)
                     beforeInstall = '; '.join(newCmds)
-                else:
+                elif isinstance(data['before_install'], basestring):
                     cmdline = data['before_install']
                     cmd = cmdline.split()[0]
                     if any(x in cmdline for x in privileged) and\
@@ -341,7 +341,7 @@ def interpretTravis(repo, travisFile, travis_def):
                         else:
                             newCmds.append(cmdline)
                     install = '; '.join(newCmds)
-                else:
+                elif isinstance(data['install'], basestring):
                     cmdline = data['install']
                     cmd = cmdline.split()[0]
                     if any(x in cmdline for x in privileged) and\
@@ -364,7 +364,7 @@ def interpretTravis(repo, travisFile, travis_def):
             if 'before_script' in data and data['before_script']:
                 if isinstance(data['before_script'], list):
                     beforeScript = '; '.join(data['before_script'])
-                else:
+                elif isinstance(data['before_script'], basestring):
                     beforeScript = data['before_script']
 
             if not travis_def['build'] and beforeScript:
@@ -372,10 +372,12 @@ def interpretTravis(repo, travisFile, travis_def):
             elif beforeScript:
                 travis_def['test'] = beforeScript
 
+            cmdline = ""
             if isinstance(data['script'], list):
                 cmdline = '; '.join(data['script'])
-            else:
+            elif isinstance(data['script'], basestring):
                 cmdline = data['script']
+
             if travis_def['test']:
                 travis_def['test'] = travis_def['test'] + '; ' + cmdline
             else:
