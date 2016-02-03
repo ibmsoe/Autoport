@@ -496,7 +496,7 @@ var batchState = {
                 }
             }
         if (selectedServers == ""){
-            showAlert("Please select atleast one build server!");
+            showAlert("Please select at least one build server!");
             batchState.loading = false;
             return false;
         }
@@ -1830,7 +1830,7 @@ var projectReportState = {
                 gssSelections = gsaSelections + 1;
             }
         }
-        if (gsaSelections != selectedProjects.length){
+        if (gsaSelections != selectedProjects.length) {
             showAlert("Local repositories chosen will be archived")
             projectReportState.loadingState.diffLoading = true;
             $.ajax({
@@ -1844,8 +1844,8 @@ var projectReportState = {
                 dataType:'json'
             }).fail(archiveCallback);
         }
-        else{
-        showAlert("Please select local repository for Archival");
+        else {
+            showAlert("Please select local repository for Archival");
         }
     },
     backToList: function(ev) {
@@ -2680,6 +2680,7 @@ function processTestHistory(data) {
 
 function archiveCallback(data) {
     projectReportState.loadingState.diffLoading = false;
+    console.log("In archiveCallback, data.status=", data.status);
     if (data.status === "ok" ) {
         showAlert("Archived successfully");
         var errors = data.error;
@@ -3077,27 +3078,25 @@ function listBatchReportFilesCallback(data) {
 }
 
 function removeBatchFileCallback(data) {
-    if (data.status === "failure") {
-        showAlert("Error!", data);
-    } else {
+    if (data.status === "ok") {
         showAlert("Removed successfully!");
+    } else {
+        showAlert("Error!", data);
     }
 }
 
 function archiveBatchFileCallback(data) {
     batchState.loading = false;
-    if (data.status === "failure") {
-        showAlert("Error!", data);
-    } else {
+    if (data.status === "ok") {
         showAlert("Archived successfully");
+    } else {
+        showAlert("Error!", data);
     }
 }
 
 function archiveBatchReportsCallback(data) {
     batchReportState.loading = false;
-    if (data.status === "failure") {
-        showAlert("Error!", data);
-    }else {
+    if (data.status === "ok") {
         showAlert("Archived Successfully!")
         if (batchReportState.listingRepo == "local"){
             batchReportState.listLocalBatch();
@@ -3106,6 +3105,8 @@ function archiveBatchReportsCallback(data) {
         } else {
             batchReportState.listAllBatch();
         }
+    } else {
+        showAlert("Error!", data);
     }
 }
 
@@ -3411,18 +3412,18 @@ function synchManagedPackageListCallback(data) {
 }
 
 // Compares two versions
-function compareVersion(version1,version2){
-    var result=false;
-    if (typeof version1!=='object'){ version1=version1.toString().split('.'); }
-    if (typeof version2!=='object'){ version2=version2.toString().split('.'); }
+function compareVersion(version1, version2){
+    var result = false;
+    if (typeof version1 !== 'object') { version1 = version1.toString().split('.'); }
+    if (typeof version2 !== 'object') { version2 = version2.toString().split('.'); }
     for (var i=0;i<(Math.max(version1.length,version2.length));i++){
-        if (version1[i]==undefined){ version1[i]=0; }
-        if (version2[i]==undefined){ version2[i]=0; }
-        if (Number(version1[i]) < Number(version2[i])){
-            result=true;
+        if (version1[i] == undefined) { version1[i] = 0; }
+        if (version2[i] == undefined) { version2[i] = 0; }
+        if (Number(version1[i]) < Number(version2[i])) {
+            result = true;
             break;
         }
-        if (version1[i]!=version2[i]){
+        if (version1[i] != version2[i]) {
             break;
         }
     }

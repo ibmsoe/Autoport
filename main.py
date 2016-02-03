@@ -1778,7 +1778,7 @@ def archiveBatchReports():
                     (timeStarted, logdiffBatchBuildResults, logdiffBatchTestResults,
                      archiveBatchResults, removeBatchResults))
 
-        return json.jsonify(status="ok", results=result), 200
+        return json.jsonify(status="ok", results=result)
     except Exception as e:
         return json.jsonify(status="failure", error=str(e)), 401
 
