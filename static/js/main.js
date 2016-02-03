@@ -576,6 +576,9 @@ var batchState = {
         });
 
         return external;
+    },
+    updateIsUserDefined: function(evt, data){
+        batchState.batchFile.packages[data.package.build.index].build.userDefined = "True";
     }
 };
 
@@ -1352,6 +1355,7 @@ var jenkinsState = {
         jenkinsState.totalSelectedSingleSlavePkg = selectedPackageList.length;
         jenkinsState.pkgInstallRemoveStatusSingleSlave = [];
         var messageText = "Package cannot be installed or Removed";
+        var responseCounter = 0;
         for (var selectedPkg in selectedPackageList ) {
             var  package_type = "", package_tagname = "";
             // Exclude packages not eligible for installation
@@ -1391,7 +1395,13 @@ var jenkinsState = {
                 type: package_type,
                 buildServer: jenkinsState.buildServer
             },
-            managePackageForSingleSlaveCallback).fail(managePackageForSingleSlaveCallback);
+            function(data){
+                managePackageForSingleSlaveCallback(data, selectedPackageList [responseCounter].packageName, clickAction);
+                responseCounter++;
+            }).fail(function(data){
+                managePackageForSingleSlaveCallback(data, selectedPackageList [responseCounter].packageName, clickAction);
+                responseCounter++;
+            });
         }
         // If no packages are eligible for install / remove display the message
         if (jenkinsState.totalSelectedSingleSlavePkg == 0) {
@@ -2973,6 +2983,7 @@ function parseBatchFileCallback(data, batch_obj){
         batch_obj.saveBatchFileName = data.results.config.name;
         batch_obj.javaType = data.results.config.java;
         batch_obj.javaScriptType = data.results.config.javascript;
+        
 
         if (data.results.config.includeTestCmds === "True") {
             batch_obj.includeTestCmds = true;
@@ -2992,27 +3003,7 @@ function parseBatchFileCallback(data, batch_obj){
         // Defined the behaviour for moving packages up/down/remove if batchState object
         var index = 0;
         data.results.packages.forEach(function(package) {
-
-            var packageNameRow = $('<tr></tr>').appendTo(buildInstallTable);
-            $('<td></td>').text('Package Name').appendTo(packageNameRow);
-            $('<td></td>').html('<a href="'+package.build.owner_url+'" target="_blank">'+package.name+'</a>').appendTo(packageNameRow);
-
-            var buildCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
-            $('<td></td>').text('Build Command').appendTo(buildCommandRow);
-            $('<td></td>').html('<textarea style="width:350px;height:60px" value="'+package.build.selectedBuild+'" onBlur="updateBuildCommand(this.value,\''+index+'\')">'+package.build.selectedBuild+'</textarea>').appendTo(buildCommandRow);
-
-            var testCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
-            $('<td></td>').text('Test Command').appendTo(testCommandRow);
-            $('<td></td>').html('<textarea style="width:350px;height:60px" value="'+package.build.selectedTest+'" onBlur="updateTestCommand(this.value,\''+index+'\')">'+package.build.selectedTest+'</textarea>').appendTo(testCommandRow);
-
-            var installCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
-            $('<td></td>').text('Install Command').appendTo(installCommandRow);
-            $('<td></td>').html('<textarea style="width:350px;height:60px" value="'+package.build.selectedInstall+'" onBlur="updateInstallCommand(this.value,\''+index+'\')">'+package.build.selectedInstall+'</textarea>').appendTo(installCommandRow);
-
-            var envCommandRow = $('<tr></tr>').appendTo(buildInstallTable);
-            $('<td></td>').html('<span>Environment Variable </span><span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Environment variables separated by blanks or newlines applied as-is" ></span>').appendTo(envCommandRow);
-            $('<td></td>').html('<textarea style="width:350px;height:60px" value="'+package.build.selectedEnv+'" onBlur="updateEnvVariable(this.value,\''+index+'\')">'+package.build.selectedEnv+'</textarea>').appendTo(envCommandRow);
-
+            package.build.index = index;
             index = index + 1
 
             package.down = function (ev) {
@@ -3043,8 +3034,6 @@ function parseBatchFileCallback(data, batch_obj){
                 }
             };
         });
-        $("#batchCommandsTableContanier").html('');
-        buildInstallTable.appendTo("#batchCommandsTableContanier");
     } else {
         showAlert("", data);
     }
@@ -3218,15 +3207,18 @@ function listPackageForSingleSlaveCallback(data) {
     $("#singleSlaveListBtn").removeClass("disabled");
 }
 
-function managePackageForSingleSlaveCallback(data) {
+function managePackageForSingleSlaveCallback(data, pkgName, action) {
     jenkinsState.pkgInstallRemoveResponseCounter++;
     if (data.status === "ok") {
         jenkinsState.singleSlavePackageTableReady = false;
-        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':data.packageName,
-                            'packageAction':data.packageAction, 'status': data.buildStatus});
+        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':pkgName,
+                            'packageAction':action, 'status': data.buildStatus});
     } else {
-        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':data.packageName,
-        'packageAction':data.packageAction, 'status': data.buildStatus, 'logUrl': data.logUrl});
+        var status = data.buildStatus;
+        if (status == undefined)
+            status = "Error";
+        jenkinsState.pkgInstallRemoveStatusSingleSlave.push({'packageName':pkgName,
+        'packageAction':action, 'status': status, 'logUrl': data.logUrl});
     }
     if ( jenkinsState.pkgInstallRemoveResponseCounter == jenkinsState.totalSelectedSingleSlavePkg ) {
         jenkinsState.loadingState.packageActionLoading = false;
@@ -3932,25 +3924,6 @@ function checkIfBuildAndTestLogCreated(log_comparison_type){
         }
     }
     return true;
-}
-function updateTestCommand(value, key){
-    batchState.batchFile.packages[key].build.selectedTest = value;
-    batchState.batchFile.packages[key].build.userDefined = "True";
-}
-
-function updateBuildCommand(value, key){
-    batchState.batchFile.packages[key].build.selectedInstall = value;
-    batchState.batchFile.packages[key].build.userDefined = "True";
-}
-
-function updateInstallCommand(value, key){
-    batchState.batchFile.packages[key].build.selectedInstall = value;
-    batchState.batchFile.packages[key].build.userDefined = "True";
-}
-
-function updateEnvVariable(value, key){
-    batchState.batchFile.packages[key].build.selectedEnv = value;
-    batchState.batchFile.packages[key].build.userDefined = "True";
 }
 
 function CustomDateSorter(date1, date2){

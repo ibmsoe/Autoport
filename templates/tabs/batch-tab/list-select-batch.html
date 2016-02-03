@@ -287,7 +287,43 @@
               <!-- Dropdown box for choosing what kind of JavaScript to use. -->
               <!-- Dropdown box for choosing what kind of Python to use. -->
            <div class='modal-body' style="display:none" id="batchCommandsTableContanier">
-          </div>
+               <!-- Start Batch Settings Menu TABLE -->
+               <table class="table panel panel-default" id="buildInstallTable">
+                 <tbody rv-each-package="batchState.batchFile.packages">
+                   <tr>
+                     <td>Package Name</td>
+                     <td>
+                       <a rv-href="package.build.owner_url" target="_blank">{package.name}</a>
+                     </td>
+                   </tr>
+                   <tr>
+                     <td>Build Command</td>
+                     <td>
+                       <textarea rv-value="package.build.selectedBuild" rv-text="package.build.selectedBuild" style="width:350px;height:60px" rv-on-blur="batchState.updateIsUserDefined">{package.build.selectedBuild}</textarea>
+                     </td>
+                   </tr>
+                   <tr>
+                     <td>Test Command</td>
+                     <td>
+                       <textarea rv-value="package.build.selectedTest" rv-text="package.build.selectedTest" style="width:350px;height:60px" rv-on-blur="batchState.updateIsUserDefined">{package.build.selectedTest}</textarea>
+                     </td>
+                   </tr>
+                   <tr>
+                     <td>Install Command</td>
+                     <td>
+                       <textarea rv-text="package.build.selectedInstall" rv-value="package.build.selectedInstall" style="width:350px;height:60px" rv-on-blur="batchState.updateIsUserDefined">{package.build.selectedInstall}</textarea>
+                     </td>
+                   </tr>
+                   <tr>
+                     <td>Environment Variable <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Environment variables separated by blanks or newlines applied as-is" ></span></td>
+                     <td>
+                       <textarea rv-text="package.build.selectedEnv" rv-value="package.build.selectedEnv" style="width:350px;height:60px" rv-on-blur="batchState.updateIsUserDefined">{package.build.selectedEnv}</textarea>
+                      </td>
+                   </tr>
+                  </tbody>
+               </table>
+               <!-- End Batch Settings Menu TABLE -->
+           </div>
 
           <div class="modal-footer">
 
