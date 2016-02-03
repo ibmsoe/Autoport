@@ -1468,7 +1468,7 @@ def moveArtifactsTry(jobName, localDir):
 def moveBatchArtifacts(batchName, jobs):
     logger.debug("In moveBatchArtifacts, batchName=%s, jobs[%d]" % (batchName, len(jobs)))
 
-    cntLimit = 400                # Max number of times to process batch file ~ 2 HRs
+    cntLimit = 4800               # Max number of times to process batch file ~24 HRs
     cnt = 0
     while len(jobs) > 1:
         logger.debug("moveBatchArtifacts: batchName=%s, jobs[%d], cnt=%d" % (batchName, len(jobs), cnt))
@@ -1483,6 +1483,7 @@ def moveBatchArtifacts(batchName, jobs):
         jobs = remaining
         cnt = cnt + 1
         if cnt > cntLimit:
+            logger.debug("Leaving moveBatchArtifacts, batchName=%s, Error=Timed out" % batchName)
             break
 
     if len(jobs) == 1 and cnt < cntLimit:
