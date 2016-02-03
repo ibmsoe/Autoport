@@ -173,17 +173,22 @@ class Catalog:
 
     def getLocalResults(self, build):
         try:
+            logger.debug("In getLocalResult build=%s " % (build))
             localPath = self.__localPath + build + "/"
-            putdir = tempfile.mkdtemp(prefix="autoport_")
-
+            tmpPath = tempfile.mkdtemp(prefix="autoport_")
+            putdir = tmpPath + "/" + build
+            if not os.path.exists(putdir):
+                os.makedirs(putdir)
+            logger.debug("Catalog getLocalResults: putdir=%s remoteDir=%s"
+                         % (putdir, localPath))
             # Copy as many files as possible.  Reports use different files
             files = os.listdir(localPath)
             for file in files:
                 try:
-                    shutil.copyfile(localPath+file, putdir + "/" + file)
+                    shutil.copyfile(localPath + file, putdir + "/" + file)
                 except IOError:
                     pass
-            self.__tmpdirs.append(putdir)
+            self.__tmpdirs.append(tmpPath)
             return putdir
         except IOError as e:
             msg = "getLocalResults: " + str(e)
@@ -196,28 +201,34 @@ class Catalog:
 
     def getGSAResults(self, build):
         try:
-            putdir = tempfile.mkdtemp(prefix="autoport_")
+            logger.debug("Catalog getGSAResult: build=%s" % (build))
+            tmpPath = tempfile.mkdtemp(prefix="autoport_")
+            putdir = tmpPath + "/" + build
+            if not os.path.exists(putdir):
+                os.makedirs(putdir)
+            logger.debug("Catalog getGSAResult: putdir=%s remoteDir=%s" % (putdir, self.__copyPath + build))
             self.__archiveFtpClient.chdir(self.__copyPath + build)
 
             # Copy as many files as possible.  Reports use different files
             files = self.__archiveFtpClient.listdir()
             for file in files:
                 try:
+                    logger.debug("Catalog getGSAResult: Downloading, sourceFile=%s Destination=%s" % (file, putdir + "/" + file))
                     self.__archiveFtpClient.get(file, putdir + "/" + file)
                 except IOError:
                     pass
-            self.__tmpdirs.append(putdir)
+            self.__tmpdirs.append(tmpPath)
             return putdir
         except AttributeError:
             msg = "Connection error to archive storage.  Use settings menu to configure!"
             logger.warning(msg)
             assert(False), msg
         except IOError as e:
-            msg = "getGSAResults: " + str(e)
+            msg = "getGSAResults: IOError " + str(e)
             logger.warning(msg)
             return None
         except Exception as e:
-            msg = "getGSAResults: " + str(e)
+            msg = "getGSAResults: Exception " + str(e)
             logger.debug(msg)
             return None
 

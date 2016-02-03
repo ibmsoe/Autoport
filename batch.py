@@ -144,10 +144,10 @@ class Batch:
                             for projectsReport in dataFile:
                                 logger.debug("listGSABatchReports: projectsReport=%s" % projectsReport)
                                 try:
-                                    self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.strip(), putdir)
+                                    self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.split('/')[0], putdir)
                                 except Exception as ex:
                                     # Project results may be missing
-                                    logger.debug("listGSABatchReports: Error in copying project %s" % projectsReport.strip() + str(ex))
+                                    logger.debug("listGSABatchReports: Error in copying project %s" % projectsReport.split('/')[0] + str(ex))
                             parsedResult = self.parseBatchReportList(
                                 os.path.join(putdir,filename,batchFilePath),
                                 "gsa",
@@ -217,7 +217,7 @@ class Batch:
 
     # Parses given batch file and returns data in JSON format.
     def parseBatchReportList(self, filename, location, tmpDir = None):
-        logger.debug("In parseBatchReportList, filename=%s location=%s" % (filename, location))
+        logger.debug("In parseBatchReportList, filename=%s location=%s tmpDir=%s" % (filename, location, tmpDir))
         batchFile = None
         return_data = {
             "batch_name": "INVALID BATCH FILE",
@@ -283,6 +283,7 @@ class Batch:
     def getLocalBuildAndTestLogs(self, jobNames = [], repo = 'local', tmpDir = None):
         build_logs = 0
         test_logs = 0
+        logger.debug("In getLocalBuildAndTestLogs, repo=%s" % (repo))
         if tmpDir:
             project_path = tmpDir + '/'
         elif repo == 'local':
@@ -290,6 +291,7 @@ class Batch:
         else:
             project_path = globals.pathForTestResults
         for jobName in jobNames:
+            logger.debug("getLocalBuildAndTestLogs , pathtotest=%s/%s/%s" % (project_path, jobName.strip(), 'test_result.arti'))
             if os.path.exists('%s%s/%s' % (project_path, jobName.strip(), 'test_result.arti')):
                 test_logs += 1
 
@@ -522,22 +524,23 @@ class Batch:
         repoData = repos[repos.keys()[0]]
         batchNamesData = repoData.keys()
         if type == "compare":
-            for proj1 in repoData[batchNamesData[0]]:
-                isMatchAvailable = False
-                proj1Name = projectResultPattern.match(proj1).group(4)
-                for proj2 in repoData[batchNamesData[1]]:
-                    proj2Name = projectResultPattern.match(proj2).group(4)
-                    if proj1Name == proj2Name:
-                        isMatchAvailable = True
-                    if repos[repos.keys()[0]][batchNamesData[1]].index(proj2) == len(repos[repos.keys()[0]][batchNamesData[1]])-1 and not isMatchAvailable:
-                        repos[repos.keys()[0]][batchNamesData[1]].remove(proj2)
-                if not isMatchAvailable:
-                    repos[repos.keys()[0]][batchNamesData[0]].remove(proj1)
-            if len(repos[repos.keys()[0]][batchNamesData[0]]) == 0:
+            leftProjectslist = []
+            rightProjectslist = []
+            if len(repos.keys()) == 2:
+                i = repos[repos.keys()[0]].values()[0]
+                j = repos[repos.keys()[1]].values()[0]
+            elif len(repos.keys()) == 1:
+                if len( repos[repos.keys()[0]].keys()) == 2:
+                    i = repos[repos.keys()[0]].values()[0]
+                    j = repos[repos.keys()[0]].values()[1]
+            leftProjectslist =  map(lambda x:projectResultPattern.match(x).group(4) , i)
+            rightProjectslist =  map(lambda x:projectResultPattern.match(x).group(4) ,j)
+            if len( set(leftProjectslist).intersection(rightProjectslist)) == 0:
                 return "No common projects available"
 
         project = Project(catalog)
         final_response = {"status": "ok"}
+        
         for repo in repos:
             projects = repos[repo]
             for batchName in projects:
@@ -733,11 +736,13 @@ class Batch:
                 logger.debug("getBatchDiffLogResults: leftArch=%s parent_name=%s project=%s" % (leftArch, batchName, project))
 
         for batchName in right_projects:
-            newBatchName = batchName.split('.')[0]
+            newBatchName = final_response.keys()[0]
             if not final_response.has_key(newBatchName):
                 final_response[newBatchName] = {}
             for project in right_projects[batchName]:
                 projectName = projectResultPattern.match(project).group(4)
+                if projectName not in final_response[newBatchName].keys():
+                    continue
                 if not rightArch:
                     rightArch = projectResultPattern.match(project).group(3)
                 if not final_response[newBatchName].has_key(projectName):
@@ -748,6 +753,7 @@ class Batch:
                 logger.debug("getBatchDiffLogResults: rightArch=%s parent_name=%s project=%s" % (rightArch, batchName, project))
 
         # We have paired jobs now call project_obj.getDiffLogResult recursively and get data.
+        logger.debug("getBatchDiffLogResults: here leftRepo=%s rightRepo=%s" % (leftRepo, rightRepo))
         for batchName in final_response:
             for project in final_response[batchName]:
                 if final_response[batchName][project].has_key("left") and final_response[batchName][project].has_key("right"):

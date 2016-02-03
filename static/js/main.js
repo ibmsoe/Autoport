@@ -687,6 +687,7 @@ var batchReportState = {
                 }
                 query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
             }
+
             if (selectedBatchJobs.length > notReadyJobList.length){
                 $.ajax({
                     type: "POST",
@@ -814,7 +815,6 @@ var batchReportState = {
                 batchReportState.hasBuildLog = (selectedBatchJobs[i].build_log_count > 0)?true:false;
                 batchReportState.hasTestLog = (selectedBatchJobs[i].test_log_count > 0)?true:false;
             }
-
             // fetch the Batch details and handle it appropriately.
             $.ajax({
                 type: "POST",
@@ -928,7 +928,6 @@ var batchReportState = {
                 }
                 query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
             }
-
             // fetch the Batch details and handle it appropriately.
             $.ajax({
                 type: "POST",
@@ -3071,6 +3070,7 @@ function listBatchReportFilesCallback(data) {
         batchReportState.showListSelectTable = true;
 
         $('#batchReportListSelectTable').bootstrapTable('load', batchReportState.fileList);
+        toggleBatchReportButtons();
     } else {
         showAlert("Error!", data);
     }
@@ -3444,10 +3444,15 @@ function toggleBatchReportButtons(){
     if (selectedProjects.length > 0){
         $("#batch_report_remove").removeClass("disabled");
         $("#batch_report_history").removeClass("disabled");
+        $("#batch_report_detail").removeClass("disabled");
+        $("#batch_report_history").removeClass("disabled");
+        $("#batch_report_remove").removeClass("disabled");
     } else {
         $("#batch_report_remove").addClass("disabled");
         $("#batch_report_archive").addClass("disabled");
         $("#batch_report_history").addClass("disabled");
+        $("#batch_report_detail").addClass("disabled");
+        $("#batch_report_remove").addClass("disabled");
     }
 
     for (var i = 0; i < selectedProjects.length; i++){
@@ -3796,7 +3801,7 @@ function generateTableData(main_table, project_info, table_rows){
     table_rows[2].appendChild(project_result_s);
 
     // Now Finally add Result data
-    if (project_info && project_info.results && project_info.results.length > 0){
+    if (project_info && project_info.results){
         var project_result_data_t_value = project_info.results.total;
         var project_result_data_f_value = project_info.results.failures;
         var project_result_data_e_value = project_info.results.errors;

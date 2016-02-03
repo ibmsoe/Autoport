@@ -272,14 +272,18 @@ class ResultParser:
         return res
 
     def ResLogCompare(self, logName, leftName, left, rightName, right, only_diff = True):
-        leftf = codecs.open(left+'/'+logName, encoding='utf-8', mode='rb')
-        leftlog = leftf.readlines()
-        leftf.close()
-
-        rightf = codecs.open(right+'/'+logName, encoding='utf-8', mode='rb')
-        rightlog = rightf.readlines()
-        rightf.close()
-
+        try:
+            with codecs.open(left+'/'+logName, encoding='utf-8', mode='rb') as leftf:
+                leftlog = leftf.readlines()
+                leftf.close()
+        except Exception as e:
+            leftlog =["No %s file found!" % logName]
+        try:
+            with codecs.open(right+'/'+logName, encoding='utf-8', mode='rb') as rightf:
+                rightlog = rightf.readlines()
+                rightf.close()
+        except Exception as e:
+            rightlog =["No %s file found!" % logName]
         errorWords = logdiffutil.getErrorWords('./data/rules/errorwords')
         packageDict = logdiffutil.buildPackageDict('./data/rules/LinuxPackageList')
 
@@ -669,7 +673,7 @@ class ResultParser:
             "duration": 0,
             "results": {}
         }
-
+        testLogFile = None
         try:
             testLogFile = open(logFile)
             logFileData = testLogFile.readlines()
@@ -696,5 +700,6 @@ class ResultParser:
         except Exception as e:
             logger.warning("perlResultParser:: Error: %s" , str(e))
         finally:
-            testLogFile.close()
+            if isinstance(testLogFile, file):
+                testLogFile.close()
         return totals
