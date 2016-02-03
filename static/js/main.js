@@ -607,7 +607,6 @@ var batchReportState = {
     loading: false,
     listingRepo: "",
     comparison: false,
-    hideArchive: false,
     listLocalBatch: function(ev) {
         // reset report state to initial state so that data reflected is correctly on fresh canvas.
         batchReportState.reset();
@@ -615,10 +614,10 @@ var batchReportState = {
         batchReportState.showListSelectTable = false;
         batchReportState.loading = true;
         batchReportState.listingRepo = "local"
-        batchReportState.hideArchive = false
         // callback to render data to Batch Report table
         $.getJSON("listBatchReports/local", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
+        $("#batch_report_archive").show();
     },
     listGSABatch: function(ev) {
         // reset report state to initial state so that data reflected is correctly on fresh canvas.
@@ -627,10 +626,10 @@ var batchReportState = {
         batchReportState.showListSelectTable = false;
         batchReportState.loading = true;
         batchReportState.listingRepo = "gsa"
-        batchReportState.hideArchive = true
         // callback to render data to Batch Report table
         $.getJSON("listBatchReports/gsa", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
+        $("#batch_report_archive").hide();
     },
     listAllBatch: function(ev) {
         // reset report state to initial state so that data reflected is correctly on fresh canvas.
@@ -639,10 +638,10 @@ var batchReportState = {
         batchReportState.showListSelectTable = false;
         batchReportState.loading = true;
         batchReportState.listingRepo = "all"
-        batchReportState.hideArchive = false
         // callback to render data to Batch Report table
         $.getJSON("listBatchReports/all", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
+        $("#batch_report_archive").show();
     },
     setTestResultsPanel: function(ev) {
         // Toggle show/hide batch report listing
@@ -1169,7 +1168,7 @@ var reportState = {
         projectReportState.compareRepo = "all";
         projectReportState.loadingState.diffLoading = true;
         $.getJSON("listTestResults/all", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
-        $("#resultArchiveBtn").hide();
+        $("#resultArchiveBtn").show();
     },
     removeProjects: function(ev) {
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
@@ -1821,22 +1820,34 @@ var projectReportState = {
     archive: function() {
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
         var sel = [];
+        var gsaSelections = 0;
         var query = {};
-        for (var i = 0; i < selectedProjects.length; i ++) {
-            sel[i] = selectedProjects[i].fullName;
-            query[sel[i]] = selectedProjects[i].repository;
+        for (var i = 0; i < selectedProjects.length; i++) {
+            if (selectedProjects[i].repository != "gsa") {
+                sel[i] = selectedProjects[i].fullName;
+                query[sel[i]] = selectedProjects[i].repository;
+            }
+            else{
+                gssSelections = gsaSelections + 1;
+            }
         }
-        projectReportState.loadingState.diffLoading = true;
-        $.ajax({
-                type: "POST",
-         contentType: "application/json; charset=utf-8",
-                 url: "archiveProjects",
-                data: JSON.stringify({
-                        projects: query
-                      }),
-             success: archiveCallback,
-            dataType:'json'
-        }).fail(archiveCallback);
+        if (gsaSelections != selectedProjects.length){
+            showAlert("Local repositories chosen will be archived")
+            projectReportState.loadingState.diffLoading = true;
+            $.ajax({
+                    type: "POST",
+             contentType: "application/json; charset=utf-8",
+                     url: "archiveProjects",
+                    data: JSON.stringify({
+                          projects: query
+                          }),
+                 success: archiveCallback,
+                dataType:'json'
+            }).fail(archiveCallback);
+        }
+        else{
+        showAlert("Please select local repository for Archival");
+        }
     },
     backToList: function(ev) {
         projectReportState.prjCompareReady = true;
