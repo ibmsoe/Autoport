@@ -2384,10 +2384,7 @@ def listManagedPackages():
                             isAddable = False
 
                         if removablePackage == "Yes":
-                           # User will be allowed to remove a package if the package is removable and is installed
-                            if 'installedVersion' in pkg and pkg['installedVersion'] and \
-                                pkg['installedVersion'] != "N/A":
-                                isRemovable = True
+                            isRemovable = True
 
                     if isAddable or isRemovable:
                         enableCheckBox = True

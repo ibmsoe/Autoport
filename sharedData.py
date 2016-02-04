@@ -732,7 +732,6 @@ class SharedData:
     def removeFromManagedList(self, packageDataList, action):
         # Read the file in memory
         localManagedListFileData = self.getLocalData("ManagedList.json")
-
         # Perform deletion to memory list
 
         for pkgData in packageDataList:
@@ -756,6 +755,15 @@ class SharedData:
                         if package['name'] == packageName and \
                            package['arch'] == arch and \
                            package['owner'] == self.__userName:
+                           # If packageVersion is N/A, then package is not yet installed and
+                           # and rather than updating action to "remove" we can directly remove it
+                           # from ManagedList.json. This case may arise when users adds a package
+                           # to ManagedList and later removes it without doing a synch.
+                           if packageVersion == 'N/A':
+                               index = sharedRuntime['userPackages'].index(package)
+                               sharedRuntime['userPackages'].pop(index)
+                               addFlag = False
+                               break
                            if 'extension' in package and package['extension'] == extension:
                                package['action'] = action
                                package['version'] = packageVersion
@@ -766,6 +774,10 @@ class SharedData:
                               package['version'] = packageVersion
                               addFlag = False
                               break
+                    # Do not create an entry for a package which is marked
+                    # for removal, even though it is not installed.
+                    if packageVersion == 'N/A':
+                        addFlag = False
                     if addFlag == True:
                         if extension:
                             sharedRuntime['userPackages'].append({"owner":self.__userName,

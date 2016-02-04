@@ -1517,7 +1517,7 @@ var jenkinsState = {
     },
     getSelectedManagedPackageData: function(type){
         var selectedPackageList = $('#multiServerPackageListTable').bootstrapTable('getSelections');
-        if(selectedPackageList.length > 1 && type == "add"){
+         if(selectedPackageList.length > 0 && type.toLowerCase() == "add"){
             var tempPackArray = [];
             for (var i in selectedPackageList){
                 var obj = selectedPackageList[i];
