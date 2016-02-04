@@ -1790,13 +1790,18 @@ var projectReportState = {
             projectReportState.modalHeader = "Log Results";
         }
         else if (sel.length === 2) {
-            var leftProject = sel[0];
-            var rightProject = sel[1];
-            var leftRepo = selectedProjects[0].repository;
-            var rightRepo = selectedProjects[1].repository;
-            fireCall = true;
-            projectReportState.prjCompareSingle = false;
-            projectReportState.modalHeader = "Log Compare Results";
+            if (selectedProjects[0].name != selectedProjects[1].name){
+                fireCall = false
+            }
+            else{
+                var leftProject = sel[0];
+                var rightProject = sel[1];
+                var leftRepo = selectedProjects[0].repository;
+                var rightRepo = selectedProjects[1].repository;
+                fireCall = true;
+                projectReportState.prjCompareSingle = false;
+                projectReportState.modalHeader = "Log Compare Results";
+            }
         }
         if (fireCall) {
             projectReportState.prjCompareReady = false;
