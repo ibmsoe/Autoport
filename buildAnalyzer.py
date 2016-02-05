@@ -633,7 +633,7 @@ def inferBuildSteps(listing, repo):
         'grep env': "MAVEN_OPTS=",
         'build': "mvn dependency:list -DexcludeTransitive; mvn -DskipTests package",
         'test' : "mvn test -fn",
-        'install': "mvn install",
+        'install': "mvn -DskipTests install",
         'env' : "",
         'artifacts': "*.arti",
         'reason': "pom.xml",
