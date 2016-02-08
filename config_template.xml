@@ -135,6 +135,13 @@
                   ################################ Shell program to create autoport environment ###########################
 
                   bash_script_providing_builtin_autoport_functions='#!/bin/bash
+
+                  # Default environment variables calculated at runtime
+                  export TRAVIS_BUILD_DIR=${TRAVIS_BUILD_DIR:=$PWD}
+                  export TRAVIS_BUILD_NUMBER=${TRAVIS_BUILD_NUMBER:=1}
+                  export TRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER:=1.1}
+                  export TRAVIS_SECURE_ENV_VARS=${TRAVIS_SECURE_ENV_VARS:=false}
+
                   if [ -e /etc/redhat-release ]; then
                       function add-apt-repository() {
                           echo "Autoport RHEL/CentOS WARNING Replace: add-apt-repository $*"

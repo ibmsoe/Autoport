@@ -859,7 +859,12 @@ def convertEnvJenkins(repo, selectedEnv):
 
     return new
 
-def addDefEnvJenkins(repo, selectedEnv):
+# TODO - We should really have tags and branches as separate parameters.  Either
+# one is set or the other, but not both.  Presently users can't select branches other
+# than the master branch which is a gap.  This would require a user interface change
+# and a call to repo->get_branches() with data being placed into cache.
+
+def addDefEnvJenkins(repo, tag, selectedEnv):
     '''
     Method to add default environment variables for building assuming they
     are not specified by the user.
@@ -873,6 +878,15 @@ def addDefEnvJenkins(repo, selectedEnv):
            selectedEnv = "CXX=g++\n" + selectedEnv
     else:
         selectedEnv="CC=gcc\nCXX=g++"
+
+    # Add in TRAVIS CI Branch or Tag Environment Variable
+    if "TRAVIS_OS_NAME=" in selectedEnv:
+        if not tag or tag == "current" or tag == "Current":
+            tag = "master"
+        if "TRAVIS_TAG=" not in selectedEnv and tag != "master":
+            selectedEnv = "TRAVIS_BRANCH=''\nTRAVIS_TAG=" + tag + "\n" + selectedEnv
+        elif "TRAVIS_BRANCH=" not in selectedEnv:
+            selectedEnv = "TRAVIS_TAG=''\nTRAVIS_BRANCH=" + tag + "\n" + selectedEnv
 
     logger.debug("addDefEnvJenkins: proj=%s, env=%s" % (repo.name, selectedEnv))
 
@@ -998,7 +1012,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
 
     # Format environment variables deduced from readme files or provided by user
     selectedEnv = convertEnvJenkins(repo, selectedEnv)
-    selectedEnv = addDefEnvJenkins(repo, selectedEnv)
+    selectedEnv = addDefEnvJenkins(repo, tag, selectedEnv)
     xml_env_command.text = selectedEnv
 
     # Format commands and environment variables for json files
