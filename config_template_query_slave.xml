@@ -13,22 +13,17 @@
     <hudson.model.ParametersDefinitionProperty>
       <parameterDefinitions>
         <hudson.model.StringParameterDefinition>
-          <name>NODE</name>
-          <description>The target node</description>
-          <defaultValue/>
-        </hudson.model.StringParameterDefinition>
-        <hudson.model.StringParameterDefinition>
           <name>ACTION</name>
           <description>The action to be performed</description>
           <defaultValue/>
         </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>NODELABEL</name>
+          <description>The jenkins target node label</description>
+          <defaultValue/>
+        </hudson.model.StringParameterDefinition>
       </parameterDefinitions>
     </hudson.model.ParametersDefinitionProperty>
-    <hudson.plugins.libvirt.BeforeJobSnapshotJobProperty plugin="libvirt-slave@1.8.5"/>
-    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
-      <autoRebuild>false</autoRebuild>
-      <rebuildDisabled>false</rebuildDisabled>
-    </com.sonyericsson.rebuild.RebuildSettings>
   </properties>
   <scm class="hudson.scm.NullSCM"/>
   <assignedNode></assignedNode>
@@ -40,12 +35,11 @@
   <concurrentBuild>false</concurrentBuild>
   <builders>
     <hudson.tasks.Shell>
-      <command>
-#!/bin/sh
+      <command>#!/bin/bash
 #
 # This script will invoke a command on the build server. RHEL and UBUNTU distributions are supported
-# Inputs:   ACTION        &quot;query-os&quot;     Query basic O/S parameters
-#           NODE                         NodeLabel for current node
+# Inputs:   ACTION   &quot;query-os&quot;     Query basic O/S parameters
+#           NODELABEL                         NodeLabel for current node
 #
 # Output:   A json file for &quot;query-os&quot; containing the following fields:
 #           distro:                      RHEL or Ubuntu
@@ -61,8 +55,8 @@ set +x
 
 uname -a
 
-echo &quot;NODE: &quot; $NODE
 echo &quot;ACTION: &quot; $ACTION
+echo &quot;NODELABEL: &quot; $NODELABEL
 
 DISTRIBUTION=&quot;UBUNTU&quot;
 if [ -e /etc/centos-release ] ; then
@@ -76,13 +70,18 @@ echo &quot;DISTRIBUTION: &quot; $DISTRIBUTION
 IPADDR=$(python - &lt;&lt;-EOF
 import socket
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-# Does not send packets, just creates a connection to
-# DNS server of Google
+# Does not send packets, just creates a connection to github.com
 s.connect(( &quot;www.github.com&quot;, 80))
 print s.getsockname()[0]
 s.close
 EOF
 )
+
+HOSTNAME=`hostname`
+echo &quot;HOSTNAME=$HOSTNAME&quot;
+HOSTNAME=${HOSTNAME%%.*}                         # Remove domain if present
+
+ARCH=`uname -m`;
 
 case $ACTION in
     &quot;query-os&quot;)
@@ -111,9 +110,7 @@ case $ACTION in
                  ;;
         esac
 
-        ARCH=`uname -m`
-        HOSTNAME=`hostname`
-        echo &quot;{$DISTRO, \&quot;rel\&quot;: \&quot;$REL\&quot;,\&quot;version\&quot;: \&quot;$VER\&quot;, \&quot;arch\&quot;: \&quot;$ARCH\&quot;, \&quot;hostname\&quot;: \&quot;$HOSTNAME\&quot;, \&quot;nodelabel\&quot;: \&quot;$NODE\&quot;, \&quot;ipaddress\&quot;: \&quot;$IPADDR\&quot;}&quot; &gt; $ACTION.json
+        echo &quot;{$DISTRO, \&quot;rel\&quot;: \&quot;$REL\&quot;,\&quot;version\&quot;: \&quot;$VER\&quot;, \&quot;arch\&quot;: \&quot;$ARCH\&quot;, \&quot;hostname\&quot;: \&quot;$HOSTNAME\&quot;, \&quot;nodelabel\&quot;: \&quot;$NODELABEL\&quot;, \&quot;ipaddress\&quot;: \&quot;$IPADDR\&quot;}&quot; &gt; $ACTION.json
         ;;
 esac
 
@@ -124,7 +121,7 @@ else
 fi
 
 exit 0
-</command>
+      </command>
     </hudson.tasks.Shell>
   </builders>
   <publishers>

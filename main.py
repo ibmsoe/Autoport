@@ -1987,7 +1987,7 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
     return returnData
 
 # Query detailed Jenkin node state for managed lists
-def queryNode(node, action):
+def queryNode(nodeLabel, action):
 
     callbackData = []              # Apparently has to be an array to avoid new variable allocation
 
@@ -2009,7 +2009,7 @@ def queryNode(node, action):
                 os.remove(localArtifactsFilePath)
                 os.rmdir(outDir)
 
-    logger.debug("In queryNode, node=%s action=%s" % (node, action))
+    logger.debug("In queryNode, nodeLabel=%s action=%s" % (nodeLabel, action))
 
     # Read template XML file
     tree = ET.parse("./config_template_query_slave.xml")
@@ -2019,20 +2019,20 @@ def queryNode(node, action):
     xml_parameters = root.findall("./properties/hudson.model.ParametersDefinitionProperty/parameterDefinitions/hudson.model.StringParameterDefinition/defaultValue")
 
     # Modify selected elements
-    xml_node.text = node
+    xml_node.text = nodeLabel
 
     # add parameters information
     i = 1
     for param in xml_parameters:
         if i == 1:
-            param.text = node
-        elif i == 2:
             param.text = action
+        elif i == 2:
+            param.text = nodeLabel
         i += 1
 
     # Set Job name
     uid = randint(globals.minRandom, globals.maxRandom)
-    jobName = globals.localHostName + '.' + str(uid) + '.' + node + '.' + "querySingleSlave"
+    jobName = globals.localHostName + '.' + str(uid) + '.' + nodeLabel + '.' + "querySingleSlave"
 
     # Add header to the config
     configXml = "<?xml version='1.0' encoding='UTF-8'?>\n" + ET.tostring(root)

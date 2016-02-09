@@ -1237,9 +1237,9 @@ var jenkinsState = {
                 jenkinsState.nodeDetails[i]['os'] = jenkinsState.nodeDetails[i]['distro'] + ' ' +
                                                     jenkinsState.nodeDetails[i]['rel']    + ' ' +
                                                     jenkinsState.nodeDetails[i]['arch'];
-                var shortHostname = jenkinsState.nodeDetails[i]['hostname'].split(".")[0]
-                jenkinsState.nodeDetails[i]['jenkinsSlaveLink'] = 
-                    '<a target="_blank" href="' + globalState.jenkinsUrl + '/computer/' + shortHostname +'/">Click here</a>';
+                var displayName = jenkinsState.nodeNames[i]
+                jenkinsState.nodeDetails[i]['jenkinsSlaveLink'] =
+                    '<a target="_blank" href="' + globalState.jenkinsUrl + '/computer/' + displayName +'/">Click here</a>';
             }
             $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
         }
