@@ -735,20 +735,20 @@ class SharedData:
         # Perform deletion to memory list
 
         for pkgData in packageDataList:
+            packageName = pkgData['package_name']
+            packageVersion =  pkgData['installed_version']
+            distro = pkgData['distro']
+            rel = pkgData['rel']
+            arch =  pkgData['arch']
+            packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
+            extension = ''
+            if 'removableExt' in pkgData:
+                extension = pkgData['removableExt']
+            elif 'extension' in pkgData:
+                extension = pkgData['extension']
+            if pkgData['removable'] == 'No':
+                continue
             for sharedRuntime in localManagedListFileData['managedRuntime']:
-                packageName = pkgData['package_name']
-                packageVersion =  pkgData['installed_version']
-                distro = pkgData['distro']
-                rel = pkgData['rel']
-                arch =  pkgData['arch']
-                packageType = pkgData['package_type']  if 'package_type' in pkgData else ''
-                extension = ''
-                if 'removableExt' in pkgData:
-                    extension = pkgData['removableExt']
-                elif 'extension' in pkgData:
-                    extension = pkgData['extension']
-                if pkgData['removable'] == 'No':
-                  continue
                 if sharedRuntime['distro'] == distro and sharedRuntime['distroVersion'] == rel:
                     addFlag = True
                     for package in sharedRuntime['userPackages']:

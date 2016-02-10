@@ -2323,6 +2323,10 @@ def managePackageForSingleSlave():
                 return json.jsonify(status="ok",
                     packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)
             else:
+                if buildStatus == 'FAILURE':
+                    consoleLogUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/consoleText"
+                    return json.jsonify(status="failure", error="Job failed", packageName=packageName, packageAction=packageAction,
+                            buildStatus="FAILURE", logUrl=consoleLogUrl)
                 return json.jsonify(status="failure",
                     error="Failed to run Jenkins job. Job Status: " + buildStatus), 400
 
