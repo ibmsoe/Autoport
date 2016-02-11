@@ -1,6 +1,6 @@
 import collections
 
-RepoDataTuple = collections.namedtuple('RepoDataTuple', ['repoName', 'data'])
+RepoDataTuple = collections.namedtuple('RepoDataTuple', ['id', 'data'])
 
 class Cache:
     def __init__(self, github):
@@ -32,29 +32,29 @@ class Cache:
     def getLang(self, repo):
         # Is language data for repo already cached?
         for langsTuple in self.langs:
-            if langsTuple.repoName == repo.name:
+            if langsTuple.id == repo.id:
                 return langsTuple.data
         # Not in cache, acquire and cache
         newLangs = repo.get_languages()
-        self.langs.append(RepoDataTuple(repo.name, newLangs))
+        self.langs.append(RepoDataTuple(repo.id, newLangs))
         return newLangs
 
     def getDir(self, repo):
         # Is directory already cached?
         for dirTuple in self.dirs:
-            if dirTuple.repoName == repo.name:
+            if dirTuple.id == repo.id:
                 return dirTuple.data
         # Not in cache, acquire and cache
         newDir = repo.get_dir_contents('/')
-        self.dirs.append(RepoDataTuple(repo.name, newDir))
+        self.dirs.append(RepoDataTuple(repo.id, newDir))
         return newDir
 
     def getTags(self, repo):
         # Are tags for repo already cached?
         for tagsTuple in self.tags:
-            if tagsTuple.repoName == repo.name:
+            if tagsTuple.id == repo.id:
                 return tagsTuple.data
         # Not in cache, acquire and cache
         newTags = repo.get_tags()
-        self.tags.append(RepoDataTuple(repo.name, newTags))
+        self.tags.append(RepoDataTuple(repo.id, newTags))
         return newTags

@@ -491,7 +491,7 @@ def detail(id, repo=None):
     if panel == "":
         return json.jsonify(status="failure", error="missing panel"), 400
 
-    logger.debug('In detail, panel=%s, version=%s' % (panel, version))
+    logger.debug('In detail, id=%s, panel=%s, version=%s' % (id, panel, version))
 
     # Get the repo if it wasn't passed in (from Search auto picking one)
     if repo is None:
@@ -500,6 +500,8 @@ def detail(id, repo=None):
         except ValueError:
             return json.jsonify(status="failure", error="bad id"), 400
         repo = globals.cache.getRepo(id)
+
+    logger.debug('detail: id=%s, proj=%s' % (repo.id, repo.name))
 
     # Get language data
     languages = globals.cache.getLang(repo)
