@@ -433,9 +433,7 @@ if [ $can_continue -ne 0 ]; then
         "UBUNTU")
             sudo apt-get -y --force-yes install wget
         ;;
-        "CentOS")
-        ;&amp;
-        "RHEL")
+        "RHEL"|"CentOS")
             sudo yum -y install wget
         ;;
     esac

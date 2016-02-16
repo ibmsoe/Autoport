@@ -609,5 +609,28 @@
         </strategy>
         <operationList/>
     </hudson.plugins.build__timeout.BuildTimeoutWrapper>
+    <org.jenkinsci.plugins.preSCMbuildstep.PreSCMBuildStepsWrapper plugin="preSCMbuildstep@0.3">
+      <buildSteps>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+          DISTRIBUTION=`echo $OSNAME | awk -F" " '{print $1}'`
+          type git
+          can_continue=$?
+          if [ $can_continue -ne 0 ]; then
+             echo "git is not installed on this system, installing \"git\"."
+             case $DISTRIBUTION in
+             "Ubuntu")
+                sudo apt-get -y --force-yes install git
+             ;;
+             "RHEL"|"CentOS")
+                sudo yum -y install git
+             ;;
+             esac
+          fi
+          </command>
+        </hudson.tasks.Shell>
+      </buildSteps>
+        <failOnError>false</failOnError>
+    </org.jenkinsci.plugins.preSCMbuildstep.PreSCMBuildStepsWrapper>
   </buildWrappers>
 </project>
