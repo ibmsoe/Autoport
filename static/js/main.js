@@ -913,6 +913,8 @@ var batchReportState = {
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
         if (!checkIfBuildAndTestLogCreated()) {
             showMessage("Info: ", "No build or test logs are presently available");
+            batchReportState.loading = false;
+
         }
         else if (selectedBatchJobs.length > 0) {
             var query = {};
@@ -2044,6 +2046,7 @@ function processResultList(data) {
         detailState.autoSelected = false;
         projectReportState.prjCompareReady = true;
         $('#testCompareSelectPanel').bootstrapTable('load', projectReportState.projects);
+        toggleProjectReportButtons();
     }
 }
 
@@ -2400,7 +2403,7 @@ function populate_batch_table_headers(pkg_name, pkg_version){
 function processBatchDetails(data) {
     // If the response is not a success display error message and return.
     if (data.status != "ok") {
-        showAlert("Error:", data);
+        showAlert("Error:",data);
     } else {
         // Hide listing of Batch jiobs before showing the batch details.
         batchReportState.showListSelectTable = false;
@@ -2706,7 +2709,13 @@ function archiveCallback(data) {
             text += "</ul>";
         }
         // refetch the list as previously checked
-        reportState.listLocalProjects();
+        if (projectReportState.compareRepo == "local"){
+            reportState.listLocalProjects();
+        }
+        else{
+            reportState.listAllProjects();
+        }
+        //reportState.listAllProjects();
         handleProjectListBtns();
         $("#archiveCallbackText").html(text);
         $("#archiveCallbackAlert").modal();
@@ -2975,6 +2984,7 @@ function runBatchFileCallback(data) {
     } else {
         showAlert("Batch job submitted");
     }
+    toggleBatchStateButtons()
 }
 
 function getBatchResultsCallback(data) {
@@ -3088,6 +3098,7 @@ function removeBatchFileCallback(data) {
     } else {
         showAlert("Error!", data);
     }
+    toggleBatchStateButtons();
 }
 
 function archiveBatchFileCallback(data) {
@@ -3097,6 +3108,7 @@ function archiveBatchFileCallback(data) {
     } else {
         showAlert("Error!", data);
     }
+    toggleBatchStateButtons();
 }
 
 function archiveBatchReportsCallback(data) {
@@ -3433,6 +3445,48 @@ function compareVersion(version1, version2){
         }
     }
     return(result);
+}
+
+function toggleBatchStateButtons() {
+    if ($('#batchListSelectTable').bootstrapTable('getSelections').length>0){
+        $('#batch_file_remove').removeClass('disabled');
+        $('#batch_file_archive').removeClass('disabled');
+        $('#batch_build_test').removeClass('disabled');
+        $('#batch_details').removeClass('disabled');
+    }
+    else {
+        $('#batch_file_remove').addClass('disabled');
+        $('#batch_file_archive').addClass('disabled');
+        $('#batch_build_test').addClass('disabled');
+        $('#batch_details').addClass('disabled');
+    }
+}
+
+
+function toggleProjectReportButtons(){
+    var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+    if (selectedProjects.length === 2) {
+        $("#compareResultsBtn").removeClass("disabled");
+        $("#compareBuildLogsBtn").removeClass("disabled");
+        $("#compareTestLogsBtn").removeClass("disabled");
+    }
+    else {
+        $("#compareResultsBtn").addClass("disabled");
+        $("#compareBuildLogsBtn").addClass("disabled");
+        $("#compareTestLogsBtn").addClass("disabled");
+    }
+    if (selectedProjects.length === 0) {
+        $("#testHistoryBtn").addClass("disabled");
+        $("#testDetailBtn").addClass("disabled");
+        $("#resultArchiveBtn").addClass("disabled");
+        $("#resultRemoveBtn").addClass("disabled");
+    }
+    else {
+        $("#testHistoryBtn").removeClass("disabled");
+        $("#testDetailBtn").removeClass("disabled");
+        $("#resultArchiveBtn").removeClass("disabled");
+        $("#resultRemoveBtn").removeClass("disabled");
+    }
 }
 
 function toggleBatchReportButtons(){
@@ -4104,17 +4158,6 @@ $(document).ready(function() {
     $('#batchListSelectTable').on('uncheck.bs.table', function (e, row) {
         batchState.selectedBatchFile={};
     });
-    $('#batchListSelectTable').change(function() {
-        if ($('#batchListSelectTable').bootstrapTable('getSelections').length>0){
-            $('#batch_file_remove').removeClass('disabled');
-            $('#batch_file_archive').removeClass('disabled');
-            $('#batch_build_test').removeClass('disabled');
-        } else {
-            $('#batch_file_remove').addClass('disabled');
-            $('#batch_file_archive').addClass('disabled');
-            $('#batch_build_test').addClass('disabled');
-        }
-    });
     // Initializes an empty batch Report list/select table
     $('#batchReportListSelectTable').bootstrapTable({
         data: []
@@ -4209,31 +4252,19 @@ $(document).ready(function() {
     $('#testCompareSelectPanel').on('check.bs.table', function (e, row) {
         projectReportState.projects = row;
     });
-
-    //Handles display of project list buttons
-    $('#testCompareSelectPanel').change(function() {
-        var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
-        if (selectedProjects.length === 2) {
-            $("#compareResultsBtn").removeClass("disabled");
-            $("#compareBuildLogsBtn").removeClass("disabled");
-            $("#compareTestLogsBtn").removeClass("disabled");
-        } else {
-            $("#compareResultsBtn").addClass("disabled");
-            $("#compareBuildLogsBtn").addClass("disabled");
-            $("#compareTestLogsBtn").addClass("disabled");
-        }
-        if (selectedProjects.length === 0) {
-            $("#testHistoryBtn").addClass("disabled");
-            $("#testDetailBtn").addClass("disabled");
-            $("#resultArchiveBtn").addClass("disabled");
-            $("#resultRemoveBtn").addClass("disabled");
-        } else {
-            $("#testHistoryBtn").removeClass("disabled");
-            $("#testDetailBtn").removeClass("disabled");
-            $("#resultArchiveBtn").removeClass("disabled");
-            $("#resultRemoveBtn").removeClass("disabled");
-        }
+    $('#batchListSelectTable').change(function() {
+        toggleBatchStateButtons();
     });
+    $('#batchListSelectTable').show(function() {
+        toggleBatchStateButtons();
+    });
+    $('#testCompareSelectPanel').change(function() {
+        toggleProjectReportButtons();
+    });
+    $('#testCompareSelectPanel').show(function() {
+        toggleProjectReportButtons();
+    });
+
 
     //Handles display of Batch Report list buttons
     $('#batchReportListSelectTable').change(function() {
