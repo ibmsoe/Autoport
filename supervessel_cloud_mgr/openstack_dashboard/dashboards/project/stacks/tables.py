@@ -118,6 +118,13 @@ class DeleteStack(tables.DeleteAction):
             return stack.stack_status != 'DELETE_COMPLETE'
         return True
 
+class RebuildCluster(tables.LinkAction):
+    name = "rebuild"
+    verbose_name = _("Rebuild Cluster")
+    url = "horizon:project:stacks:rebuild"
+    classes = ("ajax-modal",)
+    icon = "pencil"
+    pass
 
 class StacksUpdateRow(tables.Row):
     ajax = True
@@ -178,7 +185,7 @@ class StacksTable(tables.DataTable):
         status_columns = ["status", ]
         row_class = StacksUpdateRow
         table_actions = (LaunchStack, DeleteStack,)
-        row_actions = (DeleteStack,)
+        row_actions = (RebuildCluster,DeleteStack,)
                        # ChangeStackTemplate)
 
 

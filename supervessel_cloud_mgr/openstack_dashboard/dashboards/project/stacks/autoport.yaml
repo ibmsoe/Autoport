@@ -37,13 +37,13 @@ parameters:
     type: string
     description: Private ip address for master node
     default: 192.168.1.110
-  fixedip_slave_r_power:
+  fixedip_slave_c_power:
     type: string
-    description: Private ip address for rhel power slave node
+    description: Private ip address for centos power slave node
     default: 192.168.1.211
-  fixedip_slave_r_x86:
+  fixedip_slave_c_x86:
     type: string
-    description: Private ip address for rhel x86 slave node
+    description: Private ip address for centos x86 slave node
     default: 192.168.1.212
   fixedip_slave_u_power:
     type: string
@@ -58,27 +58,27 @@ parameters:
   image_driver:
     type: string
     description: Image used for driver node
-    default: 1bee1c1c-0adf-41f2-8452-c9285672dbda
+    default: d2c0d64d-9c1a-4831-be9c-4aa40a8ceab7
   image_master:
     type: string
     description: Image used for master node
-    default: 067607a9-6735-46f3-97cd-00dfce9b192d
-  image_slave_r_power:
+    default: d002b788-bd24-43bd-b145-911cc917bc2b
+  image_slave_c_power:
     type: string
-    description: Image used for rhel power slave node
-    default: c4f4ff53-aba3-4ef2-8dc5-7c11806acb03
-  image_slave_r_x86:
+    description: Image used for centos power slave node
+    default: aa1444d1-a58c-4135-b942-49871f469d2b 
+  image_slave_c_x86:
     type: string
-    description: Image used for rhel x86 slave node
-    default: af4b15be-a174-4409-82cb-ef20a1839ce4
+    description: Image used for centos x86 slave node
+    default: 13c49b81-26e1-4ac0-a7a0-33222e8eea61
   image_slave_u_power:
     type: string
     description: Image used for ubuntu power slave node
-    default: d8dd551b-3880-43a6-acd4-a1f9e5af4ebd
+    default: 001b1584-c1dd-402b-a623-7a889e747976
   image_slave_u_x86:
     type: string
     description: Image used for ubuntu x86 slave node
-    default: 97645767-4637-4e06-b3c5-108a1204a122
+    default: 889ba783-7ab8-452c-a97f-5d9d9ae0447e
   flavor_driver:
     type: string
     description: flavor used for driver node
@@ -86,7 +86,7 @@ parameters:
   flavor_master:
     type: string
     description: flavor used for master node
-    default: docker.small
+    default: kvm.16c16g20G
   flavor_slave:
     type: string
     description: flavor used for slave node
@@ -106,6 +106,7 @@ resources:
     properties:
       flavor: { get_param: flavor_driver }
       image: { get_param: image_driver }
+      metadata: {"stack_id": {get_param: "OS::stack_id"}}
       networks:
         - port: { get_resource: port_driver }
       user_data_format: RAW
@@ -115,9 +116,14 @@ resources:
            #!/bin/bash
            echo 'This is the driver server. My internal IP is $INTERNAL_IP' >> /tmp/test_driver.log
            echo '$USER_NAME'  >> /tmp/test_driver.log
+
+           # Set Hosts
+           echo "172.16.10.51 keystone.kilo" >> /etc/hosts
+           echo "172.16.10.120 crl.ptopenlab.com" >> /etc/hosts
+
            # Start up Autoport service
            cd /home/opuser/autoport
-           python main.py -p -u http://$JENKINS_MASTER_EXTERNAL_IP:8080 &
+           nohup python main.py -d -p -u http://$JENKINS_MASTER_EXTERNAL_IP:8080 &
           params:
             $JENKINS_MASTER_EXTERNAL_IP: { get_attr: [fip_master, floating_ip_address] }
             $INTERNAL_IP: { get_param: fixedip_driver }
@@ -144,6 +150,7 @@ resources:
     properties:
       flavor: { get_param: flavor_master }
       image: { get_param: image_master }
+      metadata: {"stack_id": {get_param: "OS::stack_id"}}
       networks:
         - port: { get_resource: port_master }
       user_data_format: RAW
@@ -171,55 +178,57 @@ resources:
       floating_network_id: { get_param: public_net_id }
       port_id: { get_resource: port_master }
 
-  slave_r_power:
+  slave_c_power:
     type: OS::Nova::Server
     depends_on: private_subnet
     properties:
       flavor: { get_param: flavor_slave }
-      image: { get_param: image_slave_r_power }
+      image: { get_param: image_slave_c_power }
+      metadata: {"stack_id": {get_param: "OS::stack_id"}}
       networks:
-        - port: { get_resource: port_slave_r_power }
+        - port: { get_resource: port_slave_c_power }
       user_data_format: RAW
       user_data:
         str_replace:
           template: |
            #!/bin/bash
-           echo 'This is the slave_r_power server. My internal IP is $INTERNAL_IP' >> /tmp/test_slave_r_power.log
+           echo 'This is the slave_c_power server. My internal IP is $INTERNAL_IP' >> /tmp/test_slave_c_power.log
           params:
-            $INTERNAL_IP: { get_param: fixedip_slave_r_power}
+            $INTERNAL_IP: { get_param: fixedip_slave_c_power}
 
-  # Neutron port for slave_r_power server
-  port_slave_r_power:
+  # Neutron port for slave_c_power server
+  port_slave_c_power:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: private_net }
       fixed_ips:
-        - ip_address: { get_param: fixedip_slave_r_power }
+        - ip_address: { get_param: fixedip_slave_c_power }
 
-  slave_r_x86:
+  slave_c_x86:
     type: OS::Nova::Server
     depends_on: private_subnet
     properties:
       flavor: { get_param: flavor_slave }
-      image: { get_param: image_slave_r_x86 }
+      image: { get_param: image_slave_c_x86 }
+      metadata: {"stack_id": {get_param: "OS::stack_id"}}
       networks:
-        - port: { get_resource: port_slave_r_x86 }
+        - port: { get_resource: port_slave_c_x86 }
       user_data_format: RAW
       user_data:
         str_replace:
           template: |
            #!/bin/bash
-           echo 'This is the slave_r_x86 server. My internal IP is $INTERNAL_IP' >> /tmp/test_slave_r_x86.log
+           echo 'This is the slave_c_x86 server. My internal IP is $INTERNAL_IP' >> /tmp/test_slave_c_x86.log
           params:
-            $INTERNAL_IP: { get_param: fixedip_slave_r_x86}
+            $INTERNAL_IP: { get_param: fixedip_slave_c_x86}
 
-  # Neutron port for slave_r_x86 server
-  port_slave_r_x86:
+  # Neutron port for slave_c_x86 server
+  port_slave_c_x86:
     type: OS::Neutron::Port
     properties:
       network_id: { get_resource: private_net }
       fixed_ips:
-        - ip_address: { get_param: fixedip_slave_r_x86 }
+        - ip_address: { get_param: fixedip_slave_c_x86 }
 
   slave_u_power:
     type: OS::Nova::Server
@@ -227,6 +236,7 @@ resources:
     properties:
       flavor: { get_param: flavor_slave }
       image: { get_param: image_slave_u_power }
+      metadata: {"stack_id": {get_param: "OS::stack_id"}}
       networks:
         - port: { get_resource: port_slave_u_power }
       user_data_format: RAW
@@ -252,6 +262,7 @@ resources:
     properties:
       flavor: { get_param: flavor_slave }
       image: { get_param: image_slave_u_x86 }
+      metadata: {"stack_id": {get_param: "OS::stack_id"}}
       networks:
         - port: { get_resource: port_slave_u_x86 }
       user_data_format: RAW

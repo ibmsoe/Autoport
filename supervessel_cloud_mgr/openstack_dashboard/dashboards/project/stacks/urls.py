@@ -34,4 +34,6 @@ urlpatterns = patterns(
         views.ResourceView.as_view(), name='resource'),
     url(r'^get_d3_data/(?P<stack_id>[^/]+)/$',
         views.JSONView.as_view(), name='d3_data'),
+    url(r'^(?P<stack_id>[^/]+)/rebuild/$',
+        views.RebuildClusterView.as_view(), name='rebuild'),
 )

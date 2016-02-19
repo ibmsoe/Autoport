@@ -639,3 +639,31 @@ class LaunchStacksForm(forms.SelfHandlingForm):
         except Exception:
             api.cinder.volume_delete(self.request, cinder_id)
             exceptions.handle(request)
+
+class RebuildClusterForm(forms.SelfHandlingForm):
+    class Meta:
+        name = _('Rebuild Cluster')
+
+    stack_id = forms.CharField(label=_('Stack ID'),
+        widget=forms.widgets.HiddenInput)
+
+    def __init__(self, *args, **kwargs):
+        super(RebuildClusterForm, self).__init__(*args, **kwargs)
+
+
+    def handle(self, request, data):
+        params = {'stack_id': data['stack_id']}
+        stack_id = data['stack_id']
+        messages.success(request,params)
+        try:
+            stack = api.heat.stack_get(self.request,stack_id)
+            template = api.heat.template_get(self.request,stack_id)
+#            template=api.heat.template_get(self.request,stack_id)
+#            LOG.debug(template)
+#            api.heat.stack_create(self.request, **params)
+            instances,more=api.nova.server_list(self.request)
+            messages.success(request, _("Stack rebuild completely."))
+            return True
+        except Exception:
+#            api.cinder.volume_delete(self.request, cinder_id)
+            exceptions.handle(request)

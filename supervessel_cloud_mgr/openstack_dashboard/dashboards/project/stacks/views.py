@@ -35,6 +35,7 @@ from openstack_dashboard.dashboards.project.stacks \
 from openstack_dashboard.dashboards.project.stacks \
     import tabs as project_tabs
 
+from horizon import messages
 
 LOG = logging.getLogger(__name__)
 
@@ -283,3 +284,37 @@ class LaunchStackView(forms.ModalFormView):
     form_class = project_forms.LaunchStacksForm
     template_name = 'project/stacks/launch.html'
     success_url = reverse_lazy("horizon:project:stacks:index")
+
+class RebuildClusterView(forms.ModalFormView):
+
+    form_class = project_forms.RebuildClusterForm
+    template_name = 'project/stacks/rebuild.html'
+    success_url = reverse_lazy('horizon:project:stacks:index')
+
+    def get_initial(self):
+        initial = super(RebuildClusterView, self).get_initial()
+
+        initial['stack'] = self.get_object()['stack']
+        if initial['stack']:
+            initial['stack_id'] = initial['stack'].id
+
+        return initial
+
+    def get_context_data(self, **kwargs):
+        context = super(RebuildClusterView, self).get_context_data(**kwargs)
+        context['stack'] = self.get_object()['stack']
+        return context
+
+    @memoized.memoized_method
+    def get_object(self):
+        stack_id = self.kwargs['stack_id']
+        try:
+            stack = {}
+            stack['stack'] = api.heat.stack_get(self.request, stack_id)
+#            stack['template'] = api.heat.template_get(self.request, stack_id)
+            self._stack = stack
+        except Exception:
+            msg = _("Unable to retrieve stack.")
+            redirect = reverse('horizon:project:stacks:index')
+            exceptions.handle(self.request, msg, redirect=redirect)
+        return self._stack
