@@ -127,11 +127,14 @@ def getJenkinsNodes_init():
     nodeNames = []
     nodeLabels = []
 
+    logger.debug("In getJenkinsNodes_init, jenkinsUrl=%s" % globals.jenkinsUrl)
+
     nodesUrl = globals.jenkinsUrl + "/computer/api/json?pretty=true"
     try:
         nodesResults = json.loads(requests.get(nodesUrl).text)
         nodes = nodesResults['computer']
-    except ValueError:
+    except Exception as e:
+        logger.debug("getJenkinsNodes_init: nodes Error=%s" % str(e))
         return json.jsonify(status="failure", error="Jenkins nodes url or authentication error"), 400
 
     for node in nodes:
@@ -139,13 +142,14 @@ def getJenkinsNodes_init():
             name = node['displayName']
             if name != "master":
                 nodeNames.append(name)
+                logger.debug("getJenkinsNodes_init: query nodeName=%s" % str(name))
                 root = ET.fromstring(requests.get(globals.jenkinsUrl +
                     "/computer/" + name + "/config.xml").text)
                 nodeLabels.append(root.find("./label").text)
 
     return nodeNames, nodeLabels
 
-@app.route("/autoport/getJenkinsNodes", methods=["POST"])
+@app.route("/autoport/getJenkinsNodes", methods=['POST'])
 def getJenkinsNodes():
     # Query online build slaves when client attaches
     nodeNames, nodeLabels = getJenkinsNodes_init()
@@ -207,21 +211,26 @@ def getJenkinsNodeDetails_init():
     logger.info("RHEL nodes: " + str(globals.nodeRHEL))
     logger.info("CentOS nodes: " + str(globals.nodeCentOS))
 
-@app.route("/autoport/getJenkinsNodeDetails", methods=["POST"])
+@app.route("/autoport/getJenkinsNodeDetails", methods=['POST'])
 def getJenkinsNodeDetails():
 
+    logger.debug("In getJenkinsNodeDetails, globals.nodeLabels=%s" % str(globals.nodeLabels))
+
     if not globals.nodeLabels:
-        return json.jsonify(status="ok", details=[], ubuntu=[], rhel=[])
+        return json.jsonify(status="ok", details=[], ubuntu=[], rhel=[], centos=[])
 
     try:
-        nodeLabels = request.json['nodeLabels']
-    except KeyError:
+        nodeLabels = json.loads(request.form['nodeLabels'])
+    except Exception as e:
+        logger.debug("getJenkinsNodeDetails, nodeLabels Error=%s" % str(e))
         return json.jsonify(status="failure", error="missing nodeLabels argument"), 400
 
-    if not nodeLabels:
-        return json.jsonify(status="failure", error="There are no online Jenkins build slaves"), 404
+    logger.debug("getJenkinsNodeDetails, nodeLabels=%s" % str(nodeLabels))
 
-    logger.debug("In getJenkinsNodeDetails, nodeLabels=%s" % nodeLabels)
+    if not nodeLabels:
+        msg = "There are no online Jenkins build slaves"
+        logger.debug("getJenkinsNodeDetails, Error=" + msg)
+        return json.jsonify(status="failure", error=msg), 404
 
     # Utilize cached data to avoid long connect times or connect failures when a build slave is busy or hung
     nodeDetails = []
@@ -3149,13 +3158,17 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
         sharedData.uploadChefData()
         chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
 
+        # Setup Jenkins cloud boot services for build servers.  Uses pristine snap shotted image.
+        # TODO: This needs to be enhanced to allow users to change jenkins servers in the cloud
+        # as the parameter is visible through the GUI.  Fixed it in the next release
+        try:
+            import rebuildSlaves
+            global cloudNodeInfo
+            cloudNodeInfo = rebuildSlaves.cloudInit()
+        except Exception as ex:
+            logger.debug("autoportJenkinsInit: rebuildSlaves initial Error: %s", ex)
+
 def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
-    try:
-        import rebuildSlaves
-        global cloudNodeInfo
-        cloudNodeInfo = rebuildSlaves.cloudInit()
-    except Exception as ex:
-        logger.debug("autoportUserInit: rebuildSlaves initial Error: %s", ex)
     if hostname and configUsername and configPassword :
         if globals.gsaConnected:
             catalog.close()
