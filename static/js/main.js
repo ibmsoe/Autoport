@@ -2880,6 +2880,8 @@ function initCallback(data) {
     globalState.logLevel = data.logLevel;
     globalState.tempJenkinsUrl = data.jenkinsUrl;
 
+    console.log("initCallBack: jenkinsUrl=" + globalState.jenkinsUrl);
+
     if (data.gsaConnected !== undefined) {
        if (data.gsaConnected) {
            $('#gsaConnectionStatus').text("GSA connected");
@@ -2905,7 +2907,6 @@ function settingsCallback(data) {
             jenkinsState.nodeCentOS = [];
             jenkinsState.nodeUbuntu = [];
             getJenkinsNodesCallback(data);
-            getJenkinsNodeDetailsCallback(data);
             showAlert("Updated successfully");
         }
     }
@@ -3153,6 +3154,10 @@ function getJenkinsNodesCallback(data) {
             }
         }
         console.log("All nodes: ", jenkinsState.nodeLabels);
+
+        var labels = JSON.stringify(data.nodeLabels);
+        $.post("getJenkinsNodeDetails", {nodeLabels: labels},
+             getJenkinsNodeDetailsCallback, "json").fail(getJenkinsNodeDetailsCallback);
     }
     else {
         showAlert("Could not get Jenkins slaves", data);
@@ -4060,18 +4065,10 @@ $(document).ready(function() {
     // Query Jenkins for list of build servers
     $.ajax({
         type: 'POST',
+        contentType: "application/json; charset=utf-8",
         url: "getJenkinsNodes",
         data: {},
         success: getJenkinsNodesCallback,
-        dataType: "json",
-        async:false
-    });
-    $.ajax({
-        type: 'POST',
-        contentType: "application/json; charset=utf-8",
-        url: "getJenkinsNodeDetails",
-        data: JSON.stringify({nodeLabels: jenkinsState.nodeLabels}),
-        success: getJenkinsNodeDetailsCallback,
         dataType: "json",
         async:true
     });
