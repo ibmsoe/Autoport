@@ -11,7 +11,7 @@ nodes_info_file = './data/config/cloudNodeInfo.json'
 
 cmdInvocation = False
 
-def rebuildServer(ip):
+def rebuildServer(ip, rebuildFlag = True):
 
     if not cmdInvocation:
         from log import logger
@@ -31,7 +31,8 @@ def rebuildServer(ip):
             logger.debug("rebuildServer: instance.status=%s" % instance.status)
 
         # instance.rebuild( obj[ip]['image_id'])
-        instance.rebuild( obj[ip]['original_image_id'])
+        if rebuildFlag == True:
+            instance.rebuild( obj[ip]['original_image_id'])
 
         cnt = 0
         status = "REBUILD"
@@ -45,7 +46,7 @@ def rebuildServer(ip):
                 logger.debug("rebuildServer: instance.status=%s" % status)
 
             cnt += 1
-
+    return status
 
 def randomword(length):
    return ''.join(random.choice(string.lowercase) for i in range(length))

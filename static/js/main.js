@@ -1424,47 +1424,104 @@ var jenkinsState = {
             var nodeindex = jenkinsState.nodeLabels.indexOf($(this)[0].nodelabel);
             jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span><span class='text-danger'>Disconnected</span>";
             $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
-            // Rebuild each slave
-            $.getJSON("rebuildSlave", { serverNodeCSV: selectedBuildServerCsv }, function(data){
+
+            var syncPackages = function() {
+             console.log("Start syncing..",  jenkinsState.nodeDetails[nodeindex].nodelabel);
+             jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span><span class='text-warning'>Syncing</span>";
+             $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+
+             $.ajax({
+                     url:"synchManagedPackageList",
+                     type: 'get',
+                     data: {
+                               serverNodeCSV: jenkinsState.nodeDetails[nodeindex].nodelabel
+                           },
+                     success: function(data){
+                                if (data.status === "ok") {
+                                    var pollObj = new pollingState();
+                                    if (data.jobList.length > 0){
+                                        for (var i=0; i< data.jobList.length; i++) {
+                                            var dataJob = data.jobList[i];
+                                            pollObj.setData(dataJob);
+                                            // Poll for sync status
+                                            setTimeout(
+                                                pollObj.poll(
+                                                    function(){
+                                                            jenkinsState.reBuildSlave = false;
+                                                            jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
+                                                            $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+                                               })
+                                              ,5000);
+                                        }
+                                    }
+                                } else {
+                                    showAlert("Error!", data);
+                                }
+                            },
+                        error: function(){
+                                    jenkinsState.reBuildSlave = false;
+                                    jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
+                                }
+                         });
+            };
+            var buttonID = $(ev.target).attr('id');
+            if( buttonID == "reSync") {
+                console.log("Sync only");
+                syncPackages();
+            }
+            else
+            {
+                // Rebuild each slave
+                $.getJSON("rebuildSlave", { serverNodeCSV: selectedBuildServerCsv, rebuildFlag : 1}, function(data){
                     if (data.status === "ok") {
-                        jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span><span class='text-warning'>Syncing</span>";
-                        $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
-                        console.log("Start syncing..",  jenkinsState.nodeDetails[nodeindex].nodelabel);
                         // On completion of Rebuild, Sync Managed packages on the newly built slave..
                         // so that build slave is at the latest Managed version
-                        $.getJSON("synchManagedPackageList", { serverNodeCSV: jenkinsState.nodeDetails[nodeindex].nodelabel },
-                                 function(data){
-                                    if (data.status === "ok") {
-                                        var pollObj = new pollingState();
-                                        if (data.jobList.length > 0){
-                                            for (var i=0; i< data.jobList.length; i++) {
-                                                var dataJob = data.jobList[i];
-                                                pollObj.setData(dataJob);
-                                                // Poll for sync status
-                                                setTimeout(
-                                                    pollObj.poll(
-                                                        function(){
-                                                                jenkinsState.reBuildSlave = false;
-                                                                jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
-                                                                $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
-                                                   })
-                                                  ,5000);
+                        if(data.rebuildStatus == 'ERROR'){
+                             console.log("Rubuild entered ERROR state. Hence exiting!");
+                             jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-danger'>ERROR</span>";
+                             $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+                             jenkinsState.reBuildSlave = false;
+                             return false;
+                        }
+                        if(data.rebuildStatus == 'ACTIVE'){
+                             syncPackages();
+                        }
+                        if(data.rebuildStatus != 'ACTIVE'){
+                            console.log("Slave has not come online. Keep polling for ACTIVE Status");
+                            jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span><span class='text-success'>Building</span>";
+                            $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+                            var pollObjRebuild = new pollingState();
+                            pollObjRebuild.setData({
+                                                    serverNodeCSV: jenkinsState.nodeDetails[nodeindex].nodelabel ,
+                                                    rebuildFlag : 0
+                                                   });
+                            var checkRebuildStatus = function()
+                            {
+                                pollObjRebuild.poll(
+                                    function(data){
+                                        if (data.status === "ok") {
+                                            if(data.rebuildStatus == 'ACTIVE'){
+                                                jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
+                                                $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+                                                syncPackages();
+                                                return true;
                                             }
-                                        }
-                                    } else {
-                                        showAlert("Error!", data);
-                              }
-                        })
-                        .fail(function(){
-                            jenkinsState.reBuildSlave = false;
-                            jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
-                        });
+                                         else {
+                                             checkRebuildStatus();
+                                         }
+                                       }
+                                   });
+                           };
+                           checkRebuildStatus();
+                        }
                     }
                 },nodeindex)
                 .fail(function(data){});
+                }
         });
         if (selectedBuildServerCsv == undefined || selectedBuildServerCsv == "") {
             showAlert("Please select build server!");
+            jenkinsState.reBuildSlave = false;
             return false;
         }
     },
@@ -3345,6 +3402,10 @@ var pollingState =  function(){
                    $("#syncManagedPackageButton").addClass("disabled");
 
                    $.getJSON("monitorJob", dataJob, notificationCallback(this,cb)).fail(notificationCallback(this,cb));
+                   pollCounter++;
+               }
+               if (dataJob.serverNodeCSV != undefined) {
+                   $.getJSON("rebuildSlave", dataJob, cb).fail(cb);
                    pollCounter++;
                }
            }
