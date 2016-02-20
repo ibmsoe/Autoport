@@ -2550,6 +2550,8 @@ def rebuildSlave():
     try:
         nodes = request.args.get("serverNodeCSV", "")
         logger.debug("In rebuildSlave, serverNodeCSV=%s" % (nodes))
+        rebuildFlag = request.args.get("rebuildFlag", "")
+        logger.debug("In rebuildSlave, rebuildFlag=%s" % (rebuildFlag))
     except KeyError:
         return json.jsonify(status="failure", error="missing serverNodeCSV argument"), 400
 
@@ -2561,12 +2563,14 @@ def rebuildSlave():
         if node['nodelabel'] == nodes:
             nodeIP = node['ipaddress']
             logger.debug("rebuildSlave: %s",nodeIP)
+            status = ""
             try:
                 import rebuildSlaves
-                rebuildSlaves.rebuildServer(nodeIP)
+                status = rebuildSlaves.rebuildServer(nodeIP,  bool(int(rebuildFlag)))
             except Exception as ex:
                 logger.debug("rebuildSlave: Error: %s", ex)
-    return json.jsonify(status="ok", node=nodeIP)
+
+    return json.jsonify(status="ok", node=nodeIP, rebuildStatus=status)
 
 def createSynchJobs(nodes):
     '''
@@ -3176,6 +3180,15 @@ def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
         if jenkinsUrl:
             catalog.connect(hostname, urlparse(jenkinsUrl).hostname, archiveUser=configUsername, archivePassword=configPassword)
         batch.connect(hostname, globals.port, archiveUser=configUsername, archivePassword=configPassword)
+
+@app.errorhandler(500)
+def internalError(error):
+    return json.jsonify(status="error", error = error), 500
+
+@app.errorhandler(503)
+def serviceUnavailbleError(error):
+    return json.jsonify(status="error", error = "Server is busy. Please try after some time!"), 503
+
 
 if __name__ == "__main__":
 
