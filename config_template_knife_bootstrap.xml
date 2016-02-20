@@ -90,7 +90,10 @@ echo "-------------------Running knife bootstrap to remove packages----------"
 echo "======================================================================="
 knife role from file $role.json
 rm -rf $role.json
-knife bootstrap $ipaddress -N $host -x jenkins -i /home/jenkins/.ssh/jenkins --sudo --no-host-key-verify -r role[$role]
+
+# -y flag in bootstrap command will overwrite the node and client identity stored in chef-server database
+# Assumimg validatorless bootstrap.
+knife bootstrap $ipaddress -N $host -x jenkins -i /home/jenkins/.ssh/jenkins --sudo --no-host-key-verify -r role[$role] -y
 knife role delete $role -y
 fi
 
@@ -110,7 +113,7 @@ echo "-------------------Running knife bootstrap to install packages---------"
 echo "======================================================================="
 knife role from file $role.json
 rm -rf $role.json
-knife bootstrap $ipaddress -N $host -x jenkins -i /home/jenkins/.ssh/jenkins --sudo --no-host-key-verify -r role[$role]
+knife bootstrap $ipaddress -N $host -x jenkins -i /home/jenkins/.ssh/jenkins --sudo --no-host-key-verify -r role[$role] -y
 knife role delete $role -y
          </command>
       </hudson.tasks.Shell>

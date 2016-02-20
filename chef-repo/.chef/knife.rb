@@ -8,8 +8,15 @@ log_level                :info
 log_location             STDOUT
 node_name                "autoport-chef"
 client_key               "#{current_dir}/autoport-chef.pem"
-validation_client_name   "autoport-ibm-validator"
-validation_key           "#{current_dir}/autoport-ibm-validator.pem"
+
+# Commenting out validator settings to carry out validatorless bootstrap.
+# This will gracefully handle the situation where an old client key or
+# a node object exist in the chef-server database.
+# Feature support starting from chef-client version 12.2.0
+
+# validation_client_name   "autoport-ibm-validator"
+# validation_key           "#{current_dir}/autoport-ibm-validator.pem"
+
 chef_server_url          "https://#{chef_server}/organizations/autoport-ibm"
 cookbook_path            ["#{current_dir}/../cookbooks"]
 
