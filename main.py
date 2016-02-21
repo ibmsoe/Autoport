@@ -3183,7 +3183,7 @@ def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
 
 @app.errorhandler(500)
 def internalError(error):
-    return json.jsonify(status="error", error = error), 500
+    return json.jsonify(status="error", error = "An error occured!"), 500
 
 @app.errorhandler(503)
 def serviceUnavailbleError(error):

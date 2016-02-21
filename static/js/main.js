@@ -1484,7 +1484,7 @@ var jenkinsState = {
                              return false;
                         }
                         if(data.rebuildStatus == 'ACTIVE'){
-                             syncPackages();
+                             setTimeout(syncPackages(), 20000);
                         }
                         if(data.rebuildStatus != 'ACTIVE'){
                             console.log("Slave has not come online. Keep polling for ACTIVE Status");
@@ -1503,7 +1503,7 @@ var jenkinsState = {
                                             if(data.rebuildStatus == 'ACTIVE'){
                                                 jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
                                                 $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
-                                                syncPackages();
+                                                setTimeout(syncPackages(), 20000);
                                                 return true;
                                             }
                                          else {
