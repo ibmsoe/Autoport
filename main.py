@@ -2551,7 +2551,7 @@ def rebuildSlave():
         nodes = request.args.get("serverNodeCSV", "")
         logger.debug("In rebuildSlave, serverNodeCSV=%s" % (nodes))
         rebuildFlag = request.args.get("rebuildFlag", "")
-        logger.debug("In rebuildSlave, rebuildFlag=%s" % (rebuildFlag))
+        logger.debug("rebuildSlave: rebuildFlag=%s" % (rebuildFlag))
     except KeyError:
         return json.jsonify(status="failure", error="missing serverNodeCSV argument"), 400
 
@@ -3183,11 +3183,11 @@ def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
 
 @app.errorhandler(500)
 def internalError(error):
-    return json.jsonify(status="error", error = "An error occured!"), 500
+    return json.jsonify(status="error", error = "An error occurred!"), 500
 
 @app.errorhandler(503)
 def serviceUnavailbleError(error):
-    return json.jsonify(status="error", error = "Server is busy. Please try after some time!"), 503
+    return json.jsonify(status="error", error = "Server is busy.  Please try again in a few minutes!"), 503
 
 def startAutoport(p = None):
     args = None
@@ -3220,6 +3220,20 @@ def startAutoport(p = None):
     autoportJenkinsInit(globals.jenkinsUrl, globals.configJenkinsUsername, globals.configJenkinsKey)
     autoportUserInit(globals.hostname,globals.jenkinsUrl,globals.configUsername,globals.configPassword)
 
+    return args
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    args = startAutoport(p)
+    hostname = "127.0.0.1"
+    if args.public:
+        hostname = globals.localHostName
+    print "You may use your browser now - http://%s:5000/autoport/" % (hostname)
+
+    if args.public:
+        app.run(threaded=True, host='0.0.0.0')
+    else:
+        app.run(debug = args.debug, threaded=True)
 
     logger.info("Stat[1]: timeStarted=%s, totalProjectsSearched=%d, totalProjectsBuilt=%d, totalBatchProjectsBuilt=%d" %
                 (timeStarted, totalProjectsSearched, totalProjectsBuilt, totalBatchProjectsBuilt))
@@ -3238,17 +3252,3 @@ def startAutoport(p = None):
                 (timeStarted, batchReports, logdiffBatchBuildResults, logdiffBatchTestResults,
                  archiveBatchResults, removeBatchResults))
 
-    return args
-
-if __name__ == "__main__":
-    p = argparse.ArgumentParser()
-    args = startAutoport(p)
-    hostname = "127.0.0.1"
-    if args.public:
-        hostname = globals.localHostName
-    print "You may use your browser now - http://%s:5000/autoport/" % (hostname)
-
-    if args.public:
-        app.run(threaded=True, host='0.0.0.0')
-    else:
-        app.run(debug = args.debug, threaded=True)
