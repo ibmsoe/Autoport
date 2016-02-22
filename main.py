@@ -3189,9 +3189,8 @@ def internalError(error):
 def serviceUnavailbleError(error):
     return json.jsonify(status="error", error = "Server is busy. Please try after some time!"), 503
 
-
-if __name__ == "__main__":
-
+def startAutoport(p = None):
+    args = None
     # When the server instance is freshly started clear up all the /tmp/ directories created by the application
     # in previous run, that were not cleaned up.
     for dirname, dirnames, filenames in os.walk('/tmp/'):
@@ -3199,36 +3198,28 @@ if __name__ == "__main__":
             logger.debug("Deleting: " + dirname)
             shutil.rmtree(dirname, ignore_errors=True)
 
-    p = argparse.ArgumentParser()
-    p.add_argument("-p", "--public", action="store_true",
+    if p:
+        p.add_argument("-p", "--public", action="store_true",
                    help="specifies for the web server to listen over the public network,\
                    defaults to only listening on private localhost")
-    p.add_argument("-u", "--jenkinsURL", help="specifies the URL for the Jenkins server,\
+        p.add_argument("-u", "--jenkinsURL", help="specifies the URL for the Jenkins server,\
                    defaults to '" + globals.jenkinsUrl + "'")
-    p.add_argument("-b", "--allocBuildServers", action="store_true",
+        p.add_argument("-b", "--allocBuildServers", action="store_true",
                    help="Build Servers are dynamically allocated per user")
-    p.add_argument("-d", "--debug", action="store_true",
+        p.add_argument("-d", "--debug", action="store_true",
                    help="Set debug mode")
-    args = p.parse_args()
 
-    if args.jenkinsURL:
-        globals.jenkinsUrl = args.jenkinsURL
+        args = p.parse_args()
 
-    if args.allocBuildServers:
-        globals.allocBuildServers = args.allocBuildServers
+        if args.jenkinsURL:
+            globals.jenkinsUrl = args.jenkinsURL
+
+        if args.allocBuildServers:
+            globals.allocBuildServers = args.allocBuildServers
 
     autoportJenkinsInit(globals.jenkinsUrl, globals.configJenkinsUsername, globals.configJenkinsKey)
     autoportUserInit(globals.hostname,globals.jenkinsUrl,globals.configUsername,globals.configPassword)
 
-    hostname = "127.0.0.1"
-    if args.public:
-        hostname = globals.localHostName
-    print "You may use your browser now - http://%s:5000/autoport/" % (hostname)
-
-    if args.public:
-        app.run(threaded=True, host='0.0.0.0')
-    else:
-        app.run(debug = args.debug, threaded=True)
 
     logger.info("Stat[1]: timeStarted=%s, totalProjectsSearched=%d, totalProjectsBuilt=%d, totalBatchProjectsBuilt=%d" %
                 (timeStarted, totalProjectsSearched, totalProjectsBuilt, totalBatchProjectsBuilt))
@@ -3247,3 +3238,17 @@ if __name__ == "__main__":
                 (timeStarted, batchReports, logdiffBatchBuildResults, logdiffBatchTestResults,
                  archiveBatchResults, removeBatchResults))
 
+    return args
+
+if __name__ == "__main__":
+    p = argparse.ArgumentParser()
+    args = startAutoport(p)
+    hostname = "127.0.0.1"
+    if args.public:
+        hostname = globals.localHostName
+    print "You may use your browser now - http://%s:5000/autoport/" % (hostname)
+
+    if args.public:
+        app.run(threaded=True, host='0.0.0.0')
+    else:
+        app.run(debug = args.debug, threaded=True)
