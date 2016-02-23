@@ -2,10 +2,8 @@ package com.autoport.pageobjects;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.WebDriver;
@@ -153,14 +151,6 @@ public class BatchJobsTab {
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/div[5]/span/div[2]/a[1]/button")
 	WebElement saveDetailsBtn;
 
-	// @FindBy(xpath =
-	// "//div[@id='batchPanel']/div[2]/div[2]/div[5]/span/div[2]/div[2]/button")
-	// WebElement detailBuildServersBtn;
-
-	// @FindBy(xpath =
-	// "//div[@id='batchPanel']/div[2]/div[2]/div[5]/span/div[2]/a[2]/button")
-	// WebElement detailBuildAndTestBtn;
-
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/div[5]/span/div[3]/a/button")
 	WebElement detailBackBtn;
 
@@ -211,7 +201,7 @@ public class BatchJobsTab {
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]//td[3]/a[2]/button")
 	WebElement batchRepoDownArrowBtn;
 
-	// Remove button for all repositories in batch file
+	// Remove (Cross) button for all repositories in batch file
 	@FindBy(xpath = "//div[@id='batchPanel']/div[2]/div[2]/table[2]//td[3]/a[3]/button")
 	WebElement batchRepoCrossBtn;
 
@@ -271,12 +261,8 @@ public class BatchJobsTab {
 	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[1]//button")
 	WebElement batchConfigSettingsJDK;
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[2]//button")
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[3]//button")
 	WebElement batchConfigSettingsJs;
-
-	// Changed as per new UI
-	// @FindBy(xpath = "//div[@id='settingsBatchModal']/div/div/div[2]//li/a")
-	// List<WebElement> batchConfigSettingsJDKValues;
 
 	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[1]//a")
 	List<WebElement> batchConfigSettingsJDKValues;
@@ -287,13 +273,13 @@ public class BatchJobsTab {
 	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[1]//li[4]/a")
 	WebElement batchConfigSettingsOpenJDK8; // batchConfigSettingsIBMJDK
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[2]//a")
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[3]//a")
 	List<WebElement> batchConfigSettingsNodeJsValues;
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[2]//li[1]/a")
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[3]//li[1]/a")
 	WebElement batchConfigSettingsNodeJs;
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[2]//li[2]/a")
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[2]/div/div[3]//li[2]/a")
 	WebElement batchConfigSettingsIBMNodeJs;
 
 	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[5]//label")
@@ -302,7 +288,7 @@ public class BatchJobsTab {
 	@FindBy(id = "batchSettingsTestCkBox")
 	WebElement batchConfigSettingsEnableTestChkBx;
 
-	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[5]//label")
+	@FindBy(xpath = "//div[@id='settingsBatchModal1']/div/div[6]//label")
 	WebElement batchConfigSettingsEnableInstallLabel;
 
 	@FindBy(id = "batchSettingsInstallCkBox")
@@ -314,26 +300,11 @@ public class BatchJobsTab {
 	@FindBy(id = "batchSettingsOwner")
 	WebElement batchConfigSettingsOwnerTbx;
 
-	// New UI change, hence commented
-	// @FindBy(xpath =
-	// "//div[@id='settingsBatchModal']/div/div/div[3]/button[3]")
-	// WebElement batchConfigSettingsSaveBtn;
-
 	@FindBy(xpath = "//div[@id='settingsBatchModal']/div/div/div[4]/button[3]")
 	WebElement batchConfigSettingsContinueBtn;
 
-	// New UI change, hence commented
-	// @FindBy(xpath =
-	// "//div[@id='settingsBatchModal']/div/div/div[3]/button[2]")
-	// WebElement batchConfigSettingsResetBtn;
-
 	@FindBy(xpath = "//div[@id='settingsBatchModal']/div/div/div[4]/button[2]")
 	WebElement batchConfigSettingsResetBtn;
-
-	// New UI change, hence commented
-	// @FindBy(xpath =
-	// "//div[@id='settingsBatchModal']/div/div/div[3]/button[1]")
-	// WebElement batchConfigSettingsCloseBtn;
 
 	@FindBy(id = "showModifyButton")
 	WebElement batchConfigSettingsShowModifyCommandsBtn;
@@ -720,12 +691,26 @@ public class BatchJobsTab {
 			LogResult.fail("Build+Test button is disabled.");
 		}
 
-		if (listArchiveBtn.isEnabled()) {
-			LogResult.pass("Archive button is enabled.");
-		} else {
-			LogResult.fail("Archive button is disabled.");
+		
+		if(firstRowLocalBatchFileLocation.getText().equalsIgnoreCase("local")){
+			
+			if(listArchiveBtn.isEnabled()){
+				LogResult.pass("Archive button is enabled.");
+			}else{
+				LogResult.fail("Archive button is disabled.");
+			}
+			
+		}else{
+			
+			if (firstRowLocalBatchFileLocation.getText().equalsIgnoreCase("gsa") || listArchiveBtn.isEnabled()) {
+				LogResult.pass("Archive button is disabled.");
+			} else {
+				LogResult.fail("Archive button is enabled.");
+			}
+			
 		}
-
+		
+			
 		if (listRemoveBtn.isEnabled()) {
 
 			LogResult.pass("Remove button is enabled.");
@@ -986,7 +971,9 @@ public class BatchJobsTab {
 	// Selecting first row
 	public void selectFirstRow() {
 
-		wait.until(ExpectedConditions.visibilityOf(batchFilesPanel));
+		//wait.until(ExpectedConditions.visibilityOf(batchFilesPanel));
+		
+		wait.until(ExpectedConditions.visibilityOf(firstRowCheckbx));
 
 		if (firstRowCheckbx.isDisplayed()) {
 
@@ -1020,10 +1007,6 @@ public class BatchJobsTab {
 	// To verify Batch file details UI
 	public void verifyBatchFileDetailsUI(String firstRowBatchfileName) {
 
-		// commented as changed per new UI
-		// String batchDetailsHelpTx = "The following packages will be submitted
-		// to be built and tested in order.";
-
 		String batchDetailsHelpTx = "The Settings Menu below allows you to customize the selected batch file.";
 
 		if (detailsHelpTxt.getText().contains(batchDetailsHelpTx)) {
@@ -1052,20 +1035,7 @@ public class BatchJobsTab {
 			LogResult.fail("Save button is not displayed.");
 		}
 
-		// Buttons removed in new UI hence commenting functions
-
-		// if (detailBuildServersBtn.isDisplayed()) {
-		// LogResult.pass("Build Servers button is displayed.");
-		// } else {
-		// LogResult.fail("Build Servers button is not displayed.");
-		// }
-		//
-		// if (detailBuildAndTestBtn.isDisplayed()) {
-		// LogResult.pass("Build+Test button is displayed.");
-		// } else {
-		// LogResult.fail("Build+Test button is not displayed.");
-		// }
-
+		
 		if (detailBackBtn.isDisplayed()) {
 			LogResult.pass("Back button is displayed.");
 		} else {
@@ -1202,6 +1172,9 @@ public class BatchJobsTab {
 	// Clicking on archived button and verifying appearance of alert along with
 	// message
 	public void clickOnArchiveBtn() {
+		
+		wait.until(ExpectedConditions.elementToBeClickable(listArchiveBtn));
+		
 		listArchiveBtn.click();
 
 		wait.until(ExpectedConditions.visibilityOf(alertCloseBtn));
@@ -1279,7 +1252,10 @@ public class BatchJobsTab {
 	}*/
 
 	// To verify if new Batch file is created after batch file name change
-	public void newBatchFileCreationConfirmation(String newBatchFileName) {
+	public void newBatchFileCreationConfirmation(String newBatchFileName) throws InterruptedException {
+		
+		Thread.sleep(2000);
+		
 		if (firstRowLocalBatchFileName.getText().contentEquals(newBatchFileName)) {
 			LogResult.pass("New Batch file is created successfully.");
 		} else {
@@ -1372,7 +1348,8 @@ public class BatchJobsTab {
 				LogResult.pass(item.getText());
 			}
 
-			batchConfigSettingsNodeJs.click();
+			batchConfigSettingsJs.click();
+			//batchConfigSettingsNodeJs.click();
 
 		} else {
 			LogResult.fail("Use Node.js drop down is not displayed.");
@@ -1642,7 +1619,7 @@ public class BatchJobsTab {
 
 	// To verify for Show/Modify Commands Reset button functionality on Batch
 	// Config settings pop up
-	public void clickOnShowModifyCommandsResetBtn() {
+	public void clickOnShowModifyCommandsResetBtn() throws InterruptedException {
 
 		String testCommandTxt = batchConfigSettingsShowModifyCommandsTestCommandTxtArea.getText();
 
@@ -1651,6 +1628,8 @@ public class BatchJobsTab {
 		batchConfigSettingsShowModifyCommandsTestCommandTxtArea.sendKeys("abc");
 
 		batchConfigSettingsShowModifyCommandsResetBtn.click();
+		
+		Thread.sleep(3000);
 
 		if (batchConfigSettingsShowModifyCommandsTestCommandTxtArea.getText().contentEquals(testCommandTxt)) {
 			LogResult.pass("Show/Modify Commands UI Reset button is clicked and functionality verified.");
@@ -1735,7 +1714,7 @@ public class BatchJobsTab {
 	public void clickOnRemoveBtn() throws InterruptedException {
 
 		String batchFileDate = firstRowLocalBatchFileDate.getText();
-
+		
 		listRemoveBtn.click();
 
 		wait.until(ExpectedConditions.alertIsPresent());

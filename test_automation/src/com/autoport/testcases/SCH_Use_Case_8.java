@@ -1,9 +1,7 @@
 package com.autoport.testcases;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.BatchJobsTab;
@@ -79,9 +77,5 @@ public class SCH_Use_Case_8 {
 		searchTab.commonProjectRemoveRepository();
 	}
 
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
-
+	
 }

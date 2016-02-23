@@ -300,21 +300,33 @@ public class ReportsTab {
 	/* Function to click on List Archived Project Results Button */
 	public void clickListArchivedProjectResultsButton(){
 		projectListArchivedBtn.click();
-		
-		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testCompareRunAlert")));
-				
-		if(projectResultsTable.isDisplayed()){
-			LogResult.pass("Project results are displayed in table");
+		try{
+			wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testCompareRunAlert")));
+					
+			if(projectResultsTable.isDisplayed()){
+				LogResult.pass("Project results are displayed in table");
+			}
+			else{
+				LogResult.fail("Project results are not displayed in table");
+			}
 		}
-		else{
-			LogResult.fail("Project results are not displayed in table");
+		
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
 		}
 	}
 	
 	/* Function to click on List All Project Results Button */
 	public void clickListAllProjectResultsButton(){
 		projectListAllBtn.click();
-		
+		try{
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("testCompareRunAlert")));
 				
 		if(projectResultsTable.isDisplayed()){
@@ -322,6 +334,17 @@ public class ReportsTab {
 		}
 		else{
 			LogResult.fail("Project results are not displayed in table");
+		}
+		}
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
 		}
 	}
 	
@@ -791,7 +814,7 @@ public class ReportsTab {
 	/* Function to click on List Archived Batch Jobs Results Button */
 	public void clickListArchivedBatchJobsResultsButton(){
 		batchJobListArchivedBtn.click();
-		
+		try{
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("batchReportListSelectTable")));
 				
 		if(batchJobsSearchResultsTable.isDisplayed()){
@@ -800,6 +823,18 @@ public class ReportsTab {
 		else{
 			LogResult.fail("batch jobs results are not displayed in table");
 		}
+		}
+		
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
+		}
 	}
 	
 	/* Function to click on List All Batch Jobs Results Button */
@@ -807,12 +842,24 @@ public class ReportsTab {
 		batchJobListAllBtn.click();
 		
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("batchReportListSelectTable")));
-				
+		try{		
 		if(batchJobsSearchResultsTable.isDisplayed()){
 			LogResult.pass("batch job results are displayed in table");
 		}
 		else{
 			LogResult.fail("batch job results are not displayed in table");
+		}
+		}
+		
+		catch(Exception e)
+		{
+			if(errorCloseBtn.isDisplayed()){
+				
+				String errorMessage = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div")).getText();
+				LogResult.fail(errorMessage);
+				errorCloseBtn.click();
+				Assert.fail(errorMessage);
+			}
 		}
 	}
 	
@@ -863,7 +910,7 @@ public class ReportsTab {
 		
 		selectMaximumBatchJobRecordsToDisplay();
 		
-		List<WebElement> repositoryTypes = driver.findElements(By.xpath("//table[@id='batchReportListSelectTable']/tbody/tr[3]/td[6]"));
+		List<WebElement> repositoryTypes = driver.findElements(By.xpath("//table[@id='batchReportListSelectTable']/tbody/tr/td[4]"));
 		
 		int noOfrepositoryTypes = 0;
 		for (WebElement repositoryType : repositoryTypes){			
@@ -1230,7 +1277,7 @@ public class ReportsTab {
 			LogResult.pass("List Local button is clicked.");
 		}
 
-		public void clickOnDateCompletedHeader() {
+		public void clickOnDateCompletedHeader() throws InterruptedException {
 
 			wait.until(ExpectedConditions.visibilityOf(dateCompletedHeader));
 			
@@ -1257,7 +1304,7 @@ public class ReportsTab {
 			for (WebElement item : dateCompletedColumnValues) {
 
 				Date temp1 = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(item.getText()); // yyyy-MM-dd-'h'HH-'m'mm-'s'ss
-				if (temp.before(temp1)) {
+				if (temp.before(temp1) || temp.equals(temp1)) {
 					i++;
 				}
 
@@ -1318,7 +1365,7 @@ public class ReportsTab {
 
 				Date temp1 = new SimpleDateFormat("EEE MMM dd HH:mm:ss yyyy").parse(item.getText());// yyyy-MM-dd
 				// HH:mm:ss
-				if (temp.before(temp1)) {
+				if (temp.equals(temp1) || temp.before(temp1)) {
 					i++;
 				}
 
@@ -1343,7 +1390,7 @@ public class ReportsTab {
 
 			else if (i == buildServersCount) {
 
-				LogResult.pass("All batch jobs got completed. Batch jobs that got submitted are: ");
+				LogResult.pass("All batch jobs got submitted. Batch jobs that got submitted are: ");
 
 				for (int j = 0; j < i; j++) {
 

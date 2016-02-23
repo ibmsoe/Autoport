@@ -1,7 +1,6 @@
 package com.autoport.testcases;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -17,6 +16,7 @@ public class SCH_Use_Case_2 {
 
 	String gsaUserName;
 	String gsaPassword;
+	String envType;
 
 	@BeforeTest
 	public void beforeTest() throws Exception {
@@ -27,14 +27,15 @@ public class SCH_Use_Case_2 {
 
 		gsaUserName = ReadTestData.readParameter("searchTabData", "gsaUserName");
 		gsaPassword = ReadTestData.readParameter("searchTabData", "gsaPassword");
+		envType = ReadTestData.readParameter("../config", "envType");
 	}
 
 	@Test(priority = 0)
 	public void SCH_Settings_UI_003() {
 
 		homePage.clickOnSettings();
-
-		homePage.verifySettingsUI();
+	
+		homePage.verifySettingsUI(envType);
 	}
 
 	@Test(priority = 1)
@@ -55,8 +56,4 @@ public class SCH_Use_Case_2 {
 		homePage.clickOnSettingsCloseBtn();
 	}
 
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
 }

@@ -1,9 +1,7 @@
 package com.autoport.testcases;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.BatchJobsTab;
@@ -62,11 +60,11 @@ public class BJ_Use_Case_003 {
 
 		batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);//spring-framework
+		batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);
 
 		batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.verifyResultForBatchFileSearch(topRepositoryName+"-"+topRepositoryValue);//spring-framework
+		batchJobsTab.verifyResultForBatchFileSearch(topRepositoryName+"-"+topRepositoryValue);
 
 		batchJobsTab.clearBatchFileSearchTbx();
 
@@ -92,11 +90,11 @@ public class BJ_Use_Case_003 {
 
 		batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);//spring-framework
+		batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);
 
 		batchJobsTab.clickOnListArchivedBtn();
 
-		batchJobsTab.verifyResultForBatchFileSearch(topRepositoryName+"-"+topRepositoryValue);//spring-framework
+		batchJobsTab.verifyResultForBatchFileSearch(topRepositoryName+"-"+topRepositoryValue);
 
 		batchJobsTab.clearBatchFileSearchTbx();
 	}
@@ -114,19 +112,14 @@ public class BJ_Use_Case_003 {
 
 		batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);//spring-framework
+		batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);
 
 		batchJobsTab.clickOnListAllBtn();
 
-		batchJobsTab.verifyResultForBatchFileSearch(topRepositoryName+"-"+topRepositoryValue);//spring-framework
+		batchJobsTab.verifyResultForBatchFileSearch(topRepositoryName+"-"+topRepositoryValue);
 
 		batchJobsTab.clearBatchFileSearchTbx();
 
 	}
-
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
 
 }

@@ -1,11 +1,8 @@
 package com.autoport.testcases;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
-
 import com.autoport.pageobjects.BatchJobsTab;
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.SearchTab;
@@ -34,9 +31,12 @@ public class BJ_Use_Case_002 {
 		searchTab = CommonFunctions.searchTab;
 		batchJobsTab = CommonFunctions.batchJobsTab;
 
-		downloadFilePath = ReadTestData.readParameter("searchTabData", "downloadFilePath");
-		topRepositoryName = ReadTestData.readParameter("batchJobsTabData", "topRepositoryName");
-		topRepositoryValue = ReadTestData.readParameter("searchTabData", "topRepositoryValue");
+		downloadFilePath = ReadTestData.readParameter("searchTabData",
+				"downloadFilePath");
+		topRepositoryName = ReadTestData.readParameter("batchJobsTabData",
+				"topRepositoryName");
+		topRepositoryValue = ReadTestData.readParameter("searchTabData",
+				"topRepositoryValue");
 
 		homePage.clickBatchJobsTab();
 	}
@@ -61,7 +61,8 @@ public class BJ_Use_Case_002 {
 	public void BJ_Browse_batch_file_upload_003() {
 
 		// For Windows
-		batchJobsTab.selectFileToUpload(downloadFilePath + topRepositoryName + "-" + topRepositoryValue);
+		batchJobsTab.selectFileToUpload(downloadFilePath + topRepositoryName
+				+ "-" + topRepositoryValue);
 		// e.g C:\\Users\\manish_kane\\Downloads\\spring-framework-3
 
 		// For Linux
@@ -79,13 +80,10 @@ public class BJ_Use_Case_002 {
 
 		batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.verifyLocallySavedBatchFile(topRepositoryName + "-" + topRepositoryValue);// spring-framework-3
+		batchJobsTab.verifyLocallySavedBatchFile(topRepositoryName + "-"
+				+ topRepositoryValue);
 
 	}
 
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
-
+	
 }

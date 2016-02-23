@@ -6,9 +6,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
-import java.util.TimeZone;
 
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
@@ -17,12 +15,10 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.pagefactory.AjaxElementLocatorFactory;
-
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
 
-import com.autoport.utilities.CommonFunctions;
 import com.autoport.utilities.LogResult;
 import com.autoport.utilities.ReadTestData;
 
@@ -39,7 +35,8 @@ public class SearchTab {
 	private String repositoryNameCommonProject;
 	private String repositoryNameAddedToBatch;
 
-	String downloadFilePath = ReadTestData.readParameter("searchTabData", "downloadFilePath");
+	String downloadFilePath = ReadTestData.readParameter("searchTabData",
+			"downloadFilePath");
 
 	public SearchTab(WebDriver driver, FluentWait<WebDriver> wait) {
 
@@ -47,7 +44,8 @@ public class SearchTab {
 
 		this.wait = wait;
 
-		AjaxElementLocatorFactory factory = new AjaxElementLocatorFactory(driver, 10);
+		AjaxElementLocatorFactory factory = new AjaxElementLocatorFactory(
+				driver, 10);
 		PageFactory.initElements(factory, this);
 
 		action = new Actions(driver);
@@ -144,10 +142,6 @@ public class SearchTab {
 	@FindBy(xpath = "//div[@id='singleDetailPanel']/div/h1/div/a/button")
 	WebElement addToBatchBtnForAutoResult;
 
-	// Not working hence commented
-	// @FindBy(id = "singleVersions")
-	// WebElement currentVersionForAutoResult;
-
 	@FindBy(xpath = "//div[@id='singleDetailPanel']/div/h1/div/div[3]/button")
 	WebElement currentVersionForAutoResult;
 
@@ -234,10 +228,10 @@ public class SearchTab {
 	@FindBy(xpath = "//tbody[@id='resultsTable']/tr")
 	List<WebElement> numOfResultRows;
 
-	@FindBy(xpath = "//tbody[@id='resultsTable'][1]/tr/td[1]")
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.single.ready']//tbody[@id='resultsTable'][1]/tr/td[1]")
 	WebElement mouseHoverDescription;
 
-	@FindBy(xpath = "//tbody[@id='resultsTable'][1]//p")
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.single.ready']//tbody[@id='resultsTable'][1]/tr/td[1]/p")
 	WebElement repoDescription;
 
 	@FindBy(xpath = "//tbody[@id='resultsTable'][1]//td[3]/a/button")
@@ -401,6 +395,12 @@ public class SearchTab {
 	@FindBy(xpath = "//div[@id='generateDetailPanel']/div/span[5]")
 	WebElement commonProjectLastUpdatedDetail;
 
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable'][1]/tr/td[1]")
+	WebElement mouseHoverDescriptionForCommonProjects;
+
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[@id='resultsTable'][1]/tr/td[1]/p")
+	WebElement repoDescriptionForCommonProjects;
+
 	@FindBy(xpath = "//div[@id='generateDetailPanel']/div/h3")
 	WebElement commonProjectDescriptionHeader;
 
@@ -494,7 +494,8 @@ public class SearchTab {
 	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[1]//td[2]//button")
 	WebElement commonProjectRepositoryDetailBtn; // //tbody[@id='resultsTable'][1]/tr/td[2]/a/button
 
-	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[1]//td[3]//button") // //tbody[@id='resultsTable'][1]/tr/td[3]/a/button
+	@FindBy(xpath = "//div[@id='resultsPanel'][@rv-show='searchState.multiple.ready']//tbody[1]//td[3]//button")
+	// //tbody[@id='resultsTable'][1]/tr/td[3]/a/button
 	WebElement commonProjectRepositoryRemoveBtn;
 
 	@FindBy(xpath = "//div[@id='generateDetailPanel']/div")
@@ -585,9 +586,11 @@ public class SearchTab {
 			searchSingleProjectTab.click();
 
 			if (searchSingleProjectQueryTbx.isDisplayed()) {
-				LogResult.pass("Search for a single project button is expanded.");
+				LogResult
+						.pass("Search for a single project button is expanded.");
 			} else {
-				LogResult.fail("Search for a single project button is not expanded.");
+				LogResult
+						.fail("Search for a single project button is not expanded.");
 			}
 		}
 	}
@@ -596,10 +599,13 @@ public class SearchTab {
 	public void verifySingleProjectUI() {
 
 		if (searchSingleProjectQueryTbx.isDisplayed()) {
-			LogResult.pass("Search for single project query text box is displayed with place holder text as: "
-					+ searchSingleProjectQueryTbx.getAttribute("placeholder"));
+			LogResult
+					.pass("Search for single project query text box is displayed with place holder text as: "
+							+ searchSingleProjectQueryTbx
+									.getAttribute("placeholder"));
 		} else {
-			LogResult.fail("Search for single project query text box is not displayed.");
+			LogResult
+					.fail("Search for single project query text box is not displayed.");
 		}
 
 		if (sortByBtn.isDisplayed()) {
@@ -647,7 +653,8 @@ public class SearchTab {
 			searchSingleProjectQueryTbx.sendKeys(Keys.ENTER);
 		} else {
 
-			action.click(sortByBtn).moveToElement(relevance).click().build().perform();
+			action.click(sortByBtn).moveToElement(relevance).click().build()
+					.perform();
 
 		}
 
@@ -661,7 +668,8 @@ public class SearchTab {
 	// To verify results when sorted by popularity stars
 	public void verifyResultsSortByPopularityStars() {
 
-		action.click(sortByBtn).moveToElement(popularityStars).click().build().perform();
+		action.click(sortByBtn).moveToElement(popularityStars).click().build()
+				.perform();
 
 		if (sortByBtn.getText().contentEquals("Sort by popularity stars")) {
 			LogResult.pass("Results sorted by Popularity Stars.");
@@ -685,7 +693,8 @@ public class SearchTab {
 	// To verify results when sorted by updated
 	public void verifyResultsSortByUpdated() {
 
-		action.click(sortByBtn).moveToElement(updated).click().build().perform();
+		action.click(sortByBtn).moveToElement(updated).click().build()
+				.perform();
 
 		if (sortByBtn.getText().contentEquals("Sort by updated")) {
 			LogResult.pass("Results sorted by Updated.");
@@ -696,25 +705,31 @@ public class SearchTab {
 
 	// To verify top section UI when Auto selected repository is displayed
 	public void verifyAutoSelectSection() {
-		if ((sortByBtn.getText().contentEquals("Sort by relevance")) && (singleDetailPanel.isDisplayed())) {
-			LogResult.pass("Auto-selected repository displayed sorted by relevance");
+		if ((sortByBtn.getText().contentEquals("Sort by relevance"))
+				&& (singleDetailPanel.isDisplayed())) {
+			LogResult
+					.pass("Auto-selected repository displayed sorted by relevance");
 		} else {
 
 			LogResult.fail("Repositories displayed sorted by relevance");
 		}
 
 		if (autoRepoMsg.isDisplayed()) {
-			LogResult.pass("Auto-selected repository message is displayed: " + autoRepoMsg.getText());
+			LogResult.pass("Auto-selected repository message is displayed: "
+					+ autoRepoMsg.getText());
 		} else {
-			LogResult.fail("Auto-selected repository message is not displayed.");
+			LogResult
+					.fail("Auto-selected repository message is not displayed.");
 		}
 
 		if (seeAllResultsBtn.isDisplayed()) {
 			LogResult.pass("See all results button is displayed.");
 			if (seeAllResultsBtn.getText().contentEquals("See all results")) {
-				LogResult.pass("See all results button has text: " + seeAllResultsBtn.getText());
+				LogResult.pass("See all results button has text: "
+						+ seeAllResultsBtn.getText());
 			} else {
-				LogResult.fail("See all results button has text: " + seeAllResultsBtn.getText());
+				LogResult.fail("See all results button has text: "
+						+ seeAllResultsBtn.getText());
 			}
 		} else {
 			LogResult.fail("See all results button is not displayed.");
@@ -731,37 +746,43 @@ public class SearchTab {
 		}
 
 		if (repositoryDetail.isDisplayed()) {
-			LogResult.pass("Repository name is displayed: " + repositoryDetail.getText());
+			LogResult.pass("Repository name is displayed: "
+					+ repositoryDetail.getText());
 		} else {
 			LogResult.fail("Repository name is not displayed.");
 		}
 
 		if (starCountDetail.isDisplayed()) {
-			LogResult.pass("Star count is displayed: " + starCountDetail.getText());
+			LogResult.pass("Star count is displayed: "
+					+ starCountDetail.getText());
 		} else {
 			LogResult.fail("Star count is not displayed.");
 		}
 
 		if (forkCountDetail.isDisplayed()) {
-			LogResult.pass("Fork count is displayed: " + forkCountDetail.getText());
+			LogResult.pass("Fork count is displayed: "
+					+ forkCountDetail.getText());
 		} else {
 			LogResult.fail("Fork count is not displayed.");
 		}
 
 		if (primaryLanguageDetail.isDisplayed()) {
-			LogResult.pass("Primary language is displayed: " + primaryLanguageDetail.getText());
+			LogResult.pass("Primary language is displayed: "
+					+ primaryLanguageDetail.getText());
 		} else {
 			LogResult.fail("Primary language is not displayed.");
 		}
 
 		if (repositorySizeDetail.isDisplayed()) {
-			LogResult.pass("Repository size is displayed: " + repositorySizeDetail.getText());
+			LogResult.pass("Repository size is displayed: "
+					+ repositorySizeDetail.getText());
 		} else {
 			LogResult.fail("Repository size is not displayed.");
 		}
 
 		if (lastUpdatedDetail.isDisplayed()) {
-			LogResult.pass("Last updated detail is displayed: " + lastUpdatedDetail.getText());
+			LogResult.pass("Last updated detail is displayed: "
+					+ lastUpdatedDetail.getText());
 		} else {
 			LogResult.fail("Last updated detail is not displayed.");
 		}
@@ -769,26 +790,32 @@ public class SearchTab {
 		if (descriptionHeader.isDisplayed()) {
 			LogResult.pass("Description header is displayed.");
 			if (descriptionHeader.getText().contentEquals("Description")) {
-				LogResult.pass("Description header has text as: " + descriptionHeader.getText());
+				LogResult.pass("Description header has text as: "
+						+ descriptionHeader.getText());
 			} else {
-				LogResult.fail("Description header has text as: " + descriptionHeader.getText());
+				LogResult.fail("Description header has text as: "
+						+ descriptionHeader.getText());
 			}
 		} else {
 			LogResult.fail("Description header is not displayed.");
 		}
 
 		if (descriptionText.isDisplayed()) {
-			LogResult.pass("Description text is displayed with text as: " + descriptionText.getText());
+			LogResult.pass("Description text is displayed with text as: "
+					+ descriptionText.getText());
 		} else {
 			LogResult.fail("Description text is not displayed.");
 		}
 
 		if (languageCompositionHeader.isDisplayed()) {
 			LogResult.pass("Language composition header is displayed.");
-			if (languageCompositionHeader.getText().contentEquals("Language Composition")) {
-				LogResult.pass("Language composition header has text as: " + languageCompositionHeader.getText());
+			if (languageCompositionHeader.getText().contentEquals(
+					"Language Composition")) {
+				LogResult.pass("Language composition header has text as: "
+						+ languageCompositionHeader.getText());
 			} else {
-				LogResult.fail("Language composition header has text as: " + languageCompositionHeader.getText());
+				LogResult.fail("Language composition header has text as: "
+						+ languageCompositionHeader.getText());
 			}
 		} else {
 			LogResult.fail("Language composition header is not displayed.");
@@ -815,8 +842,8 @@ public class SearchTab {
 			LogResult.fail("Language legends are not displayed.");
 		}
 
-		// In case of Java Primary language, check for JDK drop down
-		if (primaryLanguageDetail.getText().contentEquals("Java")) {
+		// In case of Java/Scala Primary language, check for JDK drop down
+		if ((primaryLanguageDetail.getText().contentEquals("Java")) || (primaryLanguageDetail.getText().contentEquals("Scala"))) {
 
 			if (useJDK.isDisplayed()) {
 				LogResult.pass("Use JDK option drop down is displayed with options: ");
@@ -843,7 +870,8 @@ public class SearchTab {
 		if (primaryLanguageDetail.getText().contentEquals("JavaScript")) {
 
 			if (useNodeJs.isDisplayed()) {
-				LogResult.pass("Use NodeJs option drop down is displayed with options: ");
+				LogResult
+						.pass("Use NodeJs option drop down is displayed with options: ");
 
 				useNodeJs.click();
 
@@ -865,10 +893,13 @@ public class SearchTab {
 
 		if (addToBatchBtnForAutoResult.isDisplayed()) {
 			LogResult.pass("Add to Batch button is displayed");
-			if (addToBatchBtnForAutoResult.getText().contentEquals("Add to Batch")) {
-				LogResult.pass("Add to Batch button has text: " + addToBatchBtnForAutoResult.getText());
+			if (addToBatchBtnForAutoResult.getText().contentEquals(
+					"Add to Batch")) {
+				LogResult.pass("Add to Batch button has text: "
+						+ addToBatchBtnForAutoResult.getText());
 			} else {
-				LogResult.fail("Add to Batch button has text: " + addToBatchBtnForAutoResult.getText());
+				LogResult.fail("Add to Batch button has text: "
+						+ addToBatchBtnForAutoResult.getText());
 			}
 		} else {
 			LogResult.fail("Add to Batch button is not displayed");
@@ -876,11 +907,14 @@ public class SearchTab {
 
 		if (currentVersionForAutoResult.isDisplayed()) {
 			LogResult.pass("Use current version drop down is displayed.");
-			if (currentVersionForAutoResult.getText().contentEquals("Use current version")) {
-				LogResult.pass("Use current version drop down has text: " + currentVersionForAutoResult.getText());
+			if (currentVersionForAutoResult.getText().contentEquals(
+					"Use current version")) {
+				LogResult.pass("Use current version drop down has text: "
+						+ currentVersionForAutoResult.getText());
 
 			} else {
-				LogResult.fail("Use current version drop down has text: " + currentVersionForAutoResult.getText());
+				LogResult.fail("Use current version drop down has text: "
+						+ currentVersionForAutoResult.getText());
 			}
 
 			currentVersionForAutoResult.click();
@@ -898,7 +932,8 @@ public class SearchTab {
 		}
 
 		if (selectBuildServerForAutoResult.isDisplayed()) {
-			LogResult.pass("Select build servers drop down is displayed with values: ");
+			LogResult
+					.pass("Select build servers drop down is displayed with values: ");
 
 			selectBuildServerForAutoResult.click();
 
@@ -918,10 +953,13 @@ public class SearchTab {
 
 		if (buildAndTestBtnForAutoResult.isDisplayed()) {
 			LogResult.pass("Build and Test button is displayed.");
-			if (buildAndTestBtnForAutoResult.getText().contentEquals("Build + Test")) {
-				LogResult.pass("Build and Test button has text: " + buildAndTestBtnForAutoResult.getText());
+			if (buildAndTestBtnForAutoResult.getText().contentEquals(
+					"Build + Test")) {
+				LogResult.pass("Build and Test button has text: "
+						+ buildAndTestBtnForAutoResult.getText());
 			} else {
-				LogResult.fail("Build and Test button has text: " + buildAndTestBtnForAutoResult.getText());
+				LogResult.fail("Build and Test button has text: "
+						+ buildAndTestBtnForAutoResult.getText());
 			}
 		} else {
 			LogResult.fail("Build and Test button is not displayed.");
@@ -930,19 +968,24 @@ public class SearchTab {
 		if (buildStepsHeader.isDisplayed()) {
 			LogResult.pass("Build Steps header is displayed.");
 			if (buildStepsHeader.getText().contentEquals("Build steps")) {
-				LogResult.pass("Build Steps header has text: " + buildStepsHeader.getText());
+				LogResult.pass("Build Steps header has text: "
+						+ buildStepsHeader.getText());
 			} else {
-				LogResult.fail("Build Steps header has text: " + buildStepsHeader.getText());
+				LogResult.fail("Build Steps header has text: "
+						+ buildStepsHeader.getText());
 			}
 		} else {
 			LogResult.fail("Build Steps header is not displayed.");
 		}
 
 		if (selectBuildOptions.isDisplayed()) {
-			if (selectBuildOptions.getText().contentEquals("Select build options")) {
-				LogResult.pass("Select build options drop down has text: " + selectBuildOptions.getText());
+			if (selectBuildOptions.getText().contentEquals(
+					"Select build options")) {
+				LogResult.pass("Select build options drop down has text: "
+						+ selectBuildOptions.getText());
 			} else {
-				LogResult.fail("Select Build options drop down has text: " + selectBuildOptions.getText());
+				LogResult.fail("Select Build options drop down has text: "
+						+ selectBuildOptions.getText());
 			}
 
 		} else {
@@ -956,10 +999,13 @@ public class SearchTab {
 		}
 
 		if (selectTestOptions.isDisplayed()) {
-			if (selectTestOptions.getText().contentEquals("Select test options")) {
-				LogResult.pass("Select test options drop down has text: " + selectTestOptions.getText());
+			if (selectTestOptions.getText()
+					.contentEquals("Select test options")) {
+				LogResult.pass("Select test options drop down has text: "
+						+ selectTestOptions.getText());
 			} else {
-				LogResult.fail("Select test options drop down has text: " + selectTestOptions.getText());
+				LogResult.fail("Select test options drop down has text: "
+						+ selectTestOptions.getText());
 			}
 		} else {
 			LogResult.fail("Select test options drop down is not displayed.");
@@ -972,19 +1018,26 @@ public class SearchTab {
 		}
 
 		if (selectEnvironmentOptions.isDisplayed()) {
-			if (selectEnvironmentOptions.getText().contentEquals("Select environment options")) {
-				LogResult.pass("Select environment options drop down has text: " + selectEnvironmentOptions.getText());
+			if (selectEnvironmentOptions.getText().contentEquals(
+					"Select environment options")) {
+				LogResult
+						.pass("Select environment options drop down has text: "
+								+ selectEnvironmentOptions.getText());
 			} else {
-				LogResult.fail("Select environment options drop down has text: " + selectEnvironmentOptions.getText());
+				LogResult
+						.fail("Select environment options drop down has text: "
+								+ selectEnvironmentOptions.getText());
 			}
 		} else {
-			LogResult.fail("Select environment options drop down is not displayed.");
+			LogResult
+					.fail("Select environment options drop down is not displayed.");
 		}
 
 		if (environmentOptionsTbx.isDisplayed()) {
 			LogResult.pass("Select environment options text box is displayed");
 		} else {
-			LogResult.fail("Select environment options text box is not displayed");
+			LogResult
+					.fail("Select environment options text box is not displayed");
 		}
 	}
 
@@ -1018,9 +1071,11 @@ public class SearchTab {
 	public void verifyNumOfRepositories(int numOfRows) {
 
 		if (numOfResultRows.size() == numOfRows) {
-			LogResult.pass("Number of repositories displayed are: " + numOfResultRows.size());
+			LogResult.pass("Number of repositories displayed are: "
+					+ numOfResultRows.size());
 		} else {
-			LogResult.pass("Number of repositories displayed are: " + numOfResultRows.size());
+			LogResult.pass("Number of repositories displayed are: "
+					+ numOfResultRows.size());
 		}
 
 	}
@@ -1030,9 +1085,13 @@ public class SearchTab {
 		if (repositoriesColHeader.isDisplayed()) {
 			LogResult.pass("Repositories column is displayed.");
 			if (repositoriesColHeader.getText().contentEquals("Repositories")) {
-				LogResult.pass("Repositories column header text is displayed as: " + repositoriesColHeader.getText());
+				LogResult
+						.pass("Repositories column header text is displayed as: "
+								+ repositoriesColHeader.getText());
 			} else {
-				LogResult.fail("Repositories column header text is displayed as: " + repositoriesColHeader.getText());
+				LogResult
+						.fail("Repositories column header text is displayed as: "
+								+ repositoriesColHeader.getText());
 			}
 		} else {
 			LogResult.fail("Repositories column is not displayed.");
@@ -1094,9 +1153,11 @@ public class SearchTab {
 		if (actionsColHeader.isDisplayed()) {
 			LogResult.pass("Actions column is displayed.");
 			if (actionsColHeader.getText().contentEquals("Actions")) {
-				LogResult.pass("Actions column header text is displayed as: " + actionsColHeader.getText());
+				LogResult.pass("Actions column header text is displayed as: "
+						+ actionsColHeader.getText());
 			} else {
-				LogResult.fail("Actions column header text is displayed as: " + actionsColHeader.getText());
+				LogResult.fail("Actions column header text is displayed as: "
+						+ actionsColHeader.getText());
 			}
 		} else {
 			LogResult.fail("Actions column is not displayed.");
@@ -1136,9 +1197,11 @@ public class SearchTab {
 				wait.until(ExpectedConditions.urlContains("github.com"));// titleContains("Git")
 
 				if (getPageURL().contains("github.com")) {// getPageTitle()
-					LogResult.pass("Owner details are displayed on GitHub website.");
+					LogResult
+							.pass("Owner details are displayed on GitHub website.");
 				} else {
-					LogResult.fail("Owner details are not displayed on GitHub website.");
+					LogResult
+							.fail("Owner details are not displayed on GitHub website.");
 				}
 
 				driver.close();
@@ -1170,9 +1233,11 @@ public class SearchTab {
 				wait.until(ExpectedConditions.urlContains("github.com"));
 
 				if (getPageURL().contains("github.com")) {
-					LogResult.pass("Repository details are displayed on GitHub website.");
+					LogResult
+							.pass("Repository details are displayed on GitHub website.");
 				} else {
-					LogResult.fail("Repository details are not displayed on GitHub website.");
+					LogResult
+							.fail("Repository details are not displayed on GitHub website.");
 				}
 
 				driver.close();
@@ -1196,13 +1261,15 @@ public class SearchTab {
 			LogResult.fail("Fork count tooltip is not displayed.");
 		}
 
-		if (primaryLanguageDetail.getAttribute("title").contains("Primary language")) {
+		if (primaryLanguageDetail.getAttribute("title").contains(
+				"Primary language")) {
 			LogResult.pass("Primary language tooltip is displayed.");
 		} else {
 			LogResult.fail("Primary language tooltip is not displayed.");
 		}
 
-		if (repositorySizeDetail.getAttribute("title").contains("Repository size")) {
+		if (repositorySizeDetail.getAttribute("title").contains(
+				"Repository size")) {
 			LogResult.pass("Repository size tooltip is displayed.");
 		} else {
 			LogResult.fail("Repository size tooltip is not displayed.");
@@ -1230,13 +1297,15 @@ public class SearchTab {
 			LogResult.fail("Fork count tooltips are not displayed.");
 		}
 
-		if (primaryLanguageList.getAttribute("title").contains("Primary language")) {
+		if (primaryLanguageList.getAttribute("title").contains(
+				"Primary language")) {
 			LogResult.pass("Primary language tooltips are displayed.");
 		} else {
 			LogResult.fail("Primary language tooltips are not displayed.");
 		}
 
-		if (repositorySizeList.getAttribute("title").contains("Repository size")) {
+		if (repositorySizeList.getAttribute("title")
+				.contains("Repository size")) {
 			LogResult.pass("Repository size tooltips are displayed.");
 		} else {
 			LogResult.fail("Repository size tooltips are not displayed.");
@@ -1251,14 +1320,16 @@ public class SearchTab {
 
 	// To verify the description of repository by hovering mouse over results
 	public void verifyRepositoryDescription() throws InterruptedException {
-		action.moveToElement(mouseHoverDescription).perform();
-
-		Thread.sleep(1000);
 
 		wait.until(ExpectedConditions.visibilityOf(mouseHoverDescription));
+		
+		Thread.sleep(2000);
+
+		action.moveToElement(mouseHoverDescription).build().perform();
 
 		if (repoDescription.isDisplayed()) {
-			LogResult.pass("Repository description displayed as: " + repoDescription.getText());
+			LogResult.pass("Repository description displayed as: "
+					+ repoDescription.getText());
 		} else {
 			LogResult.fail("Repository description is not displayed.");
 		}
@@ -1298,8 +1369,10 @@ public class SearchTab {
 	// To verify UI elements for batch file Save,Export and Close section
 	public void verifyBatchFileSaveExportCloseUI() {
 
-		if (batchFileHelpTx.getText().contains(
-				"You can Save the Batch File Repository List to a batch file enabling the projects listed within to be built and tested later with a single command.")) {
+		if (batchFileHelpTx
+				.getText()
+				.contains(
+						"You can Save the Batch File Repository List to a batch file enabling the projects listed within to be built and tested later with a single command.")) {
 			LogResult.pass("Batch file creation help text is displayed.");
 		} else {
 			LogResult.fail("Batch file creation help text is not displayed.");
@@ -1308,12 +1381,13 @@ public class SearchTab {
 		if (batchFileNameTbx.isDisplayed()) {
 			LogResult.pass("Batch file text box is displayed.");
 
-			if (batchFileNameTbx.getAttribute("placeholder").contentEquals("(e.g. mybatch-java)")) {
-				LogResult.pass(
-						"Batch file text box has placeholder text as: " + batchFileNameTbx.getAttribute("placeholder"));
+			if (batchFileNameTbx.getAttribute("placeholder").contentEquals(
+					"(e.g. mybatch-java)")) {
+				LogResult.pass("Batch file text box has placeholder text as: "
+						+ batchFileNameTbx.getAttribute("placeholder"));
 			} else {
-				LogResult.fail(
-						"Batch file text box has placeholder text as: " + batchFileNameTbx.getAttribute("placeholder"));
+				LogResult.fail("Batch file text box has placeholder text as: "
+						+ batchFileNameTbx.getAttribute("placeholder"));
 			}
 		} else {
 			LogResult.fail("Batch file text box is not displayed.");
@@ -1344,10 +1418,13 @@ public class SearchTab {
 	public void verifyBatchFileRepositoryPanelUI() {
 		if (batchFilePanelHeader.isDisplayed()) {
 			LogResult.pass("Batch file panel header is displayed.");
-			if (batchFilePanelHeader.getText().contentEquals("Batch File Repositories")) {
-				LogResult.pass("Batch file panel header text is displayed as: " + batchFilePanelHeader.getText());
+			if (batchFilePanelHeader.getText().contentEquals(
+					"Batch File Repositories")) {
+				LogResult.pass("Batch file panel header text is displayed as: "
+						+ batchFilePanelHeader.getText());
 			} else {
-				LogResult.fail("Batch file panel header text is displayed as: " + batchFilePanelHeader.getText());
+				LogResult.fail("Batch file panel header text is displayed as: "
+						+ batchFilePanelHeader.getText());
 			}
 		} else {
 			LogResult.fail("Batch file panel header is not displayed.");
@@ -1448,12 +1525,15 @@ public class SearchTab {
 	// To verify the description of added Repository in Batch file repository
 	// panel
 	public void verifyBatchFileRepositoryDescription() {
-		action.moveToElement(batchFilemouseHoverDescription).perform();
+		wait.until(ExpectedConditions.visibilityOf(batchFilemouseHoverDescription));
+		
+		action.moveToElement(batchFilemouseHoverDescription).build().perform();
 
-		wait.until(ExpectedConditions.visibilityOf(batchFilerepoDescription));
+//		Thread.sleep(2000);
 
 		if (batchFilerepoDescription.isDisplayed()) {
-			LogResult.pass("Repository description displayed as: " + batchFilerepoDescription.getText());
+			LogResult.pass("Repository description displayed as: "
+					+ batchFilerepoDescription.getText());
 		} else {
 			LogResult.fail("Repository description is not displayed.");
 		}
@@ -1488,8 +1568,8 @@ public class SearchTab {
 	// For obtaining latest modified file within the directory
 	public File getLastModifiedFile() {
 		File file = new File(downloadFilePath);
-		// For Linux /root/Downloads
-		// For Windows C:\\Users\\manish_kane\\Downloads
+		// For Linux: /root/Downloads
+		// For Windows: C:\\Users\\manish_kane\\Downloads
 
 		File[] files = file.listFiles();
 		if (files == null || files.length == 0) {
@@ -1535,7 +1615,8 @@ public class SearchTab {
 
 		wait.until(ExpectedConditions.visibilityOf(currentVersionForAutoResult));
 
-		if (currentVersionForAutoResult.getText().contentEquals("Use current version")) {
+		if (currentVersionForAutoResult.getText().contentEquals(
+				"Use current version")) {
 			LogResult.pass("Use current version drop down is displayed.");
 
 			currentVersionForAutoResult.click();
@@ -1560,7 +1641,8 @@ public class SearchTab {
 	public void verifySelectBuildServer() throws InterruptedException {
 
 		if (selectBuildServerForAutoResult.isDisplayed()) {
-			LogResult.pass("Select build servers drop down is displayed with values: ");
+			LogResult
+					.pass("Select build servers drop down is displayed with values: ");
 
 			selectBuildServerForAutoResult.click();
 
@@ -1580,11 +1662,13 @@ public class SearchTab {
 
 			}
 
-			if (selectBuildServerForAutoResult.getText().contentEquals("None selected")) {
+			if (selectBuildServerForAutoResult.getText().contentEquals(
+					"None selected")) {
 				LogResult.pass("All Build servers are unselected.");
 			} else {
-				LogResult.fail("All Build servers are not unselected. Unselected servers are: "
-						+ selectBuildServerForAutoResult.getText());
+				LogResult
+						.fail("All Build servers are not unselected. Unselected servers are: "
+								+ selectBuildServerForAutoResult.getText());
 			}
 
 			List<WebElement> buildServerChkbx1 = buildServerListChkbx;
@@ -1601,11 +1685,13 @@ public class SearchTab {
 
 			// Currently the build servers are dynamic hence checking for
 			// partial text and omitting the number in brackets
-			if (selectBuildServerForAutoResult.getText().contains("All selected")) {
+			if (selectBuildServerForAutoResult.getText().contains(
+					"All selected")) {
 				LogResult.pass("All Build servers are selected.");
 			} else {
-				LogResult.fail("All Build servers are not selected. Selected servers are: "
-						+ selectBuildServerForAutoResult.getText());
+				LogResult
+						.fail("All Build servers are not selected. Selected servers are: "
+								+ selectBuildServerForAutoResult.getText());
 			}
 
 			// selectBuildServerForAutoResult.click();
@@ -1641,7 +1727,6 @@ public class SearchTab {
 			buildServersArray.add(i, buildServerList.get(i).getText());
 		}
 
-				
 		selectBuildServerForAutoResult.click();
 
 		// for (int i=0;i< buildServerList.size();i++) {
@@ -1687,7 +1772,8 @@ public class SearchTab {
 
 					if (driver.getTitle().contains(item)) {
 
-						LogResult.pass("Jenkins page opened for build server: " + item);
+						LogResult.pass("Jenkins page opened for build server: "
+								+ item);
 					}
 
 				}
@@ -1762,10 +1848,13 @@ public class SearchTab {
 		wait.until(ExpectedConditions.visibilityOf(selectBuildOptions));
 
 		if (selectBuildOptions.isDisplayed()) {
-			if (selectBuildOptions.getText().contentEquals("Select build options")) {
-				LogResult.pass("Select build options drop down has text: " + selectBuildOptions.getText());
+			if (selectBuildOptions.getText().contentEquals(
+					"Select build options")) {
+				LogResult.pass("Select build options drop down has text: "
+						+ selectBuildOptions.getText());
 			} else {
-				LogResult.fail("Select Build options drop down has text: " + selectBuildOptions.getText());
+				LogResult.fail("Select Build options drop down has text: "
+						+ selectBuildOptions.getText());
 			}
 
 		} else {
@@ -1774,44 +1863,57 @@ public class SearchTab {
 
 		if (buildOptionsTbx.isDisplayed()) {
 
-			LogResult.pass(
-					"Select build options text box is displayed with value: " + buildOptionsTbx.getAttribute("value"));
+			LogResult
+					.pass("Select build options text box is displayed with value: "
+							+ buildOptionsTbx.getAttribute("value"));
 		} else {
 			LogResult.fail("Select build options text box is not displayed");
 		}
 
 		if (selectTestOptions.isDisplayed()) {
-			if (selectTestOptions.getText().contentEquals("Select test options")) {
-				LogResult.pass("Select test options drop down has text: " + selectTestOptions.getText());
+			if (selectTestOptions.getText()
+					.contentEquals("Select test options")) {
+				LogResult.pass("Select test options drop down has text: "
+						+ selectTestOptions.getText());
 			} else {
-				LogResult.fail("Select test options drop down has text: " + selectTestOptions.getText());
+				LogResult.fail("Select test options drop down has text: "
+						+ selectTestOptions.getText());
 			}
 		} else {
 			LogResult.fail("Select test options drop down is not displayed.");
 		}
 
 		if (testOptionsTbx.isDisplayed()) {
-			LogResult.pass(
-					"Select test options text box is displayed with value: " + testOptionsTbx.getAttribute("value"));
+			LogResult
+					.pass("Select test options text box is displayed with value: "
+							+ testOptionsTbx.getAttribute("value"));
 		} else {
 			LogResult.fail("Select test options text box is not displayed");
 		}
 
 		if (selectEnvironmentOptions.isDisplayed()) {
-			if (selectEnvironmentOptions.getText().contentEquals("Select environment options")) {
-				LogResult.pass("Select environment options drop down has text: " + selectEnvironmentOptions.getText());
+			if (selectEnvironmentOptions.getText().contentEquals(
+					"Select environment options")) {
+				LogResult
+						.pass("Select environment options drop down has text: "
+								+ selectEnvironmentOptions.getText());
 			} else {
-				LogResult.fail("Select environment options drop down has text: " + selectEnvironmentOptions.getText());
+				LogResult
+						.fail("Select environment options drop down has text: "
+								+ selectEnvironmentOptions.getText());
 			}
 		} else {
-			LogResult.fail("Select environment options drop down is not displayed.");
+			LogResult
+					.fail("Select environment options drop down is not displayed.");
 		}
 
 		if (environmentOptionsTbx.isDisplayed()) {
-			LogResult.pass("Select environment options text box is displayed with value: "
-					+ environmentOptionsTbx.getAttribute("value"));
+			LogResult
+					.pass("Select environment options text box is displayed with value: "
+							+ environmentOptionsTbx.getAttribute("value"));
 		} else {
-			LogResult.fail("Select environment options text box is not displayed");
+			LogResult
+					.fail("Select environment options text box is not displayed");
 		}
 	}
 
@@ -1822,7 +1924,8 @@ public class SearchTab {
 
 		if (commonProjectsSearchBtn.isDisplayed()) {
 
-			LogResult.pass("Search for most commonly used project tab is expanded.");
+			LogResult
+					.pass("Search for most commonly used project tab is expanded.");
 		} else {
 			if (searchSingleProjectQueryTbx.isDisplayed()) {
 
@@ -1832,9 +1935,11 @@ public class SearchTab {
 			searchCommonlyUsedProjectsTab.click();
 
 			if (searchCommonlyUsedProjectsTab.isDisplayed()) {
-				LogResult.pass("Search for most commonly used project tab is expanded.");
+				LogResult
+						.pass("Search for most commonly used project tab is expanded.");
 			} else {
-				LogResult.fail("Search for most commonly used project tab is not expanded.");
+				LogResult
+						.fail("Search for most commonly used project tab is not expanded.");
 			}
 		}
 
@@ -1891,21 +1996,32 @@ public class SearchTab {
 		if (commonProjectsTopRepositories.isDisplayed()) {
 			LogResult.pass("Top repositories is displayed.");
 
-			if (preCommonProjectsTopRepositoriesLabelTx.getText().contentEquals("Top")
-					&& postCommonProjectsTopRepositoriesLabelTx.getText().contentEquals("Repositories")) {
+			if (preCommonProjectsTopRepositoriesLabelTx.getText()
+					.contentEquals("Top")
+					&& postCommonProjectsTopRepositoriesLabelTx.getText()
+							.contentEquals("Repositories")) {
 				LogResult.pass("Top repositories label is displayed.");
 			} else {
-				LogResult.fail("Top repositories label is not displayed. Label is displayed as: "
-						+ preCommonProjectsTopRepositoriesLabelTx.getText() + " "
-						+ postCommonProjectsTopRepositoriesLabelTx.getText());
+				LogResult
+						.fail("Top repositories label is not displayed. Label is displayed as: "
+								+ preCommonProjectsTopRepositoriesLabelTx
+										.getText()
+								+ " "
+								+ postCommonProjectsTopRepositoriesLabelTx
+										.getText());
 			}
 
-			if (commonProjectsTopRepositoriesValue.getAttribute("value").contentEquals("25")) {
-				LogResult.pass("Top repositories field is displayed with value as: "
-						+ commonProjectsTopRepositoriesValue.getAttribute("value"));
+			if (commonProjectsTopRepositoriesValue.getAttribute("value")
+					.contentEquals("25")) {
+				LogResult
+						.pass("Top repositories field is displayed with value as: "
+								+ commonProjectsTopRepositoriesValue
+										.getAttribute("value"));
 			} else {
-				LogResult.fail("Top repositories field is displayed with value as: "
-						+ commonProjectsTopRepositoriesValue.getAttribute("value"));
+				LogResult
+						.fail("Top repositories field is displayed with value as: "
+								+ commonProjectsTopRepositoriesValue
+										.getAttribute("value"));
 			}
 		} else {
 			LogResult.fail("Top repositories is not displayed.");
@@ -1923,10 +2039,13 @@ public class SearchTab {
 			LogResult.pass("Sort By drop down is displayed.");
 
 			if (commonProjectsSortByLabelTx.getText().contentEquals("Sort by")) {
-				LogResult.pass("Sort by label is displayed. Values in the drop down are: ");
+				LogResult
+						.pass("Sort by label is displayed. Values in the drop down are: ");
 			} else {
-				LogResult.fail("Sort by label is not displayed. Label displayed is: "
-						+ commonProjectsSortByLabelTx.getText() + " Values in the drop down are: ");
+				LogResult
+						.fail("Sort by label is not displayed. Label displayed is: "
+								+ commonProjectsSortByLabelTx.getText()
+								+ " Values in the drop down are: ");
 			}
 
 			List<WebElement> sortByOptions = s.getOptions();
@@ -1941,12 +2060,15 @@ public class SearchTab {
 				s.selectByIndex(i);
 
 				commonProjectsSearchBtn.click();
-				wait.until(ExpectedConditions.visibilityOf(commonProjectSaveExportSection));
+				wait.until(ExpectedConditions
+						.visibilityOf(commonProjectSaveExportSection));
 
 				if (commonProjectSaveExportSection.isDisplayed()) {
-					LogResult.pass("Results sorted by: " + sortByOptions.get(i).getText());
+					LogResult.pass("Results sorted by: "
+							+ sortByOptions.get(i).getText());
 				} else {
-					LogResult.fail("Results sorted by: " + sortByOptions.get(i).getText());
+					LogResult.fail("Results sorted by: "
+							+ sortByOptions.get(i).getText());
 				}
 			}
 
@@ -1959,11 +2081,13 @@ public class SearchTab {
 		}
 
 		if (s.getFirstSelectedOption().getText().contains("Popularity Stars")) {
-			LogResult.pass("Default selected is: " + s.getFirstSelectedOption().getText());
+			LogResult.pass("Default selected is: "
+					+ s.getFirstSelectedOption().getText());
 
 		} else {
-			LogResult.fail(
-					"Popularity Stars is not selected. Value selected is: " + s.getFirstSelectedOption().getText());
+			LogResult
+					.fail("Popularity Stars is not selected. Value selected is: "
+							+ s.getFirstSelectedOption().getText());
 
 		}
 	}
@@ -1975,8 +2099,8 @@ public class SearchTab {
 		Select s = new Select(commonProjectsProgrammingLanguage);
 
 		if (commonProjectsProgrammingLanguage.isDisplayed()) {
-			LogResult.pass(
-					"Programming Language drop down is displayed. Values in programming languages drop down are: ");
+			LogResult
+					.pass("Programming Language drop down is displayed. Values in programming languages drop down are: ");
 
 			List<WebElement> programmingLanguagesOptions = s.getOptions();
 
@@ -1989,13 +2113,17 @@ public class SearchTab {
 				s.selectByIndex(i);
 
 				commonProjectsSearchBtn.click();
-				wait.until(ExpectedConditions.visibilityOf(commonProjectSaveExportSection));
+				wait.until(ExpectedConditions
+						.visibilityOf(commonProjectSaveExportSection));
 
 				if (commonProjectSaveExportSection.isDisplayed()
-						|| primaryLanguageList.getText().contentEquals(programmingLanguagesOptions.get(i).getText())) {
-					LogResult.pass("Results sorted by: " + programmingLanguagesOptions.get(i).getText());
+						|| primaryLanguageList.getText().contentEquals(
+								programmingLanguagesOptions.get(i).getText())) {
+					LogResult.pass("Results sorted by: "
+							+ programmingLanguagesOptions.get(i).getText());
 				} else {
-					LogResult.fail("Results sorted by: " + programmingLanguagesOptions.get(i).getText());
+					LogResult.fail("Results sorted by: "
+							+ programmingLanguagesOptions.get(i).getText());
 				}
 			}
 
@@ -2006,13 +2134,16 @@ public class SearchTab {
 
 		}
 
-		if (s.getFirstSelectedOption().getText().contentEquals("Any programming language")) {
-			LogResult.pass("Default selected value in Programming languages drop down is: "
-					+ s.getFirstSelectedOption().getText());
+		if (s.getFirstSelectedOption().getText()
+				.contentEquals("Any programming language")) {
+			LogResult
+					.pass("Default selected value in Programming languages drop down is: "
+							+ s.getFirstSelectedOption().getText());
 
 		} else {
-			LogResult.fail("Default selected value in Programming languages drop down is: "
-					+ s.getFirstSelectedOption().getText());
+			LogResult
+					.fail("Default selected value in Programming languages drop down is: "
+							+ s.getFirstSelectedOption().getText());
 
 		}
 	}
@@ -2024,7 +2155,8 @@ public class SearchTab {
 		Select s = new Select(commonProjectsRelease);
 
 		if (commonProjectsRelease.isDisplayed()) {
-			LogResult.pass("Release drop down is not displayed. Values in release drop down are: ");
+			LogResult
+					.pass("Release drop down is not displayed. Values in release drop down are: ");
 
 			List<WebElement> releaseOptions = s.getOptions();
 
@@ -2038,32 +2170,45 @@ public class SearchTab {
 
 				commonProjectsSearchBtn.click();
 
-				wait.until(ExpectedConditions.visibilityOf(commonProjectSaveExportSection));
+				wait.until(ExpectedConditions
+						.visibilityOf(commonProjectSaveExportSection));
 
 				if (commonProjectSaveExportSection.isDisplayed()) {
-					LogResult.pass("Results sorted by: " + releaseOptions.get(i).getText());
+					LogResult.pass("Results sorted by: "
+							+ releaseOptions.get(i).getText());
 
 				} else {
-					LogResult.fail("Results sorted by: " + releaseOptions.get(i).getText());
+					LogResult.fail("Results sorted by: "
+							+ releaseOptions.get(i).getText());
 				}
 
 				// wait.until(ExpectedConditions.visibilityOf(commonProjectRepositoryDetailsList));
 
 				commonProjectRepositoryDetailBtn.click();
 
-				wait.until(ExpectedConditions.visibilityOf(commonProjectSingleDetailPanel));
+				wait.until(ExpectedConditions
+						.visibilityOf(commonProjectSingleDetailPanel));
 
 				commonProjectCurrentVersion.click();
 
-				String currentVersion = commonProjectCurrentVersionValue.getText().toLowerCase();
-				String recentVersion = commonProjectRecentVersionValue.getText().toLowerCase();
+				String currentVersion = commonProjectCurrentVersionValue
+						.getText().toLowerCase();
+				String recentVersion = commonProjectRecentVersionValue
+						.getText().toLowerCase();
 
-				if (commonProjectCurrentVersion.getText().contains(currentVersion)) {
-					LogResult.pass("Version selected in repository details is: " + currentVersion);
-				} else if (commonProjectCurrentVersion.getText().contains(recentVersion)) {
-					LogResult.pass("Version selected in repository details is: " + recentVersion);
+				if (commonProjectCurrentVersion.getText().contains(
+						currentVersion)) {
+					LogResult
+							.pass("Version selected in repository details is: "
+									+ currentVersion);
+				} else if (commonProjectCurrentVersion.getText().contains(
+						recentVersion)) {
+					LogResult
+							.pass("Version selected in repository details is: "
+									+ recentVersion);
 				} else {
-					LogResult.fail("Selected release version does not appear in repository details.");
+					LogResult
+							.fail("Selected release version does not appear in repository details.");
 				}
 
 				commonProjectCurrentVersion.click();
@@ -2079,10 +2224,12 @@ public class SearchTab {
 		}
 
 		if (s.getFirstSelectedOption().getText().contentEquals("Current")) {
-			LogResult.pass("Default selected value in Release drop down is: " + s.getFirstSelectedOption().getText());
+			LogResult.pass("Default selected value in Release drop down is: "
+					+ s.getFirstSelectedOption().getText());
 
 		} else {
-			LogResult.fail("Default selected value in Release drop down is: " + s.getFirstSelectedOption().getText());
+			LogResult.fail("Default selected value in Release drop down is: "
+					+ s.getFirstSelectedOption().getText());
 		}
 
 	}
@@ -2093,21 +2240,32 @@ public class SearchTab {
 
 			LogResult.pass("> Popularity Stars is displayed.");
 
-			if (preCommonProjectsPopularityStarsLabelTx.getText().contentEquals(">")
-					&& postCommonProjectsPopularityStarsLabelTx.getText().contentEquals("Popularity Stars")) {
+			if (preCommonProjectsPopularityStarsLabelTx.getText()
+					.contentEquals(">")
+					&& postCommonProjectsPopularityStarsLabelTx.getText()
+							.contentEquals("Popularity Stars")) {
 				LogResult.pass("> Popularity Stars label is displayed.");
 			} else {
-				LogResult.fail("> Popularity Stars label is not displayed. Label is displayed as: "
-						+ preCommonProjectsPopularityStarsLabelTx.getText() + " "
-						+ postCommonProjectsPopularityStarsLabelTx.getText());
+				LogResult
+						.fail("> Popularity Stars label is not displayed. Label is displayed as: "
+								+ preCommonProjectsPopularityStarsLabelTx
+										.getText()
+								+ " "
+								+ postCommonProjectsPopularityStarsLabelTx
+										.getText());
 			}
 
-			if (greaterThanPopularityStarsTxBx.getAttribute("value").contentEquals("0")) {
-				LogResult.pass("> Popularity Stars field is displayed with value as: "
-						+ greaterThanPopularityStarsTxBx.getAttribute("value"));
+			if (greaterThanPopularityStarsTxBx.getAttribute("value")
+					.contentEquals("0")) {
+				LogResult
+						.pass("> Popularity Stars field is displayed with value as: "
+								+ greaterThanPopularityStarsTxBx
+										.getAttribute("value"));
 			} else {
-				LogResult.fail("> Popularity Stars field is displayed with value as: "
-						+ greaterThanPopularityStarsTxBx.getAttribute("value"));
+				LogResult
+						.fail("> Popularity Stars field is displayed with value as: "
+								+ greaterThanPopularityStarsTxBx
+										.getAttribute("value"));
 			}
 		} else {
 			LogResult.fail("> Popularity Stars is not displayed.");
@@ -2121,19 +2279,23 @@ public class SearchTab {
 			LogResult.pass("> Forks is displayed.");
 
 			if (preCommonProjectsForksLabelTx.getText().contentEquals(">")
-					&& postCommonProjectsForksLabelTx.getText().contentEquals("Forks")) {
+					&& postCommonProjectsForksLabelTx.getText().contentEquals(
+							"Forks")) {
 				LogResult.pass("> Forks label is displayed.");
 			} else {
-				LogResult.fail("> Forks label is not displayed. Label is displayed as: "
-						+ preCommonProjectsForksLabelTx.getText() + " " + postCommonProjectsForksLabelTx.getText());
+				LogResult
+						.fail("> Forks label is not displayed. Label is displayed as: "
+								+ preCommonProjectsForksLabelTx.getText()
+								+ " "
+								+ postCommonProjectsForksLabelTx.getText());
 			}
 
 			if (greaterThanForksTxBx.getAttribute("value").contentEquals("0")) {
-				LogResult.pass(
-						"> Forks field is displayed with value as: " + greaterThanForksTxBx.getAttribute("value"));
+				LogResult.pass("> Forks field is displayed with value as: "
+						+ greaterThanForksTxBx.getAttribute("value"));
 			} else {
-				LogResult.fail(
-						"> Forks field is displayed with value as: " + greaterThanForksTxBx.getAttribute("value"));
+				LogResult.fail("> Forks field is displayed with value as: "
+						+ greaterThanForksTxBx.getAttribute("value"));
 			}
 		} else {
 			LogResult.fail("> Forks is not displayed.");
@@ -2141,7 +2303,8 @@ public class SearchTab {
 	}
 
 	// To enter number of repositories for searching Most commonly used projects
-	public void enterNumOfTopRepositories(String num) throws InterruptedException {
+	public void enterNumOfTopRepositories(String num)
+			throws InterruptedException {
 		commonProjectsTopRepositoriesValue.clear();
 
 		// adding 0 before actual limit due to some intermediate issues
@@ -2153,7 +2316,8 @@ public class SearchTab {
 
 		Thread.sleep(1000);
 
-		if (commonProjectsTopRepositoriesValue.getAttribute("value").contentEquals(num)) {
+		if (commonProjectsTopRepositoriesValue.getAttribute("value")
+				.contentEquals(num)) {
 			LogResult.pass("Top Repositories value entered as: " + num);
 		} else {
 			LogResult.fail("Top Repositories value not entered.");
@@ -2180,9 +2344,11 @@ public class SearchTab {
 		s.selectByVisibleText(prgmLanguage);
 
 		if (s.getFirstSelectedOption().getText().contentEquals(prgmLanguage)) {
-			LogResult.pass("Selected Programming Language value is: " + prgmLanguage);
+			LogResult.pass("Selected Programming Language value is: "
+					+ prgmLanguage);
 		} else {
-			LogResult.fail("Selected Programming Language value is: " + prgmLanguage);
+			LogResult.fail("Selected Programming Language value is: "
+					+ prgmLanguage);
 		}
 	}
 
@@ -2205,8 +2371,10 @@ public class SearchTab {
 
 		greaterThanPopularityStarsTxBx.sendKeys(popularityStars);
 
-		if (greaterThanPopularityStarsTxBx.getAttribute("value").contentEquals(popularityStars)) {
-			LogResult.pass("Popularity Stars value entered as: " + popularityStars);
+		if (greaterThanPopularityStarsTxBx.getAttribute("value").contentEquals(
+				popularityStars)) {
+			LogResult.pass("Popularity Stars value entered as: "
+					+ popularityStars);
 		} else {
 			LogResult.fail("Popularity Stars value not entered.");
 		}
@@ -2232,7 +2400,8 @@ public class SearchTab {
 
 		commonProjectsSearchBtn.click();
 
-		wait.until(ExpectedConditions.elementToBeClickable(commonProjectResultsPanel));
+		wait.until(ExpectedConditions
+				.elementToBeClickable(commonProjectResultsPanel));
 
 		if (commonProjectSaveExportSection.isDisplayed()) {
 			LogResult.pass("Search button clicked.");
@@ -2240,17 +2409,20 @@ public class SearchTab {
 			LogResult.fail("Search button not clicked.");
 		}
 
-		repositoryNameCommonProject = commonProjectTopRepositoryNameInList.getText();
+		repositoryNameCommonProject = commonProjectTopRepositoryNameInList
+				.getText();
 
 		this.setRepositoryNameForCommonProject(repositoryNameCommonProject);
 
-		ReadTestData.writeParameter("batchJobsTabData", "topRepositoryName", repositoryNameCommonProject);
+		ReadTestData.writeParameter("batchJobsTabData", "topRepositoryName",
+				repositoryNameCommonProject);
 	}
 
 	// To verify Batch File Save, Export UI for Most commonly used projects
 	public void verifyCommonProjectBatchFileSaveExportUI() {
 
-		if (commonProjectBatchFileHelpTx.getText().contains("This is the list of most popular projects")) {
+		if (commonProjectBatchFileHelpTx.getText().contains(
+				"This is the list of most popular projects")) {
 			LogResult.pass("Batch file help text is displayed.");
 		} else {
 			LogResult.fail("Batch file help text is not displayed.");
@@ -2259,12 +2431,15 @@ public class SearchTab {
 		if (commonProjectBatchFileNameTbx.isDisplayed()) {
 			LogResult.pass("Batch file text box is displayed.");
 
-			if (commonProjectBatchFileNameTbx.getAttribute("placeholder").contentEquals("(e.g. mybatch-java)")) {
+			if (commonProjectBatchFileNameTbx.getAttribute("placeholder")
+					.contentEquals("(e.g. mybatch-java)")) {
 				LogResult.pass("Batch file text box has placeholder text as: "
-						+ commonProjectBatchFileNameTbx.getAttribute("placeholder"));
+						+ commonProjectBatchFileNameTbx
+								.getAttribute("placeholder"));
 			} else {
 				LogResult.fail("Batch file text box has placeholder text as: "
-						+ commonProjectBatchFileNameTbx.getAttribute("placeholder"));
+						+ commonProjectBatchFileNameTbx
+								.getAttribute("placeholder"));
 			}
 		} else {
 			LogResult.fail("Batch file text box is not displayed.");
@@ -2288,12 +2463,15 @@ public class SearchTab {
 	public void verifyCommonProjectRepositoryHeader() {
 		if (commonProjectRepositoriesColHeader.isDisplayed()) {
 			LogResult.pass("Repositories column is displayed.");
-			if (commonProjectRepositoriesColHeader.getText().contentEquals("Repositories")) {
-				LogResult.pass("Repositories column header text is displayed as: "
-						+ commonProjectRepositoriesColHeader.getText());
+			if (commonProjectRepositoriesColHeader.getText().contentEquals(
+					"Repositories")) {
+				LogResult
+						.pass("Repositories column header text is displayed as: "
+								+ commonProjectRepositoriesColHeader.getText());
 			} else {
-				LogResult.fail("Repositories column header text is displayed as: "
-						+ commonProjectRepositoriesColHeader.getText());
+				LogResult
+						.fail("Repositories column header text is displayed as: "
+								+ commonProjectRepositoriesColHeader.getText());
 			}
 		} else {
 			LogResult.fail("Repositories column is not displayed.");
@@ -2305,12 +2483,13 @@ public class SearchTab {
 
 		if (commonProjectActionsColHeader.isDisplayed()) {
 			LogResult.pass("Actions column is displayed.");
-			if (commonProjectActionsColHeader.getText().contentEquals("Actions")) {
-				LogResult
-						.pass("Actions column header text is displayed as: " + commonProjectActionsColHeader.getText());
+			if (commonProjectActionsColHeader.getText()
+					.contentEquals("Actions")) {
+				LogResult.pass("Actions column header text is displayed as: "
+						+ commonProjectActionsColHeader.getText());
 			} else {
-				LogResult
-						.fail("Actions column header text is displayed as: " + commonProjectActionsColHeader.getText());
+				LogResult.fail("Actions column header text is displayed as: "
+						+ commonProjectActionsColHeader.getText());
 			}
 		} else {
 			LogResult.fail("Actions column is not displayed.");
@@ -2331,13 +2510,15 @@ public class SearchTab {
 	}
 
 	// Clicking on repository details button for Most commonly used project
-	public void clickOnRepositoryDetailsBtnForCommonProjects() throws InterruptedException {
+	public void clickOnRepositoryDetailsBtnForCommonProjects()
+			throws InterruptedException {
 
 		Thread.sleep(1000);
 
 		commonProjectRepositoryDetailBtn.click();
 
-		wait.until(ExpectedConditions.visibilityOf(commonProjectSingleDetailPanel));
+		wait.until(ExpectedConditions
+				.visibilityOf(commonProjectSingleDetailPanel));
 
 		if (commonProjectSingleDetailPanel.isDisplayed()) {
 			LogResult.pass("Repository detail is displayed.");
@@ -2349,7 +2530,8 @@ public class SearchTab {
 	// To verify repository detail UI elements for Most commonly used project
 	public void verifyProjectDetailRepoUIForCommonProjects() {
 
-		wait.until(ExpectedConditions.visibilityOf(commonProjectSingleDetailPanel));
+		wait.until(ExpectedConditions
+				.visibilityOf(commonProjectSingleDetailPanel));
 
 		if (commonProjectOwnerDetail.isDisplayed()) {
 			LogResult.pass("Owner name is displayed: " + ownerDetail.getText());
@@ -2358,66 +2540,77 @@ public class SearchTab {
 		}
 
 		if (commonProjectRepositoryDetail.isDisplayed()) {
-			LogResult.pass("Repository name is displayed: " + repositoryDetail.getText());
+			LogResult.pass("Repository name is displayed: "
+					+ repositoryDetail.getText());
 		} else {
 			LogResult.fail("Repository name is not displayed.");
 		}
 
 		if (commonProjectStarCountDetail.isDisplayed()) {
-			LogResult.pass("Star count is displayed: " + starCountDetail.getText());
+			LogResult.pass("Star count is displayed: "
+					+ starCountDetail.getText());
 		} else {
 			LogResult.fail("Star count is not displayed.");
 		}
 
 		if (commonProjectForkCountDetail.isDisplayed()) {
-			LogResult.pass("Fork count is displayed: " + forkCountDetail.getText());
+			LogResult.pass("Fork count is displayed: "
+					+ forkCountDetail.getText());
 		} else {
 			LogResult.fail("Fork count is not displayed.");
 		}
 
 		if (commonProjectPrimaryLanguageDetail.isDisplayed()) {
-			LogResult.pass("Primary language is displayed: " + primaryLanguageDetail.getText());
+			LogResult.pass("Primary language is displayed: "
+					+ primaryLanguageDetail.getText());
 		} else {
 			LogResult.fail("Primary language is not displayed.");
 		}
 
 		if (commonProjectRepositorySizeDetail.isDisplayed()) {
-			LogResult.pass("Repository size is displayed: " + repositorySizeDetail.getText());
+			LogResult.pass("Repository size is displayed: "
+					+ repositorySizeDetail.getText());
 		} else {
 			LogResult.fail("Repository size is not displayed.");
 		}
 
 		if (commonProjectLastUpdatedDetail.isDisplayed()) {
-			LogResult.pass("Last updated detail is displayed: " + lastUpdatedDetail.getText());
+			LogResult.pass("Last updated detail is displayed: "
+					+ lastUpdatedDetail.getText());
 		} else {
 			LogResult.fail("Last updated detail is not displayed.");
 		}
 
 		if (commonProjectDescriptionHeader.isDisplayed()) {
 			LogResult.pass("Description header is displayed.");
-			if (commonProjectDescriptionHeader.getText().contentEquals("Description")) {
-				LogResult.pass("Description header has text as: " + commonProjectDescriptionHeader.getText());
+			if (commonProjectDescriptionHeader.getText().contentEquals(
+					"Description")) {
+				LogResult.pass("Description header has text as: "
+						+ commonProjectDescriptionHeader.getText());
 			} else {
-				LogResult.fail("Description header has text as: " + commonProjectDescriptionHeader.getText());
+				LogResult.fail("Description header has text as: "
+						+ commonProjectDescriptionHeader.getText());
 			}
 		} else {
 			LogResult.fail("Description header is not displayed.");
 		}
 
 		if (commonProjectDescriptionText.isDisplayed()) {
-			LogResult.pass("Description text is displayed with text as: " + commonProjectDescriptionText.getText());
+			LogResult.pass("Description text is displayed with text as: "
+					+ commonProjectDescriptionText.getText());
 		} else {
 			LogResult.fail("Description text is not displayed.");
 		}
 
 		if (commonProjectLanguageCompositionHeader.isDisplayed()) {
 			LogResult.pass("Language composition header is displayed.");
-			if (commonProjectLanguageCompositionHeader.getText().contentEquals("Language Composition")) {
-				LogResult.pass(
-						"Language composition header has text as: " + commonProjectLanguageCompositionHeader.getText());
+			if (commonProjectLanguageCompositionHeader.getText().contentEquals(
+					"Language Composition")) {
+				LogResult.pass("Language composition header has text as: "
+						+ commonProjectLanguageCompositionHeader.getText());
 			} else {
-				LogResult.fail(
-						"Language composition header has text as: " + commonProjectLanguageCompositionHeader.getText());
+				LogResult.fail("Language composition header has text as: "
+						+ commonProjectLanguageCompositionHeader.getText());
 			}
 		} else {
 			LogResult.fail("Language composition header is not displayed.");
@@ -2444,8 +2637,8 @@ public class SearchTab {
 			LogResult.fail("Language legends are not displayed.");
 		}
 
-		// In case of Java Primary language, check for JDK drop down
-		if (commonProjectPrimaryLanguageDetail.getText().contentEquals("Java")) {
+		// In case of Java/Scala Primary language, check for JDK drop down
+		if ((commonProjectPrimaryLanguageDetail.getText().contentEquals("Java")) || (commonProjectPrimaryLanguageDetail.getText().contentEquals("Scala"))) {
 
 			if (commonProjectUseJDK.isDisplayed()) {
 				LogResult.pass("Use JDK option drop down is displayed with options: ");
@@ -2457,6 +2650,7 @@ public class SearchTab {
 				for (WebElement item : jdks) {
 
 					LogResult.pass(item.getText());
+					
 
 				}
 
@@ -2495,10 +2689,10 @@ public class SearchTab {
 		if (commonProjectCurrentVersion.isDisplayed()) {
 			LogResult.pass("Use current version drop down is displayed.");
 			if (commonProjectCurrentVersion.getText().contentEquals("Use current version")) {
-				LogResult.pass("Use current version drop down has text: " + commonProjectCurrentVersion.getText());
+				LogResult.pass("Use current version drop down has text: "+ commonProjectCurrentVersion.getText());
 
 			} else {
-				LogResult.fail("Use current version drop down has text: " + commonProjectCurrentVersion.getText());
+				LogResult.fail("Use current version drop down has text: "+ commonProjectCurrentVersion.getText());
 			}
 
 			commonProjectCurrentVersion.click();
@@ -2536,10 +2730,13 @@ public class SearchTab {
 
 		if (commonProjectBuildAndTestBtn.isDisplayed()) {
 			LogResult.pass("Build and Test button is displayed.");
-			if (commonProjectBuildAndTestBtn.getText().contentEquals("Build + Test")) {
-				LogResult.pass("Build and Test button has text: " + commonProjectBuildAndTestBtn.getText());
+			if (commonProjectBuildAndTestBtn.getText().contentEquals(
+					"Build + Test")) {
+				LogResult.pass("Build and Test button has text: "
+						+ commonProjectBuildAndTestBtn.getText());
 			} else {
-				LogResult.fail("Build and Test button has text: " + commonProjectBuildAndTestBtn.getText());
+				LogResult.fail("Build and Test button has text: "
+						+ commonProjectBuildAndTestBtn.getText());
 			}
 		} else {
 			LogResult.fail("Build and Test button is not displayed.");
@@ -2547,20 +2744,26 @@ public class SearchTab {
 
 		if (commonProjectBuildStepsHeader.isDisplayed()) {
 			LogResult.pass("Build Steps header is displayed.");
-			if (commonProjectBuildStepsHeader.getText().contentEquals("Build steps")) {
-				LogResult.pass("Build Steps header has text: " + commonProjectBuildStepsHeader.getText());
+			if (commonProjectBuildStepsHeader.getText().contentEquals(
+					"Build steps")) {
+				LogResult.pass("Build Steps header has text: "
+						+ commonProjectBuildStepsHeader.getText());
 			} else {
-				LogResult.fail("Build Steps header has text: " + commonProjectBuildStepsHeader.getText());
+				LogResult.fail("Build Steps header has text: "
+						+ commonProjectBuildStepsHeader.getText());
 			}
 		} else {
 			LogResult.fail("Build Steps header is not displayed.");
 		}
 
 		if (commonProjectSelectBuildOptions.isDisplayed()) {
-			if (commonProjectSelectBuildOptions.getText().contentEquals("Select build options")) {
-				LogResult.pass("Select build options drop down has text: " + commonProjectSelectBuildOptions.getText());
+			if (commonProjectSelectBuildOptions.getText().contentEquals(
+					"Select build options")) {
+				LogResult.pass("Select build options drop down has text: "
+						+ commonProjectSelectBuildOptions.getText());
 			} else {
-				LogResult.fail("Select Build options drop down has text: " + commonProjectSelectBuildOptions.getText());
+				LogResult.fail("Select Build options drop down has text: "
+						+ commonProjectSelectBuildOptions.getText());
 			}
 
 		} else {
@@ -2574,10 +2777,13 @@ public class SearchTab {
 		}
 
 		if (commonProjectSelectTestOptions.isDisplayed()) {
-			if (commonProjectSelectTestOptions.getText().contentEquals("Select test options")) {
-				LogResult.pass("Select test options drop down has text: " + commonProjectSelectTestOptions.getText());
+			if (commonProjectSelectTestOptions.getText().contentEquals(
+					"Select test options")) {
+				LogResult.pass("Select test options drop down has text: "
+						+ commonProjectSelectTestOptions.getText());
 			} else {
-				LogResult.fail("Select test options drop down has text: " + commonProjectSelectTestOptions.getText());
+				LogResult.fail("Select test options drop down has text: "
+						+ commonProjectSelectTestOptions.getText());
 			}
 		} else {
 			LogResult.fail("Select test options drop down is not displayed.");
@@ -2590,21 +2796,28 @@ public class SearchTab {
 		}
 
 		if (commonProjectSelectEnvironmentOptions.isDisplayed()) {
-			if (commonProjectSelectEnvironmentOptions.getText().contentEquals("Select environment options")) {
-				LogResult.pass("Select environment options drop down has text: "
-						+ commonProjectSelectEnvironmentOptions.getText());
+			if (commonProjectSelectEnvironmentOptions.getText().contentEquals(
+					"Select environment options")) {
+				LogResult
+						.pass("Select environment options drop down has text: "
+								+ commonProjectSelectEnvironmentOptions
+										.getText());
 			} else {
-				LogResult.fail("Select environment options drop down has text: "
-						+ commonProjectSelectEnvironmentOptions.getText());
+				LogResult
+						.fail("Select environment options drop down has text: "
+								+ commonProjectSelectEnvironmentOptions
+										.getText());
 			}
 		} else {
-			LogResult.fail("Select environment options drop down is not displayed.");
+			LogResult
+					.fail("Select environment options drop down is not displayed.");
 		}
 
 		if (commonProjectEnvironmentOptionsTbx.isDisplayed()) {
 			LogResult.pass("Select environment options text box is displayed");
 		} else {
-			LogResult.fail("Select environment options text box is not displayed");
+			LogResult
+					.fail("Select environment options text box is not displayed");
 		}
 	}
 
@@ -2616,6 +2829,23 @@ public class SearchTab {
 		} else {
 			LogResult.fail("Back to results button is not displayed.");
 		}
+	}
+
+	public void verifyRepositoryDescriptionForCommonProjects() {
+		
+		wait.until(ExpectedConditions.visibilityOf(mouseHoverDescriptionForCommonProjects));
+		
+		action.moveToElement(mouseHoverDescriptionForCommonProjects).build().perform();
+
+//		Thread.sleep(2000);
+
+		if (repoDescriptionForCommonProjects.isDisplayed()) {
+			LogResult.pass("Repository description displayed as: "
+					+ repoDescriptionForCommonProjects.getText());
+		} else {
+			LogResult.fail("Repository description is not displayed.");
+		}
+
 	}
 
 	// Clicking on Back to Results
@@ -2630,7 +2860,8 @@ public class SearchTab {
 	}
 
 	// Clicking on Save button for Batch File creation
-	public void clickOnBatchFileSaveBtnForCommonProjects() throws InterruptedException {
+	public void clickOnBatchFileSaveBtnForCommonProjects()
+			throws InterruptedException {
 		wait.until(ExpectedConditions.visibilityOf(commonProjectSaveBatchBtn));
 
 		commonProjectSaveBatchBtn.click();
@@ -2676,7 +2907,8 @@ public class SearchTab {
 	// project
 	public void verifyUseCurrentVersionForCommonProject() {
 
-		if (commonProjectCurrentVersion.getText().contentEquals("Use current version")) {
+		if (commonProjectCurrentVersion.getText().contentEquals(
+				"Use current version")) {
 			LogResult.pass("Use current version drop down is displayed.");
 
 			commonProjectCurrentVersion.click();
@@ -2698,10 +2930,12 @@ public class SearchTab {
 
 	// To verify Select build servers value along with selection/unselection of
 	// build servers
-	public void verifySelectBuildServerForCommonProject() throws InterruptedException {
+	public void verifySelectBuildServerForCommonProject()
+			throws InterruptedException {
 
 		if (commonProjectSelectBuildServer.isDisplayed()) {
-			LogResult.pass("Select build servers drop down is displayed with values: ");
+			LogResult
+					.pass("Select build servers drop down is displayed with values: ");
 
 			commonProjectSelectBuildServer.click();
 
@@ -2721,11 +2955,13 @@ public class SearchTab {
 
 			}
 
-			if (commonProjectSelectBuildServer.getText().contentEquals("None selected")) {
+			if (commonProjectSelectBuildServer.getText().contentEquals(
+					"None selected")) {
 				LogResult.pass("All Build servers are unselected.");
 			} else {
-				LogResult.fail("All Build servers are not unselected. Unselected servers are: "
-						+ commonProjectSelectBuildServer.getText());
+				LogResult
+						.fail("All Build servers are not unselected. Unselected servers are: "
+								+ commonProjectSelectBuildServer.getText());
 			}
 
 			List<WebElement> buildServerChkbx1 = commonProjectBuildServerListChkbx;
@@ -2742,11 +2978,13 @@ public class SearchTab {
 
 			// Currently the build servers are dynamic hence checking for
 			// partial text and omitting the number in brackets
-			if (commonProjectSelectBuildServer.getText().contains("All selected")) {
+			if (commonProjectSelectBuildServer.getText().contains(
+					"All selected")) {
 				LogResult.pass("All Build servers are selected.");
 			} else {
-				LogResult.fail("All Build servers are not selected. Selected servers are: "
-						+ commonProjectSelectBuildServer.getText());
+				LogResult
+						.fail("All Build servers are not selected. Selected servers are: "
+								+ commonProjectSelectBuildServer.getText());
 			}
 
 			// commonProjectSelectBuildServer.click();
@@ -2760,15 +2998,17 @@ public class SearchTab {
 	}
 
 	// Clicking on Build+Test button for Most commonly used project
-	public void clickOnBuildAndTestBtnForCommonProject() throws InterruptedException {
+	public void clickOnBuildAndTestBtnForCommonProject()
+			throws InterruptedException {
 
 		ArrayList<String> buildServersArray = new ArrayList<String>();
 
 		for (int i = 0; i < commonProjectBuildServerList.size(); i++) {
 
-			buildServersArray.add(i, commonProjectBuildServerList.get(i).getText());
+			buildServersArray.add(i, commonProjectBuildServerList.get(i)
+					.getText());
 		}
-		
+
 		commonProjectSelectBuildServer.click();
 
 		// for (int i=0;i< buildServerList.size();i++) {
@@ -2814,7 +3054,8 @@ public class SearchTab {
 
 					if (driver.getTitle().contains(item)) {
 
-						LogResult.pass("Jenkins page opened for build server: " + item);
+						LogResult.pass("Jenkins page opened for build server: "
+								+ item);
 					}
 
 				}
@@ -2845,13 +3086,17 @@ public class SearchTab {
 	// for Most commonly used project
 	public void verifyBuildStepsForCommonProject() {
 
-		wait.until(ExpectedConditions.visibilityOf(commonProjectSelectBuildOptions));
+		wait.until(ExpectedConditions
+				.visibilityOf(commonProjectSelectBuildOptions));
 
 		if (commonProjectSelectBuildOptions.isDisplayed()) {
-			if (commonProjectSelectBuildOptions.getText().contentEquals("Select build options")) {
-				LogResult.pass("Select build options drop down has text: " + commonProjectSelectBuildOptions.getText());
+			if (commonProjectSelectBuildOptions.getText().contentEquals(
+					"Select build options")) {
+				LogResult.pass("Select build options drop down has text: "
+						+ commonProjectSelectBuildOptions.getText());
 			} else {
-				LogResult.fail("Select Build options drop down has text: " + commonProjectSelectBuildOptions.getText());
+				LogResult.fail("Select Build options drop down has text: "
+						+ commonProjectSelectBuildOptions.getText());
 			}
 
 		} else {
@@ -2860,46 +3105,61 @@ public class SearchTab {
 
 		if (commonProjectBuildOptionsTbx.isDisplayed()) {
 
-			LogResult.pass("Select build options text box is displayed with value: "
-					+ commonProjectBuildOptionsTbx.getAttribute("value"));
+			LogResult
+					.pass("Select build options text box is displayed with value: "
+							+ commonProjectBuildOptionsTbx
+									.getAttribute("value"));
 		} else {
 			LogResult.fail("Select build options text box is not displayed");
 		}
 
 		if (commonProjectSelectTestOptions.isDisplayed()) {
-			if (commonProjectSelectTestOptions.getText().contentEquals("Select test options")) {
-				LogResult.pass("Select test options drop down has text: " + commonProjectSelectTestOptions.getText());
+			if (commonProjectSelectTestOptions.getText().contentEquals(
+					"Select test options")) {
+				LogResult.pass("Select test options drop down has text: "
+						+ commonProjectSelectTestOptions.getText());
 			} else {
-				LogResult.fail("Select test options drop down has text: " + commonProjectSelectTestOptions.getText());
+				LogResult.fail("Select test options drop down has text: "
+						+ commonProjectSelectTestOptions.getText());
 			}
 		} else {
 			LogResult.fail("Select test options drop down is not displayed.");
 		}
 
 		if (commonProjectTestOptionsTbx.isDisplayed()) {
-			LogResult.pass("Select test options text box is displayed with value: "
-					+ commonProjectTestOptionsTbx.getAttribute("value"));
+			LogResult
+					.pass("Select test options text box is displayed with value: "
+							+ commonProjectTestOptionsTbx.getAttribute("value"));
 		} else {
 			LogResult.fail("Select test options text box is not displayed");
 		}
 
 		if (commonProjectSelectEnvironmentOptions.isDisplayed()) {
-			if (commonProjectSelectEnvironmentOptions.getText().contentEquals("Select environment options")) {
-				LogResult.pass("Select environment options drop down has text: "
-						+ commonProjectSelectEnvironmentOptions.getText());
+			if (commonProjectSelectEnvironmentOptions.getText().contentEquals(
+					"Select environment options")) {
+				LogResult
+						.pass("Select environment options drop down has text: "
+								+ commonProjectSelectEnvironmentOptions
+										.getText());
 			} else {
-				LogResult.fail("Select environment options drop down has text: "
-						+ commonProjectSelectEnvironmentOptions.getText());
+				LogResult
+						.fail("Select environment options drop down has text: "
+								+ commonProjectSelectEnvironmentOptions
+										.getText());
 			}
 		} else {
-			LogResult.fail("Select environment options drop down is not displayed.");
+			LogResult
+					.fail("Select environment options drop down is not displayed.");
 		}
 
 		if (commonProjectEnvironmentOptionsTbx.isDisplayed()) {
-			LogResult.pass("Select environment options text box is displayed with value: "
-					+ commonProjectEnvironmentOptionsTbx.getAttribute("value"));
+			LogResult
+					.pass("Select environment options text box is displayed with value: "
+							+ commonProjectEnvironmentOptionsTbx
+									.getAttribute("value"));
 		} else {
-			LogResult.fail("Select environment options text box is not displayed");
+			LogResult
+					.fail("Select environment options text box is not displayed");
 		}
 	}
 
@@ -2914,7 +3174,8 @@ public class SearchTab {
 		if (getPageURL().contains("github.com")) {
 			LogResult.pass("Owner details are displayed on GitHub website.");
 		} else {
-			LogResult.fail("Owner details are not displayed on GitHub website.");
+			LogResult
+					.fail("Owner details are not displayed on GitHub website.");
 		}
 
 	}
@@ -2927,9 +3188,11 @@ public class SearchTab {
 		wait.until(ExpectedConditions.urlContains("github.com"));
 
 		if (getPageURL().contains("github.com")) {
-			LogResult.pass("Repository details are displayed on GitHub website.");
+			LogResult
+					.pass("Repository details are displayed on GitHub website.");
 		} else {
-			LogResult.fail("Repository details are not displayed on GitHub website.");
+			LogResult
+					.fail("Repository details are not displayed on GitHub website.");
 		}
 	}
 
@@ -2956,7 +3219,8 @@ public class SearchTab {
 
 	// Setting repository name of first row in repository listing for common
 	// project
-	public void setRepositoryNameForCommonProject(String repositoryNameCommonProject) {
+	public void setRepositoryNameForCommonProject(
+			String repositoryNameCommonProject) {
 		this.repositoryNameCommonProject = repositoryNameCommonProject;
 	}
 
@@ -2977,14 +3241,17 @@ public class SearchTab {
 	}
 
 	// To check if search result contains owner and repository name in top row
-	public void verifyOwnerRepositorySearch(String ownerName, String repositoryName) {
+	public void verifyOwnerRepositorySearch(String ownerName,
+			String repositoryName) {
 
-		wait.until(ExpectedConditions.visibilityOf(resultsPanel));
+		wait.until(ExpectedConditions.visibilityOf(singleDetailPanel));
 
-		if ((topOwnerNameInList.getText().contentEquals(ownerName))
-				&& (topRepositoryNameInList.getText().contentEquals(repositoryName))) {
+		if ((ownerDetail.getText().contentEquals(ownerName))
+				&& (repositoryDetail.getText()
+						.contentEquals(repositoryName))) {
 
-			LogResult.pass("Owner-Repository combine search is successfully verified.");
+			LogResult
+					.pass("Owner-Repository combine search is successfully verified.");
 		} else {
 			LogResult.fail("Owner-Repository combine search failed.");
 		}

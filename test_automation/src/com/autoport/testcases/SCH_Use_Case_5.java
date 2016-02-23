@@ -1,9 +1,7 @@
 package com.autoport.testcases;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.BatchJobsTab;
@@ -21,20 +19,23 @@ public class SCH_Use_Case_5 {
 	BatchJobsTab batchJobsTab;
 
 	String listOfRepositories;
-//	String savedBatchFileName;
+
+	// String savedBatchFileName;
 
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-		// CommonFunctions.launchBrowser();
+		//CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
 
 		homePage = CommonFunctions.homePage;
 		searchTab = CommonFunctions.searchTab;
 		batchJobsTab = CommonFunctions.batchJobsTab;
 
-		listOfRepositories = ReadTestData.readParameter("searchTabData", "listOfRepositories");
-//		savedBatchFileName = ReadTestData.readParameter("SCH_Use_Case_5", "savedBatchFileName");
+		listOfRepositories = ReadTestData.readParameter("searchTabData",
+				"listOfRepositories");
+		// savedBatchFileName = ReadTestData.readParameter("SCH_Use_Case_5",
+		// "savedBatchFileName");
 
 		searchTab.clickOnSingleProjectBtn();
 
@@ -57,7 +58,8 @@ public class SCH_Use_Case_5 {
 	}
 
 	@Test(priority = 1)
-	public void SCH_Save_batch_file_single_project_020() throws InterruptedException {
+	public void SCH_Save_batch_file_single_project_020()
+			throws InterruptedException {
 
 		searchTab.clickOnBatchFileSaveBtn();
 
@@ -67,12 +69,14 @@ public class SCH_Use_Case_5 {
 
 		batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.verifyLocallySavedBatchFile(searchTab.getRepositoryNameAddedToBatch() + "-1");//cassandra-1
-																						
+		batchJobsTab.verifyLocallySavedBatchFile(searchTab
+				.getRepositoryNameAddedToBatch() + "-1");// cassandra-1
+
 	}
 
 	@Test(priority = 2)
-	public void SCH_Export_batch_file_single_project_021() throws InterruptedException {
+	public void SCH_Export_batch_file_single_project_021()
+			throws InterruptedException {
 
 		homePage.clickSearchTab();
 
@@ -86,8 +90,8 @@ public class SCH_Use_Case_5 {
 
 		Thread.sleep(2000);
 
-		searchTab.confirmFileDownload(searchTab.getRepositoryNameAddedToBatch() + "-1");// cassandra-1
-																						
+		searchTab.confirmFileDownload(searchTab.getRepositoryNameAddedToBatch()
+				+ "-1");// cassandra-1
 
 	}
 
@@ -102,7 +106,7 @@ public class SCH_Use_Case_5 {
 	}
 
 	@Test(priority = 4)
-	public void SCH_Batch_File_Repository_UI_023() {
+	public void SCH_Batch_File_Repository_UI_023() throws InterruptedException {
 
 		searchTab.verifyResultsSortByPopularityStars();
 
@@ -116,9 +120,5 @@ public class SCH_Use_Case_5 {
 
 	}
 
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
-
+	
 }

@@ -3,7 +3,6 @@ package com.autoport.testcases;
 import java.text.ParseException;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -26,14 +25,15 @@ public class SCH_Use_Case_6 {
 	@BeforeTest
 	public void beforeTest() throws Exception {
 
-//		 CommonFunctions.launchBrowser();
+		// CommonFunctions.launchBrowser();
 		driver = CommonFunctions.driver;
 
 		homePage = CommonFunctions.homePage;
 		searchTab = CommonFunctions.searchTab;
 		reportsTab = CommonFunctions.reportsTab;
 
-		buildAndTestRepositoryName = ReadTestData.readParameter("searchTabData", "buildAndTestRepositoryName");
+		buildAndTestRepositoryName = ReadTestData.readParameter(
+				"searchTabData", "buildAndTestRepositoryName");
 
 		searchTab.clickOnSingleProjectBtn();
 
@@ -54,13 +54,15 @@ public class SCH_Use_Case_6 {
 	}
 
 	@Test(priority = 1)
-	public void SCH_Select_build_servers_repository_details_single_project_025() throws InterruptedException {
+	public void SCH_Select_build_servers_repository_details_single_project_025()
+			throws InterruptedException {
 
 		searchTab.verifySelectBuildServer();
 	}
 
 	@Test(priority = 2)
-	public void SCH_Build_Test_repository_single_project_026() throws InterruptedException, ParseException {
+	public void SCH_Build_Test_repository_single_project_026()
+			throws InterruptedException, ParseException {
 
 		searchTab.clickOnBuildAndTestBtn();
 
@@ -76,7 +78,8 @@ public class SCH_Use_Case_6 {
 
 		reportsTab.clickOnDateCompletedHeader();
 
-		reportsTab.verifyJenkinsJobCompletion(searchTab.getBuildClickTime(), searchTab.getBuildServersCount());
+		reportsTab.verifyJenkinsJobCompletion(searchTab.getBuildClickTime(),
+				searchTab.getBuildServersCount());
 
 		homePage.clickSearchTab();
 
@@ -88,9 +91,5 @@ public class SCH_Use_Case_6 {
 		searchTab.verifyBuildSteps();
 	}
 
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
 
 }

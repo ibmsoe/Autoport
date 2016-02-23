@@ -3,16 +3,14 @@ package com.autoport.testcases;
 import java.text.ParseException;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.HomePage;
 import com.autoport.pageobjects.ReportsTab;
 import com.autoport.pageobjects.SearchTab;
 import com.autoport.utilities.CommonFunctions;
-import com.autoport.utilities.ReadTestData;
+
 
 public class SCH_Use_Case_9 {
 
@@ -78,8 +76,5 @@ public class SCH_Use_Case_9 {
 		searchTab.verifyBuildStepsForCommonProject();
 	}
 
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
+	
 }

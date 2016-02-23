@@ -1,7 +1,6 @@
 package com.autoport.testcases;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
 import org.testng.annotations.Test;
 
@@ -34,12 +33,16 @@ public class SCH_Use_Case_4 {
 		searchTab = CommonFunctions.searchTab;
 		batchJobsTab = CommonFunctions.batchJobsTab;
 
-		autoSelectedRepository = ReadTestData.readParameter("searchTabData", "autoSelectedRepository");
-		listOfRepositories = ReadTestData.readParameter("searchTabData", "listOfRepositories");
-		ownerForOwnerRepositorySearch = ReadTestData.readParameter("searchTabData", "ownerForOwnerRepositorySearch");
-		repositoryForOwnerRepositorySearch = ReadTestData.readParameter("searchTabData",
-				"repositoryForOwnerRepositorySearch");
-		numOfRepositories = ReadTestData.readParameter("searchTabData", "numOfRepositories");
+		autoSelectedRepository = ReadTestData.readParameter("searchTabData",
+				"autoSelectedRepository");
+		listOfRepositories = ReadTestData.readParameter("searchTabData",
+				"listOfRepositories");
+		ownerForOwnerRepositorySearch = ReadTestData.readParameter(
+				"searchTabData", "ownerForOwnerRepositorySearch");
+		repositoryForOwnerRepositorySearch = ReadTestData.readParameter(
+				"searchTabData", "repositoryForOwnerRepositorySearch");
+		numOfRepositories = ReadTestData.readParameter("searchTabData",
+				"numOfRepositories");
 
 	}
 
@@ -88,13 +91,15 @@ public class SCH_Use_Case_4 {
 	@Test(priority = 3)
 	public void SCH_Search_Results_verification_owner_repository_010a() {
 
-		searchTab.searchForRepository(ownerForOwnerRepositorySearch + "/" + repositoryForOwnerRepositorySearch);
+		searchTab.searchForRepository(ownerForOwnerRepositorySearch + "/"
+				+ repositoryForOwnerRepositorySearch);
 
 		searchTab.pressEnterKey();
 
 		searchTab.verifyResultsSortByRelavance();
 
-		searchTab.verifyOwnerRepositorySearch(ownerForOwnerRepositorySearch, repositoryForOwnerRepositorySearch);
+		searchTab.verifyOwnerRepositorySearch(ownerForOwnerRepositorySearch,
+				repositoryForOwnerRepositorySearch);
 	}
 
 	@Test(priority = 4)
@@ -150,7 +155,8 @@ public class SCH_Use_Case_4 {
 	}
 
 	@Test(priority = 7)
-	public void SCH_Owner_Repository_single_project_014() throws InterruptedException {
+	public void SCH_Owner_Repository_single_project_014()
+			throws InterruptedException {
 
 		searchTab.searchForRepository(autoSelectedRepository);
 
@@ -162,28 +168,12 @@ public class SCH_Use_Case_4 {
 
 		searchTab.clickOnOwner();
 
-		// searchTab.browserNavigateBack();
-		//
-		// searchTab.clickOnSingleProjectBtn();
-		//
-		// searchTab.verifyResultsSortByPopularityStars();
-		//
-		// searchTab.waitingForSingleProjectResultPanel();
-
 		searchTab.clickOnRepository();
-
-		// searchTab.browserNavigateBack();
 
 	}
 
 	@Test(priority = 8)
 	public void SCH_Tooltip_single_project_015() {
-
-		// searchTab.clickOnSingleProjectBtn();
-		//
-		// searchTab.verifyResultsSortByPopularityStars();
-		//
-		// searchTab.waitingForSingleProjectResultPanel();
 
 		searchTab.verifyRepositoryDetailsTooltip();
 
@@ -194,7 +184,7 @@ public class SCH_Use_Case_4 {
 	}
 
 	@Test(priority = 9)
-	public void SCH_Repository_description_single_project_016() throws InterruptedException {
+	public void SCH_Repository_description_single_project_016() throws InterruptedException{
 
 		searchTab.verifyRepositoryDescription();
 	}
@@ -218,9 +208,5 @@ public class SCH_Use_Case_4 {
 		searchTab.clickOnBackToResults();
 	}
 
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
-
+	
 }

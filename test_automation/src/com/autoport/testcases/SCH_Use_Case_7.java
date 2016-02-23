@@ -1,9 +1,7 @@
 package com.autoport.testcases;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.SearchTab;
@@ -159,7 +157,7 @@ public class SCH_Use_Case_7 {
 
 	@Test(priority = 10)
 	public void SCH_Repository_Description_common_projects_038() throws InterruptedException {
-		searchTab.verifyRepositoryDescription();
+		searchTab.verifyRepositoryDescriptionForCommonProjects();
 	}
 
 	@Test(priority = 11)
@@ -177,9 +175,5 @@ public class SCH_Use_Case_7 {
 		searchTab.clickOnBackToResultsForCommonProjects();
 	}
 
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
-
+	
 }

@@ -5,18 +5,12 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
+
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.FileUtils;
-import org.openqa.selenium.By;
 import org.openqa.selenium.NoSuchElementException;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.Platform;
-import org.openqa.selenium.Proxy;
-import org.openqa.selenium.TakesScreenshot;
+
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
@@ -29,7 +23,6 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.testng.Reporter;
 
 import com.autoport.pageobjects.BatchJobsTab;
 import com.autoport.pageobjects.BuildServersTab;
@@ -78,17 +71,23 @@ public class CommonFunctions {
 					.setNoProxy("*.ibm.com");*/
 
 			if (browser.equalsIgnoreCase("Firefox")) {
-
+								
 				FirefoxProfile ffProfile = new FirefoxProfile();
-				ffProfile.setPreference("browser.helperApps.neverAsk.saveToDisk", "text/plain");
-				ffProfile.setPreference("privacy.popups.policy", "true");
-				ffProfile.setPreference("browser.popups.showPopupBlocker", "false");
-				driver = new FirefoxDriver(ffProfile);
 
-				/*DesiredCapabilities capability = DesiredCapabilities.firefox();
-				capability.setBrowserName("firefox");
-				capability.setCapability(CapabilityType.PROXY, proxy);
-				driver = new FirefoxDriver(capability);*/
+				/*ProfilesIni allProfiles = new ProfilesIni();
+				FirefoxProfile ffProfile = allProfiles.getProfile("default");*/
+				ffProfile.setAcceptUntrustedCertificates(true);
+				ffProfile.setAssumeUntrustedCertificateIssuer(true);
+				ffProfile.setEnableNativeEvents(true);
+				
+				ffProfile.setPreference("browser.download.folderList", 1);
+				ffProfile.setPreference("browser.helperApps.neverAsk.openFile","text/plain");
+				ffProfile.setPreference("browser.helperApps.neverAsk.saveToDisk", "text/plain");
+				ffProfile.setPreference("browser.helperApps.alwaysAsk.force", false);
+				/*ffProfile.setPreference("privacy.popups.policy", true);
+				ffProfile.setPreference("browser.popups.showPopupBlocker", false);*/
+				
+				driver = new FirefoxDriver(ffProfile);
 
 			} else if (browser.equalsIgnoreCase("chrome")) {
 
@@ -145,6 +144,16 @@ public class CommonFunctions {
 		buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
 
 		buildServerTab.clickListInstallRemoveSoftwareUsingManagedServicesBtnToOpen();
+	}
+	
+	public static void goTo_ShowCleanSlavesUsingManagedServicesSection() {
+		
+		homePage.openBuildServerTab();
+
+		buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
+
+		buildServerTab.clickShowCleanBuildSlavesUsingManagedServicesBtnToOpen();
+		
 	}
 
 	public static void goTo_UploadPackageToRepositorySection() {

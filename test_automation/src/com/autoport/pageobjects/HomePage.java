@@ -22,8 +22,7 @@ public class HomePage {
 		this.driver = driver;
 
 		this.wait = wait;
-		// wait = new WebDriverWait(driver, 30);
-
+		
 		AjaxElementLocatorFactory factory = new AjaxElementLocatorFactory(driver, 10);
 		PageFactory.initElements(factory, this);
 	}
@@ -238,19 +237,7 @@ public class HomePage {
 		}
 	}
 
-	/*
-	 * // To verify if Reports tab is displayed public void openBuildServerTab()
-	 * { buildServerTab.click(); if (true) { LogResult.pass(
-	 * "Build Server tab is displayed."); } else { LogResult.fail(
-	 * "Build Server tab is not displayed."); } }
-	 * 
-	 * // To verify if Build Servers tab is displayed public void
-	 * clickReportsTab() { reportsTab.click();
-	 * 
-	 * if (true) { LogResult.pass("Reports tab is displayed."); } else {
-	 * LogResult.fail("Reports tab is not displayed."); } }
-	 */
-
+	
 	// To verify Home page elements
 	public void verifyHomePageUI() {
 
@@ -337,7 +324,7 @@ public class HomePage {
 	}
 
 	// To verify Settings overlay popup UI elements
-	public void verifySettingsUI() {
+	public void verifySettingsUI(String envType) {
 
 		js = (JavascriptExecutor) driver;
 
@@ -374,21 +361,31 @@ public class HomePage {
 			LogResult.fail("Local Test Results Path label is not present");
 		}
 
+		// checking for archive test path based on envtype
 		if (archiveTestResultsLabel.isDisplayed()) {
 			LogResult.pass("Archive Test Results Path label is present");
 			if (archiveTestResultsTxtBx.isDisplayed()) {
 				LogResult.pass("Archive Test Results Path textbox is displayed");
 
 				Object archiveTestResultsPath = js.executeScript("return globalState.pathForTestResults");
-
-				if (archiveTestResultsPath.toString().contentEquals("/projects/p/powersoe/autoport/test_results/")) {
-					LogResult.pass("Archive Test Results Path is correct: " + archiveTestResultsPath.toString());
+				if (envType.equalsIgnoreCase("supervessel") )
+				{
+					if (archiveTestResultsPath.toString().contentEquals("/autoport/test_results/")) {
+						LogResult.pass("Archive Test Results Path is correct: " + archiveTestResultsPath.toString());
+					} else {
+						LogResult.fail("Archive Test Results Path is incorrect: " + archiveTestResultsPath.toString());
+					}
 				} else {
-					LogResult.fail("Archive Test Results Path is incorrect: " + archiveTestResultsPath.toString());
+					if (archiveTestResultsPath.toString().contentEquals("/projects/p/powersoe/autoport/test_results/")) {
+						LogResult.pass("Archive Test Results Path is correct: " + archiveTestResultsPath.toString());
+					} else {
+						LogResult.fail("Archive Test Results Path is incorrect: " + archiveTestResultsPath.toString());
+					}
 				}
 			} else {
 				LogResult.fail("Archive Test Results Path textbox is not displayed");
 			}
+		
 		} else {
 			LogResult.fail("Archive Test Results Path label is not present");
 		}
@@ -399,7 +396,7 @@ public class HomePage {
 				LogResult.pass("Local Batch Files Path textbox is displayed");
 
 				Object localBatchFilePath = js.executeScript("return globalState.localPathForBatchFiles");
-
+				
 				if (localBatchFilePath.toString().contentEquals("./data/batch_files/")) {
 					LogResult.pass("Local Batch Files Path is correct: " + localBatchFilePath.toString());
 				} else {
@@ -412,17 +409,27 @@ public class HomePage {
 			LogResult.fail("Local Batch Files Path label is not present");
 		}
 
+		
+		// checking for archive test path based on envtype
 		if (archiveBatchFileLabel.isDisplayed()) {
-			LogResult.pass("Archive Test Results Path label is present");
+			LogResult.pass("Archive Batch Files Path label is present");
 			if (archiveBatchFileTxtBx.isDisplayed()) {
 				LogResult.pass("Archive Batch Files Path textbox is displayed");
 
 				Object archiveBatchFilePath = js.executeScript("return globalState.pathForBatchFiles");
-
-				if (archiveBatchFilePath.toString().contentEquals("/projects/p/powersoe/autoport/batch_files/")) {
+				if (envType.equalsIgnoreCase("supervessel") )
+				{
+				if (archiveBatchFilePath.toString().contentEquals("/autoport/batch_files/")) {
 					LogResult.pass("Archive Batch Files Path is correct: " + archiveBatchFilePath.toString());
 				} else {
 					LogResult.fail("Archive Batch Files Path is incorrect: " + archiveBatchFilePath.toString());
+				}
+				} else {
+					if (archiveBatchFilePath.toString().contentEquals("/projects/p/powersoe/autoport/batch_files/")) {
+						LogResult.pass("Archive Batch Files Path is correct: " + archiveBatchFilePath.toString());
+					} else {
+						LogResult.fail("Archive Batch Files Path is incorrect: " + archiveBatchFilePath.toString());
+					}
 				}
 			} else {
 				LogResult.fail("Archive Batch Files Path textbox is not displayed.");
@@ -557,15 +564,7 @@ public class HomePage {
 
 		LogResult.pass("Clicked on Save Changes button.");
 
-		// wait.until(ExpectedConditions.visibilityOf(alertCloseBtn));
-
-		// alertCloseBtn.click();
-
-		// if (settingsHeader.getText().contentEquals("Settings")) {
-		// LogResult.pass("Update alert dismissed.");
-		// } else {
-		// LogResult.fail("Update alert is displayed.");
-		// }
+		
 	}
 
 	// To verify the functionality of Reset button (by checking if selected Text

@@ -3,9 +3,7 @@ package com.autoport.testcases;
 import java.text.ParseException;
 
 import org.openqa.selenium.WebDriver;
-import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeTest;
-import org.testng.annotations.Parameters;
 import org.testng.annotations.Test;
 
 import com.autoport.pageobjects.BatchJobsTab;
@@ -86,21 +84,5 @@ public class BJ_Use_Case_005 {
 
 	}
 
-	// Buttons removed as per new UI
-
-	// @Test(priority = 2)
-	// public void BJ_Build_Server_batch_file_details_view_019() {
-	//
-	// }
-
-	// @Test(priority = 3)
-	// public void BJ_Build_Test_batch_file_detailed_view_020() {
-	//
-	// }
-
-	// @AfterTest
-	// public void afterTest() {
-	// driver.quit();
-	// }
-
+	
 }
