@@ -2096,7 +2096,9 @@ function processResultList(data) {
     projectReportState.loadingState.diffLoading = false;
     $("#resultRemoveBtn").addClass("disabled");
     if (data === undefined || data.status != "ok") {
-        showAlert("Error:", data);
+        if(data!=undefined && data.status!=undefined && data.status=="failure") {
+            showAlert("Error!", data);
+        }
     } else {
         projectReportState.projects = data.results;
         console.log("In processResultList, project list=", projectReportState.projects)
@@ -3133,7 +3135,9 @@ function listBatchFilesCallback(data) {
 
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
     } else {
-        showAlert("Error!", data);
+        if(data!=undefined && data.status!=undefined && data.status=="failure") {
+            showAlert("Error!", data);
+        }
     }
 }
 
@@ -3293,7 +3297,9 @@ function listPackageForSingleSlaveCallback(data) {
 
         $('#singleServerPackageListTable').bootstrapTable('load', jenkinsState.packageListSingleSlave);
     } else {
-        showAlert("Error!", data);
+        if(data!=undefined && data.status!=undefined && data.status=="failure") {
+            showAlert("Error!", data);
+        }
     }
     $("#singleSlaveListBtn").removeClass("disabled");
 }
@@ -3359,7 +3365,9 @@ function listManagedPackagesCallback(data) {
         jenkinsState.managedPackageTableReady = true;
         $("#multiServerPackageListTable").bootstrapTable('load', jenkinsState.managedPackageList);
     } else {
-        showAlert("Error!", data);
+        if(data!=undefined && data.status!=undefined && data.status=="failure") {
+            showAlert("Error!", data);
+        }
     }
      $("#managedListBtn").removeClass("disabled");
 }
