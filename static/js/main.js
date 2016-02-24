@@ -1,4 +1,9 @@
-google.load('search', '1');
+try {
+    google.load('search', '1');
+}
+catch(err) {
+    console.log(err.message);
+}
 
 var globalState = {
     hasInit: false,
@@ -2252,16 +2257,20 @@ function processBatchBuildLogResults(data) {
                $(this).qtip({
                  content: {
                              text: function(event, api) {
-                                      var searchControl = new google.search.SearchControl();
-                                      searchControl.addSearcher(new google.search.WebSearch());
-                                      searchControl.draw(document.getElementById(elementID));
-                                      var searchword = $(this).text();
-                                      if (searchword.length>40) {
-                                           searchword = searchword.substring(searchword.length-40);
-                                                    }
-                                       searchControl.execute(searchword);
-                                       return $("#"+elementID);
-                                       },
+                                      try {
+                                          var searchControl = new google.search.SearchControl();
+                                          searchControl.addSearcher(new google.search.WebSearch());
+                                          searchControl.draw(document.getElementById(elementID));
+                                          var searchword = $(this).text();
+                                          if (searchword.length > 40) {
+                                               searchword = searchword.substring(searchword.length - 40);
+                                          }
+                                          searchControl.execute(searchword);
+                                          return $("#"+elementID);
+                                      }
+                                      catch(err) {
+                                      }
+                                   },
                                title: 'From Google Search',
                                button: true
                                },
@@ -2329,15 +2338,18 @@ function processLogCompareResults(data) {
                 $(this).qtip({
                     content: {
                         text: function(event, api) {
-                            var searchControl = new google.search.SearchControl();
-                            searchControl.addSearcher(new google.search.WebSearch());
-                            searchControl.draw(document.getElementById(elementID));
-                            var searchword = $(this).text();
-                            if (searchword.length>40) {
-                                searchword = searchword.substring(searchword.length-40);
+                            try {
+                                var searchControl = new google.search.SearchControl();
+                                searchControl.addSearcher(new google.search.WebSearch());
+                                searchControl.draw(document.getElementById(elementID));
+                                var searchword = $(this).text();
+                                if (searchword.length > 40) {
+                                    searchword = searchword.substring(searchword.length - 40);
+                                }
+                                searchControl.execute(searchword);
+                                return $("#"+elementID);
                             }
-                            searchControl.execute(searchword);
-                            return $("#"+elementID);
+                            catch(err){}
                         },
                         title: 'From Google Search',
                         button: true
