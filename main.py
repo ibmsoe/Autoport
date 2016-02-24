@@ -341,14 +341,6 @@ def settings():
             catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
 
             chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
-
-            jenkinsUrlSubStringLength =  globals.jenkinsUrl.rfind(':')
-            if jenkinsUrlSubStringLength > 4:
-                jenkinsUrlNoPort = globals.jenkinsUrl[:globals.jenkinsUrl.rfind(':')]
-            else:
-                jenkinsUrlNoPort = globals.jenkinsUrl
-            globals.jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
-
     except Exception as e :
         logger.warning("settings: Jenkins=%s Error=%s" % (urlparse(globals.jenkinsUrl).hostname, str(e)))
         msg = "Invalid Jenkins URL or networking issue.\nHostname: %s\nError: %s" % (urlparse(globals.jenkinsUrl).hostname, str(e))
@@ -3157,7 +3149,12 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
         # Get new jenkins node information
         globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
         getJenkinsNodeDetails_init()
-
+        jenkinsUrlSubStringLength =  globals.jenkinsUrl.rfind(':')
+        if jenkinsUrlSubStringLength > 4:
+            jenkinsUrlNoPort = globals.jenkinsUrl[:globals.jenkinsUrl.rfind(':')]
+        else:
+            jenkinsUrlNoPort = globals.jenkinsUrl
+        globals.jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
         sharedData.connect(urlparse(jenkinsUrl).hostname)
         sharedData.uploadChefData()
         chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
