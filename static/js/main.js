@@ -659,11 +659,11 @@ var batchReportState = {
         batchReportState.comparison = false;
     },
     backToBatchResultsCompare: function(ev) {
-        if(batchReportState.comparison){
+        if (batchReportState.comparison) {
             // For going back to displaying batch comparison and hiding details.
             batchReportState.batchReportTableReady = true;
             batchReportState.batchReportLogRequested = false;
-        }else{
+        } else {
             batchReportState.backToBatchList(ev);
         }
         $('#testBatchLogResultsTable tr').remove();
@@ -672,7 +672,6 @@ var batchReportState = {
     },
     history: function() {
         batchReportState.loading = true;
-        batchReportState.showListSelectTable = false;
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
         var notReadyJobList = [];
         if (selectedBatchJobs.length > 0){
@@ -688,7 +687,7 @@ var batchReportState = {
                 query[selectedBatchJobs[i].repo].push(selectedBatchJobs[i].filename);
             }
 
-            if (selectedBatchJobs.length > notReadyJobList.length){
+            if (selectedBatchJobs.length > notReadyJobList.length) {
                 $.ajax({
                     type: "POST",
                     contentType: "application/json; charset=utf-8",
@@ -701,7 +700,7 @@ var batchReportState = {
                         processBatchHistory(data, batchReportState);
                     },
                     dataType:'json'
-                }).fail(function(data){
+                }).fail(function(data) {
                     processBatchHistory(data, batchReportState);
                 });
             }
@@ -726,6 +725,8 @@ var batchReportState = {
         var selectedBatchJobs = $('#batchReportListSelectTable').bootstrapTable('getSelections');
         if (selectedBatchJobs.length == 2 && !checkIfBuildAndTestLogCreated('build')) {
             showMessage("Info: ", "No build or test logs are presently available");
+            batchReportState.loading = false;
+            batchReportState.batchReportLogRequested = false;
         }
         else if (selectedBatchJobs.length == 2) {
             // fetch the Batch details and handle it appropriately.
@@ -751,6 +752,7 @@ var batchReportState = {
         else {
             showMessage("Error: ", "Two Batch job from the list needs to be selected.");
             batchReportState.loading = false;
+            batchReportState.batchReportLogRequested = false;
         }
     },
     compareBatchTestLog: function(){
@@ -765,6 +767,7 @@ var batchReportState = {
         if (selectedBatchJobs.length == 2 && !checkIfBuildAndTestLogCreated('test')) {
             showMessage("Info: ", "No build or test logs are presently available");
             batchReportState.loading = false;
+            batchReportState.batchReportLogRequested = false;
         }
         else if (selectedBatchJobs.length == 2) {
             // fetch the Batch details and handle it appropriately.
@@ -790,10 +793,11 @@ var batchReportState = {
         else {
             showMessage("Error: ", "Two Batch job from the list needs to be selected.");
             batchReportState.loading = false;
+            batchReportState.batchReportLogRequested = false;
         }
     },
     compare: function(){
-     // fetch, render and display Report in table.
+        // fetch, render and display Report in table.
         batchReportState.loading = true;
         batchReportState.comparison = true;
         batchReportState.showBatchFile = false;
@@ -1913,7 +1917,7 @@ var projectReportState = {
             }).fail(archiveCallback);
         }
         else {
-            showAlert("Please select local repository for Archival");
+            showAlert("Please select local repository for archival");
         }
     },
     backToList: function(ev) {
@@ -1968,7 +1972,7 @@ $('#packageFile').change(function () {
 });
 
 function showAlert(message, data) {
-    var text = "<br/>Internal autoport error";
+    var text = "";
     $("#apErrorDialogText").hide();
     if (typeof data !== 'undefined' && (typeof data.responseJSON !== 'undefined' || typeof data.statusText !== 'undefined')) {
         var msg = ""
@@ -1983,8 +1987,6 @@ function showAlert(message, data) {
         }
         console.log("In showAlert, msg=", msg)
         text = "<br/>" + msg;
-    } else {
-        console.log("In showAlert, data=", data)
     }
     $("#apErrorDialogText").show();
     $('#errorAlert').css("z-index","9999");
@@ -2537,6 +2539,8 @@ function processBatchDetails(data) {
 function processBatchHistory(data){
     ProjectRegExp = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)/i;
     if (data["results"]) {
+        batchReportState.showListSelectTable = false;
+
         var batchNames = Object.keys(data["results"]);
         var batchReportTestHistory = [];
         var job_list = data["results"];
@@ -3577,9 +3581,9 @@ function toggleProjectReportButtons(){
 }
 
 function toggleBatchReportButtons(){
-    var selectedProjects = $('#batchReportListSelectTable').bootstrapTable('getSelections');
-    console.log("In toggleBatchReportButtons, selectedProjects=", selectedProjects.length);
-    if (selectedProjects.length === 2) {
+    var selectedBatchFiles = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+    console.log("In toggleBatchReportButtons, selectedBatchFiles=", selectedBatchFiles.length);
+    if (selectedBatchFiles.length === 2) {
         $("#batch_report_compare").removeClass("disabled");
         $("#batch_report_compare_build_log").removeClass("disabled");
         $("#batch_report_compare_test_log").removeClass("disabled");
@@ -3589,7 +3593,7 @@ function toggleBatchReportButtons(){
         $("#batch_report_compare_test_log").addClass("disabled");
     }
 
-    if (selectedProjects.length > 0){
+    if (selectedBatchFiles.length > 0) {
         $("#batch_report_remove").removeClass("disabled");
         $("#batch_report_history").removeClass("disabled");
         $("#batch_report_detail").removeClass("disabled");
@@ -3603,8 +3607,8 @@ function toggleBatchReportButtons(){
         $("#batch_report_remove").addClass("disabled");
     }
 
-    for (var i = 0; i < selectedProjects.length; i++){
-        if (selectedProjects[i].repo == 'local'){
+    for (var i = 0; i < selectedBatchFiles.length; i++) {
+        if (selectedBatchFiles[i].repo == 'local'){
             $("#batch_report_archive").removeClass("disabled");
             break;
         }
@@ -3784,13 +3788,13 @@ function processBatchCompare(data) {
  * @param batch_report_obj
  */
 function processBatchTestLogCompare(data, batch_report_obj){
-    if (data.status == "failure"){
+    if (data.status == "failure") {
         batch_report_obj.loading = false;
         batchReportState.batchReportLogRequested = false;
         showAlert(data.error);
         return;
     }
-    if (data["results"]){
+    if (data["results"]) {
         // Hide listing of Batch jiobs before showing the batch details.
         batch_report_obj.showListSelectTable = false;
         var keys = Object.keys(data["results"]);
@@ -3798,22 +3802,23 @@ function processBatchTestLogCompare(data, batch_report_obj){
         var right_parent_batch = null
         var table_rows = [];
 
-        if (keys.length === 3){
+        if (keys.length === 3) {
             var main_table = document.getElementById("testBatchLogResultsTable");
             left_arch = '';
             right_arch = '';
             batchName = '';
-            for (var i = 0; i < keys.length; i++){
+            for (var i = 0; i < keys.length; i++) {
                 if (keys[i] == 'left_arch'){
                     left_arch = data["results"][keys[i]];
-                } else if (keys[i] == 'right_arch'){
+                } else if (keys[i] == 'right_arch') {
                     right_arch = data["results"]["right_arch"];
                 } else {
                     batchName = keys[i];
                 }
             }
 
-            // First generate all non-header data, once done generate header as the required info about parent batch name will be available after traversing project data.
+            // First generate all non-header data, once done generate header as the required info
+            // about parent batch name will be available after traversing project data.
             for (project in data["results"][batchName]) {
                 if (!left_parent_batch) {
                     left_parent_batch = data["results"][batchName][project]["left_parent_name"];

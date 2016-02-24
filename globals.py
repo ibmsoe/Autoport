@@ -116,8 +116,8 @@ def init():
     # create pool of worker threads that query Jenkins for job completion
     threadPool = ThreadPool(threadPoolSize)
 
-    # get local hostname to append to job names
-    localHostName = socket.gethostname()
+    # get local short hostname to prefix to job names
+    localHostName = socket.gethostname().split('.')[0]
 
     # set random number range for UUID
     minRandom = 100000
