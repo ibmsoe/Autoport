@@ -85,7 +85,7 @@ class Catalog:
             if repoType == "gsa" or repoType == "all":
                 jobs = jobs + self.listGSAJobResults(filt)
         except Exception as e:
-            msg = "ListJobResult: " + str(e)                   # Usually a missing test_result.arti
+            msg = "listJobResult: " + str(e)                   # Usually a missing test_result.arti
             logger.debug(msg)
             assert(False), msg
 

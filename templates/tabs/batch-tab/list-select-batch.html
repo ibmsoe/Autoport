@@ -30,31 +30,33 @@
     <div rv-show="batchState.showListSelectTable">
       <div id="batchListSelectToolbar" class="btn-group">
         <a rv-on-click="batchState.detail">
-            <button type="button" class="btn btn-primary" id="batch_details"
-                style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
-                <span class="glyphicon glyphicon-zoom-in"></span>
-                    Details
-            </button>
+          <button type="button" class="btn btn-primary" id="batch_details"
+                  style="float: left; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+            <span class="glyphicon glyphicon-zoom-in"></span>
+            Details
+          </button>
         </a>
         <select id="batchBuildServers" multiple="multiple" style="margin-right: 10px; float: left">
           <option rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
         </select>
-        <a  rv-on-click="batchState.buildAndTest">
-          <button rv-disabled="batchState.selectedBatchFile.location | isEmptyObject" type="button"  id="batch_build_test" class="btn btn-primary" style="margin-left: 10px; margin-right: 10px; border-radius: 5px; float: left">
+        <a rv-on-click="batchState.buildAndTest">
+          <button rv-disabled="batchState.selectedBatchFile.location | isEmptyObject" type="button" id="batch_build_test"
+                  class="btn btn-primary" style="margin-left: 10px; margin-right: 10px; border-radius: 5px; float: left">
             Build + Test
           </button>
         </a>
         <a rv-enabled="batchState.selectedBatchFile.location | isLocal"
           rv-on-click="batchState.archive">
           <button rv-enabled="batchState.selectedBatchFile.location | isLocal" type="button" class="btn btn-primary" id="batch_file_archive"
-           style="float: left; margin-right: 10px">
+                  style="float: left; margin-right: 10px">
             Archive
           </button>
         </a>
         <a rv-on-click="batchState.remove">
-            <button  rv-disabled="batchState.selectedBatchFile.location | isEmptyObject" type="button" class="btn btn-primary disabled" id="batch_file_remove" style="float: left; margin-right: 10px">
-                Remove
-            </button>
+          <button rv-disabled="batchState.selectedBatchFile.location | isEmptyObject" type="button" id="batch_file_remove"
+                  class="btn btn-primary" style="float: left; margin-right: 10px">
+            Remove
+          </button>
         </a>
       </div>
       <table class="table panel panel-default" id="batchListSelectTable"

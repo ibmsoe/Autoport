@@ -522,11 +522,6 @@ var batchState = {
             }
         );
     },
-    showReport: function(ev, el) {
-        batchState.showListSelectTable = false;
-        $.post("getBatchResults", {batchName: batchState.selectedBatchFile.filename},
-            getBatchResultsCallback, "json").fail(getBatchResultsCallback);
-    },
     remove: function(ev, el) {
         if (confirm("Remove selected batch file(s)?") != true) {
             return false;
@@ -1436,7 +1431,7 @@ var jenkinsState = {
                      data: {
                                serverNodeCSV: jenkinsState.nodeDetails[nodeindex].nodelabel
                            },
-                     success: function(data){
+                     success: function(data) {
                                 if (data.status === "ok") {
                                     var pollObj = new pollingState();
                                     if (data.jobList.length > 0){
@@ -1446,23 +1441,24 @@ var jenkinsState = {
                                             // Poll for sync status
                                             setTimeout(
                                                 pollObj.poll(
-                                                    function(){
-                                                            jenkinsState.reBuildSlave = false;
-                                                            jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
-                                                            $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
-                                               })
-                                              ,5000);
+                                                    function() {
+                                                        jenkinsState.reBuildSlave = false;
+                                                        jenkinsState.nodeDetails[nodeindex]['status'] =
+                                                            "<span class='text-success'>Connected</span>";
+                                                        $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+                                                }),
+                                                5000);
                                         }
                                     }
                                 } else {
                                     showAlert("Error!", data);
                                 }
                             },
-                        error: function(){
-                                    jenkinsState.reBuildSlave = false;
-                                    jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
-                                }
-                         });
+                     error: function() {
+                              jenkinsState.reBuildSlave = false;
+                              jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
+                            }
+                     });
             };
             var buttonID = $(ev.target).attr('id');
             if( buttonID == "reSync") {
@@ -1476,40 +1472,42 @@ var jenkinsState = {
                     if (data.status === "ok") {
                         // On completion of Rebuild, Sync Managed packages on the newly built slave..
                         // so that build slave is at the latest Managed version
-                        if(data.rebuildStatus == 'ERROR'){
+                        if (data.rebuildStatus == 'ERROR'){
                              console.log("Rubuild entered ERROR state. Hence exiting!");
                              jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-danger'>ERROR</span>";
                              $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
                              jenkinsState.reBuildSlave = false;
                              return false;
                         }
-                        if(data.rebuildStatus == 'ACTIVE'){
+                        if (data.rebuildStatus == 'ACTIVE'){
                              setTimeout(syncPackages(), 20000);
                         }
-                        if(data.rebuildStatus != 'ACTIVE'){
+                        if (data.rebuildStatus != 'ACTIVE'){
                             console.log("Slave has not come online. Keep polling for ACTIVE Status");
-                            jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span><span class='text-success'>Building</span>";
+                            jenkinsState.nodeDetails[nodeindex]['status'] =
+                                "<span class='glyphicon glyphicon-refresh glyphicon-refresh-animate'></span>"
+                                "<span class='text-success'>Building</span>";
                             $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
                             var pollObjRebuild = new pollingState();
                             pollObjRebuild.setData({
-                                                    serverNodeCSV: jenkinsState.nodeDetails[nodeindex].nodelabel ,
+                                                    serverNodeCSV: jenkinsState.nodeDetails[nodeindex].nodelabel,
                                                     rebuildFlag : 0
                                                    });
                             var checkRebuildStatus = function()
                             {
                                 pollObjRebuild.poll(
-                                    function(data){
+                                    function(data) {
                                         if (data.status === "ok") {
-                                            if(data.rebuildStatus == 'ACTIVE'){
+                                            if (data.rebuildStatus == 'ACTIVE') {
                                                 jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
                                                 $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
                                                 setTimeout(syncPackages(), 20000);
                                                 return true;
                                             }
-                                         else {
-                                             checkRebuildStatus();
-                                         }
-                                       }
+                                            else {
+                                                checkRebuildStatus();
+                                            }
+                                        }
                                    });
                            };
                            checkRebuildStatus();
@@ -1530,7 +1528,7 @@ var jenkinsState = {
 
     selectedMultiSlavePackage: [],     // Managed Packages selected by the user
 
-    serverGroup: "",                   // Takes value All or UBUNTU or RHEL depending on the "List x" button clicked. Variable to be used during Synch operation.
+    serverGroup: "",                   // Variable to be used during Synch operation.
     listManagedPackages: function(ev) {
         var id = $("#buildServersOSes").find(":selected").text();
         jenkinsState.selectedMultiSlavePackage = [];
@@ -1583,26 +1581,26 @@ var jenkinsState = {
                 var isUpdatedToTemp = false;
                 for (var k in tempPackArray){
                     var tempObj = tempPackArray[k];
-                    if((tempObj.packageName == obj.packageName) && compareVersion(tempObj.updateVersion, obj.updateVersion)){
+                    if ((tempObj.packageName == obj.packageName) && compareVersion(tempObj.updateVersion, obj.updateVersion)) {
                             tempObj['updateVersion'] = tempObj['updateVersion'];
                     }
                 }
-                if(!isUpdatedToTemp){
+                if (!isUpdatedToTemp) {
                     tempPackArray.push(obj);
                 }
             }
-            if(tempPackArray.length > 0){
+            if (tempPackArray.length > 0) {
                 selectedPackageList = tempPackArray;
             }
         }
         var packageListObj = [];
         var message = "";
         for (var obj in selectedPackageList){
-            if(type=="Add" && selectedPackageList[obj].isAddable) {
-                if(message=="")  message = "The below packages are eligible for "+type+"\n"
+            if (type == "Add" && selectedPackageList[obj].isAddable) {
+                if (message == "")  message = "The below packages are eligible for "+type+"\n"
                 message = message + selectedPackageList[obj].packageName+", version - "+selectedPackageList[obj].updateVersion+"\n";
-            } else if(type == "Remove" && selectedPackageList[obj].isRemovable){
-                if(message=="")  message = "The below packages are eligible for "+type+"\n"
+            } else if (type == "Remove" && selectedPackageList[obj].isRemovable){
+                if (message == "")  message = "The below packages are eligible for "+type+"\n"
                 message = message + selectedPackageList[obj].packageName+", version - "+selectedPackageList[obj].installedVersion+"\n";
             } else {
                 continue;
@@ -1621,9 +1619,9 @@ var jenkinsState = {
                 'removableExt': selectedPackageList[obj].removableExt
             });
         }
-        if(message != "") {
+        if (message != "") {
             var confRes = confirm(message);
-            if(!confRes){
+            if (!confRes) {
                 return "Cancelled";
             }
         }
@@ -1639,7 +1637,7 @@ var jenkinsState = {
     },
     removeFromManagedList: function(ev, el) {
         var packageListObj = JSON.stringify(jenkinsState.getSelectedManagedPackageData("Remove"));
-        if(packageListObj == "[]") {
+        if (packageListObj == "[]") {
             showAlert("No Package is eligible for Remove");
             return false;
         }
@@ -1653,7 +1651,7 @@ var jenkinsState = {
     synchManagedPackageList: function() {
         var selectedBuildServer = $('#buildServersToSyncDropDown  option:selected');
         var selectedBuildServerCsv = "";
-        $(selectedBuildServer).each(function(index, brand){
+        $(selectedBuildServer).each(function(index, brand) {
             if (selectedBuildServerCsv == "")
                 selectedBuildServerCsv = $(this).val()
             else
@@ -1666,7 +1664,8 @@ var jenkinsState = {
         jenkinsState.loadingState.managedPackageActionLoading = true;
         $("#syncManagedPackageButton").addClass("disabled");
         $("#manageRuntime").hide();
-        $.getJSON("synchManagedPackageList", { serverNodeCSV: selectedBuildServerCsv }, synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
+        $.getJSON("synchManagedPackageList", { serverNodeCSV: selectedBuildServerCsv },
+             synchManagedPackageListCallback).fail(synchManagedPackageListCallback);
     },
     uploadPackage: function (ev) {
         var file = $('#packageFile')[0].files[0];
@@ -1678,8 +1677,8 @@ var jenkinsState = {
         }
         if ($('#packageFile').val().indexOf('.tar') != -1
             || $('#packageFile').val().indexOf('.zip') !=-1
-            ||  $('#packageFile').val().indexOf('.bin') !=-1){
-            if (packageType == undefined || packageType == ""){
+            ||  $('#packageFile').val().indexOf('.bin') !=-1) {
+            if (packageType == undefined || packageType == "") {
                 alert("Please select Package Type");
                 return false;
             } else {
@@ -1687,7 +1686,7 @@ var jenkinsState = {
             }
         }
         var debDetails = $("#debSelector").find(":selected").val();
-        if ($('#packageFile').val().indexOf('.deb') != -1){
+        if ($('#packageFile').val().indexOf('.deb') != -1) {
            if (debDetails == undefined || debDetails == "") {
                alert("Please select appropriate deb type");
                return false;
@@ -1935,8 +1934,8 @@ rivets.bind($('#toolContainer'), {
 
 // Does the above and makes a search query
 function doSearch(autoselect) {
-    if (typeof(autoselect)==='undefined') autoselect = true;
-    if (typeof(autoselect)!=='boolean') autoselect = true;
+    if (typeof(autoselect) === 'undefined') autoselect = true;
+    if (typeof(autoselect) !== 'boolean') autoselect = true;
 
     // Do not switch to loading state if query is empty
     searchState.single.query = $('#query').val();
@@ -1964,16 +1963,25 @@ $('#packageFile').change(function () {
 });
 
 function showAlert(message, data) {
-    var text = "";
+    var text = "<br/>Internal autoport error";
     $("#apErrorDialogText").hide();
-    if (typeof data !== "undefined") {
-        text += "<br/>" + (data.responseJSON !== undefined ?
-                            (data.responseJSON.error !== undefined ?
-                              data.responseJSON.error :
-                              data.error) :
-                            data.error);
-        $("#apErrorDialogText").show();
+    if (typeof data !== 'undefined' && (typeof data.responseJSON !== 'undefined' || typeof data.statusText !== 'undefined')) {
+        var msg = ""
+        if (typeof data.responseJSON !== 'undefined' && data.responseJSON.error !== 'undefined') {
+            msg = data.responseJSON.error;
+        }
+        else if (typeof data.readyState !== 'undefined' && data.readyState === 4) {
+            msg = "Status: " + data.status.toString() + " Error: " + data.statusText
+        }
+        else {
+            msg = "Please ensure that the autoport driver / vm is running properly!"
+        }
+        console.log("In showAlert, msg=", msg)
+        text = "<br/>" + msg;
+    } else {
+        console.log("In showAlert, data=", data)
     }
+    $("#apErrorDialogText").show();
     $('#errorAlert').css("z-index","9999");
     $('#errorAlert').find('.modal-header').html(message);
     $("#apErrorDialogText").html(text);
@@ -2095,17 +2103,15 @@ function processResultList(data) {
     projectReportState.projects = [];
     projectReportState.loadingState.diffLoading = false;
     $("#resultRemoveBtn").addClass("disabled");
-    if (data === undefined || data.status != "ok") {
-        if(data!=undefined && data.status!=undefined && data.status=="failure") {
-            showAlert("Error!", data);
-        }
+    if (data === undefined || data.status === undefined || data.status != "ok") {
+        showAlert("Error!", data);
     } else {
         projectReportState.projects = data.results;
         console.log("In processResultList, project list=", projectReportState.projects)
         detailState.autoSelected = false;
         projectReportState.prjCompareReady = true;
+
         $('#testCompareSelectPanel').bootstrapTable('load', projectReportState.projects);
-        toggleProjectReportButtons();
     }
 }
 
@@ -2129,7 +2135,7 @@ function removeBatchReportsCallback(data){
     console.log("In removeBatchReportsCallback, data=", data);
     if (data.status != "ok") {
         showAlert("Error:", data);
-    } else{
+    } else {
         showAlert("Deleted Successfully !");
         if (batchReportState.listingRepo == "local") {
             batchReportState.listLocalBatch();
@@ -2220,8 +2226,9 @@ function processBuildResults(data) {
     $("#testResultsTable").html(tableContent);
     projectReportState.prjTableReady = true;
 }
+
 function processBatchBuildLogResults(data) {
-      if (data.status != "ok") {
+    if (data.status != "ok") {
          $("#batchLeftdiff").html("No Test Results Found");
     } else {
         var left = data.leftCol;
@@ -2279,8 +2286,6 @@ function processBatchBuildLogResults(data) {
     if($('.nav-pills li ul').find('.active').length ==0)
         $('.nav-pills li ul li:first').addClass("active");
 }
-
-
 
 function processLogCompareResults(data) {
     if (projectReportState.loadingState.diffLoading) {
@@ -2352,7 +2357,7 @@ function processLogCompareResults(data) {
             });
        });
 
-    $('#logdiffModal').modal('show');
+       $('#logdiffModal').modal('show');
     }
     projectReportState.prjCompareReady = true;
 }
@@ -2462,9 +2467,9 @@ function populate_batch_table_headers(pkg_name, pkg_version){
 function processBatchDetails(data) {
     // If the response is not a success display error message and return.
     if (data.status != "ok") {
-        showAlert("Error:",data);
+        showAlert("Error:", data);
     } else {
-        // Hide listing of Batch jiobs before showing the batch details.
+        // Hide listing of Batch jobs before showing the batch details.
         batchReportState.showListSelectTable = false;
         // Initialize a new blank table holding Batch report data
         var main_table = document.getElementById("testBatchResultsTable");
@@ -2484,16 +2489,16 @@ function processBatchDetails(data) {
         var all_jobs = [];
 
         for (var j = 0; j < batchNames.length; j++){
-          if (batchNames[j] !== 'status'){
-            all_jobs = all_jobs.concat(data.results[batchNames[j]]);
-          }
+            if (batchNames[j] !== 'status'){
+                all_jobs = all_jobs.concat(data.results[batchNames[j]]);
+            }
         }
 
         // Populate Batch details in table.
         for (var i = 0; i < all_jobs.length; i++) {
-            if(main_header_data !== null){
+            if (main_header_data !== null) {
                 main_header_data += ', ' + all_jobs[i].job;
-            }else{
+            } else {
                 main_header_data = all_jobs[i].job;
             }
 
@@ -2519,16 +2524,16 @@ function processBatchDetails(data) {
 
 function processBatchHistory(data){
     ProjectRegExp = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)/i;
-    if(data["results"]){
+    if (data["results"]) {
         var batchNames = Object.keys(data["results"]);
         var batchReportTestHistory = [];
         var job_list = data["results"];
         var all_jobs = [];
 
         for (var j = 0; j < batchNames.length; j++){
-          if (batchNames[j] !== 'status'){
-            all_jobs = all_jobs.concat(data.results[batchNames[j]]);
-          }
+            if (batchNames[j] !== 'status') {
+                all_jobs = all_jobs.concat(data.results[batchNames[j]]);
+            }
         }
 
         for (var j = 0; j < all_jobs.length; j++){
@@ -2569,7 +2574,7 @@ function processBatchHistory(data){
         blank_row.appendChild(blank_cell);
         main_table.appendChild(blank_row);
         main_header_data = null;
-         batchNames = Object.keys(batchReportTestHistory);
+        batchNames = Object.keys(batchReportTestHistory);
         for (var i = 0; i < Object.keys(batchReportTestHistory).length; i++) {
             var report = batchReportTestHistory[batchNames[i]];
             if(main_header_data !== null){
@@ -2590,7 +2595,7 @@ function processBatchHistory(data){
         $("#batchHeader").html(main_header_data); // Add code to generate headers data similar to existing logic for projects
         $("#batchHeaderPreText").html('Test history for Batch job(s): ');
         batchReportState.batchReportTableReady = true;
-    }else{
+    } else {
          showAlert("Error:", data);
     }
     batchReportState.loading = false;
@@ -2768,13 +2773,12 @@ function archiveCallback(data) {
             text += "</ul>";
         }
         // refetch the list as previously checked
-        if (projectReportState.compareRepo == "local"){
+        if (projectReportState.compareRepo == "local") {
             reportState.listLocalProjects();
         }
-        else{
+        else {
             reportState.listAllProjects();
         }
-        //reportState.listAllProjects();
         handleProjectListBtns();
         $("#archiveCallbackText").html(text);
         $("#archiveCallbackAlert").modal();
@@ -3044,7 +3048,6 @@ function runBatchFileCallback(data) {
     } else {
         showAlert("Batch job submitted");
     }
-    toggleBatchStateButtons()
 }
 
 function getBatchResultsCallback(data) {
@@ -3128,16 +3131,14 @@ function parseBatchFileCallback(data, batch_obj){
 function listBatchFilesCallback(data) {
     batchState.loading = false;
     $("#batch_report_remove").addClass("disabled");
-    if (data.status === "ok") {
+    if (data === undefined || data.status === undefined || data.status != "ok") {
+        showAlert("Error!", data);
+    } else {
         batchState.fileList = data.results;
         console.log(batchState.fileList);
         batchState.showListSelectTable = true;
 
         $('#batchListSelectTable').bootstrapTable('load', batchState.fileList);
-    } else {
-        if(data!=undefined && data.status!=undefined && data.status=="failure") {
-            showAlert("Error!", data);
-        }
     }
 }
 
@@ -3148,7 +3149,6 @@ function listBatchReportFilesCallback(data) {
         batchReportState.showListSelectTable = true;
 
         $('#batchReportListSelectTable').bootstrapTable('load', batchReportState.fileList);
-        toggleBatchReportButtons();
     } else {
         showAlert("Error!", data);
     }
@@ -3160,7 +3160,6 @@ function removeBatchFileCallback(data) {
     } else {
         showAlert("Error!", data);
     }
-    toggleBatchStateButtons();
 }
 
 function archiveBatchFileCallback(data) {
@@ -3170,7 +3169,6 @@ function archiveBatchFileCallback(data) {
     } else {
         showAlert("Error!", data);
     }
-    toggleBatchStateButtons();
 }
 
 function archiveBatchReportsCallback(data) {
@@ -3369,7 +3367,7 @@ function listManagedPackagesCallback(data) {
             showAlert("Error!", data);
         }
     }
-     $("#managedListBtn").removeClass("disabled");
+    $("#managedListBtn").removeClass("disabled");
 }
 
 function editManagedListCallback(data) {
@@ -3522,7 +3520,9 @@ function compareVersion(version1, version2){
 }
 
 function toggleBatchStateButtons() {
-    if ($('#batchListSelectTable').bootstrapTable('getSelections').length>0){
+    var selectedBatchFiles = $('#batchListSelectTable').bootstrapTable('getSelections');
+    console.log("In toggleBatchStateButtons, selectedBatchFiles=", selectedBatchFiles.length);
+    if (selectedBatchFiles.length > 0) {
         $('#batch_file_remove').removeClass('disabled');
         $('#batch_file_archive').removeClass('disabled');
         $('#batch_build_test').removeClass('disabled');
@@ -3539,6 +3539,7 @@ function toggleBatchStateButtons() {
 
 function toggleProjectReportButtons(){
     var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+    console.log("In toggleProjectReportButtons, selectedProjects=", selectedProjects.length);
     if (selectedProjects.length === 2) {
         $("#compareResultsBtn").removeClass("disabled");
         $("#compareBuildLogsBtn").removeClass("disabled");
@@ -3565,6 +3566,7 @@ function toggleProjectReportButtons(){
 
 function toggleBatchReportButtons(){
     var selectedProjects = $('#batchReportListSelectTable').bootstrapTable('getSelections');
+    console.log("In toggleBatchReportButtons, selectedProjects=", selectedProjects.length);
     if (selectedProjects.length === 2) {
         $("#batch_report_compare").removeClass("disabled");
         $("#batch_report_compare_build_log").removeClass("disabled");
@@ -3719,25 +3721,25 @@ function generateOrganizedData(organizedData, data, batch_name, more_info, elemP
  * 3. Datetime when the job was submitted.
  * @param data
  */
-function processBatchCompare(data){
-    if (data.status == "failure"){
+function processBatchCompare(data) {
+    if (data.status == "failure") {
         batchReportState.loading = false;
         showAlert(data.error);
         return;
     }
     ProjectRegExp = /(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)/i;
     organizedData = {};
-    if (data["results"]){
+    if (data["results"]) {
         // Hide listing of Batch jiobs before showing the batch details.
         batchReportState.showListSelectTable = false;
 
         batchNames = Object.keys(data["results"]);
 
-        for (var j = 0; j < batchNames.length; j++){
-            if (batchNames[j] !== "status"){
+        for (var j = 0; j < batchNames.length; j++) {
+            if (batchNames[j] !== "status") {
                 job_list = data["results"][batchNames[j]];
-                for (var i = 0; i < job_list.length; i++){
-                    try{
+                for (var i = 0; i < job_list.length; i++) {
+                    try {
                         splitted_job_info = ProjectRegExp.exec(job_list[i]["job"]);
                         arch = splitted_job_info[3];
                         name = splitted_job_info[4];
@@ -3747,7 +3749,7 @@ function processBatchCompare(data){
                         var more_info = [name, arch, version, timestamp, results];
                         // Prepare data for comparison between two batch jobs.
                         organizedData = generateOrganizedData(organizedData, job_list, batchNames[j], more_info, i);
-                    }catch(e){
+                    } catch(e) {
                         console.log(e);
                     }
                 }
@@ -3800,21 +3802,21 @@ function processBatchTestLogCompare(data, batch_report_obj){
             }
 
             // First generate all non-header data, once done generate header as the required info about parent batch name will be available after traversing project data.
-            for (project in data["results"][batchName]){
-                if (!left_parent_batch){
+            for (project in data["results"][batchName]) {
+                if (!left_parent_batch) {
                     left_parent_batch = data["results"][batchName][project]["left_parent_name"];
                 }
-                if (!right_parent_batch){
+                if (!right_parent_batch) {
                     right_parent_batch = data["results"][batchName][project]["right_parent_name"];
                 }
                 var new_row = generate_batch_log_compare_row(data["results"][batchName][project], project);
-                if (new_row !== null){
+                if (new_row !== null) {
                     table_rows.push(new_row);
                 }
             }
 
             main_table.appendChild(generate_batch_log_compare_header(left_parent_batch, right_parent_batch, left_arch, right_arch));
-            for (var i = 0; i < table_rows.length; i++){
+            for (var i = 0; i < table_rows.length; i++) {
                 var blank_row = document.createElement('tr');
                 var blank_cell = blank_row.insertCell(0);
                 blank_cell.setAttribute('colspan', '12');
@@ -3832,10 +3834,10 @@ function processBatchTestLogCompare(data, batch_report_obj){
 function generate_batch_log_compare_row(comparison_data, projectName, shouldColorCode){
     project_diff = comparison_data["diff"];
     var columns = [projectName];
-    if (project_diff === undefined){
+    if (project_diff === undefined) {
         return null;
     }
-    if (project_diff.error !== undefined){
+    if (project_diff.error !== undefined) {
         columns.push("Logs not available");
         columns.push("Logs not available");
     } else {
@@ -3849,7 +3851,7 @@ function generate_batch_log_compare_row(comparison_data, projectName, shouldColo
     for (var i = 0; i < columns.length; i++){
         var cell = document.createElement('td');
         cell.innerHTML = '<p>' + columns[i] + '</p>';
-        if (i % 3 == 0){
+        if (i % 3 == 0) {
             cell.setAttribute('class', 'mainTitle');
         } else {
             class_names = 'batchCompareLogData';
@@ -3868,7 +3870,7 @@ function generate_batch_log_compare_row(comparison_data, projectName, shouldColo
     return row;
 }
 
-function generate_batch_log_compare_header(left_parent_batch, right_parent_batch, left_arch, right_arch){
+function generate_batch_log_compare_header(left_parent_batch, right_parent_batch, left_arch, right_arch) {
     var columns = ["Test/Build Project Name", left_parent_batch + '<br>' + left_arch, right_parent_batch + '<br>' + right_arch];
 
     var row = document.createElement('tr');
@@ -3947,10 +3949,10 @@ function generateTableData(main_table, project_info, table_rows){
     var project_result_data_s = document.createElement('td');
     var project_result_data_e = document.createElement('td');
 
-    var project_result_data_t_text = document.createTextNode((project_result_data_t_value !== undefined)?project_result_data_t_value: 0);
-    var project_result_data_f_text = document.createTextNode((project_result_data_t_value !== undefined)?project_result_data_f_value: 0);
-    var project_result_data_e_text = document.createTextNode((project_result_data_t_value !== undefined)?project_result_data_e_value: 0);
-    var project_result_data_s_text = document.createTextNode((project_result_data_t_value !== undefined)?project_result_data_s_value: 0);
+    var project_result_data_t_text = document.createTextNode((project_result_data_t_value !== undefined) ? project_result_data_t_value: 0);
+    var project_result_data_f_text = document.createTextNode((project_result_data_t_value !== undefined) ? project_result_data_f_value: 0);
+    var project_result_data_e_text = document.createTextNode((project_result_data_t_value !== undefined) ? project_result_data_e_value: 0);
+    var project_result_data_s_text = document.createTextNode((project_result_data_t_value !== undefined) ? project_result_data_s_value: 0);
 
     project_result_data_t.appendChild(project_result_data_t_text);
     project_result_data_f.appendChild(project_result_data_f_text);
@@ -4091,23 +4093,23 @@ function populateDropDownsBasedOnLanguage(packageList){
 
     for (var position = 0; position < packageList.length; position++){
         // Get package Tag/name
-        if (packageList[position].tag !== undefined){
+        if (packageList[position].tag !== undefined) {
             var packageName = packageList[position].tag.toLowerCase();
         } else {
             var packageName = packageList[position].name.toLowerCase();
         }
 
-        if (packageName.startsWith('ibm-sdk-nodejs')){
-            langVersion = (packageList[position].version !== undefined)?packageList[position].version:0;
+        if (packageName.startsWith('ibm-sdk-nodejs')) {
+            langVersion = (packageList[position].version !== undefined) ? packageList[position].version : 0;
             langKey = 'ibm-sdk-nodejs ' + langVersion;
             detailState.supportedJavaScriptList[langKey] = langVersion;
             detailState.supportedJavaScriptListOptions = Object.keys(detailState.supportedJavaScriptList);
-        } else if (packageName.startsWith('ibm-java-sdk') || packageName.startsWith('openjdk')){
+        } else if (packageName.startsWith('ibm-java-sdk') || packageName.startsWith('openjdk')) {
             langKey = 'openjdk';
             langVersion = (packageList[position].version !== undefined)?packageList[position].version.split('.')[0]:7;
-            if (packageList[position].name.startsWith('ibm-java-sdk')){
+            if (packageList[position].name.startsWith('ibm-java-sdk')) {
                 langKey = 'ibm-java-sdk' + ' ' + langVersion;
-            }else if(packageList[position].name.startsWith('openjdk')){
+            }else if(packageList[position].name.startsWith('openjdk')) {
                 langKey = 'openjdk' + ' ' + langVersion;
             }
             detailState.supportedJavaList[langKey] = langVersion;
@@ -4120,7 +4122,7 @@ function populateDropdown(data){
     // Assuming Ubuntu and RHEL will have same set of managed packages.
     var managedRuntimePackages = data.results.managedRuntime;
     var supportedLangTypes = {};
-    if (managedRuntimePackages && managedRuntimePackages.length > 0){
+    if (managedRuntimePackages && managedRuntimePackages.length > 0) {
         var autoportChefPackages = managedRuntimePackages[0].autoportChefPackages;
         var autoportPackages = managedRuntimePackages[0].autoportPackages;
         detailState.supportedJavaScriptList['nodejs'] = 0; // while initializing of nodejs array set the default values.
@@ -4220,9 +4222,14 @@ $(document).ready(function() {
     });
     $('#batchListSelectTable').on('check.bs.table', function (e, row) {
         batchState.selectedBatchFile = row;
+        toggleBatchStateButtons();
     });
     $('#batchListSelectTable').on('uncheck.bs.table', function (e, row) {
         batchState.selectedBatchFile={};
+        toggleBatchStateButtons();
+    });
+    $('#batchListSelectTable').show(function () {
+        toggleBatchStateButtons();
     });
     // Initializes an empty batch Report list/select table
     $('#batchReportListSelectTable').bootstrapTable({
@@ -4230,6 +4237,13 @@ $(document).ready(function() {
     });
     $('#batchReportListSelectTable').on('check.bs.table', function (e, row) {
         batchReportState.selectedBatchFile = row;
+        toggleBatchReportButtons();
+    });
+    $('#batchReportListSelectTable').on('uncheck.bs.table', function (e, row) {
+        toggleBatchReportButtons();
+    });
+    $('#batchReportListSelectTable').show(function () {
+        toggleBatchReportButtons();
     });
     // Initializes an empty package list table on the single slave panel
     $('#singleServerPackageListTable').bootstrapTable({
@@ -4248,7 +4262,6 @@ $(document).ready(function() {
             $("#singlePanelRemoveBtn").removeClass("disabled");
         }
     });
-
     $('#singleServerPackageListTable').on('uncheck.bs.table', function (e, row) {
         jenkinsState.selectedSingleSlavePackage = row;
         var selectedPackages = $('#singleServerPackageListTable').bootstrapTable('getSelections');
@@ -4302,59 +4315,35 @@ $(document).ready(function() {
             $("#removeFromManagedList").addClass("disabled");
         }
     });
-
-    $('#batchReportListSelectTable').change(function() {
-        if ($('#batchReportListSelectTable').bootstrapTable('getSelections').length>0){
-            $('#batch_report_archive').removeClass('disabled');
-        } else {
-            $('#batch_report_archive').addClass('disabled');
-        }
-    });
-
     //Initalize Project Results table
     $('#testCompareSelectPanel').bootstrapTable({
         data: []
     });
     $('#testCompareSelectPanel').on('check.bs.table', function (e, row) {
         projectReportState.projects = row;
+        toggleProjectReportButtons();
     });
-    $('#batchListSelectTable').change(function() {
-        toggleBatchStateButtons();
-    });
-    $('#batchListSelectTable').show(function() {
-        toggleBatchStateButtons();
-    });
-    $('#testCompareSelectPanel').change(function() {
+    $('#testCompareSelectPanel').on('uncheck.bs.table', function (e, row) {
         toggleProjectReportButtons();
     });
     $('#testCompareSelectPanel').show(function() {
         toggleProjectReportButtons();
-    });
-
-
-    //Handles display of Batch Report list buttons
-    $('#batchReportListSelectTable').change(function() {
-        toggleBatchReportButtons();
-    });
-
-    $('#batchReportListSelectTable').show(function() {
-        toggleBatchReportButtons();
     });
 });
 
 $.fn.extend({
     treed: function (o) {
 
-      var openedClass = 'glyphicon-minus-sign';
-      var closedClass = 'glyphicon-plus-sign';
-      if (typeof o != 'undefined'){
-        if (typeof o.openedClass != 'undefined'){
-        openedClass = o.openedClass;
-        }
-        if (typeof o.closedClass != 'undefined'){
-        closedClass = o.closedClass;
-        }
-      };
+        var openedClass = 'glyphicon-minus-sign';
+        var closedClass = 'glyphicon-plus-sign';
+        if (typeof o != 'undefined') {
+            if (typeof o.openedClass != 'undefined') {
+                openedClass = o.openedClass;
+            }
+            if (typeof o.closedClass != 'undefined') {
+                closedClass = o.closedClass;
+            }
+        };
 
         //initialize each of the top levels
         var tree = $(this);
