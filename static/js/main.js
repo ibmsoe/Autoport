@@ -1962,6 +1962,12 @@ function doSearch(autoselect) {
 
 // When the query textbox is changed, do a search
 $('#query').change(doSearch);
+$('#query').bind("keypress", keyPressed);
+function keyPressed(e) {
+    if (e.keyCode === 13) {
+        doSearch();
+    }
+}
 
 $('#batchFile').change(function () {
     $('#uploadFilename').val("File selected:  " + $('#batchFile').val());
