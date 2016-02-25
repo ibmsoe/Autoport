@@ -258,9 +258,11 @@ def interpretTravis(repo, travisFile, travis_def):
                         elif linuxEnv:
                             generalEnv = linuxEnv
                 elif isinstance(data['env'], list):
-                    item = data['env'][0]
+                    for item in data['env']:
+                        if not any(x in item.lower() for x in ['cuda', 'win64', 'linux32', 'macos', 'android', 'ios']):
+                            break
                     if not isinstance(item, dict):
-                        generalEnv = ' '.join(data['env'])
+                        generalEnv = item
                     else:
                         logger.debug("interpretTravis: skipping env proj=%s env=%s" % (repo.name, item))
                 elif isinstance(data['env'], basestring):
