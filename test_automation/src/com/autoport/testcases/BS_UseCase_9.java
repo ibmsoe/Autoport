@@ -27,6 +27,7 @@ public class BS_UseCase_9 {
 		 CommonFunctions.goTo_UploadPackageToRepositorySection();	
 	  }
 	 
+	 //This is a system test case
 	 @Test(priority=0,  dataProvider = "packages")
 	  public void BS_Upload_Packages_031(String packagename) throws Exception{ 
 		 

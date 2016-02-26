@@ -28,8 +28,10 @@ public class BS_UseCase_3{
 		 CommonFunctions.goTo_ListInstallSingleSoftwarSection();
 	  }	 	
 	
+	 
+	 //This is a system test case
 	  @Test (priority=0, dataProvider = "buildServers")
-	  public void BS_Install_Package_On_Servers_004_008(String buildServer, String packagename) throws Exception{
+	  public void BS_Install_Package_On_Servers_005_008(String buildServer, String packagename) throws Exception{
 		  		 
 		  buildServerTab.enterPackageToSearch(packagename); 
 		  
@@ -55,7 +57,8 @@ public class BS_UseCase_3{
 		  
 		  buildServerTab.verifyInstalledVersionIsNotNA(packegeselected);
 	  }
-	  
+	 
+	  //This is a system test case
 	  @Test (priority=1)
 	  public void BS_Install_Already_Installed_Package_009() throws Exception{
 		  
@@ -72,7 +75,8 @@ public class BS_UseCase_3{
 		  buildServerTab.verifyAlreadyInstalledMessage();
 	  }	  
 	  
-	  @Test (priority=2)
+	  ////This is a system test case
+	   @Test (priority=2)
 	  public void BS_Install_package_with_different_versions_010() throws Exception{
 		  
 		  buildServerTab.enterPackageToSearch(packageHavingTwoVersions); 

@@ -10,60 +10,66 @@ import com.autoport.utilities.CommonFunctions;
 import com.autoport.utilities.ReadTestData;
 
 public class BS_UseCase_8 {
-	
+
 	WebDriver driver;
 	HomePage homePage;
 	BuildServersTab buildServerTab;
-	String rhelBuildServerToSync;
+	String centosBuildServerToSync;
 	String ubuntuBuildServerToSync;
-	
-	 @BeforeTest
-	  public void beforeTest() throws Exception {
-		//CommonFunctions.launchBrowser(); 
-		 driver = CommonFunctions.driver; 
-		 homePage = CommonFunctions.homePage;
-		 buildServerTab = CommonFunctions.buildServerTab;
-		 rhelBuildServerToSync = ReadTestData.readParameter("BS_UseCase_8", "rhelBuildServerToSync");
-		 ubuntuBuildServerToSync = ReadTestData.readParameter("BS_UseCase_8", "ubuntuBuildServerToSync");
-		 
-		 CommonFunctions.goTo_ListInstallUsingManagedServicesSection();	
-	  }
-	 
-	 @Test(priority=0)
-	  public void BS_Synch_Packages_On_RHEL_Servers_029() throws Exception{ 
-		  buildServerTab.clickListRhelBtn();
-		  
-		  buildServerTab.verifyPopulatedBuildServers("RHEL");
-		  
-		  buildServerTab.clickSynchBtn();
-		  
-		  buildServerTab.verifySelectBuildServerMsg();
-		  
-		  buildServerTab.selectBuildServerToSynch(rhelBuildServerToSync);
-		  
-		  buildServerTab.clickSynchBtn();
-		  
-		  buildServerTab.verifyBackgroundInstallationPopup(rhelBuildServerToSync);
-		  
-		  buildServerTab.verifySychSuccessPopUp();
-	  }
-	
-	 @Test(priority=1)
-	  public void BS_Synch_Packages_On_Ubuntu_Servers_030() throws Exception{ 
-		 buildServerTab.clickListUbuntuBtn(); 
-		  
-		  buildServerTab.verifyPopulatedBuildServers("Ubuntu");		  
-		  
-		  buildServerTab.clickSynchBtn();
-		  
-		  buildServerTab.verifySelectBuildServerMsg();
-		  
-		  buildServerTab.selectBuildServerToSynch(ubuntuBuildServerToSync);
-		  
-		  buildServerTab.clickSynchBtn();
-		  
-		  buildServerTab.verifyBackgroundInstallationPopup(ubuntuBuildServerToSync);
-		  
-		  buildServerTab.verifySychSuccessPopUp();
-	  }	 
+	String BSUbuntu;
+	String BSCentOS;
+
+	@BeforeTest
+	public void beforeTest() throws Exception {
+		// CommonFunctions.launchBrowser();
+		driver = CommonFunctions.driver;
+		homePage = CommonFunctions.homePage;
+		buildServerTab = CommonFunctions.buildServerTab;
+		centosBuildServerToSync = ReadTestData.readParameter("BS_UseCase_8",
+				"centosBuildServerToSync");
+		ubuntuBuildServerToSync = ReadTestData.readParameter("BS_UseCase_8",
+				"ubuntuBuildServerToSync");
+		BSUbuntu = ReadTestData.readParameter("BS_UseCase_6", "BSUbuntu");
+		BSCentOS = ReadTestData.readParameter("BS_UseCase_6", "BSCentOS");
+		CommonFunctions.goTo_ListInstallUsingManagedServicesSection();
+	}
+
+	@Test(priority = 0)
+	public void BS_Synch_Packages_On_CentOS_Servers_029() throws Exception {
+		buildServerTab.SelectBuiltServer(BSCentOS);
+
+		buildServerTab.verifyPopulatedBuildServers(BSCentOS);
+
+		buildServerTab.clickSynchBtn();
+
+		buildServerTab.verifySelectBuildServerMsg();
+
+		buildServerTab.selectBuildServerToSynch(centosBuildServerToSync);
+
+		buildServerTab.clickSynchBtn();
+
+		buildServerTab.verifyBackgroundInstallationPopup(centosBuildServerToSync);
+
+		buildServerTab.verifySychSuccessPopUp();
+	}
+
+	@Test(priority = 1)
+	public void BS_Synch_Packages_On_Ubuntu_Servers_030() throws Exception {
+		buildServerTab.SelectBuiltServer(BSUbuntu);
+
+		buildServerTab.verifyPopulatedBuildServers(BSUbuntu);
+
+		buildServerTab.clickSynchBtn();
+
+		buildServerTab.verifySelectBuildServerMsg();
+
+		buildServerTab.selectBuildServerToSynch(ubuntuBuildServerToSync);
+
+		buildServerTab.clickSynchBtn();
+
+		buildServerTab
+				.verifyBackgroundInstallationPopup(ubuntuBuildServerToSync);
+
+		buildServerTab.verifySychSuccessPopUp();
+	}
 }
