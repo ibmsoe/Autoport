@@ -385,7 +385,9 @@
                   echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport Build CMD:   $CMD1&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
@@ -448,7 +450,9 @@
                   echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport Test CMD:    $CMD2&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
@@ -511,7 +515,9 @@
                   echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport Install CMD: $CMD3&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
