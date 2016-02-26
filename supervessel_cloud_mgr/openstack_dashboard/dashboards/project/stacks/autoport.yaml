@@ -58,27 +58,27 @@ parameters:
   image_driver:
     type: string
     description: Image used for driver node
-    default: d2c0d64d-9c1a-4831-be9c-4aa40a8ceab7
+    default: b8a7c8c0-bfb7-476c-a678-9334efee6b0e
   image_master:
     type: string
     description: Image used for master node
-    default: d002b788-bd24-43bd-b145-911cc917bc2b
+    default: 23a8e1d3-032f-4e97-b28f-b719af41ff98
   image_slave_c_power:
     type: string
     description: Image used for centos power slave node
-    default: aa1444d1-a58c-4135-b942-49871f469d2b 
+    default: 2601d56f-0e1b-47f8-a62a-642ff2347b0d
   image_slave_c_x86:
     type: string
     description: Image used for centos x86 slave node
-    default: 13c49b81-26e1-4ac0-a7a0-33222e8eea61
+    default: 69ad2da4-d955-4a37-97ca-bfc11c6729e9
   image_slave_u_power:
     type: string
     description: Image used for ubuntu power slave node
-    default: 001b1584-c1dd-402b-a623-7a889e747976
+    default: 985c172f-08d6-4ca0-a53b-f9e5f7c9212d
   image_slave_u_x86:
     type: string
     description: Image used for ubuntu x86 slave node
-    default: 889ba783-7ab8-452c-a97f-5d9d9ae0447e
+    default: e4c1b2da-028f-4be5-b95c-d202c8dd9b59
   flavor_driver:
     type: string
     description: flavor used for driver node
@@ -92,11 +92,20 @@ parameters:
     description: flavor used for slave node
     default: docker.small
 
-  # Parameters about user (Add more parameters if needed)
-  user_name:
+  # Parameters about SuperVessel/OpenStack user
+  os_username:
     type: string
-    description: Name of user
-    default: opuser
+    description: Name of SuperVessel/OpenStack user
+  os_password:
+    type: string
+    description: Password of SuperVessel/OpenStack user
+  os_tenant_name:
+    type: string
+    description: Tenant Name
+  os_auth_url:
+    type: string
+    description: Auth URL of SuperVessel/OpenStack
+
 
 resources:
   # driver_server will be the last created node
@@ -114,20 +123,63 @@ resources:
         str_replace:
           template: |
            #!/bin/bash
-           echo 'This is the driver server. My internal IP is $INTERNAL_IP' >> /tmp/test_driver.log
-           echo '$USER_NAME'  >> /tmp/test_driver.log
 
            # Set Hosts
            echo "172.16.10.51 keystone.kilo" >> /etc/hosts
            echo "172.16.10.120 crl.ptopenlab.com" >> /etc/hosts
 
+           # Set autoport config.ini
+           # Replace jenkinsUrl
+           sed -i "/jenkinsUrl/c\jenkinsUrl: http://$JENKINS_MASTER_EXTERNAL_IP:8080" /home/opuser/autoport/config.ini
+           # Remove GSA-related parameters
+           sed -i '/GSA/d' /home/opuser/autoport/config.ini
+           sed -i '/hostname: ausgsa.ibm.com/d' /home/opuser/autoport/config.ini
+           sed -i '/username: <username>/d' /home/opuser/autoport/config.ini
+           sed -i '/password: <password>/d' /home/opuser/autoport/config.ini
+           sed -i '/pathForTestResults:/d' /home/opuser/autoport/config.ini
+           sed -i '/pathForBatchTestResults:/d' /home/opuser/autoport/config.ini
+           sed -i '/pathForBatchFiles:/d' /home/opuser/autoport/config.ini
+           sed -i '/expiryForTmp:/d' /home/opuser/autoport/config.ini
+           # Add Swift-related parameters
+           echo '' >> /home/opuser/autoport/config.ini
+           echo '[Archive - Swift]' >> /home/opuser/autoport/config.ini
+           echo 'hostname: 172.16.10.10' >> /home/opuser/autoport/config.ini
+           echo 'port: 8022' >> /home/opuser/autoport/config.ini
+           echo 'username: $OS_USERNAME:$OS_USERNAME' >> /home/opuser/autoport/config.ini
+           echo 'password: $OS_PASSWORD' >> /home/opuser/autoport/config.ini
+           echo 'pathForTestResults: /autoport/test_results/' >> /home/opuser/autoport/config.ini
+           echo 'pathForBatchTestResults: /autoport/batch_test_results/' >> /home/opuser/autoport/config.ini
+           echo "pathForBatchFiles: /autoport/batch_files/" >> /home/opuser/autoport/config.ini
+           echo "expiryForTmp: 1800" >> /home/opuser/autoport/config.ini
+           # Add OpenStack-related parameters
+           echo '' >> /home/opuser/autoport/config.ini
+           echo '[OpenStack]' >> /home/opuser/autoport/config.ini
+           echo 'os_username = $OS_USERNAME' >> /home/opuser/autoport/config.ini
+           echo 'os_password = $OS_PASSWORD' >> /home/opuser/autoport/config.ini
+           echo 'os_tenant_name = $OS_TENANT_NAME' >> /home/opuser/autoport/config.ini
+           echo 'os_auth_url = $OS_AUTH_URL' >> /home/opuser/autoport/config.ini
+           # Remove files if existed
+           if [ -e /home/opuser/autoport/data/autoport.log ]
+           then
+             rm -rf /home/opuser/autoport/data/autoport.log
+           fi
+           if [ -e /home/opuser/autoport/data/config/cloudNodeInfo.json ]
+           then
+             rm -rf /home/opuser/autoport/data/cloudNodeInfo.json
+           fi
+
            # Start up Autoport service
-           cd /home/opuser/autoport
-           nohup python main.py -d -p -u http://$JENKINS_MASTER_EXTERNAL_IP:8080 &
+           su - opuser <<EOF
+             cd /home/opuser/autoport
+             nohup python main.py -d -p &
+           EOF
+
           params:
             $JENKINS_MASTER_EXTERNAL_IP: { get_attr: [fip_master, floating_ip_address] }
-            $INTERNAL_IP: { get_param: fixedip_driver }
-            $USER_NAME: { get_param: user_name }
+            $OS_USERNAME: { get_param: os_username }
+            $OS_PASSWORD: { get_param: os_password }
+            $OS_TENANT_NAME: { get_param: os_tenant_name }
+            $OS_AUTH_URL: { get_param: os_auth_url }
 
   # Neutron port for driver server
   port_driver:
