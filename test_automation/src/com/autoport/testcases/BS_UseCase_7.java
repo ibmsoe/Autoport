@@ -16,6 +16,9 @@ public class BS_UseCase_7 {
 	BuildServersTab buildServerTab;
 	String packageToAddToManagedList;
 	String packageToRemoveFromManagedList;
+	String BSUbuntu;
+	String BSCentOS;
+	
 	 
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
@@ -25,18 +28,22 @@ public class BS_UseCase_7 {
 		 buildServerTab = CommonFunctions.buildServerTab;
 		 packageToAddToManagedList = ReadTestData.readParameter("BS_UseCase_7", "packageToAddToManagedList");
 		 packageToRemoveFromManagedList = ReadTestData.readParameter("BS_UseCase_7", "packageToRemoveFromManagedList");
-		 
+		 BSUbuntu = ReadTestData.readParameter("BS_UseCase_6", "BSUbuntu");
+		 BSCentOS = ReadTestData.readParameter("BS_UseCase_6", "BSCentOS");
+		
+	
 		 CommonFunctions.goTo_ListInstallUsingManagedServicesSection();	
 	  }
 	 
+	 //This is a system test case
 	 @Test(priority=0)
-	  public void BS_Add_Package_To_Managed_List_RHEL_Server_025() throws Exception{ 
+	  public void BS_Add_Package_To_Managed_List_CentOS_Server_025() throws Exception{ 
 		 
 		 buildServerTab.enterPackageToSearchUsingManagedServices(packageToAddToManagedList);
 		 
-		 buildServerTab.clickListRhelBtn();
+		 buildServerTab.SelectBuiltServer(BSCentOS);
 		 
-		 String version =  buildServerTab.selectPackageToAddRemove(packageToAddToManagedList);
+		 String version =  buildServerTab.selectPackageToAdd(packageToAddToManagedList);
 		 
 		 buildServerTab.clickAddToManagedListBtn();
 		 
@@ -45,14 +52,15 @@ public class BS_UseCase_7 {
 		 buildServerTab.verifyPkgAddSuccessMessage();
 	  }
 	 
+	//This is a system test case
 	 @Test(priority=1)
 	  public void BS_Add_Package_To_Managed_List_Ubuntu_Server_026() throws Exception{ 
 		 
 		 buildServerTab.enterPackageToSearchUsingManagedServices(packageToAddToManagedList);
 		 
-		 buildServerTab.clickListUbuntuBtn();
+		 buildServerTab.SelectBuiltServer(BSUbuntu);
 		 
-		 String version =  buildServerTab.selectPackageToAddRemove(packageToAddToManagedList);
+		 String version =  buildServerTab.selectPackageToAdd(packageToAddToManagedList);
 		 
 		 buildServerTab.clickAddToManagedListBtn();
 		 
@@ -62,14 +70,15 @@ public class BS_UseCase_7 {
 		  
 	  }
 	 
+	//This is a system test case
 	  @Test(priority=2)
-	  public void BS_Remove_Package_from_Managed_List_RHEL_Server_027() throws Exception{ 
+	  public void BS_Remove_Package_from_Managed_List_CentOS_Server_027() throws Exception{ 
 		  
 		  buildServerTab.enterPackageToSearchUsingManagedServices(packageToRemoveFromManagedList);
 			 
-			 buildServerTab.clickListRhelBtn();
+		  buildServerTab.SelectBuiltServer(BSCentOS);
 			 
-			 String version =  buildServerTab.selectPackageToAddRemove(packageToRemoveFromManagedList);
+			 String version =  buildServerTab.selectPackageToRemove(packageToRemoveFromManagedList);
 			 
 			 buildServerTab.clickremoveFromManagedListBtn();
 			 
@@ -78,14 +87,15 @@ public class BS_UseCase_7 {
 			 buildServerTab.verifyPkgRemoveSuccessMessage();
 	  }
 	 
+	//This is a system test case
 	 @Test(priority=3)
 	  public void BS_Remove_Package_from_Managed_List_Ubuntu_Server_028() throws Exception{ 
 		  
 		 buildServerTab.enterPackageToSearchUsingManagedServices(packageToRemoveFromManagedList);
 		 
-		 buildServerTab.clickListUbuntuBtn();
+		 buildServerTab.SelectBuiltServer(BSUbuntu);
 		 
-		 String version =  buildServerTab.selectPackageToAddRemove(packageToRemoveFromManagedList);
+		 String version =  buildServerTab.selectPackageToRemove(packageToRemoveFromManagedList);
 		 
 		 buildServerTab.clickremoveFromManagedListBtn();
 		 

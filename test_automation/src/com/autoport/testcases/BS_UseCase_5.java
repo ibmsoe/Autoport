@@ -31,8 +31,9 @@ public class BS_UseCase_5 {
 		 	
 	  }
 	 
+	 //This is a system test case
 	 @Test (priority=0, dataProvider = "buildServers")
-	  public void BS_Uninstall_Package_On_Servers_016_020(String buildServer, String packagename) throws Exception{
+	  public void BS_Uninstall_Package_On_Servers_017_020(String buildServer, String packagename) throws Exception{
 		  
 		  buildServerTab.enterPackageToSearch(packagename); 
 		  
@@ -60,6 +61,7 @@ public class BS_UseCase_5 {
 		  
 	  }
 	 
+	 //This is a system test case 
 	 @Test(priority=1)
 	  public void BS_Uninstall_Not_Installed_Package_021() throws Exception{
 		  

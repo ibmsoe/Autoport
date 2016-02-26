@@ -27,8 +27,10 @@ public class BS_UseCase_4 {
 		 CommonFunctions.goTo_ListInstallSingleSoftwarSection();		 
 	  }
 	 
+	 
+	 //This is a system test case
 	 @Test (priority=0, dataProvider = "buildServers")
-	  public void BS_Update_Package_On_Servers_011_015(String buildServer) throws Exception{ 
+	  public void BS_Update_Package_On_Servers_012_015(String buildServer) throws Exception{ 
 		  buildServerTab.enterPackageToSearch("");
 		  		  
 		  buildServerTab.selectBuildServer(buildServer);

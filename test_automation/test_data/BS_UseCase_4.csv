@@ -1,5 +1,3 @@
 BuildServer
-ppcle-ubuntu
-x86-ubuntu
-x86-64-rhel
-ppc64le-rhel
+Ubuntu_14.04_ppc64le_1
+Ubuntu_14.04_x86_64_1

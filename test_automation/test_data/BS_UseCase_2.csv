@@ -1,5 +1,3 @@
 BuildServer,PackageToInstall
-ppcle-ubuntu,python-bson
-x86-ubuntu,python-bson
-x86-64-rhel,apache-ant
-ppc64le-rhel,apache-ant
+Ubuntu_14.04_ppc64le_1,apache-maven
+Ubuntu_14.04_x86_64_1,apache-maven
