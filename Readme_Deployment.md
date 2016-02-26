@@ -37,6 +37,8 @@ In order to deploy Autoport onto Apache server following dependencies need to be
 
     :bash:`sudo pip install flask-compress`
 
+    :bash:`sudo pip install pytz`
+
     :bash:`sudo pip install python-novaclient`
 
 

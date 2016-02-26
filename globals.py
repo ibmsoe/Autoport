@@ -157,7 +157,14 @@ def init():
     global os_tenant_name
     global os_auth_url
 
-    os_username = configOptions['os_username']
-    os_password = configOptions['os_password']
-    os_tenant_name = configOptions['os_tenant_name']
-    os_auth_url = configOptions['os_auth_url']
+    if configOptions.has_key('os_username'):
+        os_username = configOptions['os_username']
+        os_password = configOptions['os_password']
+        os_tenant_name = configOptions['os_tenant_name']
+        os_auth_url = configOptions['os_auth_url']
+    else:
+        os_username = ""
+        os_password = ""
+        os_tenant_name = ""
+        os_auth_url = ""
+
