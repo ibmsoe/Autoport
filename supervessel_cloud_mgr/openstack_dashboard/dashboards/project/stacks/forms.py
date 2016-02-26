@@ -620,7 +620,8 @@ class LaunchStacksForm(forms.SelfHandlingForm):
             "environment": {},
         }
         '''
-
+		
+	
         path = "autoport.yaml"
         tpl_files, template = template_utils.get_template_contents(path)
 
@@ -630,6 +631,12 @@ class LaunchStacksForm(forms.SelfHandlingForm):
             'disable_rollback': True,
             'template': template,
             'files': {},
+            'parameters': {
+                'os_username': self.request.user.username,
+                'os_password': 'passw0rd',
+                'os_tenant_name': self.request.user.project_name,
+                'os_auth_url': 'http://172.16.10.51:5000/v2.0'
+			},
             'environment': {}
         }
         try:
