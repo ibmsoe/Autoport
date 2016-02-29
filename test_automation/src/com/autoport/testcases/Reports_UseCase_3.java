@@ -53,6 +53,8 @@ public class Reports_UseCase_3 {
 		  reportsTab.verifyButtonsAreEnabled();
 		  
 		  reportsTab.clickArchiveProjectResultsBtn();
+		   
+		  reportsTab.verifyArchivedSuccessfullyMsg();
 		  
 		  reportsTab.clearSearchedProjectResult();
 	 }

@@ -23,7 +23,7 @@ public class Reports_UseCase_1 {
 	 @BeforeTest
 	  public void beforeTest() throws Exception {
 		 
-		 //CommonFunctions.launchBrowser(); 
+//		 CommonFunctions.launchBrowser(); 
 		 driver = CommonFunctions.driver; 
 		 homePage = CommonFunctions.homePage;
 		 

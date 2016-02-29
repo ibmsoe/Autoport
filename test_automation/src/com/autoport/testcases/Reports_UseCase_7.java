@@ -54,8 +54,8 @@ public class Reports_UseCase_7 {
 		  reportsTab.verifyButtonsAreEnabledToManageBatchJobs();
 		  
 		  reportsTab.clickArchiveBatchJobsResultsBtn();
-		  
-		  reportsTab.verifyBatchJobArchivedSuccessfullyMsg();
+		  		  
+		  reportsTab.verifyArchivedSuccessfullyMsg();
 		  
 		  reportsTab.clearSearchedBatchJobResult();
 	 }	 

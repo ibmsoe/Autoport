@@ -39,6 +39,8 @@ public class Reports_UseCase_8 {
 			 reportsTab.clickManageCompareBatchJobsResultsButton();
 	  }
 	 
+	 
+	 //This is a system test case
 	 @Test(priority=0)
 	 public void Reports_Test_Compare_Local_BatchJobs_Results_027() throws Exception{		  
 		 
@@ -61,6 +63,7 @@ public class Reports_UseCase_8 {
 		  reportsTab.clearSearchedBatchJobResult();
 	 }	 
 	 
+	//This is a system test case
 	 @Test(priority=1)
 	 public void Reports_Build_Log_Compare_Local_BatchJobs_Results_028() throws Exception{		  
 		 
@@ -83,6 +86,7 @@ public class Reports_UseCase_8 {
 		  reportsTab.clearSearchedBatchJobResult();
 	 }
 	 
+	//This is a system test case
 	 @Test(priority=2)
 	 public void Reports_Test_Log_compare_Local_BatchJobs_Results_029() throws Exception{		  
 		 
@@ -105,12 +109,13 @@ public class Reports_UseCase_8 {
 		  reportsTab.clearSearchedBatchJobResult();
 	 }
 	 
+	//This is a system test case
 	 @Test(priority=3)
 	 public void Reports_Test_Compare_Archived_BatchJobs_Results_030() throws Exception{		  
 		 
 		 reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult); 
 		  
-		  reportsTab.clickArchiveBatchJobsResultsBtn();
+		  reportsTab.clickListArchivedBatchJobsResultsButton();
 		  
 		  reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);	
 		  
@@ -127,12 +132,13 @@ public class Reports_UseCase_8 {
 		  reportsTab.clearSearchedBatchJobResult();
 	 }
 	
+	//This is a system test case
 	 @Test(priority=4)
 	 public void Reports_Build_Log_Compare_Archived_BatchJobs_Results_031() throws Exception{		  
 		 
 		 reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult); 
 		  
-		  reportsTab.clickArchiveBatchJobsResultsBtn();
+		  reportsTab.clickListArchivedBatchJobsResultsButton();
 		  
 		  reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);	
 		  
@@ -149,12 +155,13 @@ public class Reports_UseCase_8 {
 		  reportsTab.clearSearchedBatchJobResult();
 	 }
 	 
+	//This is a system test case
 	 @Test(priority=5)
 	 public void Reports_Test_Log_compare_Archived_BatchJobs_Results_032() throws Exception{		  
 		 
 		 reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult); 
 		  
-		  reportsTab.clickArchiveBatchJobsResultsBtn();
+		  reportsTab.clickListArchivedBatchJobsResultsButton();
 		  
 		  reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);	
 		  
