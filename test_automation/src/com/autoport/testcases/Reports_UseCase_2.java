@@ -39,6 +39,7 @@ public class Reports_UseCase_2 {
 		 reportsTab.clickManageCompareProjectResultsButton();
 	  }
 	 
+	 //This is a system test case
 	 @Test(priority=0)
 	 public void Reports_View_Test_History_For_Local_Project_Result_004() throws Exception{		  
 		 
@@ -59,6 +60,7 @@ public class Reports_UseCase_2 {
 		  reportsTab.clearSearchedProjectResult();
 	 }
 	 
+	 //This is a system test case
 	 @Test(priority=1)
 	 public void Reports_View_Test_Detail_For_Local_Project_Result_005() throws Exception{		  
 		  
@@ -79,6 +81,7 @@ public class Reports_UseCase_2 {
 		  reportsTab.clearSearchedProjectResult();
 	 }
 	 
+	//This is a system test case
 	 @Test(priority=2)
 	 public void Reports_View_Test_History_For_Archived_Project_Result_006() throws Exception{		  
 		 
@@ -99,6 +102,7 @@ public class Reports_UseCase_2 {
 		  reportsTab.clearSearchedProjectResult();
 	 }
 	 
+	//This is a system test case
 	 @Test(priority=3)
 	 public void Reports_View_Test_Detail_For_Archived_Project_Result_007() throws Exception{		  
 		  

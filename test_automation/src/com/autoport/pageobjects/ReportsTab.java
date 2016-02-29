@@ -4,6 +4,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+
 import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.NoAlertPresentException;
@@ -16,6 +17,7 @@ import org.openqa.selenium.support.pagefactory.AjaxElementLocatorFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.FluentWait;
 import org.testng.Assert;
+
 import com.autoport.utilities.LogResult;
 
 public class ReportsTab {
@@ -257,7 +259,7 @@ public class ReportsTab {
 	
 	/* Function to enter project results to search in Search project results text box*/
 	public void clearSearchedProjectResult(){
-		projectResultTextBox.click();
+//		projectResultTextBox.click();
 		projectResultTextBox.clear();
 	}
 	
@@ -517,6 +519,9 @@ public class ReportsTab {
 		projectResultArchiveBtn.click();
 	}
 	
+	
+	
+	
 	/*Function to click on remove Projects results button*/
 	public void clickRemoveProjectResultsBtn() throws InterruptedException{
 		
@@ -771,7 +776,7 @@ public class ReportsTab {
 	
 	/* Function to clear batch Job results entered in Search project results text box*/
 	public void clearSearchedBatchJobResult(){
-		BatchJobResultsTextBox.click();
+//		BatchJobResultsTextBox.click();
 		BatchJobResultsTextBox.clear();
 	}
 	
@@ -1076,13 +1081,15 @@ public class ReportsTab {
 	}
 	
 	/* Function to verify if Batch job archived successfully pop up message is displayed correctly */	
-	public void verifyBatchJobArchivedSuccessfullyMsg(){
+	public void verifyArchivedSuccessfullyMsg() throws InterruptedException{ 
+		
+		Thread.sleep(3000);
 		
 		wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//div[@id='errorAlert']/div/div/div[1]")));
 		
 		String message = driver.findElement(By.xpath("//div[@id='errorAlert']/div/div/div[1]")).getText();
 		
-		if(message.contains("Archived Successfully")){
+		if(message.contains("Archived successfully") || message.contains("Archived Successfully!")){
 			LogResult.pass("Archived Successfully message is displayed correctly.");
 		}
 		else{

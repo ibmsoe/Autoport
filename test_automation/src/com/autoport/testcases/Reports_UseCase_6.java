@@ -37,6 +37,7 @@ public class Reports_UseCase_6 {
 		 reportsTab.clickManageCompareBatchJobsResultsButton();
 	  }
 	 
+	//This is a system test case
 	 @Test(priority=0)
 	 public void Reports_View_Test_History_For_Local_Batch_Jobs_Result_020() throws Exception{	
 		 
@@ -57,6 +58,8 @@ public class Reports_UseCase_6 {
 		  reportsTab.clearSearchedBatchJobResult();
 	 }
 	 
+	 
+	 //This is a system test case
 	 @Test(priority=1)
 	 public void Reports_View_Test_Detail_For_Local_Batch_Job_Result_021() throws Exception{	
 		 
@@ -77,6 +80,7 @@ public class Reports_UseCase_6 {
 		  reportsTab.clearSearchedBatchJobResult();
 	 }
 	 
+	//This is a system test case
 	 @Test(priority=2)
 	 public void Reports_View_Test_History_For_Archived_Batch_Jobs_Result_022() throws Exception{	
 		 
@@ -97,6 +101,7 @@ public class Reports_UseCase_6 {
 		  reportsTab.clearSearchedBatchJobResult();
 	 }
 	 
+	//This is a system test case
 	 @Test(priority=3)
 	 public void Reports_View_Test_Detail_For_Archived_Batch_Jobs_Result_023() throws Exception{	
 		 
