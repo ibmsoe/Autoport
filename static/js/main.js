@@ -1302,6 +1302,10 @@ var jenkinsState = {
     totalSelectedSingleSlavePkg: 0,
     pkgInstallRemoveStatusSingleSlave: [],
     listPackageForSingleSlave: function(ev) {
+        if (jenkinsState.buildServer == undefined || jenkinsState.buildServer == "") {
+            showAlert("Please select a Build Server");
+            return false;
+        }
         jenkinsState.singleSlavePackageTableReady = false;
         jenkinsState.loadingState.packageListLoading = true;
         jenkinsState.selectedSingleSlavePackage = [];
@@ -3278,6 +3282,7 @@ function getJenkinsNodeDetailsCallback(data) {
 }
 
 function updateDropdownsWithNodeDetails(){
+    jenkinsState.buildServer = "";
     $('#singleJenkinsBuildServers').multiselect('refresh');
     $('#singleJenkinsBuildServers').multiselect('destroy');
     $('#singleJenkinsBuildServers').multiselect('deselect', jenkinsState.nodeLabels);
