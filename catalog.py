@@ -260,7 +260,21 @@ class Catalog:
                     errors.append(build)
                     continue
                 try:
-                    self.__archiveFtpClient.mkdir(remoteBuildPath)
+                    paths = remoteBuildPath.split('/')
+                    curPath = '/'
+                    for path in paths:
+                        if (path == ""):
+                            continue
+                        if (curPath == "/"):
+                            curPath = '/%s'% (path)
+                        else:
+                            curPath = '%s/%s'% (curPath, path)
+                        try:
+                            self.__archiveFtpClient.stat(curPath)
+                        except IOError as e:
+                            if e.errno == errno.ENOENT:
+                                self.__archiveFtpClient.mkdir(curPath)
+                    #self.__archiveFtpClient.mkdir(remoteBuildPath)
                     files = os.listdir(tmpDir)
                     for file in files:
                         self.__archiveFtpClient.put(tmpDir + "/" + file,
