@@ -1223,6 +1223,7 @@ var jenkinsState = {
     showDebSelector: false,
     showRpmSelector: false,
     reBuildSlave: false,
+    resizeModalDialog: false,
     setJenkinsPanel: function(ev) {
         jenkinsState.jenkinsPanel = (jenkinsState.jenkinsPanel) ? false : true;
     },
@@ -1418,9 +1419,11 @@ var jenkinsState = {
     },
     installPackageForSingleSlave: function(ev) {
         jenkinsState.performActionOnSingleSlave('install');
+        jenkinsState.resizeModalDialog = true;
     },
     removePackageForSingleSlave: function(ev) {
          jenkinsState.performActionOnSingleSlave('remove');
+         jenkinsState.resizeModalDialog = true;
     },
     rebuildSync: function(ev) {
         console.log("rebootSync: Inside rebootSync");
@@ -1903,7 +1906,7 @@ var projectReportState = {
                 query[sel[i]] = selectedProjects[i].repository;
             }
             else{
-                gssSelections = gsaSelections + 1;
+                gsaSelections = gsaSelections + 1;
             }
         }
         if (gsaSelections != selectedProjects.length) {
@@ -3098,7 +3101,7 @@ function parseBatchFileCallback(data, batch_obj){
         batch_obj.saveBatchFileName = data.results.config.name;
         batch_obj.javaType = data.results.config.java;
         batch_obj.javaScriptType = data.results.config.javascript;
-        
+
 
         if (data.results.config.includeTestCmds === "True") {
             batch_obj.includeTestCmds = true;
