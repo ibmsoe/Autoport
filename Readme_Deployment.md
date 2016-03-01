@@ -182,6 +182,7 @@ Jenkins first time site configuration:
     - Libvirt Slaves Plugin
     - Environment Injector Plugin
     - Build-timeout Plugin
+    - Pre-scm-buildstep Plugin
 
 
 Chef Installation and Setup:
@@ -297,7 +298,7 @@ In order to setup such repositories perform following steps::
         - /var/www/autoport_repo/debs/ubuntu/conf
         - /var/www/autoport_repo/debs/ubuntu/trusty
         - /var/www/autoport_repo/rpms/rhel
-        - /var/www/autoport_repo/debs/rhel/7.1
+        - /var/www/autoport_repo/debs/rhel/7
 
         **Note**::
             With every new supported OS release, directory structure should be maintained in below format::
@@ -314,7 +315,7 @@ In order to setup such repositories perform following steps::
                     - /var/www/autoport_repo/rpms/<os>
                     - /var/www/autoport_repo/rpms/<os>/<release-number>
 
-                Here, <release-number> maps to e.g  for rhel release-number could be 7.1
+                Here, <release-number> maps to e.g  for rhel, release-number could be 7 (major-version i.e 7 not 7.x).
     4. Create distribution file at /var/www/autoport_repo/debs/ubuntu/conf/ using below command:
         :bash:`sudo touch distributions`
 
