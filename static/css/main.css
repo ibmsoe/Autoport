@@ -150,19 +150,19 @@ a {
 .nav-tabs > li > a:hover,
 .nav-tabs > li > a:focus {
     color: #000000;
-    background-color: #FFFFFF;  
-} 
+    background-color: #FFFFFF;
+}
 
 .nav-tabs > li.active > a,
 .nav-tabs > li.active > a:hover,
 .nav-tabs > li.active > a:focus {
     color: #000000;
-    background-color: #DDDDDD;  
-} 
+    background-color: #DDDDDD;
+}
 
 .tab-pane > .jumbotron {
     margin-bottom: 10px;
-    background-color: #DDDDDD;  
+    background-color: #DDDDDD;
 }
 
 .form-control[disabled],
@@ -218,6 +218,15 @@ fieldset[disabled] .form-control {
 
 .modalAttributes span input {
     width: 100%;
+}
+
+.modal-dialog-custom {
+    position: relative !important;
+    display: table     !important;
+    overflow-y: auto   !important;
+    overflow-x: auto   !important;
+    width: auto        !important;
+    min-width: 100px   !important;
 }
 
 /* Progress Bar and Button Styling*/
