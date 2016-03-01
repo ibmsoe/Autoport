@@ -72,7 +72,6 @@ var globalState = {
         }
     },
     reset: function() {
-        document.getElementById('url').value = globalState.jenkinsUrlInit;
         document.getElementById('ltest_results').value = globalState.localPathForTestResultsInit;
         document.getElementById('gtest_results').value = globalState.pathForTestResultsInit;
         document.getElementById('lbatch_files').value = globalState.localPathForBatchFilesInit;
@@ -86,7 +85,6 @@ var globalState = {
     },
     updateParameters: function () {
         jenkinsState.loadingState.settingsLoading = true;
-        jenkinsUrl = document.getElementById('url').value;
         localPathForTestResults = document.getElementById('ltest_results').value;
         pathForTestResults = document.getElementById('gtest_results').value;
         localPathForBatchFiles = document.getElementById('lbatch_files').value;
@@ -97,8 +95,7 @@ var globalState = {
         useTextAnalytics = globalState.useTextAnalytics
         logLevel = document.getElementById('loglevel').value;
         $.post("settings",
-               { url: jenkinsUrl,
-                 ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
+               { ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
                  lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles,
                  github: githubToken, username: configUsername, password: configPassword,
                  usetextanalytics: useTextAnalytics, loglevel: logLevel
@@ -1987,19 +1984,30 @@ $('#packageFile').change(function () {
 function showAlert(message, data) {
     var text = "";
     $("#apErrorDialogText").hide();
-    if (typeof data !== 'undefined' && (typeof data.responseJSON !== 'undefined' || typeof data.statusText !== 'undefined')) {
-        var msg = ""
-        if (typeof data.responseJSON !== 'undefined' && data.responseJSON.error !== 'undefined') {
-            msg = data.responseJSON.error;
+    if (typeof data !== 'undefined') {
+        var msg = "";
+        if (typeof data.responseJSON !== 'undefined' || typeof data.statusText !== 'undefined') {
+            if (typeof data.responseJSON !== 'undefined' && data.responseJSON.error !== 'undefined') {
+                msg = data.responseJSON.error;
+            }
+            else if (typeof data.readyState !== 'undefined' && data.readyState === 4) {
+                msg = "Status: " + data.status.toString() + " Error: " + data.statusText;
+            }
+            else {
+                msg = "Please ensure that the autoport driver / vm is running properly!";
+            }
         }
-        else if (typeof data.readyState !== 'undefined' && data.readyState === 4) {
-            msg = "Status: " + data.status.toString() + " Error: " + data.statusText
+        else if (data.status === "failure" && data.error !== 'undefined') {
+            msg = data.error;
+        }
+        if (msg) {
+            console.log("In showAlert, msg=", msg);
+            text = "<br/>" + msg;
         }
         else {
-            msg = "Please ensure that the autoport driver / vm is running properly!"
+            console.log("In showAlert, message=", message);
+            console.log("showAlert: data=", data);
         }
-        console.log("In showAlert, msg=", msg)
-        text = "<br/>" + msg;
     }
     $("#apErrorDialogText").show();
     $('#errorAlert').css("z-index","9999");

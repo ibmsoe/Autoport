@@ -16,44 +16,19 @@ class Catalog:
     def __init__(self):
         globals.init()
 
-    def connect(self, archiveHost, jenkinsHost,
+    def connect(self, archiveHost,
             archivePort=globals.port,
             archiveUser=globals.configUsername,
             archivePassword=globals.configPassword,
-            jenkinsUser=globals.configJenkinsUsername,
-            jenkinsKey=globals.configJenkinsKey,
             copyPath=globals.pathForTestResults,
             localPath=globals.localPathForTestResults):
         self.__archiveHost = archiveHost
         self.__archivePort = archivePort
         self.__archiveUser = archiveUser
         self.__archivePassword = archivePassword
-        self.__jenkinsHost = jenkinsHost
-        self.__jenkinsUser = jenkinsUser
-        self.__jenkinsKey = jenkinsKey
         self.__copyPath = copyPath
         self.__localPath = localPath
         self.__tmpdirs = []
-
-        try:
-            self.__jenkinsSshClient = paramiko.SSHClient()
-            self.__jenkinsSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-            self.__jenkinsSshClient.connect(self.__jenkinsHost, username=self.__jenkinsUser, \
-                                            key_filename=self.__jenkinsKey)
-            self.__jenkinsFtpClient = self.__jenkinsSshClient.open_sftp()
-        # Error handling
-        except paramiko.AuthenticationException as ae:
-            msg = "Please provide valid Jenkins credentials in settings menu!"
-            logger.warning(msg)
-            assert(False), msg
-        except paramiko.SSHException as se:
-            msg = "SSH connection error to Jenkins.  You may need to authenticate.  Check networking!"
-            logger.warning(msg)
-            assert(False), msg
-        except IOError as e:
-            msg = str(e) + ". Please ensure that the Jenkins URL is correct in the settings menu!"
-            logger.warning(msg)
-            assert(False), msg
 
         try:
             globals.gsaConnected = False
@@ -256,7 +231,7 @@ class Catalog:
             try:
                 tmpDir = self.getLocalResults(build)
                 if tmpDir == None:
-                    logger.debug("Can't fetch jenkins copy of " + build)
+                    logger.debug("Can't fetch local copy of " + build)
                     errors.append(build)
                     continue
                 try:
@@ -274,7 +249,6 @@ class Catalog:
                         except IOError as e:
                             if e.errno == errno.ENOENT:
                                 self.__archiveFtpClient.mkdir(curPath)
-                    #self.__archiveFtpClient.mkdir(remoteBuildPath)
                     files = os.listdir(tmpDir)
                     for file in files:
                         self.__archiveFtpClient.put(tmpDir + "/" + file,
@@ -284,7 +258,7 @@ class Catalog:
                     logger.warning("Can't push " + build + " : exception=" + str(e))
                     errors.append(build)
             except IOError:
-                logger.warning("Can't fetch jenkins copy of " + build)
+                logger.warning("Can't fetch local copy of " + build)
             shutil.rmtree(tmpDir, ignore_errors=True)
 
         # If copy to gsa was successful, then remove the 'local' copy
@@ -354,7 +328,6 @@ class Catalog:
         try:
             self.cleanTmp()
             self.__archiveFtpClient.close()
-            self.__jenkinsFtpClient.close()
         except AttributeError:
             pass
 

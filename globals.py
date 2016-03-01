@@ -37,6 +37,7 @@ def init():
 
     # Globals based on config file
     global jenkinsUrl
+    global jenkinsHostname
     global githubToken
     global hostname
     global port
@@ -56,7 +57,6 @@ def init():
     global expiryForTmp
 
     # user configuration globals that are supported by the user interface
-    jenkinsUrl = configOptions['jenkinsurl']
     githubToken = configOptions['githubtoken']
     hostname = configOptions['hostname']
     configUsername = configOptions['username']
@@ -72,12 +72,18 @@ def init():
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
     useTextAnalytics = configOptions['usetextanalytics'] == 'True'
-    expiryForTmp = configOptions['expiryfortmp']
 
+    # user configuration globals that are not supported by the user interface
+    expiryForTmp = configOptions['expiryfortmp']
     if not configOptions.has_key('port'):
         port = 22
     else:
         port = int(configOptions['port'])
+
+    jenkinsUrl = configOptions['jenkinsurl']
+    jenkinsHostname = configOptions['jenkinshostname']
+    if not jenkinsHostname or "<" in jenkinsHostname:
+       jenkinsHostname = urlparse(jenkinsUrl).hostname
 
     # globals not based on config file
     global github
@@ -105,7 +111,6 @@ def init():
     global jenkinsRepoUrl
     global localTarRepoLocation
     global gsaConnected
-
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
@@ -151,7 +156,7 @@ def init():
     localTarRepoLocation = '/var/opt/autoport/'
     gsaConnected = False
 
-    # used for rebuilding jenkins slaves
+    # used for rebuilding jenkins slaves in a cloud environment
     global os_username
     global os_password
     global os_tenant_name

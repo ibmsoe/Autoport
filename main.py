@@ -268,15 +268,9 @@ def getJenkinsNodeDetails():
 def settings():
 
     githubToken = globals.githubToken
-    jenkinsUrl = globals.jenkinsUrl
     hostname = globals.hostname
     configUsername = globals.configUsername
     configPassword = globals.configPassword
-
-    try:
-        globals.jenkinsUrl = request.form["url"]
-    except ValueError:
-        return json.jsonify(status="failure", error="bad url"), 400
 
     try:
         globals.localPathForTestResults = request.form["ltest_results"]
@@ -327,29 +321,9 @@ def settings():
         return json.jsonify(status="failure", error="bad value for logLevel"), 400
 
     try:
-        if jenkinsUrl != globals.jenkinsUrl:
-            logger.info("Stopping threads[] connected to old Jenkins master")
-
-            # Drain thread queue to ensure that old requests are completed first
-            mover.resetConnection()
-
-            # Initialize globals, mover threads, and Chef master
-            autoportJenkinsInit(globals.jenkinsUrl, globals.configJenkinsUsername, globals.configJenkinsKey)
-
-            # Initialize catalog
-            # XXX Why is this accessing Jenkins?
-            catalog.connect(globals.hostname, urlparse(globals.jenkinsUrl).hostname)
-
-            chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
-    except Exception as e :
-        logger.warning("settings: Jenkins=%s Error=%s" % (urlparse(globals.jenkinsUrl).hostname, str(e)))
-        msg = "Invalid Jenkins URL or networking issue.\nHostname: %s\nError: %s" % (urlparse(globals.jenkinsUrl).hostname, str(e))
-        return json.jsonify(status="failure", gsaConnected=globals.gsaConnected, error=msg)
-
-    try:
         if hostname != globals.hostname or configUsername != globals.configUsername or configPassword != globals.configPassword:
             logger.info("Applying user parameters")
-            autoportUserInit(globals.hostname,globals.jenkinsUrl,globals.configUsername,globals.configPassword)
+            autoportUserInit(globals.hostname, globals.configUsername, globals.configPassword)
 
     except Exception as e :
         logger.warning("settings: Archive parameters Error=%s" % (str(e)))
@@ -3146,7 +3120,7 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
     # and assert(False) is invoked to provide the debug context.
     if jenkinsUrl:
         # Start threads as getJenkinsNodeDetails uses thread pool
-        mover.start(urlparse(jenkinsUrl).hostname, jenkinsUsername, jenkinsKey)
+        mover.start(globals.jenkinsHostname, jenkinsUsername, jenkinsKey)
 
         # Get new jenkins node information
         globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
@@ -3157,9 +3131,9 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
         else:
             jenkinsUrlNoPort = globals.jenkinsUrl
         globals.jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
-        sharedData.connect(urlparse(jenkinsUrl).hostname)
+        sharedData.connect(globals.jenkinsHostname)
         sharedData.uploadChefData()
-        chefData.setRepoHost(urlparse(globals.jenkinsUrl).hostname)
+        chefData.setRepoHost(globals.jenkinsHostname)
 
         # Setup Jenkins cloud boot services for build servers.  Uses pristine snap shotted image.
         # TODO: This needs to be enhanced to allow users to change jenkins servers in the cloud
@@ -3171,13 +3145,12 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
         except Exception as ex:
             logger.debug("autoportJenkinsInit: rebuildSlaves initial Error: %s", ex)
 
-def autoportUserInit(hostname, jenkinsUrl, configUsername, configPassword):
-    if hostname and configUsername and configPassword :
+def autoportUserInit(hostname, configUsername, configPassword):
+    if hostname and configUsername and configPassword:
         if globals.gsaConnected:
             catalog.close()
             batch.disconnect()
-        if jenkinsUrl:
-            catalog.connect(hostname, urlparse(jenkinsUrl).hostname, archiveUser=configUsername, archivePassword=configPassword)
+        catalog.connect(hostname, archiveUser=configUsername, archivePassword=configPassword)
         batch.connect(hostname, globals.port, archiveUser=configUsername, archivePassword=configPassword)
 
 @app.errorhandler(500)
@@ -3203,6 +3176,8 @@ def startAutoport(p = None):
                    defaults to only listening on private localhost")
         p.add_argument("-u", "--jenkinsURL", help="specifies the URL for the Jenkins server,\
                    defaults to '" + globals.jenkinsUrl + "'")
+        p.add_argument("-j", "--jenkinsHostname", help="specifies the Hostname or IPADDR of the Jenkins server,\
+                   defaults to '" + globals.jenkinsHostname + "'")
         p.add_argument("-b", "--allocBuildServers", action="store_true",
                    help="Build Servers are dynamically allocated per user")
         p.add_argument("-d", "--debug", action="store_true",
@@ -3213,11 +3188,14 @@ def startAutoport(p = None):
         if args.jenkinsURL:
             globals.jenkinsUrl = args.jenkinsURL
 
+        if args.jenkinsHostname:
+            globals.jenkinsHostname = args.jenkinsHostname
+
         if args.allocBuildServers:
             globals.allocBuildServers = args.allocBuildServers
 
     autoportJenkinsInit(globals.jenkinsUrl, globals.configJenkinsUsername, globals.configJenkinsKey)
-    autoportUserInit(globals.hostname,globals.jenkinsUrl,globals.configUsername,globals.configPassword)
+    autoportUserInit(globals.hostname, globals.configUsername, globals.configPassword)
 
     return args
 
