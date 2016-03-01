@@ -3591,14 +3591,19 @@ function toggleProjectReportButtons(){
     if (selectedProjects.length === 0) {
         $("#testHistoryBtn").addClass("disabled");
         $("#testDetailBtn").addClass("disabled");
-        $("#resultArchiveBtn").addClass("disabled");
         $("#resultRemoveBtn").addClass("disabled");
     }
     else {
         $("#testHistoryBtn").removeClass("disabled");
         $("#testDetailBtn").removeClass("disabled");
-        $("#resultArchiveBtn").removeClass("disabled");
         $("#resultRemoveBtn").removeClass("disabled");
+    }
+    $("#resultArchiveBtn").addClass("disabled");
+    for (var i = 0; i < selectedProjects.length; i++) {
+        if (selectedProjects[i].repository == 'local') {
+            $("#resultArchiveBtn").removeClass("disabled");
+            break;
+        }
     }
 }
 
