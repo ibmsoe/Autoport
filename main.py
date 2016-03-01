@@ -478,6 +478,8 @@ def search():
             "classifications": classify(repo)
         })
 
+    results.sort(key=lambda x: x['stars'], reverse=True);
+
     if autoselect and len(results) == 1:
         return detail(repo.id, repo)
 

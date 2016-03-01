@@ -6,8 +6,8 @@
 
   <div class="jumbotron-button-content" id="searchBox" rv-show="searchState.single.searchBoxReady">
     <div class="input-group">
-      <input type="text" class="form-control"
-        placeholder="(e.g. redis, cassandra, mongo)" id="query"/>
+      <input type="text" class="form-control" placeholder="(e.g. redis, cassandra, apache/, or repo:libuv/libuv)" id="query"
+             autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
       <div class="input-group-btn">
         <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown">
           Sort by { searchState.single.sorting }
