@@ -15,6 +15,7 @@ var globalState = {
     localPathForBatchFilesInit: "",
     pathForBatchFilesInit: "",
     githubTokenInit: "",
+    configHostnameInit: "",
     configUsernameInit: "",
     configPasswordInit: "",
     useTextAnalyticsInit: false,
@@ -27,6 +28,7 @@ var globalState = {
     localPathForBatchTestResults: "",
     pathForBatchFiles: "",
     githubToken: "",
+    configHostname: "",
     configUsername: "",
     configPassword: "",
     useTextAnalytics: false,
@@ -77,6 +79,7 @@ var globalState = {
         document.getElementById('lbatch_files').value = globalState.localPathForBatchFilesInit;
         document.getElementById('gbatch_files').value = globalState.pathForBatchFilesInit;
         document.getElementById('github').value = globalState.githubTokenInit;
+        document.getElementById('hostname').value = globalState.configHostnameInit;
         document.getElementById('username').value = globalState.configUsernameInit;
         document.getElementById('password').value = globalState.configPasswordInit;
         globalState.useTextAnalytics = globalState.useTextAnalyticsInit;
@@ -90,6 +93,7 @@ var globalState = {
         localPathForBatchFiles = document.getElementById('lbatch_files').value;
         pathForBatchFiles = document.getElementById('gbatch_files').value;
         githubToken = document.getElementById('github').value;
+        configHostname = document.getElementById('hostname').value;
         configUsername = document.getElementById('username').value;
         configPassword = document.getElementById('password').value;
         useTextAnalytics = globalState.useTextAnalytics
@@ -97,7 +101,7 @@ var globalState = {
         $.post("settings",
                { ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
                  lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles,
-                 github: githubToken, username: configUsername, password: configPassword,
+                 github: githubToken, hostname: configHostname, username: configUsername, password: configPassword,
                  usetextanalytics: useTextAnalytics, loglevel: logLevel
                },
                settingsCallback, "json").fail(settingsCallback);
@@ -361,10 +365,10 @@ var batchState = {
         batchState.showListSelectTable = false;
         batchState.selectedBatchFile = {};
         batchState.showBatchFile = false;
-        batchState.batchListingRepo = "gsa";
+        batchState.batchListingRepo = "sftp";
         $('#batch_file_archive').addClass('disabled');
         $('#batch_file_archive').hide();
-        $.getJSON("listBatchFiles/gsa", { filter: $("#batchFileFilter").val() },
+        $.getJSON("listBatchFiles/sftp", { filter: $("#batchFileFilter").val() },
             listBatchFilesCallback).fail(listBatchFilesCallback);
     },
     listAllBatchFiles: function(ev) {
@@ -616,15 +620,15 @@ var batchReportState = {
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
         $("#batch_report_archive").show();
     },
-    listGSABatch: function(ev) {
+    listSFTPBatch: function(ev) {
         // reset report state to initial state so that data reflected is correctly on fresh canvas.
         batchReportState.reset();
         batchReportState.showBatchReportsTable = false;
         batchReportState.showListSelectTable = false;
         batchReportState.loading = true;
-        batchReportState.listingRepo = "gsa"
+        batchReportState.listingRepo = "sftp"
         // callback to render data to Batch Report table
-        $.getJSON("listBatchReports/gsa", { filter: $("#batchReportFilter").val() },
+        $.getJSON("listBatchReports/sftp", { filter: $("#batchReportFilter").val() },
             listBatchReportFilesCallback).fail(listBatchReportFilesCallback);
         $("#batch_report_archive").hide();
     },
@@ -1152,14 +1156,14 @@ var reportState = {
         $.getJSON("listTestResults/local", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").show();
     },
-    listGSAProjects: function(ev) {
+    listSFTPProjects: function(ev) {
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
 
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "archived";
         projectReportState.loadingState.diffLoading = true;
-        $.getJSON("listTestResults/gsa", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
+        $.getJSON("listTestResults/sftp", { filter: $("#projectFilter").val() }, processResultList).fail(processResultList);
         $("#resultArchiveBtn").hide();
     },
     listAllProjects: function(ev) {
@@ -1895,18 +1899,18 @@ var projectReportState = {
     archive: function() {
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
         var sel = [];
-        var gsaSelections = 0;
+        var sftpSelections = 0;
         var query = {};
         for (var i = 0; i < selectedProjects.length; i++) {
-            if (selectedProjects[i].repository != "gsa") {
+            if (selectedProjects[i].repository != "sftp") {
                 sel[i] = selectedProjects[i].fullName;
                 query[sel[i]] = selectedProjects[i].repository;
             }
             else{
-                gsaSelections = gsaSelections + 1;
+                sftpSelections = sftpSelections + 1;
             }
         }
-        if (gsaSelections != selectedProjects.length) {
+        if (sftpSelections != selectedProjects.length) {
             showAlert("Local repositories chosen will be archived")
             projectReportState.loadingState.diffLoading = true;
             $.ajax({
@@ -2152,7 +2156,7 @@ function removeProjectsCallback(data){
         if (projectReportState.compareRepo == "local") {
             reportState.listLocalProjects();
         } else if (projectReportState.compareRepo == "archived") {
-            reportState.listGSAProjects();
+            reportState.listSFTPProjects();
         } else {
             reportState.listAllProjects();
         }
@@ -2167,8 +2171,8 @@ function removeBatchReportsCallback(data){
         showAlert("Deleted Successfully !");
         if (batchReportState.listingRepo == "local") {
             batchReportState.listLocalBatch();
-        } else if (batchReportState.listingRepo == "gsa") {
-            batchReportState.listGSABatch();
+        } else if (batchReportState.listingRepo == "sftp") {
+            batchReportState.listSFTPBatch();
         } else {
             batchReportState.listAllBatch();
         }
@@ -2963,6 +2967,7 @@ function initCallback(data) {
     globalState.localPathForBatchFilesInit = data.localPathForBatchFiles;
     globalState.pathForBatchFilesInit = data.pathForBatchFiles;
     globalState.githubTokenInit = data.githubToken;
+    globalState.configHostnameInit = data.configHostname;
     globalState.configUsernameInit = data.configUsername;
     globalState.configPasswordInit = data.configPassword;
     globalState.useTextAnalyticsInit = data.useTextAnalytics;
@@ -2974,6 +2979,7 @@ function initCallback(data) {
     globalState.localPathForBatchFiles = data.localPathForBatchFiles;
     globalState.pathForBatchFiles = data.pathForBatchFiles;
     globalState.githubToken = data.githubToken;
+    globalState.configHostname = data.configHostname;
     globalState.configUsername = data.configUsername;
     globalState.configPassword = data.configPassword;
     globalState.useTextAnalytics = data.useTextAnalytics;
@@ -2982,13 +2988,13 @@ function initCallback(data) {
 
     console.log("initCallBack: jenkinsUrl=" + globalState.jenkinsUrl);
 
-    if (data.gsaConnected !== undefined) {
-       if (data.gsaConnected) {
-           $('#gsaConnectionStatus').text("GSA connected");
-           $('#gsaConnectionStatus').css("color","green");
+    if (data.sftpConnected !== undefined) {
+       if (data.sftpConnected) {
+           $('#sftpConnectionStatus').text("SFTP connected");
+           $('#sftpConnectionStatus').css("color","green");
        } else {
-           $('#gsaConnectionStatus').text("GSA not connected");
-           $('#gsaConnectionStatus').css("color","red");
+           $('#sftpConnectionStatus').text("SFTP not connected");
+           $('#sftpConnectionStatus').css("color","red");
        }
     }
 }
@@ -3010,13 +3016,13 @@ function settingsCallback(data) {
             showAlert("Updated successfully");
         }
     }
-    if (data.gsaConnected !== undefined) {
-       if (data.gsaConnected) {
-           $('#gsaConnectionStatus').text("GSA connected");
-           $('#gsaConnectionStatus').css("color","green");
+    if (data.sftpConnected !== undefined) {
+       if (data.sftpConnected) {
+           $('#sftpConnectionStatus').text("SFTP connected");
+           $('#sftpConnectionStatus').css("color","green");
        } else {
-           $('#gsaConnectionStatus').text("GSA not connected");
-           $('#gsaConnectionStatus').css("color","red");
+           $('#sftpConnectionStatus').text("SFTP not connected");
+           $('#sftpConnectionStatus').css("color","red");
        }
     }
 }
@@ -3069,7 +3075,7 @@ function batchSaveCallback(data, batchStateObj) {
         batchState.fileList.push(batchState.batchFile);
         if (batchStateObj.batchListingRepo == "local"){
             batchStateObj.listLocalBatchFiles();
-        } else if (batchStateObj.batchListingRepo == "gsa"){
+        } else if (batchStateObj.batchListingRepo == "sftp"){
              batchStateObj.listArchivedBatchFiles();
         } else {
             batchStateObj.listAllBatchFiles();
@@ -3214,8 +3220,8 @@ function archiveBatchReportsCallback(data) {
         showAlert("Archived Successfully!")
         if (batchReportState.listingRepo == "local"){
             batchReportState.listLocalBatch();
-        } else if (batchReportState.listingRepo == "gsa"){
-            batchReportState.listGSABatch();
+        } else if (batchReportState.listingRepo == "sftp"){
+            batchReportState.listSFTPBatch();
         } else {
             batchReportState.listAllBatch();
         }

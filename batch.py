@@ -22,9 +22,9 @@ class Batch:
     def __init__(self, catalog):
         self.catalog = catalog
 
-    # Connecting to SSHClient using GSA credentials
-    def connect(self, archiveHost=globals.hostname,
-                archivePort=globals.port,
+    # Connecting to SSHClient using SFTP credentials
+    def connect(self, archiveHost=globals.configHostname,
+                archivePort=globals.configPort,
                 archiveUser=globals.configUsername,
                 archivePassword=globals.configPassword):
         try:
@@ -47,8 +47,8 @@ class Batch:
             if repoType == "local" or repoType == "all":
                 res = self.listLocalBatchFiles(filt)
 
-            if repoType == "gsa" or repoType == "all":
-                res = res + self.listGSABatchFiles(filt)
+            if repoType == "sftp" or repoType == "all":
+                res = res + self.listSFTPBatchFiles(filt)
         except Exception as e:
             assert(False), str(e)
         logger.debug("Leaving listBatchFiles: res[%d]" % len(res))
@@ -67,7 +67,7 @@ class Batch:
             assert(False), "Please provide valid local batch files path in settings menu!"
         return filteredList
 
-    def listGSABatchFiles(self, filt):
+    def listSFTPBatchFiles(self, filt):
         filteredList = []
         try:
             self.ftp_client.chdir(globals.pathForBatchFiles)
@@ -77,12 +77,13 @@ class Batch:
                     putdir = tempfile.mkdtemp(prefix="autoport_")
                     self.catalog.newTmpDirectoryAdded(putdir)
                     self.ftp_client.get(filename, putdir + "/" + filename)
-                    filteredList.append(self.parseBatchFileList(putdir + "/" + filename, "gsa"))
+                    filteredList.append(self.parseBatchFileList(putdir + "/" + filename, "sftp"))
         except IOError as e:
             # if the directory doesn't exist, return null
             if e.errno == errno.ENOENT:
                 return filteredList
-            assert(False), str(e)
+            logger.debug("Leaving listSFTPBatchFiles: Error=%s" % str(e))
+            assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         except AttributeError:
             assert(False), "Connection error to archive storage.  Use settings menu to configure!"
         return filteredList
@@ -96,8 +97,8 @@ class Batch:
             if repoType == "local" or repoType == "all":
                 reportData = self.listLocalBatchReports(filt)
 
-            if repoType == "gsa" or repoType == "all":
-                reportData.extend(self.listGSABatchReports(filt))
+            if repoType == "sftp" or repoType == "all":
+                reportData.extend(self.listSFTPBatchReports(filt))
         except Exception as e:
             assert(False), str(e)
 
@@ -124,13 +125,13 @@ class Batch:
             assert(False), "Please provide valid local batch files path in settings menu!"
         return filteredList
 
-    def listGSABatchReports(self, filt):
+    def listSFTPBatchReports(self, filt):
         filteredList = []
         try:
             self.ftp_client.chdir(globals.pathForBatchTestResults)
             flist = self.ftp_client.listdir()
             for filename in sorted(flist):
-                logger.debug("listGSABatchReports: file=%s" % filename)
+                logger.debug("listSFTPBatchReports: file=%s" % filename)
                 if not filt or filt in filename.lower():
                     try:
                         putdir = tempfile.mkdtemp(prefix="autoport_")
@@ -138,25 +139,25 @@ class Batch:
                         self.copyRemoteDirToLocal(globals.pathForBatchTestResults + "/" + filename, putdir)
                         for batchFilePath in os.listdir(putdir + "/" + filename):
                         #batchFilePath = os.listdir(putdir + "/" + filename)[0]
-                            logger.debug("listGSABatchReports: batchFilePath=%s" % batchFilePath)
+                            logger.debug("listSFTPBatchReports: batchFilePath=%s" % batchFilePath)
                             batchTestReportFile = open("%s/%s/%s" % (putdir, filename, batchFilePath), 'r')
                             dataFile = batchTestReportFile.readlines()
                             for projectsReport in dataFile:
-                                logger.debug("listGSABatchReports: projectsReport=%s" % projectsReport)
+                                logger.debug("listSFTPBatchReports: projectsReport=%s" % projectsReport)
                                 try:
                                     self.copyRemoteDirToLocal(globals.pathForTestResults + projectsReport.split('/')[0], putdir)
                                 except Exception as ex:
                                     # Project results may be missing
-                                    logger.debug("listGSABatchReports: Error in copying project %s" % projectsReport.split('/')[0] + str(ex))
+                                    logger.debug("listSFTPBatchReports: Error in copying project %s" % projectsReport.split('/')[0] + str(ex))
                             parsedResult = self.parseBatchReportList(
                                 os.path.join(putdir,filename,batchFilePath),
-                                "gsa",
+                                "sftp",
                                 putdir
                             )
                             if parsedResult:
                                 filteredList.append(parsedResult)
                     except Exception as ex:
-                        logger.warning("listGSABatchReports: Error=%s" % str(ex))
+                        logger.warning("listSFTPBatchReports: Error=%s" % str(ex))
                     finally:
                         if isinstance(batchTestReportFile, file):
                             batchTestReportFile.close()
@@ -168,14 +169,14 @@ class Batch:
             if e.errno == errno.ENOENT:
                 return filteredList
         except Exception as e:
-            logger.warning("listGSABatchReports: Error=%s" % str(e))
+            logger.warning("listSFTPBatchReports: Error=%s" % str(e))
             assert(False), str(e)
         return filteredList
 
     ########### Listing of Batch Results ends #######
 
     def removeBatchFile(self, filename, location):
-        if location == "gsa":
+        if location == "sftp":
             res = self.removeArchivedBatchFile(filename)
         elif location == "local":
             res = self.removeLocalBatchFile(filename)
@@ -532,8 +533,8 @@ class Batch:
         # Get the project Names and fetch test details from them.
         if batchList.get('local'):
             repos["local"] = self.getLocalProjectForGivenBatch(batchList.get('local', []), 'local')
-        if batchList.get('gsa'):
-            repos["gsa"] = self.getLocalProjectForGivenBatch(batchList.get('gsa', []), 'gsa')
+        if batchList.get('sftp'):
+            repos["sftp"] = self.getLocalProjectForGivenBatch(batchList.get('sftp', []), 'sftp')
 
         repoData = repos[repos.keys()[0]]
         batchNamesData = repoData.keys()
@@ -594,7 +595,7 @@ class Batch:
 
         return projects
 
-    # Remove Batch Reports Data from local or GSA
+    # Remove Batch Reports Data from local or SFTP
     def removeBatchReportsData(self, reports, catalog):
         logger.debug("In removeBatchReportsData, reports[%d]" % len(reports))
         project = Project(catalog)
@@ -614,13 +615,13 @@ class Batch:
                     dataFile = batchTestReportFile.readlines()
                     for line in dataFile:
                         if line:
-                            projects[line.strip()] = 'gsa'
-                    # Projects report removal from GSA
+                            projects[line.strip()] = 'sftp'
+                    # Projects report removal from SFTP
                     catalog.removeProjectsData(projects, project)
 
                     self.ftp_client.remove(filepath)
                     if len(self.ftp_client.listdir(os.path.dirname(filepath))) == 0:
-                        # Batch report removal from GSA
+                        # Batch report removal from SFTP
                         self.ftp_client.rmdir(os.path.dirname(filepath))
             except IOError as e:
                 logger.debug("removeBatchReportsData: I/O Error=%s" % str(e))
@@ -628,7 +629,7 @@ class Batch:
                 logger.debug("removeBatchReportsData: Error=%s" % str(e))
         logger.debug("Leaving removeBatchReportsData")
 
-    # Archive Batch Reports Data to GSA
+    # Archive Batch Reports Data to SFTP
     def archiveBatchReports(self, report):
         batchReportDir = globals.pathForBatchTestResults + os.path.basename(os.path.dirname(report))
         batchReportName = os.path.basename(report)
@@ -816,10 +817,10 @@ class Batch:
             finally:
                 if isinstance(batch_detail_file, file):
                     batch_detail_file.close();
-        elif location=="gsa":
+        elif location=="sftp":
             try:
-                gsafilePath = globals.pathForBatchFiles + ntpath.basename(filePath)
-                f = self.ftp_client.open(gsafilePath, 'w')
+                sftpfilePath = globals.pathForBatchFiles + ntpath.basename(filePath)
+                f = self.ftp_client.open(sftpfilePath, 'w')
                 f.write(fileContent)
             except Exception as e:
                 logger.debug("updateBatchFile: Error=%s" % str(e))

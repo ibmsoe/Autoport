@@ -17,7 +17,7 @@ class Catalog:
         globals.init()
 
     def connect(self, archiveHost,
-            archivePort=globals.port,
+            archivePort=globals.configPort,
             archiveUser=globals.configUsername,
             archivePassword=globals.configPassword,
             copyPath=globals.pathForTestResults,
@@ -31,13 +31,13 @@ class Catalog:
         self.__tmpdirs = []
 
         try:
-            globals.gsaConnected = False
+            globals.sftpConnected = False
             self.__archiveSshClient = paramiko.SSHClient()
             self.__archiveSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.__archiveSshClient.connect(self.__archiveHost, username=self.__archiveUser,\
                                             password=self.__archivePassword,port=self.__archivePort)
             self.__archiveFtpClient = self.__archiveSshClient.open_sftp()
-            globals.gsaConnected = True
+            globals.sftpConnected = True
         # Error handling
         except paramiko.AuthenticationException as ae:
             logger.warning("Connection error to archive storage")
@@ -57,11 +57,11 @@ class Catalog:
             if repoType == "local" or repoType == "all":
                 jobs = self.listLocalJobResults(filt)
 
-            if repoType == "gsa" or repoType == "all":
-                jobs = jobs + self.listGSAJobResults(filt)
+            if repoType == "sftp" or repoType == "all":
+                jobs = jobs + self.listSFTPJobResults(filt)
         except Exception as e:
-            msg = "listJobResult: " + str(e)                   # Usually a missing test_result.arti
-            logger.debug(msg)
+            msg = str(e)
+            logger.debug("listJobResults: " + msg)
             assert(False), msg
 
         for jobDesc in jobs:
@@ -79,7 +79,7 @@ class Catalog:
                     continue
 
                 # The node may not be known to this autoport instance.  Jobs
-                # are aggregated in gsa.  Jenkin build nodes may be retired
+                # are aggregated in sftp.  Jenkin build nodes may be retired
                 if nodeLabel in globals.nodeLabels:
                     i = globals.nodeLabels.index(nodeLabel)
                     distro = globals.nodeOSes[i]
@@ -119,20 +119,21 @@ class Catalog:
             assert(False), msg
         return filteredList
 
-    def listGSAJobResults(self, filt):
+    def listSFTPJobResults(self, filt):
         filteredList = []
         try:
             self.__archiveFtpClient.chdir(self.__copyPath)
             fullList = self.__archiveFtpClient.listdir()
             for item in fullList:
                 if filt in item.lower() or filt == "":
-                    filteredList.append([item, "gsa"])
+                    filteredList.append([item, "sftp"])
         except IOError as e:
             # if the directory doesn't exist, return null
             if e.errno == errno.ENOENT:
                 return filteredList
-            msg = "listGSAJobResults: " + str(e)
+            msg = "listSFTPJobResults: " + str(e)
             logger.warning(msg)
+            msg = "Connection error to archive storage.  Use settings menu to configure!"
             assert(False), msg
         except AttributeError as e:
             msg = "Connection error to archive storage.  Use settings menu to configure!"
@@ -141,8 +142,8 @@ class Catalog:
         return filteredList
 
     def getResults(self, build, repository):
-        if repository == "gsa":
-            return self.getGSAResults(build)
+        if repository == "sftp":
+            return self.getSFTPResults(build)
         elif repository == "local":
             return self.getLocalResults(build)
 
@@ -174,21 +175,21 @@ class Catalog:
             logger.debug(msg)
             return None
 
-    def getGSAResults(self, build):
+    def getSFTPResults(self, build):
         try:
-            logger.debug("Catalog getGSAResult: build=%s" % (build))
+            logger.debug("Catalog getSFTPResult: build=%s" % (build))
             tmpPath = tempfile.mkdtemp(prefix="autoport_")
             putdir = tmpPath + "/" + build
             if not os.path.exists(putdir):
                 os.makedirs(putdir)
-            logger.debug("Catalog getGSAResult: putdir=%s remoteDir=%s" % (putdir, self.__copyPath + build))
+            logger.debug("Catalog getSFTPResult: putdir=%s remoteDir=%s" % (putdir, self.__copyPath + build))
             self.__archiveFtpClient.chdir(self.__copyPath + build)
 
             # Copy as many files as possible.  Reports use different files
             files = self.__archiveFtpClient.listdir()
             for file in files:
                 try:
-                    logger.debug("Catalog getGSAResult: Downloading, sourceFile=%s Destination=%s" % (file, putdir + "/" + file))
+                    logger.debug("Catalog getSFTPResult: Downloading, sourceFile=%s Destination=%s" % (file, putdir + "/" + file))
                     self.__archiveFtpClient.get(file, putdir + "/" + file)
                 except IOError:
                     pass
@@ -199,11 +200,11 @@ class Catalog:
             logger.warning(msg)
             assert(False), msg
         except IOError as e:
-            msg = "getGSAResults: IOError " + str(e)
+            msg = "getSFTPResults: IOError " + str(e)
             logger.warning(msg)
             return None
         except Exception as e:
-            msg = "getGSAResults: Exception " + str(e)
+            msg = "getSFTPResults: Exception " + str(e)
             logger.debug(msg)
             return None
 
@@ -261,12 +262,12 @@ class Catalog:
                 logger.warning("Can't fetch local copy of " + build)
             shutil.rmtree(tmpDir, ignore_errors=True)
 
-        # If copy to gsa was successful, then remove the 'local' copy
+        # If copy to sftp was successful, then remove the 'local' copy
         for build in copied:
             localBuildPath = self.__localPath + build
             shutil.rmtree(localBuildPath, ignore_errors=True)
 
-        # Remove partial copies to gsa.  Try again later
+        # Remove partial copies to sftp.  Try again later
         for build in errors:
             remoteBuildPath = self.__copyPath + build
             try:
@@ -284,7 +285,7 @@ class Catalog:
 
         return status, errors, alreadyThere
 
-    # Removing projects reports from the local and GSA directories
+    # Removing projects reports from the local and SFTP directories
     def removeProjectsData(self, projects, projectObj):
         for name in projects.keys():
             try:
@@ -292,7 +293,7 @@ class Catalog:
                     localPath = self.__localPath
                     shutil.rmtree(localPath+name)
                 else:
-                    projectObj.removeDirFromGSA(self.__archiveSshClient, self.__copyPath+name)
+                    projectObj.removeDirFromSFTP(self.__archiveSshClient, self.__copyPath+name)
             except IOError as e:
                 logger.warning("Can't remove directory " + remoteBuildPath + " : " + str(e))
 

@@ -31,11 +31,15 @@
             <span><input type="text" id="github" rv-value="globalState.githubToken"></span>
           </div>
           <div>
-            <label class="github">GSA Username</label>
+            <label class="github">SFTP Hostname</label>
+            <span><input type="text" id="hostname" rv-value="globalState.configHostname"></span>
+          </div>
+          <div>
+            <label class="github">SFTP Username</label>
             <span><input type="text" id="username" rv-value="globalState.configUsername"></span>
           </div>
           <div>
-            <label class="github">GSA Password</label>
+            <label class="github">SFTP Password</label>
             <span><input type="password" id="password" rv-value="globalState.configPassword"></span>
           </div>
           <div>
@@ -51,7 +55,7 @@
       </div>
       {% include "header/settings-loading.html" %}
       <div class="modal-footer">
-        <span id="gsaConnectionStatus" class="pull-left">
+        <span id="sftpConnectionStatus" class="pull-left">
         </span>
         <button type="button" class="btn btn-primary" data-dismiss="modal">Close</button>
         <button rv-on-click="globalState.reset" type="button"

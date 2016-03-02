@@ -14,8 +14,8 @@ public class SCH_Use_Case_2 {
 
 	HomePage homePage;
 
-	String gsaUserName;
-	String gsaPassword;
+	String sftpUserName;
+	String sftpPassword;
 	String envType;
 
 	@BeforeTest
@@ -25,8 +25,8 @@ public class SCH_Use_Case_2 {
 		driver = CommonFunctions.driver;
 		homePage = CommonFunctions.homePage;
 
-		gsaUserName = ReadTestData.readParameter("searchTabData", "gsaUserName");
-		gsaPassword = ReadTestData.readParameter("searchTabData", "gsaPassword");
+		sftpUserName = ReadTestData.readParameter("searchTabData", "sftpUserName");
+		sftpPassword = ReadTestData.readParameter("searchTabData", "sftpPassword");
 		envType = ReadTestData.readParameter("../config", "envType");
 	}
 
@@ -47,7 +47,7 @@ public class SCH_Use_Case_2 {
 	@Test(priority = 2)
 	public void SCH_Saving_Changes_Settings_005() {
 
-		homePage.verifyGsaConnectedStatus(gsaUserName, gsaPassword);
+		homePage.verifyGsaConnectedStatus(sftpUserName, sftpPassword);
 	}
 
 	@Test(priority = 3)

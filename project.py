@@ -23,7 +23,7 @@ class Project:
         This function will return detail for the given project
         Args:
             projects(str):  Project Names for getting details
-            repo(str):      Repository location gsa/local
+            repo(str):      Repository location sftp/local
 
         Returns:
             Dictionary with project detail.
@@ -76,12 +76,12 @@ class Project:
         This function will return details for the list of projects
         Args:
             projects(list): List of project Names for getting details
-            repo(str):      Repository location gsa/local
+            repo(str):      Repository location sftp/local
 
         Returns:
             Dictionary with project details.
         """
-        if repo not in ('gsa', 'local'):
+        if repo not in ('sftp', 'local'):
             return {
                 status: "failure",
                 error: "Invalid repository location specified"
@@ -100,17 +100,17 @@ class Project:
         return response_data
 
     # Sub-Routine which deletes files and folders recursively from remote directory
-    # @Param - remotepath, which represents the GSA folder
+    # @Param - remotepath, which represents the SFTP folder
     # @Param - ftp_client, which represents paramiko SFTP object
-    def removeDirFromGSA(self, ftpClient, remotepath):
-        logger.debug("In removeDirFromGSA, remotepath=%s" % remotepath)
+    def removeDirFromSFTP(self, ftpClient, remotepath):
+        logger.debug("In removeDirFromSFTP, remotepath=%s" % remotepath)
         ftp_client = ftpClient.open_sftp()
         try:
             for file in ftp_client.listdir(remotepath):
                 try:
                     filepath = os.path.join(remotepath, file)
                     if S_ISDIR(ftp_client.stat(filepath).st_mode):
-                        removeDirFromGSA(ftp_client, filepath)
+                        removeDirFromSFTP(ftp_client, filepath)
                     else:
                         ftp_client.remove(filepath)
                 except IOError as e:
@@ -122,7 +122,7 @@ class Project:
             try:
                 ftp_client.close()
             except Exception as e:
-                logger.warning('project:removeDirFromGSA, Error=%s' % str(e))
+                logger.warning('project:removeDirFromSFTP, Error=%s' % str(e))
 
     def stripDataFromJobName(self, jobFileName):
         jobName = self.projectResultPattern.match(jobFileName).group(2)                     # uuid field

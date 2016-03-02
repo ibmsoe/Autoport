@@ -116,11 +116,12 @@ def init():
                         localPathForBatchFiles=globals.localPathForBatchFiles,
                         pathForBatchFiles=globals.pathForBatchFiles,
                         githubToken=globals.githubToken,
+                        configHostname=globals.configHostname,
                         configUsername=globals.configUsername,
                         configPassword=globals.configPassword,
                         useTextAnalytics=globals.useTextAnalytics,
                         logLevel=globals.logLevel,
-                        gsaConnected=globals.gsaConnected,
+                        sftpConnected=globals.sftpConnected,
                         cloudNodeInfo=cloudNodeInfo)
 
 def getJenkinsNodes_init():
@@ -268,7 +269,7 @@ def getJenkinsNodeDetails():
 def settings():
 
     githubToken = globals.githubToken
-    hostname = globals.hostname
+    configHostname = globals.configHostname
     configUsername = globals.configUsername
     configPassword = globals.configPassword
 
@@ -301,6 +302,11 @@ def settings():
         return json.jsonify(status="failure", error="bad github token"), 400
 
     try:
+        globals.configHostname = request.form["hostname"]
+    except ValueError:
+        return json.jsonify(status="failure", error="bad configuration hostname"), 400
+
+    try:
         globals.configUsername = request.form["username"]
     except ValueError:
         return json.jsonify(status="failure", error="bad configuration username"), 400
@@ -321,17 +327,19 @@ def settings():
         return json.jsonify(status="failure", error="bad value for logLevel"), 400
 
     try:
-        if hostname != globals.hostname or configUsername != globals.configUsername or configPassword != globals.configPassword:
+        if configHostname != globals.configHostname or \
+           configUsername != globals.configUsername or \
+           configPassword != globals.configPassword:
             logger.info("Applying user parameters")
-            autoportUserInit(globals.hostname, globals.configUsername, globals.configPassword)
+            autoportUserInit(globals.configHostname, globals.configUsername, globals.configPassword)
 
     except Exception as e :
         logger.warning("settings: Archive parameters Error=%s" % (str(e)))
         msg = "Invalid Archive Parameters (hostname, username, or password) %s\nError: %s" % (str(e))
         batch.disconnect()
-        return json.jsonify(status="failure", gsaConnected=globals.gsaConnected, error=msg)
+        return json.jsonify(status="failure", sftpConnected=globals.sftpConnected, error=msg)
 
-    return json.jsonify(status="ok", gsaConnected=globals.gsaConnected,
+    return json.jsonify(status="ok", sftpConnected=globals.sftpConnected,
                         nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels,
                         details=globals.nodeDetails, ubuntu=globals.nodeUbuntu,
                         rhel=globals.nodeRHEL, centos=globals.nodeCentOS)
@@ -720,12 +728,12 @@ def uploadBatchFile():
     except Exception as ex:
         logger.debug("uploadBatchFile: 1 Error=%s" % str(ex))
 
-    # Open Batch details file and update the owner to Logged in GSA user or Anonymous.
+    # Open Batch details file and update the owner to Logged in SFTP user or Anonymous.
     batch_data_file, batch_detail_file = None, None
     try:
         batch_data_file = open(openPath, 'r')
         batch_info = json.load(batch_data_file)
-        # Update owner to GSA user id if available else Anonymous
+        # Update owner to SFTP user id if available else Anonymous
         if batch_info.has_key("config"):
             batch_info['config']['owner'] = globals.configUsername or 'Anonymous'
             batch_detail_file = open(openPath, 'w')
@@ -1723,7 +1731,7 @@ def removeBatchFile():
 def listBatchFiles(repositoryType):
     try:
         filt = request.args.get("filter", "")
-        if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
+        if repositoryType != "sftp" and repositoryType != "local" and repositoryType != "all":
             return json.jsonify(status="failure", error="Invalid repository type"), 400
         return json.jsonify(status="ok", results=batch.listBatchFiles(repositoryType, filt.lower()))
     except Exception as e:
@@ -1738,14 +1746,14 @@ def listBatchReports(repositoryType):
     """
     try:
         filt = request.args.get("filter", "")
-        if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
+        if repositoryType != "sftp" and repositoryType != "local" and repositoryType != "all":
             return json.jsonify(status="failure", error="Invalid repository type"), 400
         return json.jsonify(status="ok", results=batch.listBatchReports(repositoryType, filt.lower()))
     except Exception as e:
         logger.debug("listBatchReports: Error=%s" % str(e))
         return json.jsonify(status="failure", error=str(e)), 401
 
-# Archive batch reports data to GSA
+# Archive batch reports data to SFTP
 @app.route("/autoport/archiveBatchReports", methods=['POST'])
 def archiveBatchReports():
     try:
@@ -1776,7 +1784,7 @@ def archiveBatchReports():
     except Exception as e:
         return json.jsonify(status="failure", error=str(e)), 401
 
-# Removes batch reports data from local or GSA
+# Removes batch reports data from local or SFTP
 @app.route("/autoport/removeBatchReports", methods=["POST"])
 def removeBatchReports():
     try:
@@ -2753,13 +2761,13 @@ def parseBatchFile():
 def listTestResults(repositoryType):
     try:
         filt = request.args.get("filter", "")
-        if repositoryType != "gsa" and repositoryType != "local" and repositoryType != "all":
+        if repositoryType != "sftp" and repositoryType != "local" and repositoryType != "all":
             return json.jsonify(status="failure", error="Invalid repository type"), 400
         return json.jsonify(status="ok", results=catalog.listJobResults(repositoryType, filt.lower()))
     except Exception as e:
         return json.jsonify(status="failure", error=str(e)), 401
 
-# Removes projects data from local or GSA
+# Removes projects data from local or SFTP
 @app.route("/autoport/removeProjects", methods=["POST"])
 def removeProjects():
     try:
@@ -2916,7 +2924,7 @@ def getTestHistory():
     projects = request.json['projects']
 
     # projects = { <job 1> : <job 1's repo>, <job 2> : <job 2's repo>, ... }
-    # The key name is always a project.  The value of the key is "gsa" or "local"
+    # The key name is always a project.  The value of the key is "sftp" or "local"
 
     logger.debug("In getTestHistory, projects=%s" % projects)
 
@@ -3147,11 +3155,11 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
 
 def autoportUserInit(hostname, configUsername, configPassword):
     if hostname and configUsername and configPassword:
-        if globals.gsaConnected:
+        if globals.sftpConnected:
             catalog.close()
             batch.disconnect()
         catalog.connect(hostname, archiveUser=configUsername, archivePassword=configPassword)
-        batch.connect(hostname, globals.port, archiveUser=configUsername, archivePassword=configPassword)
+        batch.connect(hostname, globals.configPort, archiveUser=configUsername, archivePassword=configPassword)
 
 @app.errorhandler(500)
 def internalError(error):
@@ -3195,7 +3203,7 @@ def startAutoport(p = None):
             globals.allocBuildServers = args.allocBuildServers
 
     autoportJenkinsInit(globals.jenkinsUrl, globals.configJenkinsUsername, globals.configJenkinsKey)
-    autoportUserInit(globals.hostname, globals.configUsername, globals.configPassword)
+    autoportUserInit(globals.configHostname, globals.configUsername, globals.configPassword)
 
     return args
 

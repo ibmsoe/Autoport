@@ -101,16 +101,16 @@ public class HomePage {
 	WebElement githubTokenTxtBx;
 
 	@FindBy(xpath = "//div[@id='settingsModal']//div[@id='settingsModal']/div/div[7]/label")
-	WebElement gsaUsrNameLabel;
+	WebElement sftpUsrNameLabel;
 
 	@FindBy(id = "username")
-	WebElement gsaUsrNameTxtBx;
+	WebElement sftpUsrNameTxtBx;
 
 	@FindBy(xpath = "//div[@id='settingsModal']//div[@id='settingsModal']/div/div[8]/label")
-	WebElement gsaPwdLabel;
+	WebElement sftpPwdLabel;
 
 	@FindBy(id = "password")
-	WebElement gsaPwdTxtBx;
+	WebElement sftpPwdTxtBx;
 
 	@FindBy(xpath = "//div[@id='settingsModal']//div[@id='settingsModal']/div/div[9]/label")
 	WebElement logLevelLabel;
@@ -124,8 +124,8 @@ public class HomePage {
 	@FindBy(id = "usetextanalytics")
 	WebElement txtAnalyticsChkBx;
 
-	@FindBy(id = "gsaConnectionStatus")
-	WebElement gsaConnectionStatus;
+	@FindBy(id = "sftpConnectionStatus")
+	WebElement sftpConnectionStatus;
 
 	@FindBy(xpath = "//div[@id='settingsModal']//div[@class='modal-footer']/button[1]")
 	WebElement closeBtn;
@@ -452,33 +452,33 @@ public class HomePage {
 			LogResult.fail("Github Token label is not present.");
 		}
 
-		if (gsaUsrNameLabel.isDisplayed()) {
-			LogResult.pass("GSA Username label is present");
-			if (gsaUsrNameTxtBx.isDisplayed()) {
+		if (sftpUsrNameLabel.isDisplayed()) {
+			LogResult.pass("SFTP Username label is present");
+			if (sftpUsrNameTxtBx.isDisplayed()) {
 
-				Object gsaUsrName = js.executeScript("return globalState.configUsername");
+				Object sftpUsrName = js.executeScript("return globalState.configUsername");
 
-				LogResult.pass("GSA Username text box is displayed with value: " + gsaUsrName.toString());
+				LogResult.pass("SFTP Username text box is displayed with value: " + sftpUsrName.toString());
 			} else {
-				LogResult.fail("GSA Username text box is not displayed.");
+				LogResult.fail("SFTP Username text box is not displayed.");
 			}
 		} else {
-			LogResult.fail("GSA Username label is not present.");
+			LogResult.fail("SFTP Username label is not present.");
 		}
 
-		if (gsaPwdLabel.isDisplayed()) {
-			LogResult.pass("GSA Password label is present");
-			if (gsaPwdTxtBx.isDisplayed()) {
+		if (sftpPwdLabel.isDisplayed()) {
+			LogResult.pass("SFTP Password label is present");
+			if (sftpPwdTxtBx.isDisplayed()) {
 
-				Object gsaPwd = js.executeScript("return globalState.configPassword");
+				Object sftpPwd = js.executeScript("return globalState.configPassword");
 
-				LogResult.pass("GSA Password text box is displayed with value: " + gsaPwd.toString());
+				LogResult.pass("SFTP Password text box is displayed with value: " + sftpPwd.toString());
 
 			} else {
-				LogResult.fail("GSA Password text box is not displayed.");
+				LogResult.fail("SFTP Password text box is not displayed.");
 			}
 		} else {
-			LogResult.fail("GSA Password label is not present.");
+			LogResult.fail("SFTP Password label is not present.");
 		}
 
 		if (logLevelLabel.isDisplayed()) {
@@ -519,10 +519,10 @@ public class HomePage {
 			LogResult.fail("Close button is not displayed. ");
 		}
 
-		if (gsaConnectionStatus.isDisplayed()) {
-			LogResult.pass("GSA connection status is displayed with status: " + gsaConnectionStatus.getText());
+		if (sftpConnectionStatus.isDisplayed()) {
+			LogResult.pass("SFTP connection status is displayed with status: " + sftpConnectionStatus.getText());
 		} else {
-			LogResult.fail("GSA connection status is not displayed. ");
+			LogResult.fail("SFTP connection status is not displayed. ");
 		}
 
 		if (resetToDefaultBtn.isDisplayed()) {
@@ -557,7 +557,7 @@ public class HomePage {
 	}
 
 	// To verify the close of Update popup displayed when Save Changes button is
-	// clicked after entering GSA credentials
+	// clicked after entering SFTP credentials
 	public void clickOnSettingsSaveBtn() {
 
 		saveChangesBtn.click();
@@ -585,24 +585,24 @@ public class HomePage {
 
 	}
 
-	// To verify if GSA connected status is displayed in Settings overlay popup
-	// after entering valid GSA credentials
-	public void verifyGsaConnectedStatus(String gsaUserName, String gsaPassword) {
+	// To verify if SFTP connected status is displayed in Settings overlay popup
+	// after entering valid SFTP credentials
+	public void verifyGsaConnectedStatus(String sftpUserName, String sftpPassword) {
 
-		gsaUsrNameTxtBx.clear();
-		gsaUsrNameTxtBx.sendKeys(gsaUserName);
-		gsaPwdTxtBx.clear();
-		gsaPwdTxtBx.sendKeys(gsaPassword);
+		sftpUsrNameTxtBx.clear();
+		sftpUsrNameTxtBx.sendKeys(sftpUserName);
+		sftpPwdTxtBx.clear();
+		sftpPwdTxtBx.sendKeys(sftpPassword);
 
 		clickOnSettingsSaveBtn();
 
-		// wait.until(ExpectedConditions.visibilityOf(gsaConnectionStatus));
+		// wait.until(ExpectedConditions.visibilityOf(sftpConnectionStatus));
 
-		if (gsaConnectionStatus.getText().contentEquals("GSA connected")) {
-			LogResult.pass("Changes saved successfully. GSA Connected");
+		if (sftpConnectionStatus.getText().contentEquals("SFTP connected")) {
+			LogResult.pass("Changes saved successfully. SFTP Connected");
 
 		} else {
-			LogResult.fail("Changes not saved successfully. GSA not Connected");
+			LogResult.fail("Changes not saved successfully. SFTP not Connected");
 		}
 
 	}

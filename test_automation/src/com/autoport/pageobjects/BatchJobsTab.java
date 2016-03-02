@@ -702,7 +702,7 @@ public class BatchJobsTab {
 			
 		}else{
 			
-			if (firstRowLocalBatchFileLocation.getText().equalsIgnoreCase("gsa") || listArchiveBtn.isEnabled()) {
+			if (firstRowLocalBatchFileLocation.getText().equalsIgnoreCase("sftp") || listArchiveBtn.isEnabled()) {
 				LogResult.pass("Archive button is disabled.");
 			} else {
 				LogResult.fail("Archive button is enabled.");
@@ -942,24 +942,24 @@ public class BatchJobsTab {
 		}
 	}
 
-	// To verify if Location column has value as 'gsa' for all rows
+	// To verify if Location column has value as 'sftp' for all rows
 	public void verifyArchivedBatchFileLocation() {
 
 		int j = 0;
 		for (int i = 0; i < listLocationColumnValues.size(); i++) {
 
-			if (listLocationColumnValues.get(i).getText().contentEquals("gsa")) {
+			if (listLocationColumnValues.get(i).getText().contentEquals("sftp")) {
 				j++;
 				continue;
 			} else {
-				LogResult.fail("Some values in Location column don't have value as gsa.");
+				LogResult.fail("Some values in Location column don't have value as sftp.");
 				break;
 			}
 
 		}
 
 		if (j == listLocationColumnValues.size()) {
-			LogResult.pass("All values in Location column has value as gsa.");
+			LogResult.pass("All values in Location column has value as sftp.");
 		}
 	}
 
@@ -1275,7 +1275,7 @@ public class BatchJobsTab {
 		}
 
 		if (firstRowLocalBatchFileLocation.getText().contentEquals("local")
-				|| firstRowLocalBatchFileLocation.getText().contentEquals("gsa")) {
+				|| firstRowLocalBatchFileLocation.getText().contentEquals("sftp")) {
 			LogResult.pass("Navigated back to batch listing.");
 		} else {
 			LogResult.fail("Navigated back to batch listing failed.");

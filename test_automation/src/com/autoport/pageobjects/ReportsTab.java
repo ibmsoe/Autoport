@@ -381,7 +381,7 @@ public class ReportsTab {
 		int noOfrepositoryTypes = 0;
 		for (WebElement repositoryType : repositoryTypes){			
 			noOfrepositoryTypes++;
-			if (!(repositoryType.getText().equals("gsa"))){
+			if (!(repositoryType.getText().equals("sftp"))){
 				LogResult.fail("Only Archived project results are not displayed");
 				break;
 			}
@@ -404,7 +404,7 @@ public class ReportsTab {
 			noOfrepositoryTypes++;
 			
 			String strRepositoryType = repositoryType.getText();
-			if (!(strRepositoryType.equals("local") || strRepositoryType.equals("gsa"))){
+			if (!(strRepositoryType.equals("local") || strRepositoryType.equals("sftp"))){
 				LogResult.fail(strRepositoryType + " results are also displayed");
 				break;
 			}
@@ -899,7 +899,7 @@ public class ReportsTab {
 		int noOfrepositoryTypes = 0;
 		for (WebElement repositoryType : repositoryTypes){			
 			noOfrepositoryTypes++;
-			if (!(repositoryType.getText().equals("gsa"))){
+			if (!(repositoryType.getText().equals("sftp"))){
 				LogResult.fail("Only Archived batch Job results are not displayed");
 				break;
 			}
@@ -922,7 +922,7 @@ public class ReportsTab {
 			noOfrepositoryTypes++;
 			
 			String strRepositoryType = repositoryType.getText();
-			if (!(strRepositoryType.equals("local") || strRepositoryType.equals("gsa"))){
+			if (!(strRepositoryType.equals("local") || strRepositoryType.equals("sftp"))){
 				LogResult.fail(strRepositoryType + " results are also displayed");
 				break;
 			}

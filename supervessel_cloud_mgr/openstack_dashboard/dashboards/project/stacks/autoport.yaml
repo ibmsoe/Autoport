@@ -131,8 +131,8 @@ resources:
            # Set autoport config.ini
            # Replace jenkinsUrl
            sed -i "/jenkinsUrl/c\jenkinsUrl: http://$JENKINS_MASTER_EXTERNAL_IP:8080" /home/opuser/autoport/config.ini
-           # Remove GSA-related parameters
-           sed -i '/GSA/d' /home/opuser/autoport/config.ini
+           # Remove SFTP-related parameters
+           sed -i '/SFTP/d' /home/opuser/autoport/config.ini
            sed -i '/hostname: ausgsa.ibm.com/d' /home/opuser/autoport/config.ini
            sed -i '/username: <username>/d' /home/opuser/autoport/config.ini
            sed -i '/password: <password>/d' /home/opuser/autoport/config.ini

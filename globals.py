@@ -39,8 +39,8 @@ def init():
     global jenkinsUrl
     global jenkinsHostname
     global githubToken
-    global hostname
-    global port
+    global configHostname
+    global configPort
     global configUsername
     global configPassword
     global configJenkinsUsername
@@ -58,7 +58,7 @@ def init():
 
     # user configuration globals that are supported by the user interface
     githubToken = configOptions['githubtoken']
-    hostname = configOptions['hostname']
+    configHostname = configOptions['hostname']
     configUsername = configOptions['username']
     configPassword = configOptions['password']
     configJenkinsUsername = configOptions['jenkinsusername']
@@ -76,9 +76,9 @@ def init():
     # user configuration globals that are not supported by the user interface
     expiryForTmp = configOptions['expiryfortmp']
     if not configOptions.has_key('port'):
-        port = 22
+        configPort = 22
     else:
-        port = int(configOptions['port'])
+        configPort = int(configOptions['port'])
 
     jenkinsUrl = configOptions['jenkinsurl']
     jenkinsHostname = configOptions['jenkinshostname']
@@ -110,7 +110,7 @@ def init():
     global allocBuildServers
     global jenkinsRepoUrl
     global localTarRepoLocation
-    global gsaConnected
+    global sftpConnected
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
@@ -154,7 +154,7 @@ def init():
 
     jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
     localTarRepoLocation = '/var/opt/autoport/'
-    gsaConnected = False
+    sftpConnected = False
 
     # used for rebuilding jenkins slaves in a cloud environment
     global os_username
