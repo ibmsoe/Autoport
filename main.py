@@ -344,6 +344,20 @@ def settings():
                         details=globals.nodeDetails, ubuntu=globals.nodeUbuntu,
                         rhel=globals.nodeRHEL, centos=globals.nodeCentOS)
 
+@app.route("/autoport/refresh", methods=['POST'])
+def refresh():
+    try:
+        logger.info("refresh: Refreshing jenkins node details")
+        globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
+        getJenkinsNodeDetails_init()
+        return json.jsonify(status="ok",nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels,
+                        details=globals.nodeDetails, ubuntu=globals.nodeUbuntu,
+                        rhel=globals.nodeRHEL, centos=globals.nodeCentOS)
+    except Exception as e :
+        logger.warning("refresh: Jenkins=%s Error=%s" % (urlparse(globals.jenkinsUrl).hostname, str(e)))
+        msg = "Unable to refresh jenkins node details. \nError: %s" % (str(e))
+        return json.jsonify(status="failure", error=msg)
+
 @app.route("/autoport/progress")
 def progress():
     try:
@@ -3133,12 +3147,7 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
         # Get new jenkins node information
         globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
         getJenkinsNodeDetails_init()
-        jenkinsUrlSubStringLength =  globals.jenkinsUrl.rfind(':')
-        if jenkinsUrlSubStringLength > 4:
-            jenkinsUrlNoPort = globals.jenkinsUrl[:globals.jenkinsUrl.rfind(':')]
-        else:
-            jenkinsUrlNoPort = globals.jenkinsUrl
-        globals.jenkinsRepoUrl = '%s:%s/autoport_repo/archives' % (jenkinsUrlNoPort, '90')
+        globals.jenkinsRepoUrl = 'http://%s:%s/autoport_repo/archives' % (globals.jenkinsHostname, '90')
         sharedData.connect(globals.jenkinsHostname)
         sharedData.uploadChefData()
         chefData.setRepoHost(globals.jenkinsHostname)
