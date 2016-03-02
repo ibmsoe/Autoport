@@ -7,9 +7,17 @@
 
     <div class="jlink" id="jenkinsLink">
       <ul class="text linkText" >
-        Jenkins Page: <a rv-href="globalState.jenkinsUrl">{ globalState.jenkinsUrl }</a> 
+        Jenkins Page: <a rv-href="globalState.jenkinsUrl">{ globalState.jenkinsUrl }</a>
       </ul>
     </div>
+
+    <a rv-on-click="jenkinsState.refresh">
+    <button id="refreshBtn" class="btn btn-primary modalButton"
+      style="float: right; margin-right: 10px; margin-left: 10px; border-radius: 5px">
+      <span id="refreshSpan" class="glyphicon glyphicon-refresh"></span>
+      Refresh
+    </button>
+    </a>
 
     <button rv-on-click="percentageState.updateProgressBar" type="button" class="btn btn-primary progressButton">Check Progress</button>
     <ul class="text progressText" >

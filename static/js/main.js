@@ -1741,6 +1741,12 @@ var jenkinsState = {
         return {
             disabled: retVal
         };
+    },
+    refresh: function(ev) {
+        $("#refreshSpan").addClass("glyphicon-refresh-animate");
+        $("#refreshBtn").addClass("disabled");
+        $.post("refresh", {},
+               refreshCallback, "json").fail(refreshCallback);
     }
 };
 
@@ -3019,6 +3025,24 @@ function settingsCallback(data) {
            $('#gsaConnectionStatus').css("color","red");
        }
     }
+}
+
+function refreshCallback(data) {
+    console.log("In refreshCallback data=", data);
+    if (data.status != "ok") {
+        showAlert("Bad response from /refresh!", data);
+    } else {
+        jenkinsState.nodeNames = [];
+        jenkinsState.nodeLabels = [];
+        jenkinsState.nodeDetails = [];
+        jenkinsState.nodeRHEL = [];
+        jenkinsState.nodeCentOS = [];
+        jenkinsState.nodeUbuntu = [];
+        getJenkinsNodesCallback(data);
+        showAlert("Refreshed Successfully");
+    }
+    $("#refreshSpan").removeClass("glyphicon-refresh-animate")
+    $("#refreshBtn").removeClass("disabled");
 }
 
 function uploadBatchFileCallback(data) {
@@ -4433,4 +4457,3 @@ $.fn.extend({
         });
     }
 });
-
