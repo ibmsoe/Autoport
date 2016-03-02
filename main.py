@@ -159,40 +159,36 @@ def getJenkinsNodes():
 # Get O/S details for build servers including distribution, release, version, hostname, ...
 # Don't fail as a lot of func is still possible.  Nodes may go offline at any time.
 
-def getJenkinsNodeDetails_init():
+def getJenkinsNodeDetails_init(nodeNames, nodeLabels):
 
-    if not globals.nodeLabels:
-        return
-
-    # Empty the global lists
-    del globals.nodeDetails[:]
-    del globals.nodeUbuntu[:]
-    del globals.nodeRHEL[:]
-    del globals.nodeCentOS[:]
-    del globals.nodeOSes[:]
-    del globals.nodeHosts[:]
-    del globals.nodeIPs[:]
+    nodeDetails = []
+    nodeUbuntu = []
+    nodeRHEL = []
+    nodeCentOS = []
+    nodeOSes = []
+    nodeHosts = []
+    nodeIPs = []
 
     action = "query-os"
-    for node in globals.nodeLabels:
+    for node in nodeLabels:
         results = queryNode(node, action)
         try:
             detail = results['detail']
             if detail:
-                globals.nodeDetails.append(detail)
+                nodeDetails.append(detail)
             nodeLabel = detail['nodelabel']
             if detail['distro'] == "UBUNTU":
-                globals.nodeUbuntu.append(nodeLabel)
+                nodeUbuntu.append(nodeLabel)
                 osName = "Ubuntu"
             elif detail['distro'] == "RHEL":
-                globals.nodeRHEL.append(nodeLabel)
+                nodeRHEL.append(nodeLabel)
                 osName = "RHEL"
             elif detail['distro'] == "CentOS":
-                globals.nodeCentOS.append(nodeLabel)
+                nodeCentOS.append(nodeLabel)
                 osName = "CentOS"
-            globals.nodeOSes.append(osName + ' ' + detail['version'] + ' ' + detail['arch'].upper())
-            globals.nodeHosts.append(detail['hostname'])
-            globals.nodeIPs.append(detail['ipaddress'])
+            nodeOSes.append(osName + ' ' + detail['version'] + ' ' + detail['arch'].upper())
+            nodeHosts.append(detail['hostname'])
+            nodeIPs.append(detail['ipaddress'])
         except KeyError as e:
             if e.args[0] == 'distro':
                 logger.warning("No O/S information for node " + node)
@@ -203,6 +199,25 @@ def getJenkinsNodeDetails_init():
             else:
                 logger.warning("Unsupported O/S for node " + node)
             pass
+
+    del globals.nodeDetails[:]
+    globals.nodeDetails = nodeDetails
+    del globals.nodeUbuntu[:]
+    globals.nodeUbuntu = nodeUbuntu
+    del globals.nodeRHEL[:]
+    globals.nodeRHEL = nodeRHEL
+    del globals.nodeCentOS[:]
+    globals.nodeCentOS = nodeCentOS
+    del globals.nodeOSes[:]
+    globals.nodeOSes = nodeOSes
+    del globals.nodeHosts[:]
+    globals.nodeHosts = nodeHosts
+    del globals.nodeIPs[:]
+    globals.nodeIPs = nodeIPs
+    del globals.nodeNames[:]
+    globals.nodeNames = nodeNames
+    del globals.nodeLabels[:]
+    globals.nodeLabels = nodeLabels
 
     logger.info("All nodes: " + str(globals.nodeLabels))
     logger.info("All OSes: " + str(globals.nodeOSes))
@@ -348,8 +363,8 @@ def settings():
 def refresh():
     try:
         logger.info("refresh: Refreshing jenkins node details")
-        globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
-        getJenkinsNodeDetails_init()
+        nodeNames, nodeLabels = getJenkinsNodes_init()
+        getJenkinsNodeDetails_init(nodeNames, nodeLabels)
         return json.jsonify(status="ok",nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels,
                         details=globals.nodeDetails, ubuntu=globals.nodeUbuntu,
                         rhel=globals.nodeRHEL, centos=globals.nodeCentOS)
@@ -3145,8 +3160,8 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
         mover.start(globals.jenkinsHostname, jenkinsUsername, jenkinsKey)
 
         # Get new jenkins node information
-        globals.nodeNames, globals.nodeLabels = getJenkinsNodes_init()
-        getJenkinsNodeDetails_init()
+        nodeNames, nodeLabels = getJenkinsNodes_init()
+        getJenkinsNodeDetails_init(nodeNames,nodeLabels)
         globals.jenkinsRepoUrl = 'http://%s:%s/autoport_repo/archives' % (globals.jenkinsHostname, '90')
         sharedData.connect(globals.jenkinsHostname)
         sharedData.uploadChefData()
