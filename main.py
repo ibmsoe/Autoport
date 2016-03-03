@@ -103,6 +103,8 @@ totalProjectsBuilt = 0                        # Total including individual and b
 
 cloudNodeInfo = []
 
+activeRefresh = False
+
 # Main page - just serve up main.html
 @app.route("/autoport/")
 def main():
@@ -361,16 +363,30 @@ def settings():
 
 @app.route("/autoport/refresh", methods=['POST'])
 def refresh():
+
+    global activeRefresh
+
+    if activeRefresh:
+        return json.jsonify(status="failure", error="Discovery of Jenkins configuration is presently in progress.  Please re-load Autoport in your browser in a few minutes.  There is no need to press Refresh again!")
+
+    activeRefresh = True
+
     try:
-        logger.info("refresh: Refreshing jenkins node details")
+        logger.info("Refreshing jenkins node details")
         nodeNames, nodeLabels = getJenkinsNodes_init()
         getJenkinsNodeDetails_init(nodeNames, nodeLabels)
+
+        activeRefresh = False
+
         return json.jsonify(status="ok",nodeNames=globals.nodeNames, nodeLabels=globals.nodeLabels,
                         details=globals.nodeDetails, ubuntu=globals.nodeUbuntu,
                         rhel=globals.nodeRHEL, centos=globals.nodeCentOS)
     except Exception as e :
         logger.warning("refresh: Jenkins=%s Error=%s" % (urlparse(globals.jenkinsUrl).hostname, str(e)))
         msg = "Unable to refresh jenkins node details. \nError: %s" % (str(e))
+
+        activeRefresh = False
+
         return json.jsonify(status="failure", error=msg)
 
 @app.route("/autoport/progress")
@@ -1395,7 +1411,7 @@ def moveArtifacts(jobName, localDir, moverCv=None):
             else:
                 logger.debug("moveArtifacts: sleep 10 waiting for artifacts")
                 sleep(10)
-    except IOError as e:
+    except Exception as e:
         logger.warning("moveArtifacts: FTP failure for Job %s %s" % (jobName, str(e)))
 
     if moverCv:
