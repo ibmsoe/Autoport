@@ -58,7 +58,7 @@ parameters:
   image_driver:
     type: string
     description: Image used for driver node
-    default: b8a7c8c0-bfb7-476c-a678-9334efee6b0e
+    default: d306183c-8bfe-451a-ac85-a317cbe1f3bb
   image_master:
     type: string
     description: Image used for master node
@@ -130,7 +130,8 @@ resources:
 
            # Set autoport config.ini
            # Replace jenkinsUrl
-           sed -i "/jenkinsUrl/c\jenkinsUrl: http://$JENKINS_MASTER_EXTERNAL_IP:8080" /home/opuser/autoport/config.ini
+           sed -i "/jenkinsUrl/c\jenkinsUrl: https://bigdata.ptopenlab.com:8800/$JENKINS_MASTER_EXTERNAL_IP:8080" /home/opuser/autoport/config.ini
+           sed -i "/jenkinsHostname/c\jenkinsHostname: 192.168.1.110" /home/opuser/autoport/config.ini
            # Remove SFTP-related parameters
            sed -i '/SFTP/d' /home/opuser/autoport/config.ini
            sed -i '/hostname: ausgsa.ibm.com/d' /home/opuser/autoport/config.ini
@@ -167,6 +168,34 @@ resources:
            then
              rm -rf /home/opuser/autoport/data/cloudNodeInfo.json
            fi
+
+           # Check Jenkins Master port 22
+           for i in 1 2 3 4 5
+           do
+             status=$(ssh -o BatchMode=yes -o ConnectTimeout=5 jenkins@192.168.1.110 echo ok 2>&1)
+             if [[ $status == ok ]]
+             then
+               echo "Jenkins SSH service is up. `date`" >> /root/output.txt
+               break
+             else
+               sleep 5
+               echo "Retry.. " $i `date` >> /root/output.txt
+             fi
+           done
+
+           # Check the Jenkins Master service
+           for i in 1 2 3 4 5
+           do
+             resp=`curl -s -I http://$JENKINS_MASTER_EXTERNAL_IP:8080/computer/api/json?pretty=true | grep HTTP/1.1 | awk {'print $2'}`
+             if [ "$resp" = 200 ]
+             then
+               echo "Jenkins API is up and running. `date`" >> /root/output.txt
+               break
+             else
+               sleep 5
+               echo "Retry .. " $i `date` >> /root/output.txt
+             fi
+           done
 
            # Start up Autoport service
            su - opuser <<EOF

@@ -4,8 +4,7 @@ import random, string
 import globals
 from novaclient import client as nvclient
 import json
-from urlparse import urlparse
-
+import re
 
 nodes_info_file = './data/config/cloudNodeInfo.json'
 
@@ -59,8 +58,9 @@ def getstackIdbyIp(nova,ip):
     return ""
 
 def getfloatingIp():
-    ip = urlparse(globals.jenkinsUrl).hostname
-    return ip
+    p = r'\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b'
+    m = re.search(p, globals.jenkinsUrl)
+    return m.group()
 
 def getinstancesbyStackId(nova,stack_id):
     instances_ret=[]

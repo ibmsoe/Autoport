@@ -36,8 +36,8 @@
                     var stack_ip = "";
                     for (i in data.outputs) {
                        if (data.outputs[i].output_key === "driver_server_floating_ip"){
-                            stack_ip += "<a href=\"http://" + data.outputs[i].output_value +":5000/autoport/\"> Access AutoPort Service</a>"+"</b><br>"
-                            stack_ip += "<a href=\"http://" + data.outputs[i].output_value +":5601/\"> Access Monitor Service</a>"+"</b><br>"
+                            stack_ip += "<a href=\"https://bigdata.ptopenlab.com:8800/" + data.outputs[i].output_value +":5000/autoport/\"> Access AutoPort Service</a>"+"</b><br>"
+                            stack_ip += "<a href=\"https://bigdata.ptopenlab.com:8800/" + data.outputs[i].output_value +":5601/\"> Access Monitor Service</a>"+"</b><br>"
                        }
                     }
                     console.log(stack_ip);
