@@ -132,23 +132,24 @@ def getJenkinsNodes_init():
 
     logger.debug("In getJenkinsNodes_init, jenkinsUrl=%s" % globals.jenkinsUrl)
 
-    nodesUrl = globals.jenkinsUrl + "/computer/api/json?pretty=true"
-    try:
-        nodesResults = json.loads(requests.get(nodesUrl).text)
-        nodes = nodesResults['computer']
-    except Exception as e:
-        logger.debug("getJenkinsNodes_init: nodes Error=%s" % str(e))
-        return json.jsonify(status="failure", error="Jenkins nodes url or authentication error"), 400
+    if globals.jenkinsUrl:
+        nodesUrl = globals.jenkinsUrl + "/computer/api/json?pretty=true"
+        try:
+            nodesResults = json.loads(requests.get(nodesUrl).text)
+            nodes = nodesResults['computer']
+        except Exception as e:
+            logger.debug("getJenkinsNodes_init: nodes Error=%s" % str(e))
+            return json.jsonify(status="failure", error="Jenkins nodes url or authentication error"), 400
 
-    for node in nodes:
-        if not node['offline']:
-            name = node['displayName']
-            if name != "master":
-                nodeNames.append(name)
-                logger.debug("getJenkinsNodes_init: query nodeName=%s" % str(name))
-                root = ET.fromstring(requests.get(globals.jenkinsUrl +
-                    "/computer/" + name + "/config.xml").text)
-                nodeLabels.append(root.find("./label").text)
+        for node in nodes:
+            if not node['offline']:
+                name = node['displayName']
+                if name != "master":
+                    nodeNames.append(name)
+                    logger.debug("getJenkinsNodes_init: query nodeName=%s" % str(name))
+                    root = ET.fromstring(requests.get(globals.jenkinsUrl +
+                        "/computer/" + name + "/config.xml").text)
+                    nodeLabels.append(root.find("./label").text)
 
     return nodeNames, nodeLabels
 

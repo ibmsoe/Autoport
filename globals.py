@@ -82,7 +82,7 @@ def init():
 
     jenkinsUrl = configOptions['jenkinsurl']
     jenkinsHostname = configOptions['jenkinshostname']
-    if not jenkinsHostname or "<" in jenkinsHostname:
+    if jenkinsHostname == None or not jenkinsHostname or "<" in jenkinsHostname:
        jenkinsHostname = urlparse(jenkinsUrl).hostname
 
     # globals not based on config file
