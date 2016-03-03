@@ -58,7 +58,7 @@ parameters:
   image_driver:
     type: string
     description: Image used for driver node
-    default: d306183c-8bfe-451a-ac85-a317cbe1f3bb
+    default: c1057475-d38c-4bee-aa75-87a4b770cf1f
   image_master:
     type: string
     description: Image used for master node
@@ -172,7 +172,7 @@ resources:
            # Check Jenkins Master port 22
            for i in 1 2 3 4 5
            do
-             status=$(ssh -o BatchMode=yes -o ConnectTimeout=5 jenkins@192.168.1.110 echo ok 2>&1)
+             status=$(ssh -o BatchMode=yes -o ConnectTimeout=5 -i /home/opuser/autoport/data/security/jenkins jenkins@192.168.1.110 echo ok 2>&1)
              if [[ $status == ok ]]
              then
                echo "Jenkins SSH service is up. `date`" >> /root/output.txt
