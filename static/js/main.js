@@ -1471,9 +1471,11 @@ var jenkinsState = {
                                     showAlert("Error!", data);
                                 }
                             },
-                     error: function() {
+                     error: function(data) {
                               jenkinsState.reBuildSlave = false;
                               jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
+                              $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
+                              showAlert("Error!", data);
                             }
                      });
             };
@@ -1497,7 +1499,7 @@ var jenkinsState = {
                              return false;
                         }
                         if (data.rebuildStatus == 'ACTIVE'){
-                             setTimeout(syncPackages(), 20000);
+                             setTimeout(syncPackages(), 30000);
                         }
                         if (data.rebuildStatus != 'ACTIVE'){
                             console.log("Slave has not come online. Keep polling for ACTIVE Status");
@@ -1518,7 +1520,7 @@ var jenkinsState = {
                                             if (data.rebuildStatus == 'ACTIVE') {
                                                 jenkinsState.nodeDetails[nodeindex]['status'] = "<span class='text-success'>Connected</span>";
                                                 $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
-                                                setTimeout(syncPackages(), 20000);
+                                                setTimeout(syncPackages(), 30000);
                                                 return true;
                                             }
                                             else {
@@ -3517,8 +3519,9 @@ function notificationCallback(obj, cb){
                 type = "danger";
                 classcss = "text-danger";
                 message= "<br/><span class='"+classcss+"'>Sync completed with few errors on  " +
-                data.nodeLabel+" .Please check the <a href='" +
-                data.logUrl+"' target='_blank'  style='text-decoration: underline' >log</a> for details"+"</span>";
+                data.nodeLabel + " .Please check the <a href='" +
+                data.logUrl + "' target='_blank'  style='text-decoration: underline' >log</a> for details."
+                            + " Please retry the operation after few minutes if needed.</span>";
             }
             if (cb!= undefined)
                 cb();
@@ -3538,7 +3541,7 @@ function notificationCallback(obj, cb){
         else{
             jenkinsState.loadingState.managedPackageActionLoading = true;
             $("#syncManagedPackageButton").addClass("disabled");
-            setTimeout(obj.poll(),obj.timeInterval);
+            setTimeout(obj.poll(cb),obj.timeInterval);
         }
 
     };
