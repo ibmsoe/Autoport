@@ -12,290 +12,292 @@ import com.autoport.utilities.ReadTestData;
 
 public class BJ_Use_Case_004 {
 
-	WebDriver driver;
+    WebDriver driver;
 
-	HomePage homePage;
-	SearchTab searchTab;
-	BatchJobsTab batchJobsTab;
+    HomePage homePage;
+    SearchTab searchTab;
+    BatchJobsTab batchJobsTab;
 
-	String topRepositoryName;
-	String topRepositoryValue;
+    String topRepositoryName;
+    String topRepositoryValue;
 
-	@BeforeTest
-	public void beforeTest() throws Exception {
+    @BeforeTest
+    public void beforeTest() throws Exception {
 
-		 //CommonFunctions.launchBrowser();
-		driver = CommonFunctions.driver;
+         //CommonFunctions.launchBrowser();
+        driver = CommonFunctions.driver;
 
-		homePage = CommonFunctions.homePage;
-		searchTab = CommonFunctions.searchTab;
-		batchJobsTab = CommonFunctions.batchJobsTab;
+        homePage = CommonFunctions.homePage;
+        searchTab = CommonFunctions.searchTab;
+        batchJobsTab = CommonFunctions.batchJobsTab;
 
-		topRepositoryName = ReadTestData.readParameter("batchJobsTabData", "topRepositoryName");
-		topRepositoryValue = ReadTestData.readParameter("searchTabData", "topRepositoryValue");
+        topRepositoryName = ReadTestData.readParameter("batchJobsTabData", "topRepositoryName");
+        topRepositoryValue = ReadTestData.readParameter("searchTabData", "topRepositoryValue");
 
-		homePage.clickBatchJobsTab();
+        homePage.clickBatchJobsTab();
 
-	}
+    }
 
-	@Test(priority = 0)
-	public void BJ_Batch_file_detail_UI_009() throws InterruptedException {
+    @Test(priority = 0)
+    public void BJ_Batch_file_detail_UI_009() throws InterruptedException {
 
-		batchJobsTab.clickListSelectBtn();
+        batchJobsTab.clickListSelectBtn();
 
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.clickOnListLocalBtn();
 
-		// batchJobsTab.clickOnDateModifiedHeader();
+        // batchJobsTab.clickOnDateModifiedHeader();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.clickOnDetailsBtn();
+        batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.verifyBatchFileDetailsUI(topRepositoryName + "-" + topRepositoryValue);
+        batchJobsTab.verifyBatchFileDetailsUI(topRepositoryName + "-" + topRepositoryValue);
 
-		batchJobsTab.verifyBatchConfigTableHeaders();
+        batchJobsTab.verifyBatchConfigTableHeaders();
 
-		batchJobsTab.verifyBatchConfigActionsColumn();
+        batchJobsTab.verifyBatchConfigActionsColumn();
 
-		batchJobsTab.verifyBatchRepoHeaders();
+        batchJobsTab.verifyBatchRepoHeaders();
 
-		batchJobsTab.verifyBatchRepoActionsColumn();
+        batchJobsTab.verifyBatchRepoActionsColumn();
 
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.clickOnArchiveBtn();
+        batchJobsTab.clickOnArchiveBtn();
 
-		batchJobsTab.clickOnAlertCloseBtn();
-		
-		batchJobsTab.clearBatchFileSearchTbx();
+        batchJobsTab.clickOnAlertCloseBtn();
 
-		batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);
-		
-		batchJobsTab.clickOnListArchivedBtn();
+        batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);
 
-		batchJobsTab.clickOnDetailsBtn();
+        batchJobsTab.clickOnListArchivedBtn();
 
-		batchJobsTab.verifyBatchFileDetailsUI(topRepositoryName + "-" + topRepositoryValue);
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.verifyBatchConfigTableHeaders();
+        batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.verifyBatchConfigActionsColumn();
+        batchJobsTab.verifyBatchFileDetailsUI(topRepositoryName + "-" + topRepositoryValue);
 
-		batchJobsTab.verifyBatchRepoHeaders();
+        batchJobsTab.verifyBatchConfigTableHeaders();
 
-		batchJobsTab.verifyBatchRepoActionsColumn();
-		
-		batchJobsTab.clearBatchFileSearchTbx();
+        batchJobsTab.verifyBatchConfigActionsColumn();
 
-		batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);
+        batchJobsTab.verifyBatchRepoHeaders();
 
-		batchJobsTab.clickOnListAllBtn();
+        batchJobsTab.verifyBatchRepoActionsColumn();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.clickOnDetailsBtn();
+        batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);
 
-		batchJobsTab.verifyBatchFileDetailsUI(topRepositoryName + "-" + topRepositoryValue);
+        batchJobsTab.clickOnListAllBtn();
 
-		batchJobsTab.verifyBatchConfigTableHeaders();
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.verifyBatchConfigActionsColumn();
+        batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.verifyBatchRepoHeaders();
+        batchJobsTab.verifyBatchFileDetailsUI(topRepositoryName + "-" + topRepositoryValue);
 
-		batchJobsTab.verifyBatchRepoActionsColumn();
-	}
+        batchJobsTab.verifyBatchConfigTableHeaders();
 
-	@Test(priority = 1)
-	public void BJ_Save_batch_file_detailed_view_010() throws InterruptedException {
+        batchJobsTab.verifyBatchConfigActionsColumn();
 
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.verifyBatchRepoHeaders();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.verifyBatchRepoActionsColumn();
+    }
 
-		batchJobsTab.clickOnDetailsBtn();
+    @Test(priority = 1)
+    public void BJ_Save_batch_file_detailed_view_010() throws InterruptedException {
 
-		batchJobsTab.saveBatchFileAs(topRepositoryName + "-0" + topRepositoryValue);// spring-framework-03
+        batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.clickOnSaveBatchDetailsBtn();
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.clickOnAlertCloseBtn();
-		
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.clickOnDetailsBtn();
 
-		// batchJobsTab.verifyBatchFileNameChangeInListing(topRepositoryName +
-		// "-0" + topRepositoryValue);
+        batchJobsTab.saveBatchFileAs(topRepositoryName + "-0" + topRepositoryValue);// spring-framework-03
 
-		batchJobsTab.newBatchFileCreationConfirmation(topRepositoryName + "-0" + topRepositoryValue);// spring-framework-03
+        batchJobsTab.clickOnSaveBatchDetailsBtn();
 
-		batchJobsTab.clearBatchFileSearchTbx();
+        batchJobsTab.clickOnAlertCloseBtn();
 
-		batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);
-		
-		batchJobsTab.clickOnListArchivedBtn();
+        batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.clickOnDetailsBtn();
+        // batchJobsTab.verifyBatchFileNameChangeInListing(topRepositoryName +
+        // "-0" + topRepositoryValue);
 
-		batchJobsTab.saveBatchFileAs(topRepositoryName + "-1" + topRepositoryValue);// spring-framework-13
+        batchJobsTab.newBatchFileCreationConfirmation(topRepositoryName + "-0" + topRepositoryValue);// spring-framework-03
 
-		batchJobsTab.clickOnSaveBatchDetailsBtn();
+        batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.clickOnAlertCloseBtn();
-		
-		batchJobsTab.clearBatchFileSearchTbx();
+        batchJobsTab.enterBatchSearchTerm(topRepositoryName+"-"+topRepositoryValue);
 
-		batchJobsTab.enterBatchSearchTerm(topRepositoryName);
+        batchJobsTab.clickOnListArchivedBtn();
 
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.selectFirstRow();
 
-		// batchJobsTab.verifyBatchFileNameChangeInListing(topRepositoryName +
-		// "-1" + topRepositoryValue);// spring-framework-13
+        batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.newBatchFileCreationConfirmation(topRepositoryName + "-1" + topRepositoryValue);// spring-framework-13
-	}
+        batchJobsTab.saveBatchFileAs(topRepositoryName + "-1" + topRepositoryValue);// spring-framework-13
 
-	@Test(priority = 2)
-	public void BJ_Back_detailed_view_011() throws InterruptedException {
+        batchJobsTab.clickOnSaveBatchDetailsBtn();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.clickOnAlertCloseBtn();
 
-		batchJobsTab.clickOnDetailsBtn();
+        batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.clickOnDetailsBackBtn();
+        batchJobsTab.enterBatchSearchTerm(topRepositoryName);
 
-		batchJobsTab.clickOnListArchivedBtn();
+        batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.selectFirstRow();
+        // batchJobsTab.verifyBatchFileNameChangeInListing(topRepositoryName +
+        // "-1" + topRepositoryValue);// spring-framework-13
 
-		batchJobsTab.clickOnDetailsBtn();
+        batchJobsTab.newBatchFileCreationConfirmation(topRepositoryName + "-1" + topRepositoryValue);// spring-framework-13
+    }
 
-		batchJobsTab.clickOnDetailsBackBtn();
+    @Test(priority = 2)
+    public void BJ_Back_detailed_view_011() throws InterruptedException {
 
-		batchJobsTab.clickOnListAllBtn();
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.clickOnDetailsBtn();
+        batchJobsTab.clickOnDetailsBackBtn();
 
-		batchJobsTab.clickOnDetailsBackBtn();
+        batchJobsTab.clickOnListArchivedBtn();
 
-	}
+        batchJobsTab.selectFirstRow();
 
-	@Test(priority = 3)
-	public void BJ_Batch_file_settings_012() throws InterruptedException {
+        batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.clickOnDetailsBackBtn();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.clickOnListAllBtn();
 
-		batchJobsTab.clickOnDetailsBtn();
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.clickOnSettingsBtn();
+        batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.verifyBatchConfigSettingsUI();
+        batchJobsTab.clickOnDetailsBackBtn();
 
-	}
+    }
 
-	@Test(priority = 4)
-	public void BJ_Continue_Reset_Show_Modify_Commands_batch_file_settings_013() throws InterruptedException {
+    @Test(priority = 3)
+    public void BJ_Batch_file_settings_012() throws InterruptedException {
 
-		batchJobsTab.clickOnBatchConfigSettingsContinueBtn();
+        batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.clickOnSettingsBtn();
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.clickOnBatchConfigSettingsResetBtn();
+        batchJobsTab.clickOnDetailsBtn();
 
-		batchJobsTab.clickOnSettingsBtn();
+        batchJobsTab.clickOnSettingsBtn();
 
-		batchJobsTab.clickOnBatchConfigSettingsShowModifyCommandsBtn();
+        batchJobsTab.verifyBatchConfigSettingsUI();
 
-	}
+    }
 
-	@Test(priority = 5)
-	public void BJ_Show_Modify_Commands_UI_013a() {
+    @Test(priority = 4)
+    public void BJ_Continue_Reset_Show_Modify_Commands_batch_file_settings_013() throws InterruptedException {
 
-		batchJobsTab.verifyBatchConfigSettingsShowModifyCommandsUI();
-	}
+        batchJobsTab.clickOnBatchConfigSettingsContinueBtn();
 
-	@Test(priority = 6)
-	public void BJ_Continue_Reset_Back_Show_Modify_Commands_batch_file_settings_013b() throws InterruptedException {
+        batchJobsTab.clickOnSettingsBtn();
 
-		batchJobsTab.clickOnShowModifyCommandsBackBtn();
+        batchJobsTab.clickOnBatchConfigSettingsResetBtn();
 
-		batchJobsTab.clickOnBatchConfigSettingsShowModifyCommandsBtn();
+        batchJobsTab.clickOnSettingsBtn();
 
-		batchJobsTab.clickOnShowModifyCommandsResetBtn();
+        batchJobsTab.clickOnBatchConfigSettingsShowModifyCommandsBtn();
 
-		batchJobsTab.clickOnShowModifyCommandsContinueBtn();
-	}
+    }
 
-	@Test(priority = 7)
-	public void BJ_Move_delete_repository_batch_file_014() throws InterruptedException {
+    @Test(priority = 5)
+    public void BJ_Show_Modify_Commands_UI_013a() {
 
-		batchJobsTab.verifyRepoUpMove();
+        batchJobsTab.verifyBatchConfigSettingsShowModifyCommandsUI();
+    }
 
-		batchJobsTab.verifyRepoDownMove();
+    @Test(priority = 6)
+    public void BJ_Continue_Reset_Back_Show_Modify_Commands_batch_file_settings_013b() throws InterruptedException {
 
-		batchJobsTab.verifyRepoDelete();
+        batchJobsTab.clickOnShowModifyCommandsBackBtn();
 
-	}
+        batchJobsTab.clickOnBatchConfigSettingsShowModifyCommandsBtn();
 
-	@Test(priority = 8)
-	public void BJ_Archive_local_batch_file_015() throws InterruptedException {
-	
-		
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.clickOnShowModifyCommandsResetBtn();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.clickOnShowModifyCommandsContinueBtn();
+    }
 
-		batchJobsTab.clickOnArchiveBtn();
+    @Test(priority = 7)
+    public void BJ_Move_delete_repository_batch_file_014() throws InterruptedException {
 
-		batchJobsTab.clickOnAlertCloseBtn();
-		
-		batchJobsTab.clearBatchFileSearchTbx();
+        batchJobsTab.verifyRepoUpMove();
 
-		batchJobsTab.enterBatchSearchTerm(topRepositoryName + "-1" + topRepositoryValue);
+        batchJobsTab.verifyRepoDownMove();
 
-		batchJobsTab.clickOnListArchivedBtn();
+        batchJobsTab.verifyRepoDelete();
 
-		batchJobsTab.verifyArchivedBatchFile(topRepositoryName + "-1" + topRepositoryValue);
+    }
 
-//		batchJobsTab.clearBatchFileSearchTbx();
+    @Test(priority = 8)
+    public void BJ_Archive_local_batch_file_015() throws InterruptedException {
 
-	}
 
-	@Test(priority = 9)
-	public void BJ_Remove_batch_file_016() throws InterruptedException {
+        batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.clearBatchFileSearchTbx();
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.enterBatchSearchTerm(topRepositoryName);//+"-"+topRepositoryValue
-		
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.clickOnArchiveBtn();
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.clickOnAlertCloseBtn();
 
-		batchJobsTab.clickOnRemoveBtn();
+        batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.clickOnListArchivedBtn();
+        batchJobsTab.enterBatchSearchTerm(topRepositoryName + "-1" + topRepositoryValue);
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.clickOnListArchivedBtn();
 
-		batchJobsTab.clickOnRemoveBtn();
+        batchJobsTab.verifyArchivedBatchFile(topRepositoryName + "-1" + topRepositoryValue);
 
-		batchJobsTab.clickOnListAllBtn();
+//        batchJobsTab.clearBatchFileSearchTbx();
 
-		batchJobsTab.selectFirstRow();
+    }
 
-		batchJobsTab.clickOnRemoveBtn();
+    @Test(priority = 9)
+    public void BJ_Remove_batch_file_016() throws InterruptedException {
 
-	}
+        batchJobsTab.clearBatchFileSearchTbx();
 
-	
+        batchJobsTab.enterBatchSearchTerm(topRepositoryName);//+"-"+topRepositoryValue
+
+        batchJobsTab.clickOnListLocalBtn();
+
+        batchJobsTab.selectFirstRow();
+
+        batchJobsTab.clickOnRemoveBtn();
+
+        batchJobsTab.clickOnListArchivedBtn();
+
+        batchJobsTab.selectFirstRow();
+
+        batchJobsTab.clickOnRemoveBtn();
+
+        batchJobsTab.clickOnListAllBtn();
+
+        batchJobsTab.selectFirstRow();
+
+        batchJobsTab.clickOnRemoveBtn();
+
+    }
+
+
 }
