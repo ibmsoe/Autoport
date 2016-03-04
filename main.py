@@ -1118,7 +1118,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
         proxies=NO_PROXY
     )
 
-    logger.debug("createJob_common: jenkins job post proj=%s, rc=%d" % (repo.name, r.status_code))
+    logger.debug("createJob_common: jenkins job creat proj=%s, rc=%d" % (repo.name, r.status_code))
 
     if r.status_code == 200:
 
@@ -1132,7 +1132,9 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
         homeJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/"
 
         # Start Jenkins job
-        requests.get(startJobUrl, proxies=NO_PROXY)
+        r = requests.get(startJobUrl, proxies=NO_PROXY)
+
+        logger.debug("createJob_common: jenkins job start proj=%s, rc=%d" % (repo.name, r.status_code))
 
         # local directory for build artifacts.  No colons allowed for windows compatibility
         timestr = strftime("%Y-%m-%d-h%H-m%M-s%S", time)
@@ -2088,12 +2090,16 @@ def queryNode(nodeLabel, action):
         proxies = NO_PROXY
     )
 
+    logger.debug("queryNode: post status=%d" % r.status_code)
+
     if r.status_code == 200:
         # Success, send the jenkins job and start it right away.
         startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
 
         # Start Jenkins job
-        requests.get(startJobUrl, proxies=NO_PROXY)
+        r = requests.get(startJobUrl, proxies=NO_PROXY)
+
+        logger.debug("queryNode: get status=%d" % r.status_code)
 
         # Split off a thread to transfer job results from jenkins master to localDir
         # Wait for thread completion as we need to return the content of the result file
@@ -3178,7 +3184,7 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
 
         # Get new jenkins node information
         nodeNames, nodeLabels = getJenkinsNodes_init()
-        getJenkinsNodeDetails_init(nodeNames,nodeLabels)
+        getJenkinsNodeDetails_init(nodeNames, nodeLabels)
         globals.jenkinsRepoUrl = 'http://%s:%s/autoport_repo/archives' % (globals.jenkinsHostname, '90')
         sharedData.connect(globals.jenkinsHostname)
         sharedData.uploadChefData()
@@ -3194,13 +3200,13 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
         except Exception as ex:
             logger.debug("autoportJenkinsInit: rebuildSlaves initial Error: %s", ex)
 
-def autoportUserInit(hostname, configUsername, configPassword):
-    if hostname and configUsername and configPassword:
+def autoportUserInit(configHostname, configUsername, configPassword):
+    if configHostname and configUsername and configPassword:
         if globals.sftpConnected:
             catalog.close()
             batch.disconnect()
-        catalog.connect(hostname, archiveUser=configUsername, archivePassword=configPassword)
-        batch.connect(hostname, globals.configPort, archiveUser=configUsername, archivePassword=configPassword)
+        catalog.connect(configHostname, archiveUser=configUsername, archivePassword=configPassword)
+        batch.connect(configHostname, globals.configPort, archiveUser=configUsername, archivePassword=configPassword)
 
 @app.errorhandler(500)
 def internalError(error):
@@ -3212,6 +3218,7 @@ def serviceUnavailbleError(error):
 
 def startAutoport(p = None):
     args = None
+
     # When the server instance is freshly started clear up all the /tmp/ directories created by the application
     # in previous run, that were not cleaned up.
     for dirname, dirnames, filenames in os.walk('/tmp/'):
@@ -3227,21 +3234,28 @@ def startAutoport(p = None):
                    defaults to '" + globals.jenkinsUrl + "'")
         p.add_argument("-j", "--jenkinsHostname", help="specifies the Hostname or IPADDR of the Jenkins server,\
                    defaults to '" + globals.jenkinsHostname + "'")
+        '''
         p.add_argument("-b", "--allocBuildServers", action="store_true",
                    help="Build Servers are dynamically allocated per user")
+        '''
         p.add_argument("-d", "--debug", action="store_true",
                    help="Set debug mode")
 
         args = p.parse_args()
 
         if args.jenkinsURL:
-            globals.jenkinsUrl = args.jenkinsURL
+            if args.jenkinsURL[-1] == '/':
+                globals.jenkinsUrl = args.jenkinsURL[:-1]
+            else:
+                globals.jenkinsUrl = args.jenkinsURL
 
         if args.jenkinsHostname:
             globals.jenkinsHostname = args.jenkinsHostname
 
+        '''
         if args.allocBuildServers:
             globals.allocBuildServers = args.allocBuildServers
+        '''
 
     autoportJenkinsInit(globals.jenkinsUrl, globals.configJenkinsUsername, globals.configJenkinsKey)
     autoportUserInit(globals.configHostname, globals.configUsername, globals.configPassword)

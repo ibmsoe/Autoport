@@ -27,12 +27,17 @@ class Batch:
                 archivePort=globals.configPort,
                 archiveUser=globals.configUsername,
                 archivePassword=globals.configPassword):
+
+        logger.debug("In batch.connect, connecting to archived storage at " + archiveHost)
+        logger.debug("batch.connect: username=%s, port=%d" % (archiveUser, archivePort))
+
         try:
             self.ssh_client = paramiko.SSHClient()
             self.ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.ssh_client.connect(archiveHost, username=archiveUser, \
                 password=archivePassword, port=archivePort)
             self.ftp_client = self.ssh_client.open_sftp()
+            logger.debug("batch.connect: Connected to archived storage")
         except paramiko.AuthenticationException:
             pass                  # error message already displayed in catalog.py
         except paramiko.SSHException:

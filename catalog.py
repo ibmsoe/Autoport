@@ -30,13 +30,17 @@ class Catalog:
         self.__localPath = localPath
         self.__tmpdirs = []
 
+        logger.debug("In catalog.connect, connecting to archived storage at " + archiveHost)
+        logger.debug("catalog.connect: username=%s, port=%d" % (self.__archiveUser, self.__archivePort))
+
         try:
             globals.sftpConnected = False
             self.__archiveSshClient = paramiko.SSHClient()
             self.__archiveSshClient.set_missing_host_key_policy(paramiko.AutoAddPolicy())
             self.__archiveSshClient.connect(self.__archiveHost, username=self.__archiveUser,\
-                                            password=self.__archivePassword,port=self.__archivePort)
+                                            password=self.__archivePassword, port=self.__archivePort)
             self.__archiveFtpClient = self.__archiveSshClient.open_sftp()
+            logger.debug("catalog.connect: Connected to archived storage")
             globals.sftpConnected = True
         # Error handling
         except paramiko.AuthenticationException as ae:

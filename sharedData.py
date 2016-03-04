@@ -118,6 +118,7 @@ class SharedData:
             self.__jenkinsSshClient.connect(self.__jenkinsHost, username=self.__jenkinsUser, key_filename=self.__jenkinsKey)
             self.__jenkinsFtpClient = self.__jenkinsSshClient.open_sftp()
             self.__jenkinsTransportSession = self.__jenkinsSshClient.get_transport()
+            logger.debug("sharedData.connect: Connected to jenkins master")
         except paramiko.AuthenticationException as ae:
             msg="Please provide valid Jenkins credentials in settings menu!"
             logger.warning(msg)

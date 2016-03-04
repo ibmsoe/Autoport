@@ -80,7 +80,15 @@ def init():
     else:
         configPort = int(configOptions['port'])
 
+    # Apparently nginx reverse proxy with stacked urls - http://server-x:8800/server-y:8080/
+    # requires a trailing slash(/) character, so the input value may include it.  Normalize
+    # input to not include it as url manipulation elsewhere adds it as required
     jenkinsUrl = configOptions['jenkinsurl']
+    if jenkinsUrl[-1] == '/':
+        jenkinsUrl = jenkinsUrl[:-1]
+
+    # This field is used to open socket connections.  An IP address may be given to avoid
+    # the reverse proxies based on an external address if an internal IP address exists
     jenkinsHostname = configOptions['jenkinshostname']
     if jenkinsHostname == None or not jenkinsHostname or "<" in jenkinsHostname:
        jenkinsHostname = urlparse(jenkinsUrl).hostname
