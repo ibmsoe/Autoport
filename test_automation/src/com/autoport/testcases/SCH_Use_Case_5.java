@@ -12,113 +12,113 @@ import com.autoport.utilities.ReadTestData;
 
 public class SCH_Use_Case_5 {
 
-	WebDriver driver;
+    WebDriver driver;
 
-	HomePage homePage;
-	SearchTab searchTab;
-	BatchJobsTab batchJobsTab;
+    HomePage homePage;
+    SearchTab searchTab;
+    BatchJobsTab batchJobsTab;
 
-	String listOfRepositories;
+    String listOfRepositories;
 
-	// String savedBatchFileName;
+    // String savedBatchFileName;
 
-	@BeforeTest
-	public void beforeTest() throws Exception {
+    @BeforeTest
+    public void beforeTest() throws Exception {
 
-		//CommonFunctions.launchBrowser();
-		driver = CommonFunctions.driver;
+        //CommonFunctions.launchBrowser();
+        driver = CommonFunctions.driver;
 
-		homePage = CommonFunctions.homePage;
-		searchTab = CommonFunctions.searchTab;
-		batchJobsTab = CommonFunctions.batchJobsTab;
+        homePage = CommonFunctions.homePage;
+        searchTab = CommonFunctions.searchTab;
+        batchJobsTab = CommonFunctions.batchJobsTab;
 
-		listOfRepositories = ReadTestData.readParameter("searchTabData",
-				"listOfRepositories");
-		// savedBatchFileName = ReadTestData.readParameter("SCH_Use_Case_5",
-		// "savedBatchFileName");
+        listOfRepositories = ReadTestData.readParameter("searchTabData",
+                "listOfRepositories");
+        // savedBatchFileName = ReadTestData.readParameter("SCH_Use_Case_5",
+        // "savedBatchFileName");
 
-		searchTab.clickOnSingleProjectBtn();
+        searchTab.clickOnSingleProjectBtn();
 
-	}
+    }
 
-	@Test(priority = 0)
-	public void SCH_Adding_repositories_batch_file_single_project_019() {
+    @Test(priority = 0)
+    public void SCH_Adding_repositories_batch_file_single_project_019() {
 
-		searchTab.searchForRepository(listOfRepositories);
+        searchTab.searchForRepository(listOfRepositories);
 
-		searchTab.pressEnterKey();
+        searchTab.pressEnterKey();
 
-		searchTab.verifyResultsSortByRelavance();
+        searchTab.verifyResultsSortByRelavance();
 
-		searchTab.clickOnAddToBatchBtn();
+        searchTab.clickOnAddToBatchBtn();
 
-		searchTab.verifyBatchFileSaveExportCloseUI();
+        searchTab.verifyBatchFileSaveExportCloseUI();
 
-		searchTab.verifyBatchFileRepositoryPanelUI();
-	}
+        searchTab.verifyBatchFileRepositoryPanelUI();
+    }
 
-	@Test(priority = 1)
-	public void SCH_Save_batch_file_single_project_020()
-			throws InterruptedException {
+    @Test(priority = 1)
+    public void SCH_Save_batch_file_single_project_020()
+            throws InterruptedException {
 
-		searchTab.clickOnBatchFileSaveBtn();
+        searchTab.clickOnBatchFileSaveBtn();
 
-		homePage.clickBatchJobsTab();
+        homePage.clickBatchJobsTab();
 
-		batchJobsTab.clickListSelectBtn();
+        batchJobsTab.clickListSelectBtn();
 
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.verifyLocallySavedBatchFile(searchTab
-				.getRepositoryNameAddedToBatch() + "-1");// cassandra-1
+        batchJobsTab.verifyLocallySavedBatchFile(searchTab
+                .getRepositoryNameAddedToBatch() + "-1");// cassandra-1
 
-	}
+    }
 
-	@Test(priority = 2)
-	public void SCH_Export_batch_file_single_project_021()
-			throws InterruptedException {
+    @Test(priority = 2)
+    public void SCH_Export_batch_file_single_project_021()
+            throws InterruptedException {
 
-		homePage.clickSearchTab();
+        homePage.clickSearchTab();
 
-		Thread.sleep(1000);
+        Thread.sleep(1000);
 
-		searchTab.verifyResultsSortByPopularityStars();
+        searchTab.verifyResultsSortByPopularityStars();
 
-		searchTab.clickOnAddToBatchBtn();
+        searchTab.clickOnAddToBatchBtn();
 
-		searchTab.clickOnBatchFileExportBtn();
+        searchTab.clickOnBatchFileExportBtn();
 
-		Thread.sleep(2000);
+        Thread.sleep(2000);
 
-		searchTab.confirmFileDownload(searchTab.getRepositoryNameAddedToBatch()
-				+ "-1");// cassandra-1
+        searchTab.confirmFileDownload(searchTab.getRepositoryNameAddedToBatch()
+                + "-1");// cassandra-1
 
-	}
+    }
 
-	@Test(priority = 3)
-	public void SCH_Clear_batch_file_single_project_022() {
+    @Test(priority = 3)
+    public void SCH_Clear_batch_file_single_project_022() {
 
-		searchTab.verifyResultsSortByRelavance();
+        searchTab.verifyResultsSortByRelavance();
 
-		searchTab.clickOnAddToBatchBtn();
+        searchTab.clickOnAddToBatchBtn();
 
-		searchTab.clickOnBatchFileClearBtn();
-	}
+        searchTab.clickOnBatchFileClearBtn();
+    }
 
-	@Test(priority = 4)
-	public void SCH_Batch_File_Repository_UI_023() throws InterruptedException {
+    @Test(priority = 4)
+    public void SCH_Batch_File_Repository_UI_023() throws InterruptedException {
 
-		searchTab.verifyResultsSortByPopularityStars();
+        searchTab.verifyResultsSortByPopularityStars();
 
-		searchTab.clickOnAddToBatchBtn();
+        searchTab.clickOnAddToBatchBtn();
 
-		searchTab.verifyBatchFileRepositoryPanelUI();
+        searchTab.verifyBatchFileRepositoryPanelUI();
 
-		searchTab.verifyBatchFileRepositoryDescription();
+        searchTab.verifyBatchFileRepositoryDescription();
 
-		searchTab.clickOnBatchFileClearBtn();
+        searchTab.clickOnBatchFileClearBtn();
 
-	}
+    }
 
-	
+
 }

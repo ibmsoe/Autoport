@@ -15,74 +15,75 @@ import com.autoport.utilities.ReadTestData;
 
 public class BJ_Use_Case_005 {
 
-	WebDriver driver;
+    WebDriver driver;
 
-	HomePage homePage;
-	SearchTab searchTab;
-	BatchJobsTab batchJobsTab;
-	ReportsTab reportsTab;
+    HomePage homePage;
+    SearchTab searchTab;
+    BatchJobsTab batchJobsTab;
+    ReportsTab reportsTab;
 
-	String topRepositoryName;
-	String topRepositoryValue;
+    String topRepositoryName;
+    String topRepositoryValue;
 
-	@BeforeTest
-	public void beforeTest() throws Exception {
+    @BeforeTest
+    public void beforeTest() throws Exception {
 
-		// CommonFunctions.launchBrowser();
-		driver = CommonFunctions.driver;
+        // CommonFunctions.launchBrowser();
+        driver = CommonFunctions.driver;
 
-		homePage = CommonFunctions.homePage;
-		searchTab = CommonFunctions.searchTab;
-		batchJobsTab = CommonFunctions.batchJobsTab;
-		reportsTab = CommonFunctions.reportsTab;
+        homePage = CommonFunctions.homePage;
+        searchTab = CommonFunctions.searchTab;
+        batchJobsTab = CommonFunctions.batchJobsTab;
+        reportsTab = CommonFunctions.reportsTab;
 
-		topRepositoryName = ReadTestData.readParameter("batchJobsTabData", "topRepositoryName");
-		topRepositoryValue = ReadTestData.readParameter("searchTabData", "topRepositoryValue");
+        topRepositoryName = ReadTestData.readParameter("batchJobsTabData", "topRepositoryName");
+        topRepositoryValue = ReadTestData.readParameter("searchTabData", "topRepositoryValue");
 
-		homePage.clickBatchJobsTab();
-	}
+        homePage.clickBatchJobsTab();
+    }
 
-	@Test(priority = 0)
-	public void BJ_Build_Server_batch_file_results_view_017() throws InterruptedException {
+    @Test(priority = 0)
+    public void BJ_Build_Server_batch_file_results_view_017() throws InterruptedException {
 
-		batchJobsTab.clickListSelectBtn();
+        batchJobsTab.clickListSelectBtn();
 
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.clickOnBuildServers();
+        batchJobsTab.clickOnBuildServers();
 
-		batchJobsTab.verifyBuildServersNodes();
+        batchJobsTab.verifyBuildServersNodes();
 
-		batchJobsTab.verifySelectionOfAllBuildServers();
+        batchJobsTab.verifySelectionOfAllBuildServers();
 
-		batchJobsTab.verifyDeSelectionOfAllBuildServers();
+        batchJobsTab.verifyDeSelectionOfAllBuildServers();
 
-		batchJobsTab.clickOnBuildServers();
-	}
+        batchJobsTab.clickOnBuildServers();
+    }
 
-	@Test(priority = 1)
-	public void BJ_Build_Test_batch_file_result_view_018() throws InterruptedException, ParseException {
+    //This is a system test case
+    @Test(priority = 1)
+    public void BJ_Build_Test_batch_file_result_view_018() throws InterruptedException, ParseException {
 
-		batchJobsTab.selectFirstRow();
+        batchJobsTab.selectFirstRow();
 
-		batchJobsTab.verifyBuildAndTestBtn();
+        batchJobsTab.verifyBuildAndTestBtn();
 
-		searchTab.clickOnAlertCloseBtn();
+        searchTab.clickOnAlertCloseBtn();
 
-		homePage.openReportsTab();
+        homePage.openReportsTab();
 
-		reportsTab.clickOnManageCompareBatchJobsResultsBtn();
+        reportsTab.clickOnManageCompareBatchJobsResultsBtn();
 
-		reportsTab.enterBatchNameForSearch(topRepositoryName);// spring-framework
+        reportsTab.enterBatchNameForSearch(topRepositoryName);// spring-framework
 
-		reportsTab.clickOnBatchListLocalBtn();
+        reportsTab.clickOnBatchListLocalBtn();
 
-		reportsTab.clickOnDateSubmittedHeader();
+        reportsTab.clickOnDateSubmittedHeader();
 
-		reportsTab.verifyJenkinsJobCompletionForBatch(batchJobsTab.getBuildClickTime(),
-				batchJobsTab.getBuildServersCount());
+        reportsTab.verifyJenkinsJobCompletionForBatch(batchJobsTab.getBuildClickTime(),
+                batchJobsTab.getBuildServersCount());
 
-	}
+    }
 
-	
+
 }

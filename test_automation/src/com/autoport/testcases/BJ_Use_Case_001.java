@@ -10,29 +10,29 @@ import com.autoport.utilities.CommonFunctions;
 
 public class BJ_Use_Case_001 {
 
-	WebDriver driver;
+    WebDriver driver;
 
-	HomePage homePage;
-	BatchJobsTab batchJobsTab;
+    HomePage homePage;
+    BatchJobsTab batchJobsTab;
 
-	@BeforeTest
-	public void beforeTest() throws Exception {
+    @BeforeTest
+    public void beforeTest() throws Exception {
 
-		// CommonFunctions.launchBrowser();
+        // CommonFunctions.launchBrowser();
 
-		driver = CommonFunctions.driver;
-		homePage = CommonFunctions.homePage;
-		batchJobsTab = CommonFunctions.batchJobsTab;
+        driver = CommonFunctions.driver;
+        homePage = CommonFunctions.homePage;
+        batchJobsTab = CommonFunctions.batchJobsTab;
 
-		homePage.clickBatchJobsTab();
-	}
+        homePage.clickBatchJobsTab();
+    }
 
-	@Test
-	public void BJ_Batch_Jobs_UI_001() {
+    @Test
+    public void BJ_Batch_Jobs_UI_001() {
 
-		batchJobsTab.verifyBatchJobsTabUI();
+        batchJobsTab.verifyBatchJobsTabUI();
 
-	}
+    }
 
-	
+
 }

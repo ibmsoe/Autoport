@@ -248,6 +248,7 @@ public class BJ_Use_Case_004 {
 
     }
 
+    //This is a system test case
     @Test(priority = 8)
     public void BJ_Archive_local_batch_file_015() throws InterruptedException {
 

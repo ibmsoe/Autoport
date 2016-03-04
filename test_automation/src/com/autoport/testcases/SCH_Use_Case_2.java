@@ -10,50 +10,50 @@ import com.autoport.utilities.ReadTestData;
 
 public class SCH_Use_Case_2 {
 
-	WebDriver driver;
+    WebDriver driver;
 
-	HomePage homePage;
+    HomePage homePage;
 
-	String sftpUserName;
-	String sftpPassword;
-	String envType;
+    String sftpUserName;
+    String sftpPassword;
+    String envType;
 
-	@BeforeTest
-	public void beforeTest() throws Exception {
+    @BeforeTest
+    public void beforeTest() throws Exception {
 
-		// CommonFunctions.launchBrowser();
-		driver = CommonFunctions.driver;
-		homePage = CommonFunctions.homePage;
+         //CommonFunctions.launchBrowser();
+        driver = CommonFunctions.driver;
+        homePage = CommonFunctions.homePage;
 
-		sftpUserName = ReadTestData.readParameter("searchTabData", "sftpUserName");
-		sftpPassword = ReadTestData.readParameter("searchTabData", "sftpPassword");
-		envType = ReadTestData.readParameter("../config", "envType");
-	}
+        sftpUserName = ReadTestData.readParameter("searchTabData", "sftpUserName");
+        sftpPassword = ReadTestData.readParameter("searchTabData", "sftpPassword");
+        envType = ReadTestData.readParameter("../config", "envType");
+    }
 
-	@Test(priority = 0)
-	public void SCH_Settings_UI_003() {
+    @Test(priority = 0)
+    public void SCH_Settings_UI_003() {
 
-		homePage.clickOnSettings();
-	
-		homePage.verifySettingsUI(envType);
-	}
+        homePage.clickOnSettings();
 
-	@Test(priority = 1)
-	public void SCH_Reset_to_Default_Settings_004() {
+        homePage.verifySettingsUI(envType);
+    }
 
-		homePage.clickOnSettingsResetBtn();
-	}
+    @Test(priority = 1)
+    public void SCH_Reset_to_Default_Settings_004() {
 
-	@Test(priority = 2)
-	public void SCH_Saving_Changes_Settings_005() {
+        homePage.clickOnSettingsResetBtn();
+    }
 
-		homePage.verifyGsaConnectedStatus(sftpUserName, sftpPassword);
-	}
+    @Test(priority = 2)
+    public void SCH_Saving_Changes_Settings_005() {
 
-	@Test(priority = 3)
-	public void SCH_Close_Settings_006() throws InterruptedException {
+        homePage.verifyGsaConnectedStatus(sftpUserName, sftpPassword);
+    }
 
-		homePage.clickOnSettingsCloseBtn();
-	}
+    @Test(priority = 3)
+    public void SCH_Close_Settings_006() throws InterruptedException {
+
+        homePage.clickOnSettingsCloseBtn();
+    }
 
 }

@@ -11,79 +11,80 @@ import com.autoport.utilities.ReadTestData;
 
 public class BJ_Use_Case_002 {
 
-	WebDriver driver;
+    WebDriver driver;
 
-	HomePage homePage;
-	SearchTab searchTab;
-	BatchJobsTab batchJobsTab;
+    HomePage homePage;
+    SearchTab searchTab;
+    BatchJobsTab batchJobsTab;
 
-	String topRepositoryValue;
-	String downloadFilePath;
-	String topRepositoryName;
+    String topRepositoryValue;
+    String downloadFilePath;
+    String topRepositoryName;
 
-	@BeforeTest
-	public void beforeTest() throws Exception {
+    @BeforeTest
+    public void beforeTest() throws Exception {
 
-		// CommonFunctions.launchBrowser();
-		driver = CommonFunctions.driver;
+        // CommonFunctions.launchBrowser();
+        driver = CommonFunctions.driver;
 
-		homePage = CommonFunctions.homePage;
-		searchTab = CommonFunctions.searchTab;
-		batchJobsTab = CommonFunctions.batchJobsTab;
+        homePage = CommonFunctions.homePage;
+        searchTab = CommonFunctions.searchTab;
+        batchJobsTab = CommonFunctions.batchJobsTab;
 
-		downloadFilePath = ReadTestData.readParameter("searchTabData",
-				"downloadFilePath");
-		topRepositoryName = ReadTestData.readParameter("batchJobsTabData",
-				"topRepositoryName");
-		topRepositoryValue = ReadTestData.readParameter("searchTabData",
-				"topRepositoryValue");
+        downloadFilePath = ReadTestData.readParameter("searchTabData",
+                "downloadFilePath");
+        topRepositoryName = ReadTestData.readParameter("batchJobsTabData",
+                "topRepositoryName");
+        topRepositoryValue = ReadTestData.readParameter("searchTabData",
+                "topRepositoryValue");
 
-		homePage.clickBatchJobsTab();
-	}
+        homePage.clickBatchJobsTab();
+    }
 
-	@Test(priority = 0)
-	public void BJ_Import_UI_002() {
+    @Test(priority = 0)
+    public void BJ_Import_UI_002() {
 
-		batchJobsTab.clickImportBtn();
+        batchJobsTab.clickImportBtn();
 
-		batchJobsTab.verifyDisplayOfImportSection();
+        batchJobsTab.verifyDisplayOfImportSection();
 
-		batchJobsTab.verifyUploadDisplayBox();
+        batchJobsTab.verifyUploadDisplayBox();
 
-		batchJobsTab.verifyPlaceHolderTextForUploadFileDisplayBox();
+        batchJobsTab.verifyPlaceHolderTextForUploadFileDisplayBox();
 
-		batchJobsTab.verifySelectFileBtn();
+        batchJobsTab.verifySelectFileBtn();
 
-		batchJobsTab.verifyUploadBtn();
-	}
+        batchJobsTab.verifyUploadBtn();
+    }
 
-	@Test(priority = 1)
-	public void BJ_Browse_batch_file_upload_003() {
+    @Test(priority = 1)
+    public void BJ_Browse_batch_file_upload_003() {
 
-		// For Windows
-		batchJobsTab.selectFileToUpload(downloadFilePath + topRepositoryName
-				+ "-" + topRepositoryValue);
-		// e.g C:\\Users\\manish_kane\\Downloads\\spring-framework-3
+        // For Windows
+        batchJobsTab.selectFileToUpload(downloadFilePath + topRepositoryName
+                + "-" + topRepositoryValue);
+        // e.g C:\\Users\\manish_kane\\Downloads\\spring-framework-3
 
-		// For Linux
-		// e.g /root/Downloads/spring-framework-3
-	}
+        // For Linux
+        // e.g /root/Downloads/spring-framework-3
+    }
 
-	@Test(priority = 2)
-	public void BJ_Upload_batch_file_004() throws InterruptedException {
+    //This is a system test case
+    @Test(priority = 2)
+    public void BJ_Upload_batch_file_004() throws InterruptedException {
 
-		batchJobsTab.clickOnUploadBtn();
+        batchJobsTab.clickOnUploadBtn();
 
-		batchJobsTab.clickOnAlertCloseBtn();
+        batchJobsTab.clickOnAlertCloseBtn();
 
-		batchJobsTab.clickListSelectBtn();
+        batchJobsTab.clickListSelectBtn();
 
-		batchJobsTab.clickOnListLocalBtn();
+        batchJobsTab.clickOnListLocalBtn();
 
-		batchJobsTab.verifyLocallySavedBatchFile(topRepositoryName + "-"
-				+ topRepositoryValue);
+        batchJobsTab.verifyLocallySavedBatchFile(topRepositoryName + "-"
+                + topRepositoryValue);
 
-	}
+    }
 
-	
+
 }

@@ -6,19 +6,19 @@ import org.testng.annotations.AfterSuite;
 import com.autoport.utilities.CommonFunctions;
 
 public class Initialize {
-  
-	public WebDriver driver;	
- 
-	@BeforeSuite
-	public void beforeSuite() throws Exception {
-	 
-	 CommonFunctions.launchBrowser(); 
-	 driver = CommonFunctions.driver;
-  } 
-	
-	  @AfterSuite
-	  public void afterSuite() {
-		  driver.quit();
-	  }
+
+    public WebDriver driver;
+
+    @BeforeSuite
+    public void beforeSuite() throws Exception {
+
+     CommonFunctions.launchBrowser();
+     driver = CommonFunctions.driver;
+  }
+
+      @AfterSuite
+      public void afterSuite() {
+          driver.quit();
+      }
 
 }

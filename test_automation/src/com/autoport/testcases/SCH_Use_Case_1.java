@@ -9,35 +9,35 @@ import com.autoport.utilities.CommonFunctions;
 
 public class SCH_Use_Case_1 {
 
-	WebDriver driver;
+    WebDriver driver;
 
-	HomePage homePage;
+    HomePage homePage;
 
-	@BeforeTest
-	public void beforeTest() throws Exception {
+    @BeforeTest
+    public void beforeTest() throws Exception {
 
-		// CommonFunctions.launchBrowser();
+        // CommonFunctions.launchBrowser();
 
-		driver = CommonFunctions.driver;
-		homePage = CommonFunctions.homePage;
+        driver = CommonFunctions.driver;
+        homePage = CommonFunctions.homePage;
 
-	}
+    }
 
-	@Test(priority = 0)
-	public void SCH_AutoPort_Initialization_001() {
+    @Test(priority = 0)
+    public void SCH_AutoPort_Initialization_001() {
 
-		homePage.initializeText();
+        homePage.initializeText();
 
-	}
+    }
 
-	@Test(priority = 1)
-	public void SCH_Home_UI_002() {
+    @Test(priority = 1)
+    public void SCH_Home_UI_002() {
 
-		homePage.verifyHomePageUI();
+        homePage.verifyHomePageUI();
 
-		homePage.verifySearchTabContents();
+        homePage.verifySearchTabContents();
 
-	}
+    }
 
-	
+
 }

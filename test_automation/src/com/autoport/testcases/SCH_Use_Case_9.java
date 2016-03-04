@@ -14,67 +14,68 @@ import com.autoport.utilities.CommonFunctions;
 
 public class SCH_Use_Case_9 {
 
-	WebDriver driver;
+    WebDriver driver;
 
-	HomePage homePage;
-	SearchTab searchTab;
-	ReportsTab reportsTab;
+    HomePage homePage;
+    SearchTab searchTab;
+    ReportsTab reportsTab;
 
-	@BeforeTest
-	public void beforeTest() throws Exception {
+    @BeforeTest
+    public void beforeTest() throws Exception {
 
-		// CommonFunctions.launchBrowser();
-		driver = CommonFunctions.driver;
-		homePage = CommonFunctions.homePage;
-		searchTab = CommonFunctions.searchTab;
-		reportsTab = CommonFunctions.reportsTab;
-	}
+        // CommonFunctions.launchBrowser();
+        driver = CommonFunctions.driver;
+        homePage = CommonFunctions.homePage;
+        searchTab = CommonFunctions.searchTab;
+        reportsTab = CommonFunctions.reportsTab;
+    }
 
-	@Test(priority = 0)
-	public void SCH_Use_current_version_repository_details_common_projects_044() throws InterruptedException {
+    @Test(priority = 0)
+    public void SCH_Use_current_version_repository_details_common_projects_044() throws InterruptedException {
 
-		// searchTab.clickOnMostCommonlyUsedProjectsBtn();
+        // searchTab.clickOnMostCommonlyUsedProjectsBtn();
 
-		searchTab.clickOnCommonlyUsedProjectSearch();
+        searchTab.clickOnCommonlyUsedProjectSearch();
 
-		searchTab.clickOnRepositoryDetailsBtnForCommonProjects();
+        searchTab.clickOnRepositoryDetailsBtnForCommonProjects();
 
-		searchTab.verifyUseCurrentVersionForCommonProject();
-	}
+        searchTab.verifyUseCurrentVersionForCommonProject();
+    }
 
-	@Test(priority = 1)
-	public void SCH_Select_build_servers_repository_details_common_projects_045() throws InterruptedException {
+    @Test(priority = 1)
+    public void SCH_Select_build_servers_repository_details_common_projects_045() throws InterruptedException {
 
-		searchTab.verifySelectBuildServerForCommonProject();
+        searchTab.verifySelectBuildServerForCommonProject();
 
-	}
+    }
 
-	@Test(priority = 2)
-	public void SCH_Build_Test_repository_common_projects_046() throws InterruptedException, ParseException {
+    //This is a system test case
+    @Test(priority = 2)
+    public void SCH_Build_Test_repository_common_projects_046() throws InterruptedException, ParseException {
 
-		searchTab.clickOnBuildAndTestBtnForCommonProject();
+        searchTab.clickOnBuildAndTestBtnForCommonProject();
 
-		searchTab.clickOnAlertCloseBtn();
+        searchTab.clickOnAlertCloseBtn();
 
-		homePage.openReportsTab();
+        homePage.openReportsTab();
 
-		reportsTab.clickOnManageCompareProjectResultsBtn();
+        reportsTab.clickOnManageCompareProjectResultsBtn();
 
-		reportsTab.enterProjectNameForSearch(searchTab.getRepositoryNameForCommonProject());// bootstrap
+        reportsTab.enterProjectNameForSearch(searchTab.getRepositoryNameForCommonProject());// bootstrap
 
-		reportsTab.clickOnListLocalBtn();
+        reportsTab.clickOnListLocalBtn();
 
-		reportsTab.clickOnDateCompletedHeader();
+        reportsTab.clickOnDateCompletedHeader();
 
-		reportsTab.verifyJenkinsJobCompletion(searchTab.getBuildClickTime(), searchTab.getBuildServersCount());
+        reportsTab.verifyJenkinsJobCompletion(searchTab.getBuildClickTime(), searchTab.getBuildServersCount());
 
-		homePage.clickSearchTab();
-	}
+        homePage.clickSearchTab();
+    }
 
-	@Test(priority = 3)
-	public void SCH_Build_Steps_repository_common_project_047() {
-		searchTab.verifyBuildStepsForCommonProject();
-	}
+    @Test(priority = 3)
+    public void SCH_Build_Steps_repository_common_project_047() {
+        searchTab.verifyBuildStepsForCommonProject();
+    }
 
-	
+    
 }

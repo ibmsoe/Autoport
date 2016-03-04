@@ -32,135 +32,135 @@ import com.autoport.pageobjects.SearchTab;
 
 public class CommonFunctions {
 
-	public static WebDriver driver;
+    public static WebDriver driver;
 
-	public static FluentWait<WebDriver> fluentWait;
-	public static WebDriverWait explicitWait;
+    public static FluentWait<WebDriver> fluentWait;
+    public static WebDriverWait explicitWait;
 
-	public static HomePage homePage;
-	public static SearchTab searchTab;
-	public static BuildServersTab buildServerTab;
-	public static BatchJobsTab batchJobsTab;
-	public static ReportsTab reportsTab;
+    public static HomePage homePage;
+    public static SearchTab searchTab;
+    public static BuildServersTab buildServerTab;
+    public static BatchJobsTab batchJobsTab;
+    public static ReportsTab reportsTab;
 
-	public static void launchBrowser() throws Exception {
+    public static void launchBrowser() throws Exception {
 
-		try {
+        try {
 
-			Properties prop = new Properties();
-			String userDir = System.getProperty("user.dir");
-			String filePath = userDir + "/config.properties";
+            Properties prop = new Properties();
+            String userDir = System.getProperty("user.dir");
+            String filePath = userDir + "/config.properties";
 
-			InputStream is = new FileInputStream(filePath);
+            InputStream is = new FileInputStream(filePath);
 
-			prop.load(is);
+            prop.load(is);
 
-			String url = prop.getProperty("URL");
-			String browser = prop.getProperty("browser");
-			long implicitWaitTime = Integer.parseInt(prop.getProperty("implicitWait"));
-			long explicitWaitTime = Integer.parseInt(prop.getProperty("explicitWait"));
-			long fluentWaitTime = Integer.parseInt(prop.getProperty("fluentWait"));
+            String url = prop.getProperty("URL");
+            String browser = prop.getProperty("browser");
+            long implicitWaitTime = Integer.parseInt(prop.getProperty("implicitWait"));
+            long explicitWaitTime = Integer.parseInt(prop.getProperty("explicitWait"));
+            long fluentWaitTime = Integer.parseInt(prop.getProperty("fluentWait"));
 
-			/*String proxyurl = prop.getProperty("proxy");
-			String port = prop.getProperty("port");
+            /*String proxyurl = prop.getProperty("proxy");
+            String port = prop.getProperty("port");
 
-			String PROXY = proxyurl + ":" + port;
+            String PROXY = proxyurl + ":" + port;
 
-			Proxy proxy = new Proxy();
-			proxy.setHttpProxy(PROXY).setFtpProxy(PROXY).setSslProxy(PROXY).setSocksProxy(PROXY)
-					.setNoProxy("*.ibm.com");*/
+            Proxy proxy = new Proxy();
+            proxy.setHttpProxy(PROXY).setFtpProxy(PROXY).setSslProxy(PROXY).setSocksProxy(PROXY)
+                    .setNoProxy("*.ibm.com");*/
 
-			if (browser.equalsIgnoreCase("Firefox")) {
-								
-				FirefoxProfile ffProfile = new FirefoxProfile();
+            if (browser.equalsIgnoreCase("Firefox")) {
 
-				/*ProfilesIni allProfiles = new ProfilesIni();
-				FirefoxProfile ffProfile = allProfiles.getProfile("default");*/
-				ffProfile.setAcceptUntrustedCertificates(true);
-				ffProfile.setAssumeUntrustedCertificateIssuer(true);
-				ffProfile.setEnableNativeEvents(true);
-				
-				ffProfile.setPreference("browser.download.folderList", 1);
-				ffProfile.setPreference("browser.helperApps.neverAsk.openFile","text/plain");
-				ffProfile.setPreference("browser.helperApps.neverAsk.saveToDisk", "text/plain");
-				ffProfile.setPreference("browser.helperApps.alwaysAsk.force", false);
-				/*ffProfile.setPreference("privacy.popups.policy", true);
-				ffProfile.setPreference("browser.popups.showPopupBlocker", false);*/
-				
-				driver = new FirefoxDriver(ffProfile);
+                FirefoxProfile ffProfile = new FirefoxProfile();
 
-			} else if (browser.equalsIgnoreCase("chrome")) {
+                /*ProfilesIni allProfiles = new ProfilesIni();
+                FirefoxProfile ffProfile = allProfiles.getProfile("default");*/
+                ffProfile.setAcceptUntrustedCertificates(true);
+                ffProfile.setAssumeUntrustedCertificateIssuer(true);
+                ffProfile.setEnableNativeEvents(true);
 
-				System.setProperty("webdriver.chrome.driver", userDir + "/Drivers/chromedriver.exe");
-				
-				ChromeOptions options = new ChromeOptions();
-				options.addArguments("test-type");
-				options.addArguments("--disable-popup-blocking");
-				DesiredCapabilities capabilities = DesiredCapabilities.chrome();
-				capabilities.setCapability(ChromeOptions.CAPABILITY, options);
-				
-				driver = new ChromeDriver(capabilities);
-				
-			} else if (browser.equalsIgnoreCase("IE")) {
+                ffProfile.setPreference("browser.download.folderList", 1);
+                ffProfile.setPreference("browser.helperApps.neverAsk.openFile","text/plain");
+                ffProfile.setPreference("browser.helperApps.neverAsk.saveToDisk", "text/plain");
+                ffProfile.setPreference("browser.helperApps.alwaysAsk.force", false);
+                /*ffProfile.setPreference("privacy.popups.policy", true);
+                ffProfile.setPreference("browser.popups.showPopupBlocker", false);*/
 
-				System.setProperty("webdriver.ie.driver", userDir + "/Drivers/IEDriverServer.exe");
-				driver = new InternetExplorerDriver();
-			}
+                driver = new FirefoxDriver(ffProfile);
 
-			driver.manage().timeouts().implicitlyWait(implicitWaitTime, TimeUnit.SECONDS);
-			driver.manage().window().maximize();
-			explicitWait = new WebDriverWait(driver, explicitWaitTime);
-			fluentWait = new FluentWait<WebDriver>(driver).withTimeout(fluentWaitTime, TimeUnit.SECONDS)
-					.pollingEvery(5, TimeUnit.SECONDS).ignoring(NoSuchElementException.class);
+            } else if (browser.equalsIgnoreCase("chrome")) {
 
-			homePage = new HomePage(driver, fluentWait);
-			searchTab = new SearchTab(driver, fluentWait);
-			batchJobsTab = new BatchJobsTab(driver, fluentWait);
-			reportsTab = new ReportsTab(driver, fluentWait);
-			buildServerTab = new BuildServersTab(driver, fluentWait);
+                System.setProperty("webdriver.chrome.driver", userDir + "/Drivers/chromedriver.exe");
 
-			driver.get(url);
+                ChromeOptions options = new ChromeOptions();
+                options.addArguments("test-type");
+                options.addArguments("--disable-popup-blocking");
+                DesiredCapabilities capabilities = DesiredCapabilities.chrome();
+                capabilities.setCapability(ChromeOptions.CAPABILITY, options);
 
-		} catch (FileNotFoundException ex) {
-			ex.printStackTrace();
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
+                driver = new ChromeDriver(capabilities);
 
-	public static void goTo_ListInstallSingleSoftwarSection() {
+            } else if (browser.equalsIgnoreCase("IE")) {
 
-		homePage.openBuildServerTab();
+                System.setProperty("webdriver.ie.driver", userDir + "/Drivers/IEDriverServer.exe");
+                driver = new InternetExplorerDriver();
+            }
 
-		buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
+            driver.manage().timeouts().implicitlyWait(implicitWaitTime, TimeUnit.SECONDS);
+            driver.manage().window().maximize();
+            explicitWait = new WebDriverWait(driver, explicitWaitTime);
+            fluentWait = new FluentWait<WebDriver>(driver).withTimeout(fluentWaitTime, TimeUnit.SECONDS)
+                    .pollingEvery(5, TimeUnit.SECONDS).ignoring(NoSuchElementException.class);
 
-		buildServerTab.clickListInstallRemoveSoftwareBtnToOpen();
-	}
+            homePage = new HomePage(driver, fluentWait);
+            searchTab = new SearchTab(driver, fluentWait);
+            batchJobsTab = new BatchJobsTab(driver, fluentWait);
+            reportsTab = new ReportsTab(driver, fluentWait);
+            buildServerTab = new BuildServersTab(driver, fluentWait);
 
-	public static void goTo_ListInstallUsingManagedServicesSection() {
+            driver.get(url);
 
-		homePage.openBuildServerTab();
+        } catch (FileNotFoundException ex) {
+            ex.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
 
-		buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
+    public static void goTo_ListInstallSingleSoftwarSection() {
 
-		buildServerTab.clickListInstallRemoveSoftwareUsingManagedServicesBtnToOpen();
-	}
-	
-	public static void goTo_ShowCleanSlavesUsingManagedServicesSection() {
-		
-		homePage.openBuildServerTab();
+        homePage.openBuildServerTab();
 
-		buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
+        buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
 
-		buildServerTab.clickShowCleanBuildSlavesUsingManagedServicesBtnToOpen();
-		
-	}
+        buildServerTab.clickListInstallRemoveSoftwareBtnToOpen();
+    }
 
-	public static void goTo_UploadPackageToRepositorySection() {
+    public static void goTo_ListInstallUsingManagedServicesSection() {
 
-		homePage.openBuildServerTab();
+        homePage.openBuildServerTab();
 
-		buildServerTab.clickuploadPackagesToRepositoryBtnToOpen();
-	}
+        buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
+
+        buildServerTab.clickListInstallRemoveSoftwareUsingManagedServicesBtnToOpen();
+    }
+
+    public static void goTo_ShowCleanSlavesUsingManagedServicesSection() {
+
+        homePage.openBuildServerTab();
+
+        buildServerTab.clickManageJenkinsSlaveNodesBtnToOpen();
+
+        buildServerTab.clickShowCleanBuildSlavesUsingManagedServicesBtnToOpen();
+
+    }
+
+    public static void goTo_UploadPackageToRepositorySection() {
+
+        homePage.openBuildServerTab();
+
+        buildServerTab.clickuploadPackagesToRepositoryBtnToOpen();
+    }
 
 }

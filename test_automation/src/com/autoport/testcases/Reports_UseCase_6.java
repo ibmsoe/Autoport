@@ -11,115 +11,115 @@ import com.autoport.utilities.CommonFunctions;
 import com.autoport.utilities.ReadTestData;
 
 public class Reports_UseCase_6 {
-	WebDriver driver;
-	FluentWait<WebDriver> fluentWait;
-	CommonFunctions functions;
-	HomePage homePage;
-	ReportsTab reportsTab;	
-	String localBatchJobResult;
-	String archivedBatchJobResult;
-	 
-	 @BeforeTest
-	  public void beforeTest() throws Exception {
-		 
-		 //CommonFunctions.launchBrowser(); 
-		 driver = CommonFunctions.driver; 
-		 homePage = CommonFunctions.homePage;
-		 
-		 homePage = CommonFunctions.homePage;
-		 reportsTab = CommonFunctions.reportsTab;	
-		 
-		 localBatchJobResult = ReadTestData.readParameter("Reports_UseCase_6", "localBatchJobResultForWhichBuildIsSuccess");
-		 archivedBatchJobResult = ReadTestData.readParameter("Reports_UseCase_6", "archivedBatchJobResultForWhichBuildIsSuccess");
-		 		 
-		 homePage.openReportsTab();
-		 
-		 reportsTab.clickManageCompareBatchJobsResultsButton();
-	  }
-	 
-	//This is a system test case
-	 @Test(priority=0)
-	 public void Reports_View_Test_History_For_Local_Batch_Jobs_Result_020() throws Exception{	
-		 
-		 reportsTab.enterBatchJobResultToSearch(localBatchJobResult);
-		  
-		  reportsTab.clickListLocalBatchJobResultsButton();
-		  
-		  reportsTab.verifySearchResultsforBatchJob(localBatchJobResult);
-		  
-		  reportsTab.selectCheckboxForBatchJob(localBatchJobResult);
-		  
-		  reportsTab.verifyButtonsAreEnabledToManageBatchJobs();
-		  
-		  reportsTab.clickTestHistoryButtonForBatchJobs();
-		  
-		  reportsTab.clickBackToListButtonForBatchJobs();
-		  
-		  reportsTab.clearSearchedBatchJobResult();
-	 }
-	 
-	 
-	 //This is a system test case
-	 @Test(priority=1)
-	 public void Reports_View_Test_Detail_For_Local_Batch_Job_Result_021() throws Exception{	
-		 
-		 reportsTab.enterBatchJobResultToSearch(localBatchJobResult);
-		  
-		  reportsTab.clickListLocalBatchJobResultsButton();
-		  
-		  reportsTab.verifySearchResultsforBatchJob(localBatchJobResult);
-		  
-		  reportsTab.selectCheckboxForBatchJob(localBatchJobResult);
-		  
-		  reportsTab.verifyButtonsAreEnabledToManageBatchJobs();
-		  
-		  reportsTab.clickTestDetailButtonForBatchJobs();
-		  
-		  reportsTab.clickBackToListButtonForBatchJobs();
-		  
-		  reportsTab.clearSearchedBatchJobResult();
-	 }
-	 
-	//This is a system test case
-	 @Test(priority=2)
-	 public void Reports_View_Test_History_For_Archived_Batch_Jobs_Result_022() throws Exception{	
-		 
-		 reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult);
-		  
-		  reportsTab.clickListArchivedBatchJobsResultsButton();
-		  
-		  reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);
-		  
-		  reportsTab.selectCheckboxForBatchJob(archivedBatchJobResult);
-		  
-		  reportsTab.verifyButtonsAreEnabledToManageBatchJobs();
-		  
-		  reportsTab.clickTestHistoryButtonForBatchJobs();
-		  
-		  reportsTab.clickBackToListButtonForBatchJobs();
-		  
-		  reportsTab.clearSearchedBatchJobResult();
-	 }
-	 
-	//This is a system test case
-	 @Test(priority=3)
-	 public void Reports_View_Test_Detail_For_Archived_Batch_Jobs_Result_023() throws Exception{	
-		 
-		 reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult);
-		  
-		  reportsTab.clickListArchivedBatchJobsResultsButton();
-		  
-		  reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);
-		  
-		  reportsTab.selectCheckboxForBatchJob(archivedBatchJobResult);
-		  
-		  reportsTab.verifyButtonsAreEnabledToManageBatchJobs();
-		  
-		  reportsTab.clickTestDetailButtonForBatchJobs();
-		  
-		  reportsTab.clickBackToListButtonForBatchJobs();
-		  
-		  reportsTab.clearSearchedBatchJobResult();
-	 }
+    WebDriver driver;
+    FluentWait<WebDriver> fluentWait;
+    CommonFunctions functions;
+    HomePage homePage;
+    ReportsTab reportsTab;
+    String localBatchJobResult;
+    String archivedBatchJobResult;
+
+     @BeforeTest
+      public void beforeTest() throws Exception {
+
+         //CommonFunctions.launchBrowser();
+         driver = CommonFunctions.driver;
+         homePage = CommonFunctions.homePage;
+
+         homePage = CommonFunctions.homePage;
+         reportsTab = CommonFunctions.reportsTab;
+
+         localBatchJobResult = ReadTestData.readParameter("Reports_UseCase_6", "localBatchJobResultForWhichBuildIsSuccess");
+         archivedBatchJobResult = ReadTestData.readParameter("Reports_UseCase_6", "archivedBatchJobResultForWhichBuildIsSuccess");
+
+         homePage.openReportsTab();
+
+         reportsTab.clickManageCompareBatchJobsResultsButton();
+      }
+
+    //This is a system test case
+     @Test(priority=0)
+     public void Reports_View_Test_History_For_Local_Batch_Jobs_Result_020() throws Exception{
+
+         reportsTab.enterBatchJobResultToSearch(localBatchJobResult);
+
+          reportsTab.clickListLocalBatchJobResultsButton();
+
+          reportsTab.verifySearchResultsforBatchJob(localBatchJobResult);
+
+          reportsTab.selectCheckboxForBatchJob(localBatchJobResult);
+
+          reportsTab.verifyButtonsAreEnabledToManageBatchJobs();
+
+          reportsTab.clickTestHistoryButtonForBatchJobs();
+
+          reportsTab.clickBackToListButtonForBatchJobs();
+
+          reportsTab.clearSearchedBatchJobResult();
+     }
+
+
+     //This is a system test case
+     @Test(priority=1)
+     public void Reports_View_Test_Detail_For_Local_Batch_Job_Result_021() throws Exception{
+
+         reportsTab.enterBatchJobResultToSearch(localBatchJobResult);
+
+          reportsTab.clickListLocalBatchJobResultsButton();
+
+          reportsTab.verifySearchResultsforBatchJob(localBatchJobResult);
+
+          reportsTab.selectCheckboxForBatchJob(localBatchJobResult);
+
+          reportsTab.verifyButtonsAreEnabledToManageBatchJobs();
+
+          reportsTab.clickTestDetailButtonForBatchJobs();
+
+          reportsTab.clickBackToListButtonForBatchJobs();
+
+          reportsTab.clearSearchedBatchJobResult();
+     }
+
+    //This is a system test case
+     @Test(priority=2)
+     public void Reports_View_Test_History_For_Archived_Batch_Jobs_Result_022() throws Exception{
+
+         reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult);
+
+          reportsTab.clickListArchivedBatchJobsResultsButton();
+
+          reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);
+
+          reportsTab.selectCheckboxForBatchJob(archivedBatchJobResult);
+
+          reportsTab.verifyButtonsAreEnabledToManageBatchJobs();
+
+          reportsTab.clickTestHistoryButtonForBatchJobs();
+
+          reportsTab.clickBackToListButtonForBatchJobs();
+
+          reportsTab.clearSearchedBatchJobResult();
+     }
+
+    //This is a system test case
+     @Test(priority=3)
+     public void Reports_View_Test_Detail_For_Archived_Batch_Jobs_Result_023() throws Exception{
+
+         reportsTab.enterBatchJobResultToSearch(archivedBatchJobResult);
+
+          reportsTab.clickListArchivedBatchJobsResultsButton();
+
+          reportsTab.verifySearchResultsforBatchJob(archivedBatchJobResult);
+
+          reportsTab.selectCheckboxForBatchJob(archivedBatchJobResult);
+
+          reportsTab.verifyButtonsAreEnabledToManageBatchJobs();
+
+          reportsTab.clickTestDetailButtonForBatchJobs();
+
+          reportsTab.clickBackToListButtonForBatchJobs();
+
+          reportsTab.clearSearchedBatchJobResult();
+     }
 
 }

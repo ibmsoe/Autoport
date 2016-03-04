@@ -14,82 +14,83 @@ import com.autoport.utilities.ReadTestData;
 
 public class SCH_Use_Case_6 {
 
-	WebDriver driver;
+    WebDriver driver;
 
-	HomePage homePage;
-	SearchTab searchTab;
-	ReportsTab reportsTab;
+    HomePage homePage;
+    SearchTab searchTab;
+    ReportsTab reportsTab;
 
-	String buildAndTestRepositoryName;
+    String buildAndTestRepositoryName;
 
-	@BeforeTest
-	public void beforeTest() throws Exception {
+    @BeforeTest
+    public void beforeTest() throws Exception {
 
-		// CommonFunctions.launchBrowser();
-		driver = CommonFunctions.driver;
+        // CommonFunctions.launchBrowser();
+        driver = CommonFunctions.driver;
 
-		homePage = CommonFunctions.homePage;
-		searchTab = CommonFunctions.searchTab;
-		reportsTab = CommonFunctions.reportsTab;
+        homePage = CommonFunctions.homePage;
+        searchTab = CommonFunctions.searchTab;
+        reportsTab = CommonFunctions.reportsTab;
 
-		buildAndTestRepositoryName = ReadTestData.readParameter(
-				"searchTabData", "buildAndTestRepositoryName");
+        buildAndTestRepositoryName = ReadTestData.readParameter(
+                "searchTabData", "buildAndTestRepositoryName");
 
-		searchTab.clickOnSingleProjectBtn();
+        searchTab.clickOnSingleProjectBtn();
 
-	}
+    }
 
-	@Test(priority = 0)
-	public void SCH_Use_current_version_repository_details_single_project_024() {
+    @Test(priority = 0)
+    public void SCH_Use_current_version_repository_details_single_project_024() {
 
-		searchTab.searchForRepository(buildAndTestRepositoryName);
+        searchTab.searchForRepository(buildAndTestRepositoryName);
 
-		searchTab.pressEnterKey();
+        searchTab.pressEnterKey();
 
-		searchTab.waitingForResultPanel();
+        searchTab.waitingForResultPanel();
 
-		searchTab.clickOnFirstRepositoryDetailsBtn();
+        searchTab.clickOnFirstRepositoryDetailsBtn();
 
-		searchTab.verifyUseCurrentVersion();
-	}
+        searchTab.verifyUseCurrentVersion();
+    }
 
-	@Test(priority = 1)
-	public void SCH_Select_build_servers_repository_details_single_project_025()
-			throws InterruptedException {
+    @Test(priority = 1)
+    public void SCH_Select_build_servers_repository_details_single_project_025()
+            throws InterruptedException {
 
-		searchTab.verifySelectBuildServer();
-	}
+        searchTab.verifySelectBuildServer();
+    }
 
-	@Test(priority = 2)
-	public void SCH_Build_Test_repository_single_project_026()
-			throws InterruptedException, ParseException {
+    //This is a system test case
+    @Test(priority = 2)
+    public void SCH_Build_Test_repository_single_project_026()
+            throws InterruptedException, ParseException {
 
-		searchTab.clickOnBuildAndTestBtn();
+        searchTab.clickOnBuildAndTestBtn();
 
-		searchTab.clickOnAlertCloseBtn();
+        searchTab.clickOnAlertCloseBtn();
 
-		homePage.openReportsTab();
+        homePage.openReportsTab();
 
-		reportsTab.clickOnManageCompareProjectResultsBtn();
+        reportsTab.clickOnManageCompareProjectResultsBtn();
 
-		reportsTab.enterProjectNameForSearch(searchTab.getRepositoryName());
+        reportsTab.enterProjectNameForSearch(searchTab.getRepositoryName());
 
-		reportsTab.clickOnListLocalBtn();
+        reportsTab.clickOnListLocalBtn();
 
-		reportsTab.clickOnDateCompletedHeader();
+        reportsTab.clickOnDateCompletedHeader();
 
-		reportsTab.verifyJenkinsJobCompletion(searchTab.getBuildClickTime(),
-				searchTab.getBuildServersCount());
+        reportsTab.verifyJenkinsJobCompletion(searchTab.getBuildClickTime(),
+                searchTab.getBuildServersCount());
 
-		homePage.clickSearchTab();
+        homePage.clickSearchTab();
 
-	}
+    }
 
-	@Test(priority = 3)
-	public void SCH_Build_Steps_repository_single_project_027() {
+    @Test(priority = 3)
+    public void SCH_Build_Steps_repository_single_project_027() {
 
-		searchTab.verifyBuildSteps();
-	}
+        searchTab.verifyBuildSteps();
+    }
 
 
 }
