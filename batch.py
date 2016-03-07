@@ -206,6 +206,7 @@ class Batch:
         except IOError as e:
             if e.errno == errno.ENOENT:
                 try:
+                    # Make directories iteratively
                     paths = globals.pathForBatchFiles.split('/')
                     curPath = '/'
                     for path in paths:
@@ -220,7 +221,6 @@ class Batch:
                         except IOError as e:
                             if e.errno == errno.ENOENT:
                                 self.ftp_client.mkdir(curPath)
-                    #self.ftp_client.mkdir(globals.pathForBatchFiles)
                 except:
                     return {"error": "Could not mkdir %s on archive storage " % (globals.pathForBatchFiles)  }
 
@@ -649,6 +649,7 @@ class Batch:
             pass # Directory's not there, try to add it
 
         try:
+            # Make directories iteratively
             paths = batchReportDir.split('/')
             curPath = '/'
             for path in paths:
@@ -663,7 +664,6 @@ class Batch:
                 except IOError as e:
                     if e.errno == errno.ENOENT:
                         self.ftp_client.mkdir(curPath)
-            #self.ftp_client.mkdir(batchReportDir)
             self.ftp_client.put(report, batchReportDir + '/' + batchReportName)
             # Cleaning-up local batch_test_report after archival
             os.remove(report)

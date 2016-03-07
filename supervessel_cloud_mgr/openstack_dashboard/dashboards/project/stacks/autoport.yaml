@@ -58,7 +58,7 @@ parameters:
   image_driver:
     type: string
     description: Image used for driver node
-    default: c1057475-d38c-4bee-aa75-87a4b770cf1f
+    default: 7990afe0-7414-4a4f-ac2e-a732946c119c
   image_master:
     type: string
     description: Image used for master node
@@ -130,7 +130,7 @@ resources:
 
            # Set autoport config.ini
            # Replace jenkinsUrl
-           sed -i "/jenkinsUrl/c\jenkinsUrl: https://bigdata.ptopenlab.com:8800/$JENKINS_MASTER_EXTERNAL_IP:8080" /home/opuser/autoport/config.ini
+           sed -i "/jenkinsUrl/c\jenkinsUrl: https://crl.ptopenlab.com:8800/$JENKINS_MASTER_EXTERNAL_IP:8080/" /home/opuser/autoport/config.ini
            sed -i "/jenkinsHostname/c\jenkinsHostname: 192.168.1.110" /home/opuser/autoport/config.ini
            # Remove SFTP-related parameters
            sed -i '/SFTP/d' /home/opuser/autoport/config.ini
@@ -192,7 +192,7 @@ resources:
                echo "Jenkins API is up and running. `date`" >> /root/output.txt
                break
              else
-               sleep 5
+               sleep 10
                echo "Retry .. " $i `date` >> /root/output.txt
              fi
            done
