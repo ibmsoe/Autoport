@@ -106,6 +106,11 @@ rivets.formatters['gt'] = function (value, arg) {
 rivets.formatters['gteq'] = function (value, arg) {
   return value <= arg;
 };
+
+rivets.formatters.append = function (value, arg) {
+  return value + arg;
+};
+
 /************************************* Bootstrap Table addon formatters *********************************************/
 
 // Returns 'Yes' if the package is up-datable, 'No' otherwise
