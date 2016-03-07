@@ -240,6 +240,7 @@ class Catalog:
                     errors.append(build)
                     continue
                 try:
+                    # Make directories iteratively
                     paths = remoteBuildPath.split('/')
                     curPath = '/'
                     for path in paths:
