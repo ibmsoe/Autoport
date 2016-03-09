@@ -66,19 +66,19 @@ parameters:
   image_slave_c_power:
     type: string
     description: Image used for centos power slave node
-    default: 2601d56f-0e1b-47f8-a62a-642ff2347b0d
+    default: 6d5febe3-3d39-46fb-83ab-a9043343a378
   image_slave_c_x86:
     type: string
     description: Image used for centos x86 slave node
-    default: 69ad2da4-d955-4a37-97ca-bfc11c6729e9
+    default: e8a5c0c7-f401-4dad-9785-74a4dd5832b6
   image_slave_u_power:
     type: string
     description: Image used for ubuntu power slave node
-    default: 985c172f-08d6-4ca0-a53b-f9e5f7c9212d
+    default: f583e83e-c68c-4dd0-9dd7-31c980d1ceb2
   image_slave_u_x86:
     type: string
     description: Image used for ubuntu x86 slave node
-    default: e4c1b2da-028f-4be5-b95c-d202c8dd9b59
+    default: 628514af-3de5-4ea1-b92b-c4a30fdc9897
   flavor_driver:
     type: string
     description: flavor used for driver node
@@ -90,7 +90,7 @@ parameters:
   flavor_slave:
     type: string
     description: flavor used for slave node
-    default: docker.small
+    default: kvm.2c4g20G
 
   # Parameters about SuperVessel/OpenStack user
   os_username:
