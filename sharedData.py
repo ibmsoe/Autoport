@@ -842,6 +842,7 @@ class SharedData:
                                 addLocalPackage = True
                                 for sharedPackage in sharedRuntime['userPackages']:
                                     if localPackage['name'] == sharedPackage['name'] and \
+                                       localPackage['arch'] == sharedPackage['arch'] and \
                                        localPackage['owner'] == sharedPackage['owner']:
                                         if localPackage['version'] != sharedPackage['version']:
                                             sharedPackage['version'] = localPackage['version']
@@ -859,6 +860,7 @@ class SharedData:
                                 for localPackage in localRuntime['userPackages']:
                                     if sharedPackage['owner'] == localPackage['owner'] and \
                                        sharedPackage['name'] == localPackage['name'] and \
+                                       sharedPackage['arch'] == localPackage['arch'] and \
                                        sharedPackage['version'] == localPackage['version']:
                                         removePackage = False
                                         break

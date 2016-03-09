@@ -2406,7 +2406,7 @@ def listManagedPackages():
                     isAddable = False
                     isRemovable = False
                     enableCheckBox = False
-                    managedP, managedV, userAddedVersion, removablePackage = sharedData.getManagedPackage(ml, pkg, node)
+                    managedP, managedV, userAddedVersion, removablePackage = sharedData.getManagedPackage(ml, pkg, data['node'])
 
                     # In case package is not managed and is a user added package, then managedVersion is
                     # set to userAdded version instead of 'N/A'
