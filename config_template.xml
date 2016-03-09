@@ -215,7 +215,7 @@
                               echo "Autoport INFO: sudo $cmd $rest, rc=$rc"
                               if [ "$rc" -eq "$expectedFailure" ]; then
                                   i=$((i+1))
-                                  sleep 30
+                                  sleep 60
                               else
                                   break;
                               fi
