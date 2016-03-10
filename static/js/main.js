@@ -159,6 +159,10 @@ var searchState = {
                         searchState.single.batchFile.packages[0].name +
                         "-" + String(searchState.single.batchFile.packages.length);
                 }
+                searchState.single.batchFile.config.includeTestCmds = "True";
+                searchState.single.batchFile.config.includeInstallCmds = "False";
+                searchState.single.batchFile.config.java = detailState.javaType;
+                searchState.single.batchFile.config.javascript = detailState.javaScriptType;
                 var json = JSON.stringify(batchState.convertToExternal(searchState.single.batchFile),
                     undefined, 2);
                 var blob = new Blob([json], {type: "text/plain;charset=utf-8"});
@@ -221,6 +225,10 @@ var searchState = {
                           searchState.multiple.batchFile.packages[0].name +
                           "-" + String(searchState.multiple.batchFile.packages.length);
                   }
+                  searchState.multiple.batchFile.config.includeTestCmds = "True";
+                  searchState.multiple.batchFile.config.includeInstallCmds = "False";
+                  searchState.multiple.batchFile.config.java = detailState.javaType;
+                  searchState.multiple.batchFile.config.javascript = detailState.generateJavaScriptType;
                   var json =
                       JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
                       undefined, 2);
@@ -244,7 +252,7 @@ var searchState = {
                   var name = searchState.multiple.batchFile.config.name;
                   searchState.multiple.batchFile.config.includeTestCmds = "True";
                   searchState.multiple.batchFile.config.includeInstallCmds = "False";
-                  searchState.multiple.batchFile.config.java = detailState.JavaType;
+                  searchState.multiple.batchFile.config.java = detailState.javaType;
                   searchState.multiple.batchFile.config.javascript = detailState.generateJavaScriptType;
                   var file = JSON.stringify(batchState.convertToExternal(searchState.multiple.batchFile),
                       undefined, 2);

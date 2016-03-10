@@ -221,12 +221,7 @@ fieldset[disabled] .form-control {
 }
 
 .modal-dialog-custom {
-    position: relative !important;
     display: table     !important;
-    overflow-y: auto   !important;
-    overflow-x: auto   !important;
-    width: auto        !important;
-    min-width: 100px   !important;
 }
 
 /* Progress Bar and Button Styling*/
