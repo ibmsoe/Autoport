@@ -22,6 +22,10 @@ Autoport provides a managed runtime environment for Jenkins build servers
 so that the requisite build tools and most commonly used packages such as
 libsnappy-java, libblas, and protobuf are pre-installed.
 
+To see Autoport in action:
+
+https://crl.ptopenlab.com:8800/autoport?next=/autoport/project/
+
 
 # Documentation
 
