@@ -1563,11 +1563,12 @@ def runBatchFile ():
     logger.debug("In runBatchFile, batchName=%s, nodeCSV=%s" % (batchName, nodeCSV))
 
     try:
-        batchList = batchName.split('.')
+        batchPath = ntpath.basename(batchName)
+        batchList = batchPath.split(".")
         createdTime = batchList[-1]
-        batchNameOnly = ".".join(batchList[1:-1])
+        batchNameOnly = batchList[0]
         batchDirName = "%s.%s" % (
-            globals.localPathForBatchTestResults + ntpath.basename(batchNameOnly),
+            globals.localPathForBatchTestResults + batchNameOnly,
             createdTime
         )
     except ValueError:
@@ -1624,7 +1625,7 @@ def runBatchFile ():
         try:
             newBatchName = "%s/%s.%s.%s" % (
                 batchDirName,
-                ntpath.basename(batchNameOnly),
+                batchNameOnly,
                 uid,
                 submissionTime
             )
