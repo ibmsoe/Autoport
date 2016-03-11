@@ -58,7 +58,7 @@ parameters:
   image_driver:
     type: string
     description: Image used for driver node
-    default: 7990afe0-7414-4a4f-ac2e-a732946c119c
+    default: 9bbf427f-4f11-4402-8d6f-bb3c773f6b62
   image_master:
     type: string
     description: Image used for master node
