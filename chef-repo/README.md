@@ -1,37 +1,30 @@
-Deprecated
-==========
-
-Use of this repository is deprecated. We recommend using the `chef generate repo` command that comes with [ChefDK](http://downloads.chef.io/chef-dk/).
-
 Overview
 ========
 
-Every Chef installation needs a Chef Repository. This is the place where cookbooks, roles, config files and other artifacts for managing systems with Chef will live. We strongly recommend storing this repository in a version control system such as Git and treat it like source code.
-
-While we prefer Git, and make this repository available via GitHub, you are welcome to download a tar or zip archive and use your favorite version control system to manage the code.
+Every Chef installation needs a Chef Repository. This is the place where cookbooks, roles, config files and other artifacts for managing systems with Chef will live. For Autoport we use a standard default directory structure for chef-repo. The chef-repo is supposed to be located on workstation, which in our case is Jenkins Master. Autoport tool during initialization takes care of keeping chef-repo on Jenkins Master up to date and also uploading the latest version of cookbook on to the chef-server.
 
 Repository Directories
 ======================
 
 This repository contains several directories, and each directory contains a README file that describes what it is for in greater detail, and how to use it for managing your systems with Chef.
 
-* `cookbooks/` - Cookbooks you download or create.
-* `data_bags/` - Store data bags and items in .json in the repository.
-* `roles/` - Store roles in .rb or .json in the repository.
-* `environments/` - Store environments in .rb or .json in the repository.
+* `cookbooks/` - Cookbooks you download or create. Autoport work with a single cookbook `buildServer`
+* `data_bags/` - Store data bags and items in .json in the repository. This is not being utilized currently for Autoport.
+* `roles/` - Store roles in .rb or .json in the repository. This is not being utilized currently for Autoport.
+* `environments/` - Store environments in .rb or .json in the repository. This is not being utilized currently for Autoport.
 
 Configuration
 =============
 
-The repository contains a knife configuration file.
+The repository contains a knife configuration file and a custom bootstrap template for autoport.
 
 * .chef/knife.rb
+* .chef/bootstrap/autoport_template.erb
 
-The knife configuration file `.chef/knife.rb` is a repository specific configuration file for knife. If you're using Hosted Chef, you can download one for your organization from the management console. If you're using the Open Source Chef Server, you can generate a new one with `knife configure`. For more information about configuring Knife, see the Knife documentation.
+The file `.chef/knife.rb` is a configuration file for knife with Autoport specific settings.
+For more details on knife configuartion settings refer following sections in `docs/README-install.md`:
+* Chef Installation And Setup on Jenkins Master
+* Configuring Chef Workstation on Jenkins Master
 
-https://docs.chef.io/knife.html
-
-Next Steps
-==========
-
-Read the README file in each of the subdirectories for more information about what goes in those directories.
+Custom bootstrap template `autoport_template.erb` is created specifically to support installation of chef-client
+on power architecture during knife bootstrap process.
