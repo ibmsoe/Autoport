@@ -84,14 +84,20 @@ def init():
     # requires a trailing slash(/) character, so the input value may include it.  Normalize
     # input to not include it as url manipulation elsewhere adds it as required
     jenkinsUrl = configOptions['jenkinsurl']
-    if jenkinsUrl[-1] == '/':
+    if not jenkinsUrl or "<" in jenkinsUrl:
+        jenkinsUrl = ""
+    elif jenkinsUrl[-1] == '/':
         jenkinsUrl = jenkinsUrl[:-1]
 
-    # This field is used to open socket connections.  An IP address may be given to avoid
-    # the reverse proxies based on an external address if an internal IP address exists
+    # This field is used to open socket connections.  A second field is provided so that an
+    # IP Address or alternate hostname may be given as a proxy server may be used to provide
+    # access to jenkinsUrl.
     jenkinsHostname = configOptions['jenkinshostname']
-    if jenkinsHostname == None or not jenkinsHostname or "<" in jenkinsHostname:
-       jenkinsHostname = urlparse(jenkinsUrl).hostname
+    if jenkinsUrl:
+        if not jenkinsHostname or "<" in jenkinsHostname:
+           jenkinsHostname = urlparse(jenkinsUrl).hostname
+    else:
+        jenkinsHostname = ""
 
     # globals not based on config file
     global github
