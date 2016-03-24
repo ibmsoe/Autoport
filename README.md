@@ -22,6 +22,8 @@ Autoport provides a managed runtime environment for Jenkins build servers
 so that the requisite build tools and most commonly used packages such as
 libsnappy-java, libblas, and protobuf are pre-installed.
 
+Autoport supports programs written in C, C++, Java, Javascript, Python, Perl, PHP, Ruby, and Scala. 
+
 To see Autoport in action:
 
 https://crl.ptopenlab.com:8800/autoport?next=/autoport/project/
