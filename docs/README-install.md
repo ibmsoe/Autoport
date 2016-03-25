@@ -1,151 +1,166 @@
 
-3/11/2016
+## Installation of an Autoport Cluster
 
-This document describes the installation and configuration of Autoport:
+This document describes the installation and configuration of Autoport cluster which includes the following servers:
 
-* autoport driver on VM 1
-* jenkins master on VM 2
-* jenkins build slaves(N) on VM <3+N-1>
+* Autoport driver VM
+* Jenkins master VM
+* Jenkins build slave VMs
 
-Typically, there is a ppc64le and x86-64 build server for each Linux
-distribution that is the target of the porting effort.  Supported
-Linux distributions are: Ubuntu, RHEL, and CentOS.  Others should
-work as well but only these have been tested.
+Typically, there is a ppc64le and x86-64 build slave for each Linux distribution that is the
+target of your porting effort.  The x86-64 build server is used to establish a base line
+for *proper* functionality.  This is useful to identify Power specific failures assuming they exist,
+but the x86-64 servers are not required.
 
+Supported Linux distributions are: Ubuntu 14.04, RHEL 7, and CentOS 7.2.
 
-================================================================
-IMPORTANT: These steps are to be carried out on autoport driver.
-================================================================
+Note code changes are required to support linux distributions not listed above as install tools
+are operating system specific; however, adding support for new versions of a supported distribution can be
+easily achieved by editing the file that defines the
+[managed runtime environment.](https://github.com/ibmsoe/Autoport/blob/master/data/config/ManagedList.json)
 
-In order to deploy Autoport the following dependencies need to be pre-installed:
+Note Power Linux Big Endian is not supported.  At the time of development, the Chef server package for ppc64 was not available.
 
-1. Install **pip**, so that required python libraries can be installed with all
-   required dependencies,**pip** can be installed as:
+### Steps to be carried out on Autoport Driver VM
 
-    **On RHEL/Centos :**
+  1. Install **pip**, the python package manager, to install python packages required by the Autoport driver
+
+    **On RHEL/Centos**:
+
     $ sudo yum install python-pip
 
-    **On Ubuntu/Debian :**
+    **On Ubuntu/Debian**:
+
     $ sudo apt-get install python-pip
 
-2. If packages *python-devel* and *libevent-devel* are not already installed,
-   install them as:
+  2. Install **python-devel** and **libevent-devel** if they are not already installed
 
-   **On RHEL/Centos:**
-   $ sudo yum install libevent-devel python-devel
+    **On RHEL/Centos**:
 
-   **On Ubuntu/Debian:**
-   $ sudo apt-get install libevent-dev python-dev
+    $ sudo yum install libevent-devel python-devel
 
-3. Install python libraries using **pip** :
+    **On Ubuntu/Debian**:
 
-   $ sudo pip install Flask
-   $ sudo pip install PyGithub
-   $ sudo pip install requests
-   $ sudo pip install paramiko
-   $ sudo pip install threadpool
-   $ sudo pip install diff-match-patch
-   $ sudo pip install PyYaml
-   $ sudo pip install flask-compress
-   $ sudo pip install pytz
-   $ sudo pip install python-novaclient
+    $ sudo apt-get install libevent-dev python-dev
 
-4. Get the autoport source code
+  3. Install python libraries using **pip**
 
-   $ git clone git://github.com/ibmsoe/autoport.git
+    $ sudo pip install Flask
 
-   Edit the autoport/config.ini file to provide Jenkins URL.   To accomplish, this you
-   need to follow the instructions further down in this file pertaining to Jenkins Master
-   and then Jenkins build slaves.  Return HERE when these steps are done.
+    $ sudo pip install PyGithub
 
-   There are two ways to run autoport:
+    $ sudo pip install requests
 
-   A) under the Autoport built-in Flask webserver
+    $ sudo pip install paramiko
 
-      This is good for small development deployments with a few users
+    $ sudo pip install threadpool
 
-      $ cd autoport
-      $ nohup python main.py -p &
-      $ tail -f nohup.out
-      http://<local_server_hostname>:5000/autoport
+    $ sudo pip install diff-match-patch
 
-      This is for local deployments.  Best performance by far, but not sharable
+    $ sudo pip install PyYaml
 
-      $ nohup python main.py &
-      $ tail -f nohup.out
-      http://127.0.0.1:5000/autoport
+    $ sudo pip install flask-compress
 
-   B) under the apache server.  This is better for production installations
+    $ sudo pip install pytz
 
-      Continue with steps 5-7 immediately below
+    $ sudo pip install python-novaclient
 
-==============================================================
-Steps 5-7: Optional Autoport deployment using an Apache Server
-==============================================================
+  4. Install and configure the Autoport source code and start Autoport
 
-5. Install **apache server**, refer following links for installation :
+    $ git clone git://github.com/ibmsoe/Autoport.git
 
-    * [Installing Apache on RHEL6](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Managing_Confined_Services/chap-Managing_Confined_Services-The_Apache_HTTP_Server.html#sect-Managing_Confined_Services-The_Apache_HTTP_Server-The_Apache_HTTP_Server_and_SELinux)
+    Edit the **Autoport/config.ini** file to provide Jenkins URL.   To accomplish, this you
+    need to follow the instructions provided in the next section in this file pertaining to Jenkins Master
+    and then Jenkins build slaves.  Return HERE when these steps are done.
 
-    * [Installing Apache on RHEL7/CentOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/System_Administrators_Guide/ch-Web_Servers.html)
+    There are several ways to run Autoport:
 
-    * [Installing Apache on Ubuntu/Debian](https://help.ubuntu.com/lts/serverguide/httpd.html)
+    1. Private development web service that is addressable locally only.  Each user needs to install and configure the
+       Autoport driver which is generally configured to use a shared jenkins cluster.  This provides the best
+       performance by far, but each user needs to locally configure and install Autoport.  This is what autoport
+       developers do.
 
-6. Install **mod_wsgi** if not already installed as below :
+            $ cd Autoport
+            $ nohup python main.py &
+            $ tail -f nohup.out
 
-    **On Ubuntu/Debian :**
-    $ sudo apt-get install libapache2-mod-wsgi
-    $ sudo a2enmod mod-wsgi
+            To access Autoport, Local users paste this into their browser: http://127.0.0.1:5000/autoport
 
-    **On RHEL/Centos :**
-    $ sudo yum install mod_wsgi
+    2. Shared development web service supporting a **small** number of concurrent users.  Internally utilizes the Flask web server  
 
-7. Execute the apache deployment script provided with Autoport suorce code as a sudo user,
-   with OS flavor(centos/ubuntu/rhel) as argument :
+            $ cd Autoport
+            $ nohup python main.py -p &
+            $ tail -f nohup.out
 
-    $ cd autoport/configs
-    $ chmod 755 deploy_autoport.sh
-    $ sudo ./deploy_autoport.sh <os_flavor>
+            To access Autoport, users paste this into their browser: http://<autoport_driver_hostname>:5000/autoport
 
-    On completion of the script Autoport application will be deployed and
-    ready to served by Apache on port 80.
+            Note : when configuring autoport as a with a in this environment you can edit **config.ini** to specify more threads to support more concurrent build and 
+            install operations.  Each build operation takes 1 thread.  Some install operations take 2.  When a thread is
+            not available, the operation blocks until one is available.  Users may experience very long waits
+            as build and test operations may take a long time.
 
-    http://<local_server_hostname>/autoport
+    3. Production web service using apache web server
 
-Apache Log Locations:
+      1. Install **apache server**. Please refer to the following links for installation instructions
 
-A) Autoport logs can be found at location:
+        * [Installing Apache on RHEL6](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Managing_Confined_Services/chap-Managing_Confined_Services-The_Apache_HTTP_Server.html#sect-Managing_Confined_Services-The_Apache_HTTP_Server-The_Apache_HTTP_Server_and_SELinux)
 
-   /var/www/html/autoport/data/autoport.log
+        * [Installing Apache on RHEL7/CentOS](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/System_Administrators_Guide/ch-Web_Servers.html)
 
-B) Server logs can be found at:
+        * [Installing Apache on Ubuntu/Debian](https://help.ubuntu.com/lts/serverguide/httpd.html)
 
-   **For RHEL/CentOS :**
-   /var/log/httpd/error_log
+      2. Install **mod_wsgi** if not already installed as below
 
-   **For Ubuntu :**
-   /var/log/apache2/error.log
+          **On Ubuntu/Debian**:
+
+              $ sudo apt-get install libapache2-mod-wsgi
+              $ sudo a2enmod mod-wsgi
+
+          **On RHEL/Centos**:
+
+              $ sudo yum install mod_wsgi
+
+      3. Execute the apache deployment script provided with Autoport suorce code as a sudo user,
+         with OS flavor(centos/ubuntu/rhel) as argument
+
+              $ cd Autoport/configs
+              $ chmod 755 deploy_autoport.sh
+              $ sudo ./deploy_autoport.sh <os_flavor>
+
+              On completion of the script Autoport application will be deployed and
+              ready to served by Apache on port 80.
+
+              http://<local_server_hostname>/autoport
+
+      4. For debugging purposes, log information is located at:
+
+            /var/www/html/autoport/data/autoport.log
+
+         **For RHEL/CentOS**:
+
+            /var/log/httpd/error_log
+
+         **For Ubuntu**:
+
+            /var/log/apache2/error.log
 
 
-================================================================
-IMPORTANT: These steps are to be carried out on Jenkins Master
-================================================================
+### Steps to be carried out on Jenkins Master VM
 
 1. Install Jenkins master as per link :
 
    http://pkg.jenkins-ci.org/debian/
 
 2. After installation of Jenkins Master, perform following steps :
-   a) Create a user **jenkins**
+   1. Create a user **jenkins**
 
-      $ useradd -p $(openssl passwd -1 <password>) jenkins \
-        -s /bin/bash -m -d /home/jenkins
+      $ useradd -p $(openssl passwd -1 <password>) jenkins -s /bin/bash -m -d /home/jenkins
 
-   b) Create a folder 'jenkins_home' under specified path as shown below
+   2. Create a folder 'jenkins_home' under specified path as shown below
 
       $ mkdir /home/jenkins/jenkins_home
 
-   c) Edit **'/etc/default/jenkins'**
+   3. Edit **'/etc/default/jenkins'**
 
       Add following line
 
@@ -155,25 +170,29 @@ IMPORTANT: These steps are to be carried out on Jenkins Master
 
       `# jenkins home location`
 
-   d) Install Open-jdk-7:
+   4. Install Open-jdk-7:
 
-      **Ubuntu :**
+      **Ubuntu/Debian**:
+
       $ sudo apt-get install openjdk-7-jdk
 
-      **RHEL/CentOS :**
+      **RHEL/CentOS**:
+
       $ sudo yum install java-1.7.0-openjdk-devel
 
-   e) Install git:
+   5. Install git:
 
-      **Ubuntu :**
+      **Ubuntu/Debian**:
+
       $ sudo apt-get install git-all
 
-      **RHEL/CentOS :**
+      **RHEL/CentOS**:
+
       $ sudo yum install git-all
 
-    e) Add **jenkins** user to sudoers list with no password
+   6. Add **jenkins** user to sudoers list with no password
 
-      * Add following line in file **"/etc/sudoers"**:
+      Add following line in file **"/etc/sudoers"**:
 
       `jenkins ALL=(ALL:ALL) NOPASSWD: ALL`
 
@@ -183,39 +202,45 @@ IMPORTANT: These steps are to be carried out on Jenkins Master
 
 3. SSH configuration :
 
-   Copy ssh keys from autoport sandbox to root and jenkins accounts,
-   on Jenkins master. Perform following steps to copy:
+  * Copy ssh keys from Autoport sandbox to root and jenkins accounts on Jenkins master
 
-   $ cd autoport
-   $ scp ./data/security/jenkins  root@<jenkins-master>:.ssh/
-   $ scp ./data/security/jenkins.pub  root@<jenkins-master>:.ssh/
-   $ scp ./data/security/jenkins  jenkins@<jenkins-master>:.ssh/
-   $ scp ./data/security/jenkins.pub jenkins@<jenkins-master>:.ssh/
+      $ cd autoport
 
-   * Ensure that appropriate permissions are set on .ssh folder.
+      $ scp ./data/security/jenkins  root@<jenkins-master>:.ssh/
 
-   $ ssh root@<jenkins-master>
-   $ su jenkins
-   $ sudo chown -R jenkins:jenkins ~/.ssh
-   $ sudo chmod 700 ~/.ssh
-   $ sudo chmod 600 ~/.ssh/*
-   $ sudo restorecon -R -v ~/.ssh
+      $ scp ./data/security/jenkins.pub  root@<jenkins-master>:.ssh/
+
+      $ scp ./data/security/jenkins  jenkins@<jenkins-master>:.ssh/
+
+      $ scp ./data/security/jenkins.pub jenkins@<jenkins-master>:.ssh/
+
+   * Ensure that appropriate permissions are set on .ssh folder
+
+     $ ssh root@<jenkins-master>
+
+     $ su jenkins
+
+     $ sudo chown -R jenkins:jenkins ~/.ssh
+
+     $ sudo chmod 700 ~/.ssh
+
+     $ sudo chmod 600 ~/.ssh/*
+
+     $ sudo restorecon -R -v ~/.ssh
 
 4. Jenkins server can be accessed at:
 
-   http://<new_server_hostname>:8080/
+   http://jenkins_master_hostname:8080/
 
-=============================================
-Jenkins Master First Time Site Configurations
-=============================================
+### Jenkins Master First Time Configuration
 
 1. Click on `Manage Jenkins -> Configure System`. Set number of executors to 8.
 
 2. Click on `Manage Jenkins -> Manage Plugins`.
    Update the installed plugins,and click restart jenkins button.
 
-3. After restart, install following plugins(Look on the available tab.
-   If you do not see it, there is a search option for plugins):
+3. After restart, install following plugins (Look on the available tab.
+   If you do not see it, there is a search option for plugins)
       - Artifact Deployer Plugin
       - Copy Artifact Plugin
       - Compress build log Plugin
@@ -244,9 +269,7 @@ Jenkins Master First Time Site Configurations
       - Pre-scm-buildstep Plugin
 
 
-=============================================
-Chef Installation And Setup on Jenkins Master
-=============================================
+### Chef Installation And Setup on Jenkins Master
 
 1. Get chef-server-core package and install as
    per instructions from this [website](https://packagecloud.io/chef/stable/packages/ubuntu/lucid/chef-server-core_12.1.0-1_amd64.deb).
@@ -273,11 +296,11 @@ Chef Installation And Setup on Jenkins Master
 5. Edit the below files(temporary tweak):
 
    * Edit `/opt/opscode/embedded/cookbooks/private-chef/templates/default/nginx/nginx.conf.erb`.
-        * Change all occurrence of  `server_name <%= node['fqdn'] %>;`
+   * Change all occurrence of  `server_name <%= node['fqdn'] %>;`
           to `server_name <%= node['ipaddress'] %>;`
 
    * Edit `/opt/opscode/embedded/cookbooks/private-chef/recipes/show_config.rb`.
-        * Change `config = PrivateChef.generate_config(node['fqdn'])`
+   * Change `config = PrivateChef.generate_config(node['fqdn'])`
           to `config = PrivateChef.generate_config(node['ipaddress'])`
 
    *  Again run reconfigure:
@@ -296,15 +319,13 @@ Chef Installation And Setup on Jenkins Master
 
    $ chef-server-ctl org-create short_name long_name --association_user user_name --filename  ORG_FILE_NAME
 
-   short_name: A basic identifier for your organization.
-   Make sure we set the value as autoport-ibm.
-   long_name:  proper name of the organization.
-   Make sure we set the value as autoport-ibm.
-   user_name:  User to be added to the Organization.  This value is the one created in #6 above i.e  autoport-chef`
+   short_name: A basic identifier for your organization.  Make sure to set the value as autoport-ibm.
 
-===============================================
-Chef Workstation Installation on Jenkins Master
-===============================================
+   long_name:  proper name of the organization.  Make sure we set the value as autoport-ibm.
+
+   user_name:  User to be added to the Organization. This value is the one created in #6 above i.e  autoport-chef`
+
+### Chef Workstation Installation on Jenkins Master
 
 - Download [chef-client](https://downloads.chef.io/chef-client/ubuntu/) package.
 
@@ -314,25 +335,24 @@ Chef Workstation Installation on Jenkins Master
 
   $ sudo dpkg -i chef_*_amd64.deb
 
-==============================================
-Configuring Chef Workstation on Jenkins Master
-==============================================
+### Configuring Chef Workstation on Jenkins Master
 
 - Create a directory named ".chef" and add certificate files :
 
    $ mkdir -p /var/opt/autoport/chef-repo/.chef
+
    $ cp autoport-ibm-validator.pem /var/opt/autoport/chef-repo/.chef/
+
    $ cp autoport-chef.pem /var/opt/autoport/chef-repo/.chef/
 
 
-=========================================================
-Configuring Custom Managed Repositories on Jenkins Master
-=========================================================
+### Configuring Custom Managed Repositories on Jenkins Master
 
 RPMS, DEBS which are not directly available via yum/apt package manager on
-the slaves nodes, are maintained in the custom repository.
-Along with RPMS and DEBS there are few binaries/tar/zip packages also maintained.
-These packages are part of Managed Runtime.
+the slaves nodes, are maintained in the custom repository.  In addition, the mechanism
+allows a few binaries/tar/zip packages to be uploaded.  They are managed outside
+local yum/apt repositories mentioned above, but they are supported by autoport via
+managed runtime services.
 
 In order to setup repositories perform following steps:
 
@@ -476,72 +496,91 @@ In order to setup repositories perform following steps:
                       /var/www/autoport_repo/debs/<os>/<os-release>
         $ service apache2 restart
 
-========================================================================
-IMPORTANT: These steps are to be carried out on each Jenkins build slave
-========================================================================
+### These steps are to be carried out on each Jenkins build slave
 
 1. Install Open-jdk-7. This is necessary to connect the build slave to Jenkins master:
 
-   **Ubuntu :**
+   **On Ubuntu/Debian**:
+
    $ sudo apt-get install openjdk-7-jdk
 
-   **RHEL/CentOS :**
+   **On RHEL/CentOS**:
+
    $ sudo yum install java-1.7.0-openjdk-devel
 
 2. SSH configurations:
 
    * Edit **/etc/ssh/sshd_config**.
-       * Ensure you have added/edited the setting as:
+   * Ensure you have added/edited the setting as:
           * `change PermitRootLogin yes`
-       * For *Ubuntu/Debian* build slaves, add (or) edit to the following:
+   * For *Ubuntu/Debian* build slaves, add (or) edit to the following:
           * `UseDNS no`
 
-   * Restart ssh service.
-       **Ubuntu :**
+   * Restart the ssh service
+
+       **On Ubuntu/Debian**:
+
        $ sudo service ssh restart
 
-       **RHEL/CentOS :**
+       **On RHEL/CentOS**:
+
        $ service sshd restart
 
 3. Create **jenkins** user account
 
-   $ useradd -p $(openssl passwd -1 <password>) jenkins \
-              -s /bin/bash -m -d /home/jenkins
+   $ useradd -p $(openssl passwd -1 <password>) jenkins -s /bin/bash -m -d /home/jenkins
 
 4. Add jenkins to Sudoers list:
 
-   %sudo   ALL=(ALL:ALL) ALL
-   jenkins ALL=(ALL) NOPASSWD: ALL
-   Change "Defaults requiretty" to "Defaults !requiretty" if present
+       %sudo   ALL=(ALL:ALL) ALL
+
+       jenkins ALL=(ALL) NOPASSWD: ALL
+
+       Change "Defaults requiretty" to "Defaults !requiretty" if present
 
 5. Configure ssh keys:
 
    * Append the content of jenkins.pub present on Jenkins Master at /home/jenkins/.ssh/
      to /home/jenkins/.ssh/authorized_keys of each the build slave.
 
-   $ cd /home/jenkins/.ssh/         # On jenkins master
-   $ scp jenkins.pub jenkins@<jenkins-slave>:~/.ssh/
-   $ ssh jenkins@<jenkins-slave> cat ~/.ssh/jenkins.pub >> ~/.ssh/authorized_keys
+       $ cd /home/jenkins/.ssh/         # On jenkins master
+
+       $ scp jenkins.pub jenkins@<jenkins-slave>:~/.ssh/
+
+       $ ssh jenkins@<jenkins-slave> cat ~/.ssh/jenkins.pub >> ~/.ssh/authorized_keys
 
    * Make sure that permissions are correct for .ssh folder and its content:
 
-   $ ssh jenkins@<jenkins-slave>
-   $ sudo chown -R jenkins:jenkins ~/.ssh
-   $ sudo chmod 700 ~/.ssh
-   $ sudo chmod 600 ~/.ssh/*
-   $ sudo restorecon -R -v ~/.ssh
+       $ ssh jenkins@<jenkins-slave>
+
+       $ sudo chown -R jenkins:jenkins ~/.ssh
+
+       $ sudo chmod 700 ~/.ssh
+
+       $ sudo chmod 600 ~/.ssh/*
+
+       $ sudo restorecon -R -v ~/.ssh
 
 6. Add slave node to Jenkins Master.
    * Go to `Jenkins Dashboard -> Manage Jenkins -> Manage Nodes -> New Node`
    * Fill in the details after selecting **Dumb Slave** option:
 
-   Name: <node-name>
-   # of executors: 8
-   Remote root directory: /home/jenkins
-   Label: Ubuntu_14.04_x86-64
-   Launch Method: Launch slave agents on Unix machines via SSH
-   Host: <ip-address/fqdn of the slave node>
-   Credentials:
-       Select option SSH Username with private key
-       Username: <jenkins>
-       Private Key: </home/jenkins/.ssh/jenkins>
+       Name: build-slave-hostname
+
+       `#` of executors: 8
+
+       Remote root directory: /home/jenkins
+
+       Label: a short name like distro_platform_instance
+
+       Launch Method: Launch slave agents on Unix machines via SSH
+
+       Host: ip-address/fqdn of the slave node
+
+       Credentials:
+
+           * Select option SSH Username with private key
+
+           * Username: jenkins
+
+           * Private Key: /home/jenkins/.ssh/jenkins
