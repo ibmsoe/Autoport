@@ -32,9 +32,12 @@ https://crl.ptopenlab.com:8800/autoport?next=/autoport/project/
 # Documentation
 
 Documentation is available in the docs/ directory.
+* [User Guide] (https://github.com/ibmsoe/Autoport/blob/master/docs/UserGuide.pdf)
+* [Installation Guide] (https://github.com/ibmsoe/Autoport/blob/master/docs/README-install.md)
 
-There is an Installation Guide and a User Guide.
+# Questions / Issues
 
+Please create a project [issue] (https://github.com/ibmsoe/Autoport/issues) and include @ibmsoe/autoport in your comment.
 
 # License
 
