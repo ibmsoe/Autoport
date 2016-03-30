@@ -75,7 +75,8 @@ Note Power Linux Big Endian is not supported.  At the time of development, the C
             $ nohup python main.py &
             $ tail -f nohup.out
 
-            To access Autoport, Local users paste this into their browser: http://127.0.0.1:5000/autoport
+            To access Autoport, Local users paste this into their browser: 
+            http://127.0.0.1:5000/autoport
 
     2. Shared development web service supporting a **small** number of concurrent users.  Internally utilizes the Flask web server  
 
@@ -83,12 +84,17 @@ Note Power Linux Big Endian is not supported.  At the time of development, the C
             $ nohup python main.py -p &
             $ tail -f nohup.out
 
-            To access Autoport, users paste this into their browser: http://<autoport_driver_hostname>:5000/autoport
+            To access Autoport, users paste this into their browser: 
+            http://<autoport_driver_hostname>:5000/autoport
 
-            Note : when configuring autoport as a with a in this environment you can edit **config.ini** to specify more threads to support more concurrent build and 
-            install operations.  Each build operation takes 1 thread.  Some install operations take 2.  When a thread is
-            not available, the operation blocks until one is available.  Users may experience very long waits
-            as build and test operations may take a long time.
+            Notes:
+            
+            When configuring autoport as a web service here and below, you may need to increase
+            the number of threads that are internally allocated in a pool (12 by default) to manage 
+            Jenkins related tasks such as build and install.  In general, 1 thread is utilized 
+            per client request so a pool size of 12 allows 12 concurrent requests.  If you experience
+            delays in client processing, then you may want to increase the default pool size.  You can
+            accomplish this by editing the field **threadPoolSize** in the file **config.ini**.   
 
     3. Production web service using apache web server
 
@@ -186,11 +192,11 @@ Note Power Linux Big Endian is not supported.  At the time of development, the C
 
       Add following line in file **"/etc/sudoers"**:
 
-          `jenkins ALL=(ALL:ALL) NOPASSWD: ALL`
+          jenkins ALL=(ALL:ALL) NOPASSWD: ALL
 
       after line:
 
-          `%sudo    ALL=(ALL:ALL) ALL`
+          %sudo    ALL=(ALL:ALL) ALL
 
 3. SSH configuration :
 
@@ -280,13 +286,23 @@ Note Power Linux Big Endian is not supported.  At the time of development, the C
 
 5. Edit the below files(temporary tweak):
 
-   * Edit `/opt/opscode/embedded/cookbooks/private-chef/templates/default/nginx/nginx.conf.erb`.
-     * Change all occurrence of  `server_name <%= node['fqdn'] %>;`
-          to `server_name <%= node['ipaddress'] %>;`
+   * Edit `/opt/opscode/embedded/cookbooks/private-chef/templates/default/nginx/nginx.conf.erb`
+     * Change all occurrence of
+         
+         server_name <%= node['fqdn'] %>
+        
+         to
+        
+         server_name <%= node['ipaddress'] %>;
 
-   * Edit `/opt/opscode/embedded/cookbooks/private-chef/recipes/show_config.rb`.
-     * Change `config = PrivateChef.generate_config(node['fqdn'])`
-          to `config = PrivateChef.generate_config(node['ipaddress'])`
+   * Edit `/opt/opscode/embedded/cookbooks/private-chef/recipes/show_config.rb`
+     * Change
+        
+        config = PrivateChef.generate_config(node['fqdn'])
+        
+        to
+        
+        config = PrivateChef.generate_config(node['ipaddress'])
 
    * Again run reconfigure
      *   `$ sudo chef-server-ctl reconfigure`
@@ -462,7 +478,7 @@ In order to setup repositories perform following steps:
         |       |   |-- scala-2.9.2.deb
         |-- rpms
             |-- centos
-            |   --- 7
+            |   |-- 7
             |       |-- chef-12.3.0-1.el6.x86_64.rpm
             |       |-- chef-12.4.0~dev.0+20150519065500.git.237.2882f53-1.el7.ppc64le.rpm
             |       |-- chef-12.4.0~dev.0+git.237.2882f53-1.el7.ppc64.rpm
@@ -472,7 +488,7 @@ In order to setup repositories perform following steps:
             |       |-- scala-2.10.2.rpm
             |       |-- scons-2.3.0-1.noarch.rpm
             |-- rhel
-                --- 7
+                |-- 7
                     |-- chef-12.3.0-1.el6.x86_64.rpm
                     |-- chef-12.4.0~dev.0+20150519065500.git.237.2882f53-1.el7.ppc64le.rpm
                     |-- chef-12.4.0~dev.0+git.237.2882f53-1.el7.ppc64.rpm
@@ -556,7 +572,7 @@ In order to setup repositories perform following steps:
    * Fill in the details after selecting **Dumb Slave** option:
 
             Name: build-slave-hostname
-            `#` of executors: 8
+            # of executors: 8
             Remote root directory: /home/jenkins
             Label: a short name like distro_platform_instance
             Launch Method: Launch slave agents on Unix machines via SSH
