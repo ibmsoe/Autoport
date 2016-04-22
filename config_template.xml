@@ -345,11 +345,63 @@
                       fi
                       rc=$?
                       return $rc
+                  }
+                  function getMakeTestTarget() {
+                      TEST=$(python .autoport-scratch/makeFileParser.py)
+                      echo "Autoport : Test Target deduced from makefile is : $TEST"
                   }'
                  ################################ End shell program to create autoport environment ###########################
 
                  # Dump to a bash script for execution
                  echo &quot;$bash_script_providing_builtin_autoport_functions&quot; >.autoport-scratch/.autoportrc
+
+################################ Python program to parse makefile generated during build command ####################
+
+                 python_script_makefile_parsing='#!/usr/bin/python
+import re
+
+def getAllTargets():
+    try:
+        targets = []
+        subTargets = []
+        target_pattern = re.compile("^[^\-#\s\$\.][a-zA-Z0-9_\/\s\-]*(?!:=):[a-zA-Z0-9_\$\(\)\/\s\-\.]*;*")
+
+        # Considering that Makefile is generated in the current working directory.
+
+        with open("Makefile") as makefile_data:
+            for line in makefile_data:
+                m = target_pattern.search(line)
+                if m:
+                    tgt = m.group(0).partition(":")
+                    targets.append(tgt[0].strip())
+                    subTargets.append(tgt[2].strip(";").split())
+        return targets, subTargets
+    except Exception as e:
+        makefile_data = ""
+        return [], []
+
+def getMakeTestCommand():
+    subTgt, reqTgt = "", "test"
+    try:
+        targets, subTargets = getAllTargets()
+        for count, tgt in enumerate(targets):
+            if tgt == "test" or tgt == "check":
+                print tgt
+                return tgt
+            elif "test" in tgt:
+                if len(subTgt) &lt; len(subTargets[count]) or subTgt == "":
+                    reqTgt = tgt
+                    subTgt = subTargets[count]
+        print reqTgt
+    except Exception as e:
+        print reqTgt
+
+if __name__ == "__main__":
+    getMakeTestCommand()'
+
+################################## End python program to parse makefile generated during build command ##################
+
+                 echo &quot;$python_script_makefile_parsing&quot; >.autoport-scratch/makeFileParser.py
 
                  env</command>
         </hudson.tasks.Shell>
