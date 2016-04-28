@@ -846,7 +846,15 @@ def inferBuildSteps(listing, repo):
     bootstrap = None
     makefile = None
     travis = None
+    directory_feed = []
+    langlist_length = len(langlist)
     for f in listing:
+        if f.type == 'dir':
+            if f.name == "build" or f.name == "scripts":
+                directory_feed.insert(0, f.path)
+            else:
+                directory_feed.append(f.path)
+            continue
         if f.name == 'pom.xml':
             langlist.append(maven_def)         # If we find specific build files we can improve our commands by grepping readme's
         elif f.name == 'build.gradle':
@@ -878,6 +886,61 @@ def inferBuildSteps(listing, repo):
                         logger.debug("inferBuildSteps: proj=%s, grepfile=%s" % (repo.name, f.name))
                 except:
                     pass
+    cmds = []
+    subdirs = []
+    if len(langlist) <= langlist_length and makefile == None and bootstrap == None and buildsh == None and travis == None:
+        for directory in directory_feed:
+            logger.info("directory Name : %s" %(directory))
+            listing = repo.get_dir_contents(directory)
+            for f in listing:
+                if f.name == 'pom.xml':
+                    subdirs.append(directory)
+                    cmds.append(maven_def)
+                elif f.name == 'build.gradle':
+                    subdirs.append(directory)
+                    cmds.append(gradle_def)
+                elif f.name == 'build.xml':
+                    subdirs.append(directory)
+                    cmds.append(ant_def)
+                elif f.name == 'CMakeLists.txt':
+                    subdirs.append(directory)
+                    cmds.append(cmake_def)
+                elif f.name in ('SConstruct', 'Sconstruct', 'sconstruct'):
+                    subdirs.append(directory)
+                    cmds.append(scons_def)
+                elif f.name == 'build.sbt':
+                    subdirs.append(directory)
+                    cmds.append(sbt_def)
+                elif f.name == 'package.json':
+                    subdirs.append(directory)
+                    cmds.append(base_js_def)
+                elif f.name == 'Makefile':
+                    subdirs.append(directory)
+                    makefile = f
+                elif f.name in ('bootstrap.sh', 'autogen.sh'):
+                    subdirs.append(directory)
+                    bootstrap = f
+                elif f.name in ('build.sh', 'run_build.sh'):
+                    subdirs.append(directory)
+                    buildsh = f
+                elif f.name == '.travis.yml':
+                    subdirs.append(directory)
+                    travis = interpretTravis(repo, f, travis_def)
+                elif any(x in f.name.lower() for x in readmeFiles):
+                    if f.type == 'file' and f.size != 0 and not travis:
+                        try:
+                            fstr = repo.get_file_contents(f.path).content.decode('base64', 'strict')
+                            if fstr != "":
+                                grepstack.insert(0, fstr)
+                                logger.debug("inferBuildSteps: proj=%s, grepfile=%s" % (repo.name, f.name))
+                        except:
+                            pass
+        if len(cmds) > 0 and len(subdirs) > 0:
+            cmd = cmds[-1]
+            subdir = subdirs[-1]
+            cmd['build'] = "cd ./%s; %s" %(subdir,cmd['build'])
+            cmd['test'] = "cd ./%s; %s" %(subdir, cmd['test'])
+            langlist.append(cmd)
 
     # Travis YML file take precedence over build.sh, bootstrap.sh, and Makefile.
     # Next, build.sh is favored, because it bridges languages, sets environment variables, ...
@@ -893,20 +956,37 @@ def inferBuildSteps(listing, repo):
     # understood. Once we have the ability to grep a Makefile we could scan it for Java or Python
     # to determine whether the makefile applies to multiple languages.  For now, we assume
     # that it does.  Later, we can conditionally push it to the lang stack.  TODO: improve
-
+    if len(subdirs) > 0:
+        subdir = subdirs[-1]
     if travis != None:
-        langlist.append(travis_def)
-    elif buildsh != None:
-        langlist.append(buildsh_def)
-    elif bootstrap != None:
-        langlist.append(bootstrap_def)
-    elif makefile != None:
-        testCmd = getMakeTestCommand(repo, makefile)
-        langlist.append(c_def)
-        if testCmd:
-            langlist[-1]['test'] = testCmd
+        if len(subdirs) > 0:
+            travis_def['build'] = "cd ./%s; %s" %(subdir,travis_def['build'])
+            travis_def['test'] = "cd ./%s; %s" %(subdir,travis_def['test'])
+            langlist.append(travis_def)
         else:
-            langlist[-1]['test'] = "make test"
+            langlist.append(travis_def)
+    elif buildsh != None:
+        if len(subdirs) > 0:
+            buildsh_def['build'] = "cd ./%s; %s" %(subdir,buildsh_def['build'])
+            buildsh_def['test'] = "cd ./%s; %s" %(subdir,buildsh_def['test'])
+            langlist.append(buildsh_def)
+        else:
+            langlist.append(buildsh_def)
+    elif bootstrap != None:
+        if len(subdirs) > 0:
+            bootstrap_def['build'] = "cd ./%s; %s" %(subdir, bootstrap_def['build'])
+            bootstrap_def['test'] = "cd ./%s; %s" %(subdir, bootstrap_def['test'])
+            langlist.append(bootstrap_def)
+        else:
+            langlist.append(bootstrap_def)
+    elif makefile != None:
+        if len(subdirs) > 0:
+            buildVal = c_def['build']
+            c_def['build'] = "cd ./%s; %s" %(subdir, c_def['build'])
+            c_def['test'] = "cd ./%s; %s" %(subdir, c_def['test'])
+            langlist.append(c_def)
+        else:
+            langlist.append(c_def)
 
     # Add each template match to build info in the order they were found
     for lang in langlist:
