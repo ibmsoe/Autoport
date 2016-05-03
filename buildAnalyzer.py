@@ -890,7 +890,9 @@ def inferBuildSteps(listing, repo):
     subdirs = []
     if len(langlist) <= langlist_length and makefile == None and bootstrap == None and buildsh == None and travis == None:
         for directory in directory_feed:
-            logger.info("directory Name : %s" %(directory))
+            if "doc" in directory or "book" in directory:
+                continue
+            logger.info("Looking for build files at %s/%s" % (repo.html_url, directory))
             listing = repo.get_dir_contents(directory)
             for f in listing:
                 if f.name == 'pom.xml':
