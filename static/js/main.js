@@ -1,5 +1,65 @@
+var buildEditor = "";
+var testEditor = "";
+var envEditor = "";
+var singleBuildEditor = "";
+var singleTestEditor = "";
+var singleEnvEditor = "";
 try {
     google.load('search', '1');
+    
+    buildEditor = ace.edit("generateSelectedBuild-editor");
+    buildEditor.setTheme("ace/theme/chrome");
+    buildEditor.getSession().setMode("ace/mode/sh");
+    buildEditor.setShowPrintMargin(false);
+    buildEditor.setOptions({
+        fontFamily: "tahoma",
+        fontSize: "10pt"
+    });
+
+    testEditor = ace.edit("generateSelectedTest-editor");
+    testEditor.setTheme("ace/theme/chrome");
+    testEditor.getSession().setMode("ace/mode/sh");
+    testEditor.setShowPrintMargin(false);
+    testEditor.setOptions({
+        fontFamily: "tahoma",
+        fontSize: "10pt"
+    });
+
+    envEditor = ace.edit("generateSelectedEnv-editor");
+    envEditor.setTheme("ace/theme/chrome");
+    envEditor.getSession().setMode("ace/mode/sh");
+    envEditor.setShowPrintMargin(false);
+    envEditor.setOptions({
+        fontFamily: "tahoma",
+        fontSize: "10pt"
+    });
+
+    singleBuildEditor = ace.edit("singleSelectedBuild-editor");
+    singleBuildEditor.setTheme("ace/theme/chrome");
+    singleBuildEditor.getSession().setMode("ace/mode/sh");
+    singleBuildEditor.setShowPrintMargin(false);
+    singleBuildEditor.setOptions({
+        fontFamily: "tahoma",
+        fontSize: "10pt"
+    });
+
+    singleTestEditor = ace.edit("singleSelectedTest-editor");
+    singleTestEditor.setTheme("ace/theme/chrome");
+    singleTestEditor.getSession().setMode("ace/mode/sh");
+    singleTestEditor.setShowPrintMargin(false);
+    singleTestEditor.setOptions({
+        fontFamily: "tahoma",
+        fontSize: "10pt"
+    });
+
+    singleEnvEditor = ace.edit("singleSelectedEnv-editor");
+    singleEnvEditor.setTheme("ace/theme/chrome");
+    singleEnvEditor.getSession().setMode("ace/mode/sh");
+    singleEnvEditor.setShowPrintMargin(false);
+    singleEnvEditor.setOptions({
+        fontFamily: "tahoma",
+        fontSize: "10pt"
+    });
 }
 catch(err) {
     console.log(err.message);
@@ -1070,6 +1130,8 @@ var detailState = {
     javaScriptType: "nodejs",                       // nodejs or IBM SDK for Node.js
     javaScriptTypeOptions: "",
     generateJavaScriptTypeOptions: "",
+    isBuildMultiLine:false,
+    isTestMultiLine:false,
     backToResults: function(ev) {
         var idName = ev.target.id;
         if (idName === "singleDetailBackButton") {
@@ -1113,26 +1175,26 @@ var detailState = {
     },
     changeBuildOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
-            detailState.repo.build.selectedBuild = ev.target.text;
+        	singleBuildEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
         else if (ev.target.className === "generateSearch") {
-            detailState.generateRepo.build.selectedBuild = ev.target.text;
+        	buildEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
     },
     changeTestOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
-            detailState.repo.build.selectedTest = ev.target.text;
+        	singleTestEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
         else if (ev.target.className === "generateSearch") {
-            detailState.generateRepo.build.selectedTest = ev.target.text;
+            testEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
     },
     changeEnvOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
-            detailState.repo.build.selectedEnv = ev.target.text;
+        	singleEnvEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
         else if (ev.target.className === "generateSearch") {
-            detailState.generateRepo.build.selectedEnv = ev.target.text;
+        	envEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
     },
     addToBatchFile: function(ev) {
@@ -2866,17 +2928,20 @@ function showDetail(data) {
         showAlert("Bad response while creating detail view!", data);
     } else {
         if (data.panel === "single") {
-            detailState.repo = data.repo;
-            detailState.repo.addToJenkins = function(e) {
+             detailState.repo = data.repo;
+             singleBuildEditor.session.setValue(detailState.repo.build.selectedBuild.replace(/;\s*/gi,';\n'));
+             singleTestEditor.session.setValue(detailState.repo.build.selectedTest.replace(/;\s*/gi,';\n'));
+             singleEnvEditor.session.setValue(detailState.repo.build.selectedEnv.replace(/;\s*/gi,';\n'));
+             detailState.repo.addToJenkins = function(e) {
                 var buildInfo = detailState.repo.build;
 
-                var selectedBuild = $("#singleSelectedBuild").val();
+                var selectedBuild = singleBuildEditor.session.getValue();
                 selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
 
-                var selectedTest = $("#singleSelectedTest").val();
+                var selectedTest = singleTestEditor.session.getValue();
                 selectedTest = selectedTest === "NA" ? "" : selectedTest;
 
-                var selectedEnv = $("#singleSelectedEnv").val();
+                var selectedEnv = singleEnvEditor.session.getValue();
                 selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
 
                 var el = $("#singleBuildServers")[0];
@@ -2915,18 +2980,21 @@ function showDetail(data) {
         else if (data.panel === "generate") {
             var buildInfo = data.repo.build;
             detailState.generateRepo = data.repo;
+            buildEditor.session.setValue(detailState.generateRepo.build.selectedBuild.replace(/;\s*/gi,';\n'));
+            testEditor.session.setValue(detailState.generateRepo.build.selectedTest.replace(/;\s*/gi,';\n'));
+            envEditor.session.setValue(detailState.generateRepo.build.selectedEnv.replace(/;\s*/gi,';\n'));
             detailState.generateRepo.javaType = detailState.supportedJavaListOptions[0];
 
             detailState.generateRepo.addToJenkins = function(e) {
                 var buildInfo = detailState.generateRepo.build;
 
-                var selectedBuild = $("#generateSelectedBuild").val();
+                var selectedBuild = buildEditor.session.getValue();
                 selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
 
-                var selectedTest = $("#generateSelectedTest").val();
+                var selectedTest = testEditor.session.getValue();
                 selectedTest = selectedTest === "NA" ? "" : selectedTest;
 
-                var selectedEnv = $("#generateSelectedEnv").val();
+                var selectedEnv = envEditor.session.getValue();
                 selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
 
                 var el = $("#generateBuildServers")[0];

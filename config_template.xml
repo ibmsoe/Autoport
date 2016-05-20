@@ -440,7 +440,7 @@ if __name__ == "__main__":
                   echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
                   echo &quot;&quot;                &gt;&gt; $ARTI
-                  echo &quot;Autoport Build CMD:   $CMD1&quot; &gt;&gt; $ARTI
+                  echo -e &quot;Autoport Build CMD:   $CMD1&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
@@ -462,7 +462,7 @@ if __name__ == "__main__":
                   echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  echo $CMD1 | tee $PWD/.autoport-scratch/autoport_build_cmd;
+                  echo -e $CMD1 | tee $PWD/.autoport-scratch/autoport_build_cmd;
                   chmod a+x $PWD/.autoport-scratch/autoport_build_cmd;
                   source $PWD/.autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$?
@@ -505,7 +505,7 @@ if __name__ == "__main__":
                   echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
                   echo &quot;&quot;                &gt;&gt; $ARTI
-                  echo &quot;Autoport Test CMD:    $CMD2&quot; &gt;&gt; $ARTI
+                  echo -e &quot;Autoport Test CMD:    $CMD2&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
@@ -527,7 +527,7 @@ if __name__ == "__main__":
                   echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  echo $CMD2 | tee .autoport-scratch/autoport_test_cmd;
+                  echo -e $CMD2 | tee .autoport-scratch/autoport_test_cmd;
                   chmod a+x .autoport-scratch/autoport_test_cmd;
                   source .autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$?
@@ -570,7 +570,7 @@ if __name__ == "__main__":
                   echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
                   echo &quot;&quot;                &gt;&gt; $ARTI
-                  echo &quot;Autoport Install CMD: $CMD3&quot; &gt;&gt; $ARTI
+                  echo -e &quot;Autoport Install CMD: $CMD3&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
@@ -593,7 +593,7 @@ if __name__ == "__main__":
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
 
-                  echo $CMD3 | tee .autoport-scratch/autoport_install_cmd;
+                  echo -e $CMD3 | tee .autoport-scratch/autoport_install_cmd;
                   chmod a+x .autoport-scratch/autoport_install_cmd;
                   source .autoport-scratch/autoport_install_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$?
