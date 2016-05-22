@@ -44,6 +44,7 @@ from cache import Cache
 from requests.exceptions import MissingSchema
 from project import Project
 from flask.ext.compress import Compress
+from requests.auth import HTTPBasicAuth
 
 # Constants
 maxResults = 25
@@ -124,9 +125,23 @@ def init():
                         useTextAnalytics=globals.useTextAnalytics,
                         logLevel=globals.logLevel,
                         sftpConnected=globals.sftpConnected,
-                        cloudNodeInfo=cloudNodeInfo)
+                        cloudNodeInfo=cloudNodeInfo,
+                        jenkinsPassword=globals.configJenkinsPassword,
+                        jenkinsUser=globals.configJenkinsUsername)
+
+def getAuth():
+    if globals.configJenkinsPassword:
+        logger.debug("getAuth: Considering security setup is enabled for jenkins," +
+                     "using credentials for user %s" %(globals.configJenkinsUsername))
+        globals.auth = HTTPBasicAuth(globals.configJenkinsUsername, globals.configJenkinsPassword)
+    else:
+        globals.auth = ""
+        logger.debug("getAuth: Considering security setup is disabled for jenkins," +
+                     "no authentication required for user %s" %(globals.configJenkinsUsername))
+        logger.debug("In case security setup is enabled, please set the correct password in config.ini")
 
 def getJenkinsNodes_init():
+    nodes = []
     nodeNames = []
     nodeLabels = []
 
@@ -135,11 +150,12 @@ def getJenkinsNodes_init():
     if globals.jenkinsUrl:
         nodesUrl = globals.jenkinsUrl + "/computer/api/json?pretty=true"
         try:
-            nodesResults = json.loads(requests.get(nodesUrl).text)
+            nodesResults = json.loads(requests.get(nodesUrl, auth=globals.auth).text)
             nodes = nodesResults['computer']
         except Exception as e:
             logger.debug("getJenkinsNodes_init: nodes Error=%s" % str(e))
-            return json.jsonify(status="failure", error="Jenkins nodes url or authentication error"), 400
+            logger.debug("Please check credentials in case security is enabled.")
+            # return json.jsonify(status="failure", error="Jenkins nodes url or authentication error"), 400
 
         for node in nodes:
             if not node['offline']:
@@ -148,7 +164,7 @@ def getJenkinsNodes_init():
                     nodeNames.append(name)
                     logger.debug("getJenkinsNodes_init: query nodeName=%s" % str(name))
                     root = ET.fromstring(requests.get(globals.jenkinsUrl +
-                        "/computer/" + name + "/config.xml").text)
+                        "/computer/" + name + "/config.xml", auth=globals.auth).text)
                     nodeLabels.append(root.find("./label").text)
 
     return nodeNames, nodeLabels
@@ -290,6 +306,7 @@ def settings():
     configHostname = globals.configHostname
     configUsername = globals.configUsername
     configPassword = globals.configPassword
+    configJenkinsPassword = globals.configJenkinsPassword
 
     try:
         globals.localPathForTestResults = request.form["ltest_results"]
@@ -333,7 +350,7 @@ def settings():
         globals.configPassword = request.form["password"]
     except ValueError:
         return json.jsonify(status="failure", error="bad configuration password"), 400
-
+ 
     try:
         globals.useTextAnalytics = request.form["usetextanalytics"] == 'true'
     except ValueError:
@@ -1115,7 +1132,8 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
             'name': jobName
         },
         data=configXml,
-        proxies=NO_PROXY
+        proxies=NO_PROXY,
+        auth=globals.auth
     )
 
     logger.debug("createJob_common: jenkins job creat proj=%s, rc=%d" % (repo.name, r.status_code))
@@ -1132,7 +1150,7 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
         homeJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/"
 
         # Start Jenkins job
-        r = requests.get(startJobUrl, proxies=NO_PROXY)
+        r = requests.post(startJobUrl, proxies=NO_PROXY, auth=globals.auth)
 
         logger.debug("createJob_common: jenkins job start proj=%s, rc=%d" % (repo.name, r.status_code))
 
@@ -1332,7 +1350,7 @@ def moveArtifacts(jobName, localDir, moverCv=None):
     building = True
     while building:
         try:
-            requestInfo = requests.get(checkBuildUrl)
+            requestInfo = requests.get(checkBuildUrl, auth=globals.auth)
             if requestInfo.status_code == 200:
                 buildInfo = json.loads(requestInfo.text)
                 building = buildInfo['building']
@@ -1348,7 +1366,7 @@ def moveArtifacts(jobName, localDir, moverCv=None):
                 logger.debug("moveArtifacts: sleep 10 build is queued - not started")
                 sleep(10)
                 try:
-                    r = requests.get(checkQueueUrl).text
+                    r = requests.get(checkQueueUrl, auth=globals.auth).text
                     projectInfo = json.loads(r)
                     inQueue = projectInfo['inQueue']
                 # if it's not in the queue and not building something went wrong
@@ -1438,7 +1456,7 @@ def moveArtifactsTry(jobName, localDir):
     building = True
     for x in range(0, 3):
         try:
-            requestInfo = requests.get(checkBuildUrl)
+            requestInfo = requests.get(checkBuildUrl, auth=globals.auth)
             if requestInfo.status_code == 200:
                 buildInfo = json.loads(requestInfo.text)
                 building = buildInfo['building']
@@ -1969,7 +1987,8 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
                 'name': jobName
             },
             data = configXml,
-            proxies = NO_PROXY
+            proxies = NO_PROXY,
+            auth = globals.auth
         )
     except MissingSchema as e:
         logger.error("createJob_SingleSlavePanel_Common: Please provide valid jenkins url in settings menu")
@@ -1980,7 +1999,7 @@ def createJob_SingleSlavePanel_Common(selectedBuildServer, packageFilter, config
         startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
 
         # Start Jenkins job
-        requests.get(startJobUrl, proxies=NO_PROXY)
+        requests.post(startJobUrl, proxies=NO_PROXY, auth = globals.auth)
 
 
         # Split off a thread to transfer job results from jenkins master to localDir
@@ -2088,7 +2107,8 @@ def queryNode(nodeLabel, action):
             'name': jobName
         },
         data = configXml,
-        proxies = NO_PROXY
+        proxies = NO_PROXY,
+        auth = globals.auth
     )
 
     logger.debug("queryNode: post status=%d" % r.status_code)
@@ -2098,7 +2118,7 @@ def queryNode(nodeLabel, action):
         startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
 
         # Start Jenkins job
-        r = requests.get(startJobUrl, proxies=NO_PROXY)
+        r = requests.post(startJobUrl, proxies=NO_PROXY, auth = globals.auth)
 
         logger.debug("queryNode: get status=%d" % r.status_code)
 
@@ -2187,7 +2207,8 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer, cv=None):
                 'name': jobName
             },
             data = configXml,
-            proxies = NO_PROXY
+            proxies = NO_PROXY,
+            auth = globals.auth
         )
     except MissingSchema as e:
         assert(False), "Please provide valid jenkins url in settings menu!"
@@ -2196,7 +2217,7 @@ def listPackageForSingleSlave_common(packageName, selectedBuildServer, cv=None):
         # Success, send the jenkins job and start it right away.
         startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
         # Start Jenkins job
-        requests.get(startJobUrl, proxies=NO_PROXY)
+        requests.post(startJobUrl, proxies=NO_PROXY, auth=globals.auth)
 
         # Move artifacts.  Wait for completion as we need to return content of file
         time = strftime("%Y-%m-%d-h%H-m%M-s%S", localtime())
@@ -2315,7 +2336,8 @@ def managePackageForSingleSlave():
                 'name': jobName
             },
             data = configXml,
-            proxies = NO_PROXY
+            proxies = NO_PROXY,
+            auth = globals.auth
         )
 
         if r.status_code == 200:
@@ -2323,7 +2345,7 @@ def managePackageForSingleSlave():
             startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
 
             # Start Jenkins job
-            requests.get(startJobUrl, proxies=NO_PROXY)
+            requests.post(startJobUrl, proxies=NO_PROXY, auth=globals.auth)
 
             # Check the status of the Jenkins job
             checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
@@ -2343,7 +2365,7 @@ def managePackageForSingleSlave():
                     while queued and count < 20:
                         sleep(10)
                         try:
-                            r = requests.get(checkQueueUrl).text
+                            r = requests.get(checkQueueUrl, auth=globals.auth).text
                             projectInfo = json.loads(r)
                             inQueue = projectInfo['inQueue']
                         # if it's not in the queue and not building something went wrong
@@ -2356,7 +2378,7 @@ def managePackageForSingleSlave():
             # /home/jenkins/jenkins_home/jobs/<jobName>/builds/1/log
 
             # Grab the status of the last build
-            buildInfo = json.loads(requests.get(checkBuildUrl).text)
+            buildInfo = json.loads(requests.get(checkBuildUrl, auth=globals.auth).text)
             buildStatus = buildInfo['result']
 
             if buildStatus == "SUCCESS":
@@ -2364,7 +2386,7 @@ def managePackageForSingleSlave():
                     packageName=packageName, packageAction=packageAction, buildStatus=buildStatus)
             else:
                 if buildStatus == 'FAILURE':
-                    consoleLogUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/consoleText"
+                    consoleLogUrl = "/job/" + jobName + "/lastBuild/consoleText"
                     return json.jsonify(status="failure", error="Job failed", packageName=packageName, packageAction=packageAction,
                             buildStatus="FAILURE", logUrl=consoleLogUrl)
                 return json.jsonify(status="failure",
@@ -2708,14 +2730,15 @@ def createChefJob(host, ipaddress, chefAttr, runList, jobType="single-package"):
             'name': jobName
         },
         data = configXml,
-        proxies = NO_PROXY
+        proxies = NO_PROXY,
+        auth = globals.auth
     )
 
     if r.status_code == 200:
         # Success, send the jenkins job and start it right away.
         startJobUrl = globals.jenkinsUrl + "/job/" + jobName + "/buildWithParameters?" + "delay=0sec"
         # Start Jenkins job
-        requests.get(startJobUrl, proxies=NO_PROXY)
+        requests.post(startJobUrl, proxies=NO_PROXY, auth=globals.auth)
         return { 'status':"success", 'jobName':jobName }
     else:
         return { 'status':"failure", 'error':"job creation failed for: " + jobName, 'rstatus':r.status_code }
@@ -2741,9 +2764,9 @@ def monitorChefJobs(jobName, sync=False):
     checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
     while building:
         try:
-            requestInfo = requests.get(checkBuildUrl)
+            requestInfo = requests.get(checkBuildUrl, auth=globals.auth)
             if requestInfo.status_code == 200:
-                buildInfo = json.loads(requests.get(checkBuildUrl).text)
+                buildInfo = json.loads(requests.get(checkBuildUrl, auth=globals.auth).text)
                 building = buildInfo['building']
             if building:
                 sleep(3)
@@ -2758,7 +2781,7 @@ def monitorChefJobs(jobName, sync=False):
             while queued and count < 20:
                 sleep(10)
                 try:
-                    r = requests.get(checkQueueUrl).text
+                    r = requests.get(checkQueueUrl, auth=globals.auth).text
                     projectInfo = json.loads(r)
                     inQueue = projectInfo['inQueue']
                 # if it's not in the queue and not building something went wrong
@@ -2769,9 +2792,9 @@ def monitorChefJobs(jobName, sync=False):
                         return "FAILURE"
                 count += 1
             building = False
-
-    consoleLog = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/consoleText"
-    log = (requests.get(consoleLog).text).encode('utf-8')
+    logURL =  "/job/" + jobName + "/lastBuild/consoleText"
+    consoleLog = globals.jenkinsUrl + logURL
+    log = (requests.get(consoleLog, auth=globals.auth).text).encode('utf-8')
     logfile = open(globals.localPathForChefLogs + jobName, 'w')
     logfile.write(log)
     logfile.close()
@@ -2791,10 +2814,10 @@ def monitorChefJobs(jobName, sync=False):
 
     if jobStatus == 'SUCCESS':
         if sync == True:
-            return runStatus, consoleLog
+            return runStatus, logURL
     else:
         if sync == True:
-            return "FAILURE", consoleLog
+            return "FAILURE", logURL
 
 # Read and sanitize the contents of the named batch file
 @app.route("/autoport/parseBatchFile")
@@ -3258,6 +3281,7 @@ def startAutoport(p = None):
             globals.allocBuildServers = args.allocBuildServers
         '''
 
+    getAuth()
     autoportJenkinsInit(globals.jenkinsUrl, globals.configJenkinsUsername, globals.configJenkinsKey)
     autoportUserInit(globals.configHostname, globals.configUsername, globals.configPassword)
 

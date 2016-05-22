@@ -102,7 +102,7 @@ var globalState = {
                { ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
                  lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles,
                  github: githubToken, hostname: configHostname, username: configUsername, password: configPassword,
-                 usetextanalytics: useTextAnalytics, loglevel: logLevel
+                 jenkinsPassword: jenkinsPassword, usetextanalytics: useTextAnalytics, loglevel: logLevel
                },
                settingsCallback, "json").fail(settingsCallback);
     }
@@ -1253,9 +1253,13 @@ var jenkinsState = {
                 jenkinsState.nodeDetails[i]['os'] = jenkinsState.nodeDetails[i]['distro'] + ' ' +
                                                     jenkinsState.nodeDetails[i]['rel']    + ' ' +
                                                     jenkinsState.nodeDetails[i]['arch'];
+                var url =globalState.jenkinsUrl;
+                if(globalState.jenkinsPassword  !=""){
+                    url = globalState.jenkinsAuthURL;
+                }
                 var displayName = jenkinsState.nodeNames[i]
                 jenkinsState.nodeDetails[i]['jenkinsSlaveLink'] =
-                    '<a target="_blank" href="' + globalState.jenkinsUrl + '/computer/' + displayName +'/">Click here</a>';
+                    '<a target="_blank" href="' + url + '/computer/' + displayName +'/">Click here</a>';
             }
             $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
         }
@@ -2988,6 +2992,14 @@ function initCallback(data) {
     globalState.configPasswordInit = data.configPassword;
     globalState.useTextAnalyticsInit = data.useTextAnalytics;
     globalState.logLevelInit = data.logLevel;
+    globalState.jenkinsAuthURL = data.jenkinsUrl+"/j_acegi_security_check?j_username="+
+                                 data.jenkinsUser+"&j_password="+data.jenkinsPassword  +"&from=";
+    globalState.jenkinsPassword   = data.jenkinsPassword  ;
+    if(globalState.jenkinsPassword   == ""){
+        $('#jenkinsPath').attr('href',data.jenkinsUrl);
+    }else{
+        $('#jenkinsPath').attr('href',globalState.jenkinsAuthURL);
+    }
 
     globalState.jenkinsUrl = data.jenkinsUrl;
     globalState.localPathForTestResults = data.localPathForTestResults;
@@ -3269,7 +3281,11 @@ function addToJenkinsCallback(data) {
     batchState.loading = false;
     if (data.status === "ok") {
         // Open new windows with the jobs' home pages
-        window.open(data.hjobUrl,'_blank');
+        if(globalState.jenkinsPassword  !=""){
+            window.open(globalState.jenkinsAuthURL+"/job/"+data.hjobUrl.split('/job')[1]);
+        }else{
+            window.open(data.hjobUrl);
+        }
         percentageState.updateProgressBar();
         showAlert("Build job submitted");
     } else {
@@ -3524,6 +3540,11 @@ function notificationCallback(obj, cb){
                 message= "<br><span class='"+classcss+"'>Sync completed successfully on "+data.nodeLabel+"</span>";
             }
             if (data.jobstatus == "FAILURE") {
+                if(globalState.jenkinsPassword == ""){
+                    data.logUrl = globalState.jenkinsUrl + data.logUrl;
+                }else{
+                    data.logUrl = globalState.jenkinsAuthURL + data.logUrl;
+                }
                 type = "danger";
                 classcss = "text-danger";
                 message= "<br/><span class='"+classcss+"'>Sync completed with few errors on  " +

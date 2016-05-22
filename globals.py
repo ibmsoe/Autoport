@@ -44,6 +44,7 @@ def init():
     global configUsername
     global configPassword
     global configJenkinsUsername
+    global configJenkinsPassword
     global configJenkinsKey
     global pathForTestResults
     global pathForBatchTestResults
@@ -99,6 +100,10 @@ def init():
     else:
         jenkinsHostname = ""
 
+    configJenkinsPassword = configOptions['jenkinspassword']
+    if not configJenkinsPassword or "<" in configJenkinsPassword:
+        configJenkinsPassword = ""
+
     # globals not based on config file
     global github
     global cache
@@ -125,6 +130,7 @@ def init():
     global jenkinsRepoUrl
     global localTarRepoLocation
     global sftpConnected
+    global auth
 
     # need to use the token to be able to perform more requests per hour
     github = Github(githubToken)
@@ -158,6 +164,8 @@ def init():
     nodeHosts = []
 
     allocBuildServers = False
+
+    auth = ""
 
     # if substring length not greater than 4 means port is not part of URL
     jenkinsUrlSubStringLength = jenkinsUrl.rfind(':')
