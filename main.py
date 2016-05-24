@@ -1248,6 +1248,7 @@ def createJob(i_id = None,
     # Get build info
     try:
         selectedBuild = request.form["selectedBuild"]
+        selectedBuild = selectedBuild.replace("\n", "\\n")
         if selectedBuild.strip().startswith('[TextAnalytics]'): #Remove the [TextAnalytics] tag from build command
             selectedBuild = selectedBuild[15:]
     except KeyError:
@@ -1259,6 +1260,7 @@ def createJob(i_id = None,
     # Get test info
     try:
         selectedTest = request.form["selectedTest"]
+        selectedTest = selectedTest.replace("\n", "\\n")
     except KeyError:
         if i_selectedTest != None:
             selectedTest = i_selectedTest
@@ -1266,6 +1268,7 @@ def createJob(i_id = None,
             return json.jsonify(status="failure", error="missing selected test command"), 400
     try:
         selectedInstall =  request.form["selectedInstall"]
+        selectedInstall = selectedInstall.replace("\n", "\\n")
     except KeyError:
         if i_selectedInstall != None:
             selectedInstall = i_selectedInstall
