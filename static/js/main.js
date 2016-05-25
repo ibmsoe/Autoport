@@ -12,8 +12,8 @@ try {
     buildEditor.getSession().setMode("ace/mode/sh");
     buildEditor.setShowPrintMargin(false);
     buildEditor.setOptions({
-        fontFamily: "tahoma",
-        fontSize: "10pt"
+        fontFamily: "monospace",
+        fontSize: "13px"
     });
 
     testEditor = ace.edit("generateSelectedTest-editor");
@@ -21,8 +21,8 @@ try {
     testEditor.getSession().setMode("ace/mode/sh");
     testEditor.setShowPrintMargin(false);
     testEditor.setOptions({
-        fontFamily: "tahoma",
-        fontSize: "10pt"
+        fontFamily: "monospace",
+        fontSize: "13px"
     });
 
     envEditor = ace.edit("generateSelectedEnv-editor");
@@ -30,8 +30,8 @@ try {
     envEditor.getSession().setMode("ace/mode/sh");
     envEditor.setShowPrintMargin(false);
     envEditor.setOptions({
-        fontFamily: "tahoma",
-        fontSize: "10pt"
+        fontFamily: "monospace",
+        fontSize: "13px"
     });
 
     singleBuildEditor = ace.edit("singleSelectedBuild-editor");
@@ -39,8 +39,8 @@ try {
     singleBuildEditor.getSession().setMode("ace/mode/sh");
     singleBuildEditor.setShowPrintMargin(false);
     singleBuildEditor.setOptions({
-        fontFamily: "tahoma",
-        fontSize: "10pt"
+        fontFamily: "monospace",
+        fontSize: "13px"
     });
 
     singleTestEditor = ace.edit("singleSelectedTest-editor");
@@ -48,8 +48,8 @@ try {
     singleTestEditor.getSession().setMode("ace/mode/sh");
     singleTestEditor.setShowPrintMargin(false);
     singleTestEditor.setOptions({
-        fontFamily: "tahoma",
-        fontSize: "10pt"
+        fontFamily: "monospace",
+        fontSize: "13px"
     });
 
     singleEnvEditor = ace.edit("singleSelectedEnv-editor");
@@ -57,8 +57,8 @@ try {
     singleEnvEditor.getSession().setMode("ace/mode/sh");
     singleEnvEditor.setShowPrintMargin(false);
     singleEnvEditor.setOptions({
-        fontFamily: "tahoma",
-        fontSize: "10pt"
+        fontFamily: "monospace",
+        fontSize: "13px"
     });
 }
 catch(err) {
