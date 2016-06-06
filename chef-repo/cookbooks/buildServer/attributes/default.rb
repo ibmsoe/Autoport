@@ -103,3 +103,7 @@ default['buildServer']['pytest']['ext']      = ''
 default['buildServer']['userpackages']={}
 default['buildServer']['debs']={}
 default['buildServer']['rpms']={}
+
+# Attributes for power advance toolchain
+default['at']['version']='9.0'
+

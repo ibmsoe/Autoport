@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "20",
+    "sequence": "21",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -51,7 +51,19 @@
                     "name": "flex"
                 },
                 {
+                    "name": "gccgo"
+                },
+                {
+                    "name": "gccgo-go"
+                },
+                {
                     "name": "git"
+                },
+                {
+                    "name": "golang"
+                },
+                {
+                    "name": "golang-go"
                 },
                 {
                     "name": "gyp"
@@ -438,6 +450,9 @@
                     "name": "gcc-c++"
                 },
                 {
+                    "name": "gcc-go"
+                },
+                {
                     "name": "git"
                 },
                 {
@@ -448,6 +463,9 @@
                 },
                 {
                     "name": "gnutls-utils"
+                },
+                {
+                    "name": "golang"
                 },
                 {
                     "name": "gtk3-devel"
@@ -736,6 +754,9 @@
                     "name": "gcc-c++"
                 },
                 {
+                    "name": "gcc-go"
+                },
+                {
                     "name": "git"
                 },
                 {
@@ -746,6 +767,9 @@
                 },
                 {
                     "name": "gnutls-utils"
+                },
+                {
+                    "name": "golang"
                 },
                 {
                     "name": "gtk3-devel"
@@ -1034,6 +1058,9 @@
                     "name": "gcc-c++"
                 },
                 {
+                    "name": "gcc-go"
+                },
+                {
                     "name": "git"
                 },
                 {
@@ -1047,6 +1074,9 @@
                 },
                 {
                     "name": "gtk3-devel"
+                },
+                {
+                    "name": "golang"
                 },
                 {
                     "name": "java-1.7.0-openjdk-devel"
