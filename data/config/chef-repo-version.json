@@ -3,5 +3,5 @@
     "version": "1",
     "sequence": "23",
     "name": "chef-repo-version.json",
-    "cook-version": "0.2.11"
+    "cook-version": "0.2.12"
 }

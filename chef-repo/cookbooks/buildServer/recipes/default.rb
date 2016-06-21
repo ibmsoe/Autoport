@@ -28,4 +28,5 @@ case node['platform']
     include_recipe 'buildServer::pytest'
 end
 include_recipe 'buildServer::at'
+include_recipe 'buildServer::r'
 include_recipe 'buildServer::userpackages'

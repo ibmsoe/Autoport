@@ -8,6 +8,7 @@
 # Regular expression to match directory names such as at8.0,at9.0..,atX.X
 regex=^at[0-9]*.[0-9]*$
 version=0.0
+oldir=$PWD
 cd /opt
 
 # Looping over all the directories in /opt folder to find a match for
@@ -18,7 +19,6 @@ cd /opt
 for dir in *
 do
   if [[ -d ${dir} && $dir =~ $regex ]]; then
-    echo $dir
     temp=$(echo "${dir:2} > $version" | bc)
     if [[ $temp -gt "0" ]]; then
         version=${dir:2}
@@ -29,4 +29,4 @@ done
 if [ $version != "0.0" ]; then
   export PATH=/opt/at$version/bin:$PATH
 fi
-cd ~
+cd $oldir
