@@ -1,4 +1,4 @@
-# Recipe would uninstall/remove ant package installed via binary source
+# Recipe would uninstall/remove R package installed vai source
 
 Chef::Recipe.send(:include, ArchiveLog)
 
@@ -35,8 +35,8 @@ file "/etc/profile.d/R.sh" do
   ignore_failure true
 end
 
-buildServer_log "r_source" do
-  name         "r_source"
+buildServer_log "R" do
+  name         "R"
   log_location node['log_location']
   log_record   "R,#{version},r_source,R,#{arch},#{ext},#{r_pkg}#{ext}"
   action       :remove

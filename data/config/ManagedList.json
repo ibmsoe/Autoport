@@ -384,6 +384,11 @@
                     "tag": "maven"
                 },
                 {
+                    "name": "LuaJIT",
+                    "version": "2.1.0",
+                    "tag": "luajit"
+                },
+                {
                     "name": "openjdk-7-jdk",
                     "version": "7"
                 },
@@ -669,6 +674,11 @@
                 {
                     "name": "java-1.8.0-openjdk",
                     "version": "8"
+                },
+                {
+                    "name": "LuaJIT",
+                    "version": "2.1.0",
+                    "tag": "luajit"
                 },
                 {
                     "name": "Module-Install",
@@ -982,6 +992,11 @@
                     "version": "8"
                 },
                 {
+                    "name": "LuaJIT",
+                    "version": "2.1.0",
+                    "tag": "luajit"
+                },
+                {
                     "name": "Module-Install",
                     "version": "1.14",
                     "tag": "perl-Module-Install"
@@ -1291,6 +1306,11 @@
                 {
                     "name": "java-1.8.0-openjdk",
                     "version": "8"
+                },
+                {
+                    "name": "LuaJIT",
+                    "version": "2.1.0",
+                    "tag": "luajit"
                 },
                 {
                     "name": "Module-Install",
