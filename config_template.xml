@@ -345,11 +345,63 @@
                       fi
                       rc=$?
                       return $rc
+                  }
+                  function getMakeTestTarget() {
+                      TEST=$(python $PWD/.autoport-scratch/makeFileParser.py)
+                      echo "Autoport : Test Target deduced from makefile is : $TEST"
                   }'
                  ################################ End shell program to create autoport environment ###########################
 
                  # Dump to a bash script for execution
                  echo &quot;$bash_script_providing_builtin_autoport_functions&quot; >.autoport-scratch/.autoportrc
+
+################################ Python program to parse makefile generated during build command ####################
+
+                 python_script_makefile_parsing='#!/usr/bin/python
+import re
+
+def getAllTargets():
+    try:
+        targets = []
+        subTargets = []
+        target_pattern = re.compile("^[^\-#\s\$\.][a-zA-Z0-9_\/\s\-]*(?!:=):[a-zA-Z0-9_\$\(\)\/\s\-\.]*;*")
+
+        # Considering that Makefile is generated in the current working directory.
+
+        with open("Makefile") as makefile_data:
+            for line in makefile_data:
+                m = target_pattern.search(line)
+                if m:
+                    tgt = m.group(0).partition(":")
+                    targets.append(tgt[0].strip())
+                    subTargets.append(tgt[2].strip(";").split())
+        return targets, subTargets
+    except Exception as e:
+        makefile_data = ""
+        return [], []
+
+def getMakeTestCommand():
+    subTgt, reqTgt = "", "test"
+    try:
+        targets, subTargets = getAllTargets()
+        for count, tgt in enumerate(targets):
+            if tgt == "test" or tgt == "check":
+                print tgt
+                return tgt
+            elif "test" in tgt:
+                if len(subTgt) &lt; len(subTargets[count]) or subTgt == "":
+                    reqTgt = tgt
+                    subTgt = subTargets[count]
+        print reqTgt
+    except Exception as e:
+        print reqTgt
+
+if __name__ == "__main__":
+    getMakeTestCommand()'
+
+################################## End python program to parse makefile generated during build command ##################
+
+                 echo &quot;$python_script_makefile_parsing&quot; >.autoport-scratch/makeFileParser.py
 
                  env</command>
         </hudson.tasks.Shell>
@@ -376,7 +428,7 @@
                       JS_VERSION=`echo ${ADDR[1]}`
                   fi
                   source /etc/profile
-                  ARTI=&quot;.autoport-scratch/build_result.arti&quot;
+                  ARTI=&quot;$PWD/.autoport-scratch/build_result.arti&quot;
                   echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                   echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
@@ -388,7 +440,7 @@
                   echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
                   echo &quot;&quot;                &gt;&gt; $ARTI
-                  echo &quot;Autoport Build CMD:   $CMD1&quot; &gt;&gt; $ARTI
+                  echo -e &quot;Autoport Build CMD:   $CMD1&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
@@ -410,9 +462,9 @@
                   echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  echo $CMD1 | tee .autoport-scratch/autoport_build_cmd;
-                  chmod a+x .autoport-scratch/autoport_build_cmd;
-                  source .autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                  echo -e $CMD1 | tee $PWD/.autoport-scratch/autoport_build_cmd;
+                  chmod a+x $PWD/.autoport-scratch/autoport_build_cmd;
+                  source $PWD/.autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$?
                   echo &quot;Autoport BUILD CMD RC=$rc&quot; &gt;&gt; $ARTI
                   exit $rc
@@ -453,7 +505,7 @@
                   echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
                   echo &quot;&quot;                &gt;&gt; $ARTI
-                  echo &quot;Autoport Test CMD:    $CMD2&quot; &gt;&gt; $ARTI
+                  echo -e &quot;Autoport Test CMD:    $CMD2&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
@@ -475,7 +527,7 @@
                   echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  echo $CMD2 | tee .autoport-scratch/autoport_test_cmd;
+                  echo -e $CMD2 | tee .autoport-scratch/autoport_test_cmd;
                   chmod a+x .autoport-scratch/autoport_test_cmd;
                   source .autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$?
@@ -518,7 +570,7 @@
                   echo &quot;&quot;                &gt;&gt; $ARTI
                   echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
                   echo &quot;&quot;                &gt;&gt; $ARTI
-                  echo &quot;Autoport Install CMD: $CMD3&quot; &gt;&gt; $ARTI
+                  echo -e &quot;Autoport Install CMD: $CMD3&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
@@ -541,7 +593,7 @@
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
 
-                  echo $CMD3 | tee .autoport-scratch/autoport_install_cmd;
+                  echo -e $CMD3 | tee .autoport-scratch/autoport_install_cmd;
                   chmod a+x .autoport-scratch/autoport_install_cmd;
                   source .autoport-scratch/autoport_install_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$?

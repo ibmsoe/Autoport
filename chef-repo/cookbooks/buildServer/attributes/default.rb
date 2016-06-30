@@ -99,6 +99,15 @@ default['buildServer']['py']['ext']          = ''
 default['buildServer']['pytest']['version']  = '2.6.4'
 default['buildServer']['pytest']['ext']      = ''
 
+# Attributes for power advance toolchain
+# default['at']['version']='9.0'
+
+# Attributes for R
+default['buildServer']['R']['source_install'] = 'false'
+default['buildServer']['R']['version'] = '3.0.2'
+default['buildServer']['R']['install_dir'] = '/opt'
+default['buildServer']['R']['ext'] = ''
+
 # Attributes for userpackages
 default['buildServer']['userpackages']={}
 default['buildServer']['debs']={}

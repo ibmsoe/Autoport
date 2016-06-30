@@ -236,8 +236,7 @@
               <li rv-each-tag="detailState.repo.build.buildOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
             </ul>
             <br />
-              <input id="singleSelectedBuild" type="text" class="form-control"
-                rv-value="detailState.repo.build.selectedBuild | cleanOptionsOutput"/>
+            <div style="width:100%; height:80px;" id="singleSelectedBuild-editor"></div>
           </div>
           <br />
           <div class="dropdown">
@@ -249,8 +248,7 @@
               <li rv-each-tag="detailState.repo.build.testOptions"><a class="singleSearch" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
             </ul>
             <br />
-              <input id="singleSelectedTest" type="text" class="form-control"
-                rv-value="detailState.repo.build.selectedTest | cleanOptionsOutput"/>
+            <div style="width:100%; height:80px;" id="singleSelectedTest-editor"></div>
           </div>
           <br />
           <small>Environment variables separated by blanks or newlines applied as-is.</small>
@@ -264,8 +262,7 @@
             </ul>
             <br />
             <div class="form-group">
-              <textarea id="singleSelectedEnv" class="form-control" rows="1"
-                rv-value="detailState.repo.build.selectedEnv | cleanOptionsOutput"></textarea>
+                <div style="width:100%; height:80px;" id="singleSelectedEnv-editor"></div>
             </div>
           </div>
         </span>

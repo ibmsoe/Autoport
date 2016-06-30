@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "20",
+    "sequence": "22",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -51,7 +51,19 @@
                     "name": "flex"
                 },
                 {
+                    "name": "gccgo"
+                },
+                {
+                    "name": "gccgo-go"
+                },
+                {
                     "name": "git"
+                },
+                {
+                    "name": "golang"
+                },
+                {
+                    "name": "golang-go"
                 },
                 {
                     "name": "gyp"
@@ -216,6 +228,9 @@
                     "name": "libyaml-tiny-perl"
                 },
                 {
+                    "name": "lua5.2"
+                },
+                {
                     "name": "lzop"
                 },
                 {
@@ -301,6 +316,9 @@
                 },
                 {
                     "name": "qt-sdk"
+                },
+                {
+                    "name": "r-base"
                 },
                 {
                     "name": "rake"
@@ -438,6 +456,9 @@
                     "name": "gcc-c++"
                 },
                 {
+                    "name": "gcc-go"
+                },
+                {
                     "name": "git"
                 },
                 {
@@ -448,6 +469,9 @@
                 },
                 {
                     "name": "gnutls-utils"
+                },
+                {
+                    "name": "golang"
                 },
                 {
                     "name": "gtk3-devel"
@@ -499,6 +523,9 @@
                 },
                 {
                     "name": "libyaml-devel"
+                },
+                {
+                    "name": "lua"
                 },
                 {
                     "name": "lua-devel"
@@ -665,6 +692,10 @@
                 {
                     "name": "pytest",
                     "version": "2.6.4"
+                },
+                {
+                    "name": "R",
+                    "version": "3.0.2"
                 },
                 {
                     "name": "scala",
@@ -736,6 +767,9 @@
                     "name": "gcc-c++"
                 },
                 {
+                    "name": "gcc-go"
+                },
+                {
                     "name": "git"
                 },
                 {
@@ -746,6 +780,9 @@
                 },
                 {
                     "name": "gnutls-utils"
+                },
+                {
+                    "name": "golang"
                 },
                 {
                     "name": "gtk3-devel"
@@ -797,6 +834,9 @@
                 },
                 {
                     "name": "libyaml-devel"
+                },
+                {
+                    "name": "lua"
                 },
                 {
                     "name": "lua-devel"
@@ -963,6 +1003,10 @@
                 {
                     "name": "pytest",
                     "version": "2.6.4"
+                },
+                {
+                    "name": "R",
+                    "version": "3.0.2"
                 },
                 {
                     "name": "scala",
@@ -1034,6 +1078,9 @@
                     "name": "gcc-c++"
                 },
                 {
+                    "name": "gcc-go"
+                },
+                {
                     "name": "git"
                 },
                 {
@@ -1047,6 +1094,9 @@
                 },
                 {
                     "name": "gtk3-devel"
+                },
+                {
+                    "name": "golang"
                 },
                 {
                     "name": "java-1.7.0-openjdk-devel"
@@ -1095,6 +1145,9 @@
                 },
                 {
                     "name": "libyaml-devel"
+                },
+                {
+                    "name": "lua"
                 },
                 {
                     "name": "lua-devel"
@@ -1261,6 +1314,10 @@
                 {
                     "name": "pytest",
                     "version": "2.6.4"
+                },
+                {
+                    "name": "R",
+                    "version": "3.0.2"
                 },
                 {
                     "name": "scala",

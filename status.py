@@ -1,5 +1,6 @@
 import ast
-import urllib
+import urllib2
+import base64
 import sys
 import globals
 
@@ -7,10 +8,15 @@ import globals
 def determineProgress ():
     url = str(globals.jenkinsUrl)
     try:
-        xml_input_no_filter = ast.literal_eval(urllib.urlopen(url + "/api/python?depth=1&tree=jobs[displayName,lastBuild[result]]").read())
+        req = urllib2.Request(url + "/api/python?depth=1&tree=jobs[displayName,lastBuild[result]]")
+        if globals.auth:
+            auth_header = 'Basic ' + base64.encodestring('%s:%s' % (globals.configJenkinsUsername, globals.configJenkinsPassword))[:-1]
+            req.add_header('Authorization', auth_header)
+        response = urllib2.urlopen(req)
+        xml_input_no_filter = ast.literal_eval(response.read())
+        all_jobs = xml_input_no_filter['jobs']
     except IOError as e:
         assert(False), "Please provide valid jenkins url"
-    all_jobs = xml_input_no_filter['jobs']
 
     success = 0
     unstable = 0

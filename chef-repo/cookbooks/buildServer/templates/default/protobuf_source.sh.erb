@@ -1,2 +1,3 @@
 #!/bin/sh
 export PATH=<%= @install_prefix %>/bin:$PATH
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:<%= @install_prefix %>/lib/pkgconfig

@@ -1,8 +1,10 @@
 from github import GithubException
+from collections import OrderedDict
 from log import logger
 import globals
 import utils
 import yaml
+import re
 
 # General strategy is to create a list of language definitions from which build
 # and test commands are generated.  Each successive definition that is added to
@@ -209,6 +211,55 @@ def selectTravisMatrix(repo, matrix):
 
     return linuxEnv
 
+def getAllTargets(repo, Makefile):
+    logger.debug("In getAllTargets, proj=%s" % repo.name)
+    try:
+       targets = []
+       subTargets = []
+       data = repo.get_file_contents(Makefile.path).content.decode('base64', 'strict')
+       makefile_data = data.split("\n")
+       target_pattern = re.compile("^[^\-#\s\$\.\%][a-zA-Z0-9_\/\s\.\-]*(?!:=):[a-zA-Z0-9_\$\(\)\/\s\-\.]*;*")
+       for line in makefile_data:
+           m = target_pattern.search(line)
+           if m:
+               tgt = m.group(0).partition(':')
+               target = tgt[0].split()
+               targets.extend(target)
+               for i in xrange(len(target)):
+                   subTargets.append(tgt[2].strip(";").split())
+       logger.debug("In getAllTargets: proj=%s, all targets=%s" %(repo.name, targets))
+       return targets, subTargets
+    except Exception as e:
+        logger.debug("In getAllTargets: File Error %s" % str(e))
+        makefile_data = ""
+
+
+def getMakeTestCommand(repo, Makefile):
+    logger.debug("In getMakeTestCommand, proj=%s" % repo.name)
+    try:
+       targets, subTargets = getAllTargets(repo, Makefile)
+       subTgt, reqTgt = "", ""
+       for count, tgt in enumerate(targets):
+           if tgt == "test" or tgt == "check":
+               reqTgt = "make %s" %(tgt)
+               logger.debug("In getMakeTestCommand, target=%s found in makefile" % tgt)
+               return reqTgt
+           elif "test" in tgt:
+             logger.debug("In getMakeTestCommand, proj=%s, candidate target %s" % (repo.name, tgt))
+             logger.debug("In getMakeTestCommand, proj=%s, associated subtargets %s" % (repo.name, subTargets[count]))
+             if len(subTgt) < len(subTargets[count]) or subTgt == "":
+                 reqTgt = tgt
+                 subTgt = subTargets[count]
+                 logger.debug("In getMakeTestCommand, proj=%s, candidate target %s" % (repo.name, reqTgt))
+       if not reqTgt:
+           logger.debug("In getMakeTestCommand, proj=%s, No specific test target found in makefile" % repo.name)
+       else:
+           reqTgt = "make %s" %(reqTgt)
+           logger.debug("In getMakeTestCommand, proj=%s, target=%s found in makefile" % (repo.name,reqTgt))
+       return reqTgt
+    except Exception as e:
+        logger.debug("getMakeTestCommand: %s" % str(e))
+
 def interpretTravis(repo, travisFile, travis_def):
     """
     Method to interpret the travis control file and fill out the
@@ -360,7 +411,6 @@ def interpretTravis(repo, travisFile, travis_def):
                 travis_def['build'] = beforeInstall
             else:
                 travis_def['build'] = install
-
             # Add autoport test command which comes from yaml before_script and script
             beforeScript = ""
             if 'before_script' in data and data['before_script']:
@@ -406,7 +456,6 @@ def interpretTravis(repo, travisFile, travis_def):
     return travis_flag
 
 def inferBuildSteps(listing, repo):
-
     if not listing or not repo:
         return { 'success': False, 'error': "Github I/O error" }
 
@@ -530,8 +579,8 @@ def inferBuildSteps(listing, repo):
         'grep test': "make check",
         'grep install': "",
         'grep env': "",
-        'build': "if [ -e Makefile.PL ]; then perl Makefile.PL; fi; make",
-        'test' : "make test",
+        'build': "if [ -e Build.PL ]; then  perl ./Build.PL; elif [ -e Makefile.PL ]; then perl Makefile.PL; make; fi",
+        'test' : "if [ -e Build.PL ]; then ./Build test; elif [ -e Makefile.PL ]; then getMakeTestTarget; make $TEST; fi",
         'install':"make install",
         'env' : "",
         'artifacts': "*.arti",
@@ -548,7 +597,7 @@ def inferBuildSteps(listing, repo):
         'grep env': "CFLAGS=",
         'build': "if [ -e configure.ac ]; then autoreconf -iv; fi; if [ -x configure ]; then ./configure; fi; make",
         # 'build': "if [ -e configure.ac ]; then aclocal; fi; if [ -e Makefile.am ]; then automake --add-missing; fi; if [ -e configure.ac ]; then autoconfig; fi; if [ -x configure ]; then ./configure; fi; make",
-        'test' : "make test",
+        'test' : "getMakeTestTarget; make $TEST;",
         'install' : "sudo make install",
         'env' : "",
         'artifacts': "*.arti",
@@ -565,7 +614,7 @@ def inferBuildSteps(listing, repo):
         'grep env': "CXXFLAGS=",
         'build': "if [ -e configure.ac ]; then autoreconf -iv; fi; if [ -x configure ]; then ./configure; fi; make",
         # 'build': "if [ -e configure.ac ]; then aclocal; fi; if [ -e Makefile.am ]; then automake --add-missing; fi; if [ -e configure.ac ]; then autoconfig; fi; if [ -x configure ]; then ./configure; fi; make",
-        'test' : "make test",
+        'test' : "getMakeTestTarget; make $TEST;",
         'install' : "sudo make install",
         'env' : "",
         'artifacts': "*.arti",
@@ -666,7 +715,7 @@ def inferBuildSteps(listing, repo):
         'grep install': "",
         'grep env': "CXXFLAGS=",
         'build': "cmake . ; if [ -x configure ]; then ./configure; fi; make",
-        'test' : "make test",
+        'test' : "getMakeTestTarget; make $TEST",
         'install': "",
         'env' : "",
         'artifacts': "*.arti",
@@ -714,7 +763,7 @@ def inferBuildSteps(listing, repo):
         'grep install': "",
         'grep env': "CFLAGS=",
         'build': "if [ -x configure ]; then ./configure; fi; make",
-        'test' : "make test",
+        'test' : "getMakeTestTarget; make $TEST",
         'install' : "sudo make install",
         'env' : "",
         'artifacts': "*.arti",
@@ -730,7 +779,7 @@ def inferBuildSteps(listing, repo):
         'grep install': "",
         'grep env': "CFLAGS=",
         'build': "if [ -x bootstrap.sh ]; then ./bootstrap.sh; elif [ -x autogen.sh ]; then ./autogen.sh; fi; if [ -x configure ]; then ./configure; fi; make",
-        'test' : "make test",
+        'test' : "getMakeTestTarget; make $TEST",
         'install': "sudo make install",
         'env' : "",
         'artifacts': "*.arti",
@@ -797,7 +846,15 @@ def inferBuildSteps(listing, repo):
     bootstrap = None
     makefile = None
     travis = None
+    directory_feed = []
+    langlist_length = len(langlist)
     for f in listing:
+        if f.type == 'dir':
+            if f.name == "build" or f.name == "scripts":
+                directory_feed.insert(0, f.path)
+            else:
+                directory_feed.append(f.path)
+            continue
         if f.name == 'pom.xml':
             langlist.append(maven_def)         # If we find specific build files we can improve our commands by grepping readme's
         elif f.name == 'build.gradle':
@@ -829,6 +886,63 @@ def inferBuildSteps(listing, repo):
                         logger.debug("inferBuildSteps: proj=%s, grepfile=%s" % (repo.name, f.name))
                 except:
                     pass
+    cmds = []
+    subdirs = []
+    if len(langlist) <= langlist_length and makefile == None and bootstrap == None and buildsh == None and travis == None:
+        for directory in directory_feed:
+            if "doc" in directory or "book" in directory:
+                continue
+            logger.info("Looking for build files at %s/%s" % (repo.html_url, directory))
+            listing = repo.get_dir_contents(directory)
+            for f in listing:
+                if f.name == 'pom.xml':
+                    subdirs.append(directory)
+                    cmds.append(maven_def)
+                elif f.name == 'build.gradle':
+                    subdirs.append(directory)
+                    cmds.append(gradle_def)
+                elif f.name == 'build.xml':
+                    subdirs.append(directory)
+                    cmds.append(ant_def)
+                elif f.name == 'CMakeLists.txt':
+                    subdirs.append(directory)
+                    cmds.append(cmake_def)
+                elif f.name in ('SConstruct', 'Sconstruct', 'sconstruct'):
+                    subdirs.append(directory)
+                    cmds.append(scons_def)
+                elif f.name == 'build.sbt':
+                    subdirs.append(directory)
+                    cmds.append(sbt_def)
+                elif f.name == 'package.json':
+                    subdirs.append(directory)
+                    cmds.append(base_js_def)
+                elif f.name == 'Makefile':
+                    subdirs.append(directory)
+                    makefile = f
+                elif f.name in ('bootstrap.sh', 'autogen.sh'):
+                    subdirs.append(directory)
+                    bootstrap = f
+                elif f.name in ('build.sh', 'run_build.sh'):
+                    subdirs.append(directory)
+                    buildsh = f
+                elif f.name == '.travis.yml':
+                    subdirs.append(directory)
+                    travis = interpretTravis(repo, f, travis_def)
+                elif any(x in f.name.lower() for x in readmeFiles):
+                    if f.type == 'file' and f.size != 0 and not travis:
+                        try:
+                            fstr = repo.get_file_contents(f.path).content.decode('base64', 'strict')
+                            if fstr != "":
+                                grepstack.insert(0, fstr)
+                                logger.debug("inferBuildSteps: proj=%s, grepfile=%s" % (repo.name, f.name))
+                        except:
+                            pass
+        if len(cmds) > 0 and len(subdirs) > 0:
+            cmd = cmds[-1]
+            subdir = subdirs[-1]
+            cmd['build'] = "cd ./%s; %s" %(subdir,cmd['build'])
+            cmd['test'] = "cd ./%s; %s" %(subdir, cmd['test'])
+            langlist.append(cmd)
 
     # Travis YML file take precedence over build.sh, bootstrap.sh, and Makefile.
     # Next, build.sh is favored, because it bridges languages, sets environment variables, ...
@@ -844,15 +958,37 @@ def inferBuildSteps(listing, repo):
     # understood. Once we have the ability to grep a Makefile we could scan it for Java or Python
     # to determine whether the makefile applies to multiple languages.  For now, we assume
     # that it does.  Later, we can conditionally push it to the lang stack.  TODO: improve
-
+    if len(subdirs) > 0:
+        subdir = subdirs[-1]
     if travis != None:
-        langlist.append(travis_def)
+        if len(subdirs) > 0:
+            travis_def['build'] = "cd ./%s; %s" %(subdir,travis_def['build'])
+            travis_def['test'] = "cd ./%s; %s" %(subdir,travis_def['test'])
+            langlist.append(travis_def)
+        else:
+            langlist.append(travis_def)
     elif buildsh != None:
-        langlist.append(buildsh_def)
+        if len(subdirs) > 0:
+            buildsh_def['build'] = "cd ./%s; %s" %(subdir,buildsh_def['build'])
+            buildsh_def['test'] = "cd ./%s; %s" %(subdir,buildsh_def['test'])
+            langlist.append(buildsh_def)
+        else:
+            langlist.append(buildsh_def)
     elif bootstrap != None:
-        langlist.append(bootstrap_def)
+        if len(subdirs) > 0:
+            bootstrap_def['build'] = "cd ./%s; %s" %(subdir, bootstrap_def['build'])
+            bootstrap_def['test'] = "cd ./%s; %s" %(subdir, bootstrap_def['test'])
+            langlist.append(bootstrap_def)
+        else:
+            langlist.append(bootstrap_def)
     elif makefile != None:
-        langlist.append(c_def)
+        if len(subdirs) > 0:
+            buildVal = c_def['build']
+            c_def['build'] = "cd ./%s; %s" %(subdir, c_def['build'])
+            c_def['test'] = "cd ./%s; %s" %(subdir, c_def['test'])
+            langlist.append(c_def)
+        else:
+            langlist.append(c_def)
 
     # Add each template match to build info in the order they were found
     for lang in langlist:

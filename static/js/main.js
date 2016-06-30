@@ -1,5 +1,65 @@
+var buildEditor = "";
+var testEditor = "";
+var envEditor = "";
+var singleBuildEditor = "";
+var singleTestEditor = "";
+var singleEnvEditor = "";
 try {
     google.load('search', '1');
+    
+    buildEditor = ace.edit("generateSelectedBuild-editor");
+    buildEditor.setTheme("ace/theme/chrome");
+    buildEditor.getSession().setMode("ace/mode/sh");
+    buildEditor.setShowPrintMargin(false);
+    buildEditor.setOptions({
+        fontFamily: "monospace",
+        fontSize: "13px"
+    });
+
+    testEditor = ace.edit("generateSelectedTest-editor");
+    testEditor.setTheme("ace/theme/chrome");
+    testEditor.getSession().setMode("ace/mode/sh");
+    testEditor.setShowPrintMargin(false);
+    testEditor.setOptions({
+        fontFamily: "monospace",
+        fontSize: "13px"
+    });
+
+    envEditor = ace.edit("generateSelectedEnv-editor");
+    envEditor.setTheme("ace/theme/chrome");
+    envEditor.getSession().setMode("ace/mode/sh");
+    envEditor.setShowPrintMargin(false);
+    envEditor.setOptions({
+        fontFamily: "monospace",
+        fontSize: "13px"
+    });
+
+    singleBuildEditor = ace.edit("singleSelectedBuild-editor");
+    singleBuildEditor.setTheme("ace/theme/chrome");
+    singleBuildEditor.getSession().setMode("ace/mode/sh");
+    singleBuildEditor.setShowPrintMargin(false);
+    singleBuildEditor.setOptions({
+        fontFamily: "monospace",
+        fontSize: "13px"
+    });
+
+    singleTestEditor = ace.edit("singleSelectedTest-editor");
+    singleTestEditor.setTheme("ace/theme/chrome");
+    singleTestEditor.getSession().setMode("ace/mode/sh");
+    singleTestEditor.setShowPrintMargin(false);
+    singleTestEditor.setOptions({
+        fontFamily: "monospace",
+        fontSize: "13px"
+    });
+
+    singleEnvEditor = ace.edit("singleSelectedEnv-editor");
+    singleEnvEditor.setTheme("ace/theme/chrome");
+    singleEnvEditor.getSession().setMode("ace/mode/sh");
+    singleEnvEditor.setShowPrintMargin(false);
+    singleEnvEditor.setOptions({
+        fontFamily: "monospace",
+        fontSize: "13px"
+    });
 }
 catch(err) {
     console.log(err.message);
@@ -102,7 +162,7 @@ var globalState = {
                { ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
                  lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles,
                  github: githubToken, hostname: configHostname, username: configUsername, password: configPassword,
-                 usetextanalytics: useTextAnalytics, loglevel: logLevel
+                 jenkinsPassword: jenkinsPassword, usetextanalytics: useTextAnalytics, loglevel: logLevel
                },
                settingsCallback, "json").fail(settingsCallback);
     }
@@ -1070,6 +1130,8 @@ var detailState = {
     javaScriptType: "nodejs",                       // nodejs or IBM SDK for Node.js
     javaScriptTypeOptions: "",
     generateJavaScriptTypeOptions: "",
+    isBuildMultiLine:false,
+    isTestMultiLine:false,
     backToResults: function(ev) {
         var idName = ev.target.id;
         if (idName === "singleDetailBackButton") {
@@ -1113,26 +1175,26 @@ var detailState = {
     },
     changeBuildOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
-            detailState.repo.build.selectedBuild = ev.target.text;
+        	singleBuildEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
         else if (ev.target.className === "generateSearch") {
-            detailState.generateRepo.build.selectedBuild = ev.target.text;
+        	buildEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
     },
     changeTestOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
-            detailState.repo.build.selectedTest = ev.target.text;
+        	singleTestEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
         else if (ev.target.className === "generateSearch") {
-            detailState.generateRepo.build.selectedTest = ev.target.text;
+            testEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
     },
     changeEnvOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
-            detailState.repo.build.selectedEnv = ev.target.text;
+        	singleEnvEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
         else if (ev.target.className === "generateSearch") {
-            detailState.generateRepo.build.selectedEnv = ev.target.text;
+        	envEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
     },
     addToBatchFile: function(ev) {
@@ -1253,9 +1315,13 @@ var jenkinsState = {
                 jenkinsState.nodeDetails[i]['os'] = jenkinsState.nodeDetails[i]['distro'] + ' ' +
                                                     jenkinsState.nodeDetails[i]['rel']    + ' ' +
                                                     jenkinsState.nodeDetails[i]['arch'];
+                var url =globalState.jenkinsUrl;
+                if(globalState.jenkinsPassword  !=""){
+                    url = globalState.jenkinsAuthURL;
+                }
                 var displayName = jenkinsState.nodeNames[i]
                 jenkinsState.nodeDetails[i]['jenkinsSlaveLink'] =
-                    '<a target="_blank" href="' + globalState.jenkinsUrl + '/computer/' + displayName +'/">Click here</a>';
+                    '<a target="_blank" href="' + url + '/computer/' + displayName +'/">Click here</a>';
             }
             $("#rebootServerListTable").bootstrapTable('load', jenkinsState.nodeDetails);
         }
@@ -2866,17 +2932,20 @@ function showDetail(data) {
         showAlert("Bad response while creating detail view!", data);
     } else {
         if (data.panel === "single") {
-            detailState.repo = data.repo;
-            detailState.repo.addToJenkins = function(e) {
+             detailState.repo = data.repo;
+             singleBuildEditor.session.setValue(detailState.repo.build.selectedBuild.replace(/;\s*/gi,';\n'));
+             singleTestEditor.session.setValue(detailState.repo.build.selectedTest.replace(/;\s*/gi,';\n'));
+             singleEnvEditor.session.setValue(detailState.repo.build.selectedEnv.replace(/;\s*/gi,';\n'));
+             detailState.repo.addToJenkins = function(e) {
                 var buildInfo = detailState.repo.build;
 
-                var selectedBuild = $("#singleSelectedBuild").val();
+                var selectedBuild = singleBuildEditor.session.getValue();
                 selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
 
-                var selectedTest = $("#singleSelectedTest").val();
+                var selectedTest = singleTestEditor.session.getValue();
                 selectedTest = selectedTest === "NA" ? "" : selectedTest;
 
-                var selectedEnv = $("#singleSelectedEnv").val();
+                var selectedEnv = singleEnvEditor.session.getValue();
                 selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
 
                 var el = $("#singleBuildServers")[0];
@@ -2915,18 +2984,21 @@ function showDetail(data) {
         else if (data.panel === "generate") {
             var buildInfo = data.repo.build;
             detailState.generateRepo = data.repo;
+            buildEditor.session.setValue(detailState.generateRepo.build.selectedBuild.replace(/;\s*/gi,';\n'));
+            testEditor.session.setValue(detailState.generateRepo.build.selectedTest.replace(/;\s*/gi,';\n'));
+            envEditor.session.setValue(detailState.generateRepo.build.selectedEnv.replace(/;\s*/gi,';\n'));
             detailState.generateRepo.javaType = detailState.supportedJavaListOptions[0];
 
             detailState.generateRepo.addToJenkins = function(e) {
                 var buildInfo = detailState.generateRepo.build;
 
-                var selectedBuild = $("#generateSelectedBuild").val();
+                var selectedBuild = buildEditor.session.getValue();
                 selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
 
-                var selectedTest = $("#generateSelectedTest").val();
+                var selectedTest = testEditor.session.getValue();
                 selectedTest = selectedTest === "NA" ? "" : selectedTest;
 
-                var selectedEnv = $("#generateSelectedEnv").val();
+                var selectedEnv = envEditor.session.getValue();
                 selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
 
                 var el = $("#generateBuildServers")[0];
@@ -2988,6 +3060,14 @@ function initCallback(data) {
     globalState.configPasswordInit = data.configPassword;
     globalState.useTextAnalyticsInit = data.useTextAnalytics;
     globalState.logLevelInit = data.logLevel;
+    globalState.jenkinsAuthURL = data.jenkinsUrl+"/j_acegi_security_check?j_username="+
+                                 data.jenkinsUser+"&j_password="+data.jenkinsPassword  +"&from=";
+    globalState.jenkinsPassword   = data.jenkinsPassword  ;
+    if(globalState.jenkinsPassword   == ""){
+        $('#jenkinsPath').attr('href',data.jenkinsUrl);
+    }else{
+        $('#jenkinsPath').attr('href',globalState.jenkinsAuthURL);
+    }
 
     globalState.jenkinsUrl = data.jenkinsUrl;
     globalState.localPathForTestResults = data.localPathForTestResults;
@@ -3269,7 +3349,11 @@ function addToJenkinsCallback(data) {
     batchState.loading = false;
     if (data.status === "ok") {
         // Open new windows with the jobs' home pages
-        window.open(data.hjobUrl,'_blank');
+        if(globalState.jenkinsPassword  !=""){
+            window.open(globalState.jenkinsAuthURL+"/job/"+data.hjobUrl.split('/job')[1]);
+        }else{
+            window.open(data.hjobUrl);
+        }
         percentageState.updateProgressBar();
         showAlert("Build job submitted");
     } else {
@@ -3524,6 +3608,11 @@ function notificationCallback(obj, cb){
                 message= "<br><span class='"+classcss+"'>Sync completed successfully on "+data.nodeLabel+"</span>";
             }
             if (data.jobstatus == "FAILURE") {
+                if(globalState.jenkinsPassword == ""){
+                    data.logUrl = globalState.jenkinsUrl + data.logUrl;
+                }else{
+                    data.logUrl = globalState.jenkinsAuthURL + data.logUrl;
+                }
                 type = "danger";
                 classcss = "text-danger";
                 message= "<br/><span class='"+classcss+"'>Sync completed with few errors on  " +

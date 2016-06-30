@@ -175,8 +175,7 @@
               <li role="presentation" rv-each-tag="detailState.generateRepo.build.buildOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeBuildOptions">{ tag }</a></li>
             </ul>
             <br />
-            <input id="generateSelectedBuild" type="text" class="form-control"
-              rv-value="detailState.generateRepo.build.selectedBuild | cleanOptionsOutput"/>
+            <div style="width:100%; height:80px;" id="generateSelectedBuild-editor"></div>
           </div>
           <br />
           <div class="dropdown">
@@ -188,8 +187,7 @@
               <li role="presentation" rv-each-tag="detailState.generateRepo.build.testOptions"><a class="generateSearch" role="menuitem" tabindex="-1" rv-on-click="detailState.changeTestOptions">{ tag }</a></li>
             </ul>
             <br />
-            <input id="generateSelectedTest" type="text" class="form-control"
-              rv-value="detailState.generateRepo.build.selectedTest | cleanOptionsOutput"/>
+            <div style="width:100%; height:80px;" id="generateSelectedTest-editor"></div>
           </div>
           <br />
           <small>Environment variables separated by blanks or newlines applied as-is.</small>
@@ -203,8 +201,7 @@
             </ul>
             <br />
             <div class="form-group">
-              <textarea id="generateSelectedEnv" class="form-control" rows="1"
-                rv-value="detailState.generateRepo.build.selectedEnv | cleanOptionsOutput"></textarea>
+              <div style="width:100%; height:80px;" id="generateSelectedEnv-editor"></div>
             </div>
           </div>
         </span>
