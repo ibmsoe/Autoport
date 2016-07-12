@@ -654,7 +654,41 @@ def inferBuildSteps(listing, repo):
         'error': "",
         'success': True }
 
-    supported_langs = [ base_python_def, base_js_def, base_ruby_def, base_php_def, base_perl_def, base_c_def, base_cxx_def, base_java_def, base_scala_def ]
+    base_go_def = {
+        'build system': "Go",
+        'primary lang': "Go",
+        'grep build': "go build",
+        'grep test': "go test",
+        'grep install': "go get",
+        'grep env': "",
+        'build': "go get -t;go build",
+        'test': "go test",
+        'install': "go install",
+        'env' : "GOPATH=${WORKSPACE}\nGOBIN=${GOPATH}/bin",
+        'artifacts': "*.arti ",
+        'reason': "Primary language",
+        'error': "",
+        'success': True }
+
+    base_r_def = {
+        'build system': "R",
+        'primary lang': "R",
+        'grep build': "Rscript",
+        'grep test': "",
+        'grep install': "",
+        'grep env': "",
+        'build': "if [ -e DESCRIPTION ]; then R CMD build .; fi",
+        'test': "if [ -e %s*tar.gz ]; then R CMD check %s*tar.gz; fi"%(repo.name, repo.name),
+        'install': "",
+        'env' : "",
+        'artifacts': "*.arti ",
+        'reason': "Primary language",
+        'error': "",
+        'success': True }
+
+    supported_langs = [ base_python_def, base_js_def, base_ruby_def, base_php_def,
+                        base_perl_def, base_c_def, base_cxx_def, base_java_def,
+                        base_scala_def, base_go_def, base_r_def ]
 
     # These definitions are added based on the presense of a specific build file.  We can
     # simply the command line provided by the base definition and grep for project and build
