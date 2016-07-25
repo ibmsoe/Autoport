@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "22",
+    "sequence": "23",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -229,6 +229,9 @@
                 },
                 {
                     "name": "lua5.2"
+                },
+                {
+                    "name": "luarocks"
                 },
                 {
                     "name": "lzop"
@@ -534,6 +537,9 @@
                 },
                 {
                     "name": "lua-devel"
+                },
+                {
+                    "name": "luarocks"
                 },
                 {
                     "name": "lzo-devel"
@@ -852,6 +858,9 @@
                     "name": "lua-devel"
                 },
                 {
+                    "name": "luarocks"
+                },
+                {
                     "name": "lzo-devel"
                 },
                 {
@@ -1163,6 +1172,9 @@
                 },
                 {
                     "name": "lua"
+                },
+                {
+                    "name": "luarocks"
                 },
                 {
                     "name": "lua-devel"
