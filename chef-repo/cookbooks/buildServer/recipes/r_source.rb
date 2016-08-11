@@ -60,8 +60,8 @@ template '/etc/profile.d/R.sh' do
   only_if { File.exist?("#{install_path}/bin/R") }
 end
 
-buildServer_log "r_source" do
-  name         "r_source"
+buildServer_log "R" do
+  name         "R"
   log_location node['log_location']
   log_record   "R,#{version},r_source,R,#{arch},#{ext},#{r_package}"
   action       :add

@@ -108,6 +108,11 @@ default['buildServer']['R']['version'] = '3.0.2'
 default['buildServer']['R']['install_dir'] = '/opt'
 default['buildServer']['R']['ext'] = ''
 
+# Attributes for luajit
+default['buildServer']['luajit']['version'] = '2.1.0'
+default['buildServer']['luajit']['install_dir'] = '/opt'
+default['buildServer']['luajit']['ext'] = ''
+
 # Attributes for userpackages
 default['buildServer']['userpackages']={}
 default['buildServer']['debs']={}

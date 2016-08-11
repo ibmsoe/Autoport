@@ -29,4 +29,5 @@ case node['platform']
 end
 include_recipe 'buildServer::at'
 include_recipe 'buildServer::r'
+include_recipe 'buildServer::luajit_source'
 include_recipe 'buildServer::userpackages'

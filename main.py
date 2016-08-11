@@ -248,7 +248,6 @@ def getJenkinsNodeDetails_init(nodeNames, nodeLabels):
 
 @app.route("/autoport/getJenkinsNodeDetails", methods=['POST'])
 def getJenkinsNodeDetails():
-
     logger.debug("In getJenkinsNodeDetails, globals.nodeLabels=%s" % str(globals.nodeLabels))
 
     if not globals.nodeLabels:
@@ -1357,6 +1356,8 @@ def moveArtifacts(jobName, localDir, moverCv=None):
             if requestInfo.status_code == 200:
                 buildInfo = json.loads(requestInfo.text)
                 building = buildInfo['building']
+            if requestInfo.ok == False:
+                raise ValueError("Jobname=%s in queue" %(jobName))
             if building:
                 sleep(3)
         # check to make sure build isn't queued, if it is wait for it to dequeue
@@ -1366,17 +1367,31 @@ def moveArtifacts(jobName, localDir, moverCv=None):
 
             count = 0
             while queued and count < 20:
-                logger.debug("moveArtifacts: sleep 10 build is queued - not started")
+                logger.debug("moveArtifacts: job %s , sleep 10 build is queued - not started" %(jobName))
                 sleep(10)
                 try:
                     r = requests.get(checkQueueUrl, auth=globals.auth).text
                     projectInfo = json.loads(r)
                     inQueue = projectInfo['inQueue']
+                    if "queueItem" in projectInfo.keys() and "why" in projectInfo['queueItem'].keys() and "offline" in projectInfo['queueItem']['why']:
+                        logger.debug("moveArtifacts: stopping the poll on artifact for the job %s, as target slave node is offline" % jobName)
+                        if moverCv:
+                            moverCv['cv'].acquire()
+                            moverCv['outDir'] = outDir
+                            moverCv['cv'].notifyAll()
+                            moverCv['cv'].release()
+                        return outDir
                 # if it's not in the queue and not building something went wrong
                 except ValueError:
                     logger.debug("moveArtifacts: project failed to start building/queueing %s" % jobName)
                 count += 1
             if count == 20:
+                logger.debug("moveArtifacts: stopping the poll on artifact for the job %s, as poll timedout reached" % jobName)
+                if moverCv:
+                    moverCv['cv'].acquire()
+                    moverCv['outDir'] = outDir
+                    moverCv['cv'].notifyAll()
+                    moverCv['cv'].release()
                 return outDir
             building = False
 
@@ -2415,8 +2430,9 @@ def listManagedPackages():
         callback to handle return value of each thread
         and manipulate it further.
         '''
-        logger.debug("In listCallback, status=%s node=%s" % (data['status'], data['node']))
+        logger.debug("In listCallback, status=%s" % (data['status']))
         if data['status'] == 'ok':
+            logger.debug("In listCallback, status=%s node=%s" % (data['status'], data['node']))
             try:
                 i = globals.nodeLabels.index(data['node'])
                 for pkg in data['packageData']:
@@ -2530,7 +2546,7 @@ def listManagedPackages():
 
     logger.debug("listManagedPackages: methodName=%s arg_list=%s" % (methodName, arg_list))
 
-    threadRequests = makeRequests(methodName, arg_list, listCallback)
+    threadRequests = makeRequests(methodName, arg_list)
 
     cv['cv'].acquire()
     [globals.threadPool.putRequest(req) for req in threadRequests]
