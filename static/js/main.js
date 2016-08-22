@@ -5,8 +5,6 @@ var singleBuildEditor = "";
 var singleTestEditor = "";
 var singleEnvEditor = "";
 try {
-    google.load('search', '1');
-    
     buildEditor = ace.edit("generateSelectedBuild-editor");
     buildEditor.setTheme("ace/theme/chrome");
     buildEditor.getSession().setMode("ace/mode/sh");
@@ -60,6 +58,8 @@ try {
         fontFamily: "monospace",
         fontSize: "13px"
     });
+
+    google.load('search', '1');
 }
 catch(err) {
     console.log(err.message);
