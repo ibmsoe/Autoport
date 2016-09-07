@@ -3,7 +3,8 @@
 # This recipe also sets gradle_home and sets default path variable for gradle.
 
 Chef::Recipe.send(:include, CommandBuilder)
-Chef::Recipe.send(:include, ArchiveLog)
+
+include_recipe 'buildServer::get_log'
 
 version      = node['buildServer']['gradle']['version']
 install_dir  = node['buildServer']['gradle']['install_dir']

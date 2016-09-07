@@ -1,7 +1,7 @@
 # Installs python module "pytest" using source and build method.
 # source to be built is hosted at autoport_repo.
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 pytest_ver = node['buildServer']['pytest']['version']
 pytest_ext = node['buildServer']['pytest']['ext']

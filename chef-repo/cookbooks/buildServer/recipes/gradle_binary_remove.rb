@@ -1,6 +1,6 @@
 # Recipe would uninstall/remove gradle package installed via binary source.
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 version      = node['buildServer']['gradle']['version']
 install_dir  = node['buildServer']['gradle']['install_dir']

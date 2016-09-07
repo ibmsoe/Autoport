@@ -884,7 +884,7 @@ def inferBuildSteps(listing, repo):
     langlist_length = len(langlist)
     for f in listing:
         if f.type == 'dir':
-            if f.name == "build" or f.name == "scripts":
+            if f.name == "build" or f.name == "scripts" or f.name == "src":
                 directory_feed.insert(0, f.path)
             else:
                 directory_feed.append(f.path)
@@ -924,7 +924,7 @@ def inferBuildSteps(listing, repo):
     subdirs = []
     if len(langlist) <= langlist_length and makefile == None and bootstrap == None and buildsh == None and travis == None:
         for directory in directory_feed:
-            if "doc" in directory or "book" in directory:
+            if "doc" in directory or "book" in directory or "example" in directory:
                 continue
             logger.info("Looking for build files at %s/%s" % (repo.html_url, directory))
             listing = repo.get_dir_contents(directory)

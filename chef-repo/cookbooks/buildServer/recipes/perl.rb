@@ -1,6 +1,6 @@
 # Installs perl based on the version supplied and sets it as default perl version to be used.
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 version      = node['buildServer']['perl']['version']
 install_path = "#{node['buildServer']['perl']['prefix_dir']}/bin/perl#{version}"

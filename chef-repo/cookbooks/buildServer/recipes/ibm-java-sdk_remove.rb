@@ -1,3 +1,5 @@
+include_recipe 'buildServer::get_log'
+
 version_arr = node['buildServer']['ibm-java-sdk']['version']
 arch = node['kernel']['machine']
 install_dir = node['buildServer']['ibm-java-sdk']['install_dir']

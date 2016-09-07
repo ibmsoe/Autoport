@@ -1,6 +1,6 @@
 # Recipe would uninstall/remove luajit package built from source
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 version       = node['buildServer']['luajit']['version']
 install_dir   = node['buildServer']['luajit']['install_dir']

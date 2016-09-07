@@ -1,8 +1,6 @@
 # List of all recipes to be run, whenever a synch operation is done on a build-server.
 
-Chef::Recipe.send(:include, ArchiveLog)
-ArchiveLog.getLog(run_context, node)
-
+include_recipe 'buildServer::get_log'
 include_recipe 'buildServer::repo_settings'
 include_recipe 'buildServer::buildtools'
 include_recipe 'buildServer::cmake'

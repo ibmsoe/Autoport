@@ -1,7 +1,7 @@
 {
     "comment": "IMPORTANT READ sharedData.py before updating",
     "version": "1",
-    "sequence": "23",
+    "sequence": "24",
     "name": "ManagedList.json",
     "managedRuntime": [
         {
@@ -46,6 +46,9 @@
                 },
                 {
                     "name": "cmake"
+                },
+                {
+                    "name": "cython"
                 },
                 {
                     "name": "flex"
@@ -228,6 +231,9 @@
                     "name": "libyaml-tiny-perl"
                 },
                 {
+                    "name": "linux-tools-common"
+                },
+                {
                     "name": "lua5.2"
                 },
                 {
@@ -307,6 +313,9 @@
                 },
                 {
                     "name": "python-pytest"
+                },
+                {
+                    "name": "python-scipy"
                 },
                 {
                     "name": "python-setuptools"
@@ -452,6 +461,9 @@
                     "name": "cmake"
                 },
                 {
+                    "name": "Cython"
+                },
+                {
                     "name": "expat-devel"
                 },
                 {
@@ -575,6 +587,9 @@
                     "name": "openssl-devel"
                 },
                 {
+                    "name": "perf"
+                },
+                {
                     "name": "perl"
                 },
                 {
@@ -624,6 +639,9 @@
                 },
                 {
                     "name": "sbt"
+                },
+                {
+                    "name": "scipy"
                 },
                 {
                     "name": "scons"
@@ -771,6 +789,9 @@
                     "name": "cmake"
                 },
                 {
+                    "name": "Cython"
+                },
+                {
                     "name": "expat-devel"
                 },
                 {
@@ -894,6 +915,9 @@
                     "name": "openssl-devel"
                 },
                 {
+                    "name": "perf"
+                },
+                {
                     "name": "perl"
                 },
                 {
@@ -943,6 +967,9 @@
                 },
                 {
                     "name": "sbt"
+                },
+                {
+                    "name": "scipy"
                 },
                 {
                     "name": "scons"
@@ -1090,6 +1117,9 @@
                     "name": "cmake"
                 },
                 {
+                    "name": "Cython"
+                },
+                {
                     "name": "expat-devel"
                 },
                 {
@@ -1213,6 +1243,9 @@
                     "name": "openssl-devel"
                 },
                 {
+                    "name": "perf"
+                },
+                {
                     "name": "perl"
                 },
                 {
@@ -1262,6 +1295,9 @@
                 },
                 {
                     "name": "sbt"
+                },
+                {
+                    "name": "scipy"
                 },
                 {
                     "name": "scons"

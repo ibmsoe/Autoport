@@ -1,8 +1,7 @@
 # Installs perl module "test-strict" using source and build method.
 # source to be built is hosted at autoport_repo.
 
-Chef::Recipe.send(:include, ArchiveLog)
-
+include_recipe 'buildServer::get_log'
 include_recipe 'buildServer::perl'
 
 arch = node['kernel']['machine']

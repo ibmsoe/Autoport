@@ -627,7 +627,8 @@ class SharedData:
         #         available in ManagedList then the version from ManagedList becomes the Managed Version
         # case 3: If in the above two cases the ManagedList doesn't contain version for given package
         #         then installedVersion becomes the managed version
-        packageName = pkg["packageName"]
+        packageArch = pkg["arch"]
+        packageName = pkg["packageName"].split("." + packageArch)[0]
         pkgVersion = ""
         userAddedVersion = "N/A"
         removablePackage = "Yes"
@@ -636,6 +637,17 @@ class SharedData:
                 continue
             if runtime['distroVersion'] != distroRel and runtime['distroVersion'] != distroVersion:
                 continue
+            for package in runtime['userPackages']:
+                if package['name'] == packageName and \
+                   package['owner'] == self.__userName and \
+                   "arch" in package and package['arch'] == pkg['arch']:
+                    try:
+                        removablePackage = "Yes"
+                        userAddedVersion = package['version']
+                    except KeyError:
+                        break
+            if userAddedVersion != "N/A":
+                break
             for package in runtime['autoportChefPackages']:
                 if package['name'] == packageName or \
                    ("tagName" in package and package["tagName"] == packageName):
@@ -654,7 +666,7 @@ class SharedData:
                     break
             if not pkgVersion:
                 for package in runtime['autoportPackages']:
-                    if package['name'] == packageName:
+                    if package['name'] == packageName and "archiveName" not in pkg:
                         removablePackage = "No"
                         if "arch" in package and package['arch'] == pkg['arch']:
                             if "version" in package:
@@ -667,15 +679,6 @@ class SharedData:
                             else:
                                 pkgVersion = pkg['updateVersion']
                     if pkgVersion:
-                        break
-            for package in runtime['userPackages']:
-                if package['name'] == packageName and \
-                   package['owner'] == self.__userName and \
-                   "arch" in package and package['arch'] == pkg['arch']:
-                    try:
-                        removablePackage = "Yes"
-                        userAddedVersion = package['version']
-                    except KeyError:
                         break
         if not pkgVersion:
             pkgVersion="N/A"

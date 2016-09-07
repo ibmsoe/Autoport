@@ -1,7 +1,7 @@
 # Installs protobuf using source/build method, using the tarball maintained in autoport_repo.
 
 Chef::Recipe.send(:include, CommandBuilder)
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 version        = node['buildServer']['protobuf']['version']
 source_dir     = node['buildServer']['protobuf']['source_dir']
@@ -62,7 +62,7 @@ execute 'ldconfig' do
   only_if { Dir.exist?("#{source_dir}/#{protobuf_pkg}") }
 end
 
-execute 'Setting permissions' do
+execute 'Setting permissions for protobuf directory' do
   command "chmod -R 755 #{install_prefix}/"
   ignore_failure true
   only_if { Dir.exist?("#{install_prefix}") }
