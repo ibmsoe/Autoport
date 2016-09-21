@@ -447,7 +447,8 @@ function sigint_running_trap() {
     # properly, if a signal (SIGINT) is received the wait will exit
     # prematurely
     $WAIT
-    WAIT_RET_VAL=$?
+    WAIT_RET_VAL=$?    
+    echo "$WAIT_RET_VAL" > cmd_status
 
     # if the wait returned a non-zero value it may be because it was short-circuited by a SIGINT
     # if so, kill the PID we were waiting on because it will still be running, just in case

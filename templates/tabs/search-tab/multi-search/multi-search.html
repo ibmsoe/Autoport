@@ -124,12 +124,18 @@
                 <option selected="selected" rv-each-nodelabel="jenkinsState.nodeLabels" rv-value="nodelabel">{ nodelabel }</option>
               </select>
             </div>
-
+            <div>
             <button class="btn btn-primary" type="button"
               rv-on-click="detailState.generateRepo.addToJenkins">
               Build + Test
             </button>
-
+            </div>
+            <div>
+              <button class="btn btn-primary" type="button" id="buildPerfTestBtn"
+                rv-on-click="detailState.generateRepo.addToJenkins">
+                Build + Perf + Test
+              </button>
+            </div>
           </div>
         </h1>
 

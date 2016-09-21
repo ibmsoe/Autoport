@@ -95,7 +95,7 @@ class SharedData:
     def connect(self, jenkinsHost,
             jenkinsUser="root",
             jenkinsKey=globals.configJenkinsKey,
-            jenkinsHome="/home/jenkins",
+            jenkinsHome=globals.jenkinsHome,
             sharedDataDir="/var/opt/autoport/",
             repoPathPrefix="/var/www/autoport_repo",
             userName=globals.configUsername):
@@ -248,6 +248,20 @@ class SharedData:
         except Exception as e:
             assert(False), str(e)
 
+    def putSharedDir(self, localPath, remotePath):
+        # Transfer the folder to remote path on Jenkins master that is
+        # shared by all autoport instances
+        try:
+            self.__jenkinsFtpClient.chdir(remotePath)
+        except Exception as e:
+            self.__jenkinsFtpClient.mkdir(remotePath)
+        try:
+            for walker in os.walk(localPath):
+                for file in walker[2]:
+                    self.__jenkinsFtpClient.put(os.path.join(walker[0],file),os.path.join(remotePath,file))
+        except Exception as e:
+            assert(False), str(e)
+
     def removeRemoteFile(self, remotePath, filename):
         # Delete file from remote path on Jenkins master.
         try:
@@ -256,6 +270,82 @@ class SharedData:
         except Exception as e:
             logger.debug("removeRemoteFile: Error %s" % str(e))
             assert(False), str(e)
+
+    def uploadPerfData(self):
+        # This routine is responsible for uploading perf-data to Jenkins Master
+
+        msg = "Initializing autoport perf data"
+        logger.info(msg)
+
+        # Fetching version from this autoport instance
+        localData = self.getLocalData("perf-version.json")
+        localSequence = int(localData['sequence'])
+        localVersion = int(localData['version'])
+
+        # Fetching version from jenkins Master
+        sharedData = self.getSharedData("perf-version.json", "")
+        try:
+            sharedSequence = int(sharedData['sequence'])
+            sharedVersion = int(sharedData['version'])
+        except KeyError:
+            logger.debug("No or invalid perf control data on Jenkins master")
+            sharedSequence = 0
+            sharedVersion = 0
+
+        # Upload local copy if it is more recent
+        if localVersion > sharedVersion or \
+           (localVersion == sharedVersion and localSequence > sharedSequence):
+
+            logger.info("Uploading new perf-plugin version=%d sequence=%d" % (localVersion, localSequence))
+            logger.info("Replacing new perf-plugin version=%s sequence=%s" % (sharedVersion, sharedSequence))
+
+            # Upload local perf-version.json
+            sharedDataPath = self.putSharedData(localData, sharedData, "")
+            if not sharedDataPath:
+                msg = "Failed upload of perf control data to jenkins master"
+                logger.error(msg)
+                assert(False), msg
+
+            # For debugging / validation purposes, let's copy the control file
+            # into the perf data as this is a 2 step update.  Also identify
+            # which node made the update.
+
+            try:
+                localData['username'] = self.__userName
+                localData['hostname'] = self.__localHostName
+                localPath = self.putLocalData(localData, "")
+                shutil.copyfile(localPath, "smart_performance_plugin/perf-version.json")
+            except Exception as e:
+                logger.warning("Failed store of perf debug to sub-dir, continuing")
+                logger.warning(str(e))
+                pass
+
+            localPath = "./smart_performance_plugin"
+            remotePath = self.__sharedDataDir + "smart_performance_plugin"
+
+            # Transfer the perf folder to the shared location on Jenkins Master
+            self.putSharedDir(localPath, remotePath)
+            command = "cp -r " + remotePath + " " + self.__jenkinsHome + "/userContent" + \
+                      " && chown -R jenkins:jenkins " + self.__jenkinsHome + "/userContent/smart_performance_plugin"
+            exit_status, stderr = self.executeSharedCommand(command)
+            if exit_status:
+                logger.warning("Failed upload of perf data to jenkins master")
+
+            # Read the shared control data again and validate that we are still latest
+            newSharedData = self.getSharedData("perf-version.json", "")
+            try:
+                sharedSequence = int(newSharedData['sequence'])
+                sharedVersion = int(newSharedData['version'])
+            except KeyError:
+                sharedSequence = 0
+                sharedVersion = 0
+
+            logger.debug("Local  perf version=%s sequence=%s" % (localVersion, localSequence))
+            logger.debug("Shared  perf version=%s sequence=%s" % (sharedVersion, sharedSequence))
+
+            # Somebody else has updated the repository
+            if sharedSequence != localSequence and sharedVersion != localVersion:
+                return
 
     def executeSharedCommand(self, command):
         # Execute remote commands on Jenkins Master to manipulate shared data
@@ -459,7 +549,7 @@ class SharedData:
             cmd2 = "cd chef-repo"
             cmd3 = "knife ssl fetch > ../knife-ssl-fetch.out.$$ 2>&1"
             cmd4 = "knife upload / > ../knife-upload.out.$$ 2>&1"
-            cmd5 = "cp -r .chef " +  self.__jenkinsHome + " && chown -R jenkins:jenkins " + self.__jenkinsHome
+            cmd5 = "cp -r .chef " + os.path.dirname(self.__jenkinsHome) + " && chown -R jenkins:jenkins " + os.path.dirname(self.__jenkinsHome)
 
             command = cmd1 + " && " + cmd2 + " && " + cmd3 + " && " + cmd4 + " && " + cmd5
             exit_status, stderr = self.executeSharedCommand(command)
@@ -627,8 +717,7 @@ class SharedData:
         #         available in ManagedList then the version from ManagedList becomes the Managed Version
         # case 3: If in the above two cases the ManagedList doesn't contain version for given package
         #         then installedVersion becomes the managed version
-        packageArch = pkg["arch"]
-        packageName = pkg["packageName"].split("." + packageArch)[0]
+        packageName = pkg["packageName"]
         pkgVersion = ""
         userAddedVersion = "N/A"
         removablePackage = "Yes"
@@ -637,17 +726,6 @@ class SharedData:
                 continue
             if runtime['distroVersion'] != distroRel and runtime['distroVersion'] != distroVersion:
                 continue
-            for package in runtime['userPackages']:
-                if package['name'] == packageName and \
-                   package['owner'] == self.__userName and \
-                   "arch" in package and package['arch'] == pkg['arch']:
-                    try:
-                        removablePackage = "Yes"
-                        userAddedVersion = package['version']
-                    except KeyError:
-                        break
-            if userAddedVersion != "N/A":
-                break
             for package in runtime['autoportChefPackages']:
                 if package['name'] == packageName or \
                    ("tagName" in package and package["tagName"] == packageName):
@@ -666,7 +744,7 @@ class SharedData:
                     break
             if not pkgVersion:
                 for package in runtime['autoportPackages']:
-                    if package['name'] == packageName and "archiveName" not in pkg:
+                    if package['name'] == packageName:
                         removablePackage = "No"
                         if "arch" in package and package['arch'] == pkg['arch']:
                             if "version" in package:
@@ -679,6 +757,15 @@ class SharedData:
                             else:
                                 pkgVersion = pkg['updateVersion']
                     if pkgVersion:
+                        break
+            for package in runtime['userPackages']:
+                if package['name'] == packageName and \
+                   package['owner'] == self.__userName and \
+                   "arch" in package and package['arch'] == pkg['arch']:
+                    try:
+                        removablePackage = "Yes"
+                        userAddedVersion = package['version']
+                    except KeyError:
                         break
         if not pkgVersion:
             pkgVersion="N/A"

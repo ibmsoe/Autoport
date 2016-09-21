@@ -45,6 +45,7 @@ from requests.exceptions import MissingSchema
 from project import Project
 from flask.ext.compress import Compress
 from requests.auth import HTTPBasicAuth
+from os import listdir
 
 # Constants
 maxResults = 25
@@ -349,7 +350,7 @@ def settings():
         globals.configPassword = request.form["password"]
     except ValueError:
         return json.jsonify(status="failure", error="bad configuration password"), 400
- 
+
     try:
         globals.useTextAnalytics = request.form["usetextanalytics"] == 'true'
     except ValueError:
@@ -970,7 +971,7 @@ def convertbuildInfoJson(env, buildCmd, testCmd, installCmd):
 
 # Common routine for createJob and runBatchJob
 def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selectedBuild,
-                     selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang, upstreamProj=None):
+                     selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang, upstreamProj=None, isPerf=False):
 
     # Get repository
     repo = globals.cache.getRepo(id)
@@ -999,6 +1000,8 @@ def createJob_common(time, uid, id, tag, node, javaType, javaScriptType, selecte
 
     # Read template XML file
     tree = ET.parse("config_template.xml")
+    if isPerf:
+        tree = ET.parse("config_template_build_perf.xml")
     root = tree.getroot()
     # Find elements we want to modify
     xml_github_url = root.find("./properties/com.coravy.hudson.plugins.github.GithubProjectProperty/projectUrl")
@@ -1185,7 +1188,8 @@ def createJob(i_id = None,
               i_selectedEnv = None,
               i_artifacts = None,
               i_primaryLang = None,
-              i_isBatchJob = False):
+              i_isBatchJob = False,
+              i_isPerf = False):
 
     # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
     # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one
@@ -1302,8 +1306,13 @@ def createJob(i_id = None,
             return json.jsonify(status="failure", error="missing primary language"), 400
 
     try:
+        isPerf = request.form["isPerf"] == 'true'
+    except KeyError:
+        isPerf = False
+
+    try:
         rc = createJob_common(localtime(), uid, id, tag, node, javaType, javaScriptType, selectedBuild,
-                              selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang)
+                              selectedTest, selectedInstall, selectedEnv, artifacts, primaryLang, isPerf=isPerf)
         rcstatus = rc['status']
 
         logger.info("Stat[3]: timeStarted=%s, totalProjectsBuilt=%d, historyDetailReports=%d, "\
@@ -1596,6 +1605,12 @@ def runBatchFile ():
     except KeyError:
         return json.jsonify(status="failure", error="Please select at least one build server!"), 403
 
+    # Get the batch file name from POST
+    try:
+        isPerf = request.form["isPerf"]
+    except KeyError:
+        isPerf = False
+
     logger.debug("In runBatchFile, batchName=%s, nodeCSV=%s" % (batchName, nodeCSV))
 
     try:
@@ -1715,7 +1730,8 @@ def runBatchFile ():
                           package['build']['selectedEnv'],
                           package['build']['artifacts'],
                           package['build']['primaryLang'],
-                          upstreamJobSync)
+                          upstreamJobSync,
+                          isPerf=isPerf)
             except Exception as e:
                 logger.debug("runBatchFile: createJob_common node=%s, Error %s" % (node, str(e)))
                 continue
@@ -3208,6 +3224,57 @@ def getBatchTestDetails():
     else:
         return json.jsonify(status=batchDetails['status'], results = batchDetails)
 
+@app.route('/autoport/getPerformanceData', methods=['GET', 'POST'])
+def getPerformanceData():
+    try:
+        projectNamesCSV = request.args.get("projectNamesCSV","")
+        projectNames = projectNamesCSV.split(",")
+        repo = request.args.get("repo","")
+        response = {}
+        for projectName in projectNames:
+            build_file = None
+            test_file = None
+            projResp = {}
+            if repo == 'local':
+                artiFileLocation = globals.localPathForTestResults+projectName
+                try:
+                    build_file=open(artiFileLocation+'/build_perf_metrics.arti')
+                except:
+                    # Not raising exception
+                    pass
+                try:
+                    test_file = open(artiFileLocation+'/test_perf_metrics.arti')
+                except:
+                    # Not raising exception since we have build metrics to show
+                    pass
+            else:
+                artiFileLocation = globals.pathForTestResults+projectName
+                try:
+                    build_file = catalog.readRemoteFile(artiFileLocation+'/build_perf_metrics.arti')
+                except:
+                    # Not raising exception
+                    pass
+                try:
+                    test_file = catalog.readRemoteFile(artiFileLocation+'/test_perf_metrics.arti')
+                except:
+                    # Not raising exception since we have build metrics to show
+                    pass
+            if build_file is not None and build_file:
+                build_json = json.load(build_file)
+                projResp["Build"]=build_json
+            else:
+                projResp["Build"]=""
+            if test_file is not None and test_file:
+                test_json=json.load(test_file)
+                projResp["Test"]=test_json
+            else:
+                projResp["Test"]=""
+            response[projectName]=projResp
+        return json.jsonify(status='ok', results = response)
+    except Exception as ex:
+        json.jsonify(status='error', error=str(ex))
+
+
 @app.route('/autoport/getManagedList', methods=['GET','POST'])
 def getManagedList():
     try:
@@ -3232,6 +3299,7 @@ def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
         sharedData.connect(globals.jenkinsHostname)
         sharedData.uploadChefData()
         chefData.setRepoHost(globals.jenkinsHostname)
+        sharedData.uploadPerfData()
 
         # Setup Jenkins cloud boot services for build servers.  Uses pristine snap shotted image.
         # TODO: This needs to be enhanced to allow users to change jenkins servers in the cloud

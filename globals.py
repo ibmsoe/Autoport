@@ -37,6 +37,7 @@ def init():
 
     # Globals based on config file
     global jenkinsUrl
+    global jenkinsHome
     global jenkinsHostname
     global githubToken
     global configHostname
@@ -99,6 +100,11 @@ def init():
            jenkinsHostname = urlparse(jenkinsUrl).hostname
     else:
         jenkinsHostname = ""
+
+    jenkinsHome = configOptions['jenkinshome']
+    if jenkinsHome:
+        if not jenkinsHome or "<" in jenkinsHome:
+           jenkinsHome = "/home/jenkins/jenkins_home"
 
     configJenkinsPassword = configOptions['jenkinspassword']
     if not configJenkinsPassword or "<" in configJenkinsPassword:

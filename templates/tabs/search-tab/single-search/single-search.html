@@ -183,11 +183,17 @@
               </select>
             </div>
 
-            <button class="btn btn-primary" type="button"
-              rv-on-click="detailState.repo.addToJenkins">
-              Build + Test
-            </button>
+            <div>
+              <button class="btn btn-primary" type="button"
+                rv-on-click="detailState.repo.addToJenkins">
+                Build + Test
+              </button>
+            </div>
 
+           <div>
+             <button class="btn btn-primary" type="button" id="buildPerfTestBtn"
+               rv-on-click="detailState.repo.addToJenkins">
+               Build + Perf + Test
           </div>
         </h1>
 

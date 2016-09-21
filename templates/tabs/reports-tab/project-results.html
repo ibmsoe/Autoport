@@ -130,6 +130,13 @@
             rv-on-click="reportState.removeProjects">
         Remove
         </button>
+        <button type="button" style="margin-top: 4px;"
+            class="btn btn-primary disabled"
+            id="resultPerfBtn"
+            rv-on-click="reportState.getPerformance">
+            <span class="glyphicon glyphicon-bookmark" aria-hidden="true"></span>
+        Performance Compare (2)
+        </button>
       </div>
     </div>
 
@@ -153,6 +160,35 @@
           </tr>
         </thead>
       </table>
+    </div>
+
+    <div id="perfCompareTablePanel" class="table panel panel-default" rv-show="projectReportState.performanceTableReady">
+      <div class="panel panel-primary">
+        <div class="panel-heading">Perf results for Jenkins job(s):<span id="perfPrjHeader"></span></div>
+    <div class="row" style="margin:0px">
+          <div class="col-md-6" style="border-right: 1px dashed #333;">
+           <div class="row" style="margin:0px">
+               <div class="col-md-12 text-center">
+                   <span id="perfPrjHeader_left" style="font-weight:bold"></span>
+               </div>
+               <div class="perf-table-container-left" style="padding:5px;">
+
+               </div>
+           </div>
+          </div>
+          <div class="col-md-6">
+           <div class="row" style="margin:0px">
+               <div class="col-md-12 text-center">
+                   <span id="perfPrjHeader_right" style="font-weight:bold"></span>
+               </div>
+               <div class="perf-table-container-right" style="padding:5px;">
+
+               </div>
+
+           </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Project reports table for viewing history/detail/comparisons -->

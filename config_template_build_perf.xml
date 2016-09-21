@@ -1,0 +1,738 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description></description>
+  <logRotator class="hudson.tasks.LogRotator">
+    <daysToKeep>7</daysToKeep>
+    <numToKeep>3000</numToKeep>
+    <artifactDaysToKeep>7</artifactDaysToKeep>
+    <artifactNumToKeep>3000</artifactNumToKeep>
+  </logRotator>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.12.0">
+      <projectUrl></projectUrl>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.StringParameterDefinition>
+          <name>META_NAME</name>
+          <description>Job profile file name</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>META_CONTENTS</name>
+          <description>Job parameters</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>HOSTNAME</name>
+          <description>Hostname of build server</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>IPADDR</name>
+          <description>IPADDR of build server</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>OSNAME</name>
+          <description>OS Name Version PLatform of build server</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>JAVATYPE</name>
+          <description>Calculated environment variables</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>JSTYPE</name>
+          <description>Calculated environment variables</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PROJECTURL</name>
+          <description>Project URL</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PROJECTVERS</name>
+          <description>Project branch name or release tag</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>PROJENV</name>
+          <description>Environment variables specific to project injected by jenkins plugin</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CMD1</name>
+          <description>Command to build the project</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CMD2</name>
+          <description>Command to test the project</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>CMD3</name>
+          <description>Command to install the project to resolve a dependency in a batch file</description>
+          <defaultValue></defaultValue>
+        </hudson.model.StringParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+    <hudson.plugins.libvirt.BeforeJobSnapshotJobProperty plugin="libvirt-slave@1.8.5"/>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.25">
+      <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
+    </com.sonyericsson.rebuild.RebuildSettings>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@2.4.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url></url>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name></name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions>
+      <hudson.plugins.git.extensions.impl.CloneOption>
+        <shallow>true</shallow>
+        <reference></reference>
+        <timeout>60</timeout>
+      </hudson.plugins.git.extensions.impl.CloneOption>
+    </extensions>
+  </scm>
+  <assignedNode></assignedNode>
+  <canRoam>false</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder plugin="conditional-buildstep@1.3.3">
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.0"/>
+      <runCondition class="org.jenkins_ci.plugins.run_condition.core.AlwaysRun" plugin="run-condition@1.0"/>
+      <conditionalbuilders>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+                  if [ ! -d .autoport-scratch ]; then
+                      mkdir .autoport-scratch
+                  fi
+                  if [ -d smart_performance_plugin ]; then
+                      mv smart_performance_plugin .autoport-scratch
+                      chmod 755 .autoport-scratch/smart_performance_plugin/*
+                  fi
+                  echo &quot;*&quot; &gt; .autoport-scratch/.gitignore
+                  echo $META_CONTENTS &gt; .autoport-scratch/$META_NAME
+
+                  # bitcoin is a good project to test these functions
+
+                  ################################ Shell program to create autoport environment ###########################
+
+                  bash_script_providing_builtin_autoport_functions='#!/bin/bash
+
+                  # Default environment variables calculated at runtime
+                  export TRAVIS_BUILD_DIR=${TRAVIS_BUILD_DIR:=$PWD}
+                  export TRAVIS_BUILD_NUMBER=${TRAVIS_BUILD_NUMBER:=1}
+                  export TRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER:=1.1}
+                  export TRAVIS_SECURE_ENV_VARS=${TRAVIS_SECURE_ENV_VARS:=false}
+
+                  if [ -e /etc/redhat-release ]; then
+                      function add-apt-repository() {
+                          echo "Autoport RHEL/CentOS WARNING Replace: add-apt-repository $*"
+                      }
+                      function apt-cache() {
+                          echo "Autoport RHEL/CentOS WARNING Replace: apt-cache $*"
+                      }
+                      function apt-get() {
+                          echo "Autoport RHEL/CentOS WARNING Replace: apt-get $*"
+                      }
+                      function aptitude() {
+                          echo "Autoport RHEL/CentOS WARNING Replace: aptitude $*"
+                      }
+                      function dpkg() {
+                          echo "Autoport RHEL/CentOS WARNING Replace: dpkg $*"
+                      }
+                      function synaptic() {
+                          echo "Autoport RHEL/CentOS WARNING Replace: synaptic $*"
+                      }
+                      function sudo() {
+                          rc=0
+                          args=$@
+                          cmd=${args%% *}
+                          sudoarg=""
+                          if [ ${cmd:0:1} == "-" ]; then
+                              sudoarg="$cmd"
+                              args=${args#$cmd }
+                              cmd=${args%% *}
+                          fi
+                          rest=""
+                          if [ "$cmd" != "$args" ]; then
+                              rest=${args#$cmd }
+                          fi
+                          case $cmd in
+                          "dpkg")
+                              echo "Autoport RHEL/CentOS WARNING Replace: sudo $*"
+                              ;;
+                          "apt"*)
+                              echo "Autoport RHEL/CentOS WARNING Replace: sudo $*"
+                              ;;
+                          "add-apt"*)
+                              echo "Autoport RHEL/CentOS WARNING Replace: sudo $*"
+                              ;;
+                          *)
+                              cmd=`/usr/bin/which $cmd`
+                              rc=$?
+                              echo "AUTOPORT INFO: /usr/bin/sudo $sudoarg $cmd $rest"
+                              if [ $rc == 0 ]; then
+                                  /usr/bin/sudo $sudoarg $cmd $rest
+                                  rc=$?
+                              fi
+                              ;;
+                          esac
+                          return $rc
+                      }
+                  else
+                      function sudoRetryRC() {
+                          args=$@
+                          expectedFailure=${args%% *}
+                          cmdline=${args#$expectedFailure }
+                          cmd=${cmdline%% *}
+                          rest=${cmdline#$cmd }
+
+                          echo "Autoport INFO: sudo $cmdline"
+
+                          rc=0
+                          i=0
+                          while [ $i -lt 3 ]; do
+                              /usr/bin/sudo $cmd $rest
+                              rc=$?
+                              echo "Autoport INFO: sudo $cmd $rest, rc=$rc"
+                              if [ "$rc" -eq "$expectedFailure" ]; then
+                                  i=$((i+1))
+                                  sleep 60
+                              else
+                                  break;
+                              fi
+                          done
+                          return $rc
+                      }
+                      # It is assumed that all apt-get commands are prefixed with sudo.  Protect
+                      # against lock collisions as we allow multiple projects to build at the
+                      # by retrying selected commands.  These commands come from TravisCI yml files.
+                      function sudo() {
+                          args=$@
+                          cmd=${args%% *}
+                          sudoarg=""
+                          if [ ${cmd:0:1} == "-" ]; then
+                              sudoarg="$cmd"
+                              args=${args#$cmd }
+                              cmd=${args%% *}
+                          fi
+                          rest=""
+                          if [ "$cmd" != "$args" ]; then
+                              rest=${args#$cmd }
+                          fi
+                          case $cmd in
+                          "apt-get")
+                              subCmd=${rest%% *}
+                              if [ "$subCmd" != "$rest" ]; then
+                                  rest=${rest#$subCmd }
+                              else
+                                  rest=""
+                              fi
+                              if [ "$subCmd" == "update" ]; then
+                                  echo "Autoport INFO: sudo $cmd $subCmd $rest"
+                                  /usr/bin/sudo $cmd $subCmd $rest
+                                  rc=0
+                              else
+                                  sudoRetryRC 100 $cmd $subCmd $rest
+                                  rc=$?
+                              fi
+                              return $rc
+                              ;;
+                          "aptitude")
+                              sudoRetryRC 255 $cmd $rest
+                              return $?
+                              ;;
+                          "dpkg")
+                              sudoRetryRC 2 $cmd $rest
+                              return $?
+                              ;;
+                          "synaptic")
+                              sudoRetryRC 1 $cmd $rest
+                              return $?
+                              ;;
+                          *)
+                              # add-apt-repository does not appear to take any locks
+
+                              cmd=`/usr/bin/which $cmd`
+                              rc=$?
+                              echo "AUTOPORT INFO: /usr/bin/sudo $sudoarg $cmd $rest"
+                              if [ $rc == 0 ]; then
+                                  /usr/bin/sudo $sudoarg $cmd $rest
+                                  rc=$?
+                              fi
+                              return $rc
+                              ;;
+                          esac
+                      }
+                  fi
+                  function travis_retry() {
+                      args=$@
+                      cmd=${args%% *}
+                      rest=""
+                      if [ "$cmd" != "$args" ]; then
+                          rest=${args#$cmd }
+                      fi
+                      i=0
+                      while [ $i -lt 3 ]; do
+                          if [ "$cmd" == "sudo" ]; then
+                              cmd=${rest%% *}
+                              if [ "$cmd" != "$rest" ]; then
+                                  rest=${rest#$cmd }
+                              else
+                                  rest=""
+                              fi
+                              cmdType=`type $cmd`
+                              if [[ $cmdType != *"is a function"* ]]; then
+                                  echo "Autoport INFO: travis_retry sudo $cmd $rest"
+                                  /usr/bin/sudo $cmd $rest
+                              else
+                                  echo "Autoport RHEL/CentOS WARNING Replace: travis_retry sudo $cmd $rest"
+                                  rc=0
+                              fi
+                          else
+                              command $cmd $rest
+                          fi
+                          rc=$?
+                          if [ "$rc" -eq "0" ]; then
+                              break;
+                          fi
+                          i=$((i+1))
+                      done
+                      return $rc
+                  }
+                  function travis_wait() {
+                      args=$@
+                      cmd=${args%% *}
+                      rest=""
+                      if [ "$cmd" != "$args" ]; then
+                          rest=${args#$cmd }
+                      fi
+                      if [ "$cmd" == "sudo" ]; then
+                          cmd=${rest%% *}
+                          if [ "$cmd" != "$rest" ]; then
+                              rest=${rest#$cmd }
+                          else
+                              rest=""
+                          fi
+                          cmdType=`type $cmd`
+                          if [[ $cmdType != *"is a function"* ]]; then
+                              echo "travis_retry sudo $cmd $rest"
+                              /usr/bin/sudo $cmd $rest
+                          else
+                              echo "Autoport RHEL/CentOS WARNING Replace: travis_wait sudo $cmd $rest"
+                              rc=0
+                          fi
+                      else
+                          command $cmd $rest
+                      fi
+                      rc=$?
+                      return $rc
+                  }
+                  function getMakeTestTarget() {
+                      TEST=$(python $PWD/.autoport-scratch/makeFileParser.py)
+                      echo "Autoport : Test Target deduced from makefile is : $TEST"
+                  }'
+                 ################################ End shell program to create autoport environment ###########################
+
+                 # Dump to a bash script for execution
+                 echo &quot;$bash_script_providing_builtin_autoport_functions&quot; >.autoport-scratch/.autoportrc
+
+################################ Python program to parse makefile generated during build command ####################
+
+                 python_script_makefile_parsing='#!/usr/bin/python
+import re
+
+def getAllTargets():
+    try:
+        targets = []
+        subTargets = []
+        target_pattern = re.compile("^[^\-#\s\$\.][a-zA-Z0-9_\/\s\-]*(?!:=):[a-zA-Z0-9_\$\(\)\/\s\-\.]*;*")
+
+        # Considering that Makefile is generated in the current working directory.
+
+        with open("Makefile") as makefile_data:
+            for line in makefile_data:
+                m = target_pattern.search(line)
+                if m:
+                    tgt = m.group(0).partition(":")
+                    targets.append(tgt[0].strip())
+                    subTargets.append(tgt[2].strip(";").split())
+        return targets, subTargets
+    except Exception as e:
+        makefile_data = ""
+        return [], []
+
+def getMakeTestCommand():
+    subTgt, reqTgt = "", "test"
+    try:
+        targets, subTargets = getAllTargets()
+        for count, tgt in enumerate(targets):
+            if tgt == "test" or tgt == "check":
+                print tgt
+                return tgt
+            elif "test" in tgt:
+                if len(subTgt) &lt; len(subTargets[count]) or subTgt == "":
+                    reqTgt = tgt
+                    subTgt = subTargets[count]
+        print reqTgt
+    except Exception as e:
+        print reqTgt
+
+if __name__ == "__main__":
+    getMakeTestCommand()'
+
+################################## End python program to parse makefile generated during build command ##################
+
+                 echo &quot;$python_script_makefile_parsing&quot; >.autoport-scratch/makeFileParser.py
+
+                 env</command>
+        </hudson.tasks.Shell>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+              if [ -n &quot;$CMD1&quot; ]; then
+                  source .autoport-scratch/.autoportrc
+                  if [ $JAVATYPE ]; then
+                      # Expecting value of JAVATYPE as 'ibm-java-sdk,7' or 'openjdk,7'
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
+                      echo &quot;Setting Java to $JAVATYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JAVATYPE&quot;
+                      JAVA_TYPE=`echo ${ADDR[0]}`
+                      JAVA_VERSION=`echo ${ADDR[1]}`
+                  fi
+                  if [ $JSTYPE ]; then
+                      # Expecting value of JSTYPE as 'ibm-sdk-nodejs,7' or ''
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
+                      echo &quot;Setting JavaScript to $JSTYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JSTYPE&quot;
+                      JS_TYPE=`echo ${ADDR[0]}`
+                      JS_VERSION=`echo ${ADDR[1]}`
+                  fi
+                  source /etc/profile
+                  SCRATCH=&quot;$PWD/.autoport-scratch&quot;
+                  echo -e $CMD1 &gt;&gt; $SCRATCH/autoport_build_cmd;
+                  ARTI=&quot;$SCRATCH/build_result.arti&quot;
+                  DEBUG=&quot;$SCRATCH/.debug&quot;
+                  PERF_DIR=&quot;$SCRATCH/smart_performance_plugin&quot;
+                  PERF_SCRIPT=&quot;$PERF_DIR/basic_perf_plugin.sh&quot;
+                  POST_PERF_SCRIPT=&quot;$PERF_DIR/post_process.py&quot;
+                  BUILD_PERF_CMD=&quot;$PERF_SCRIPT profilers=&quot;&quot; workload=&quot;autoport&quot; department_name=&quot;POSS&quot; cmd=&quot;$SCRATCH/autoport_build_cmd&quot; package=&quot;${JOB_NAME}&quot; output_dir=&quot;$SCRATCH&quot;&quot;
+
+                  echo &quot;Autoport HOST:           $HOSTNAME&quot; &gt; $ARTI
+                  echo &quot;Autoport IPADDR:         $IPADDR&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport O/S:            $OSNAME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport JAVA_HOME:      $JAVA_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport NODEJS_HOME:    $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PATH:           $PATH&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJURL:        $PROJECTURL&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJVERS:       $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                   &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJENV:        $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                   &gt;&gt; $ARTI
+                  echo -e &quot;Autoport Build CMD:   $CMD1&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport Build+Perf CMD: $BUILD_PERF_CMD&quot; &gt;&gt; $DEBUG
+                  echo &quot;&quot;                   &gt;&gt; $DEBUG
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  java -version 2&gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`mvn --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`ant -version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`gradle --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type node &gt;&gt; $ARTI
+                  V=`node --version`
+                  echo &quot;node version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type npm &gt;&gt; $ARTI
+                  V=`npm --version`
+                  echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  chmod a+x $PWD/.autoport-scratch/autoport_build_cmd;
+                  echo -e $CMD1
+                  eval $BUILD_PERF_CMD &gt;&gt; $ARTI 2&gt;&amp;1;
+                  rc=$(cat cmd_status)
+                  echo &quot;Autoport BUILD CMD RC=$rc&quot; &gt;&gt; $ARTI
+                  TAR_FILE=$(ls $SCRATCH/*.tar.bz2.arti)
+                  GET_METRICS=&quot;$POST_PERF_SCRIPT $TAR_FILE $SCRATCH/&quot;
+                  echo &quot;Autoport fetch build metric CMD:     $GET_METRICS&quot; &gt;&gt; $DEBUG
+                  echo &quot;Fetching performance metrics for build&quot;
+                  eval $GET_METRICS
+                  JSON_FILE_NAME=$(ls $PWD/$JOB_NAME*.json)
+                  cat $JSON_FILE_NAME &gt;&gt; $PWD/.autoport-scratch/build_perf_metrics.arti
+                  rm  $TAR_FILE $JSON_FILE_NAME cmd_status
+                  exit $rc
+              fi</command>
+        </hudson.tasks.Shell>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+              if [ -n &quot;$CMD2&quot; ]; then
+                  if [ $JAVATYPE ]; then
+                      # Expecting value of JAVATYPE as 'ibm-java-sdk,7' or 'openjdk,7'
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
+                      echo &quot;Setting Java to $JAVATYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JAVATYPE&quot;
+                      JAVA_TYPE=`echo ${ADDR[0]}`
+                      JAVA_VERSION=`echo ${ADDR[1]}`
+                  fi
+                  if [ $JSTYPE ]; then
+                      # Expecting value of JSTYPE as 'ibm-sdk-nodejs,7' or ''
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
+                      echo &quot;Setting JavaScript to $JSTYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JSTYPE&quot;
+                      JS_TYPE=`echo ${ADDR[0]}`
+                      JS_VERSION=`echo ${ADDR[1]}`
+                  fi
+                  source /etc/profile
+                  SCRATCH=&quot;$PWD/.autoport-scratch&quot;
+                  echo &quot;source .autoport-scratch/.autoportrc&quot; &gt;&gt; $SCRATCH/autoport_test_cmd;
+                  echo -e $CMD2 &gt;&gt; $SCRATCH/autoport_test_cmd;
+                  ARTI=&quot;.autoport-scratch/test_result.arti&quot;
+                  PERF_DIR=&quot;$SCRATCH/smart_performance_plugin&quot;
+                  PERF_SCRIPT=&quot;$PERF_DIR/basic_perf_plugin.sh&quot;
+                  TEST_PERF_CMD=&quot;$PERF_SCRIPT profilers=&quot;&quot; workload=&quot;autoport&quot; department_name=&quot;POSS&quot; cmd=&quot;$SCRATCH/autoport_test_cmd&quot; package=&quot;${JOB_NAME}&quot; output_dir=&quot;$SCRATCH&quot;&quot;
+                  POST_PERF_SCRIPT=&quot;$PERF_DIR/post_process.py&quot;
+
+                  echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
+                  echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
+                  echo -e &quot;Autoport Test CMD:    $CMD2&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  java -version 2&gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`mvn --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`ant -version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`gradle --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type node &gt;&gt; $ARTI
+                  V=`node --version`
+                  echo &quot;node version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type npm &gt;&gt; $ARTI
+                  V=`npm --version`
+                  echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  chmod a+x $PWD/.autoport-scratch/autoport_test_cmd;
+                  echo -e $CMD2
+                  eval $TEST_PERF_CMD &gt;&gt; $ARTI 2&gt;&amp;1;
+                  rc=$(cat cmd_status)
+                  echo &quot;Autoport TEST CMD RC=$rc&quot; &gt;&gt; $ARTI
+                  TAR_FILE=$(ls $SCRATCH/*.tar.bz2.arti)
+                  GET_METRICS=&quot;$POST_PERF_SCRIPT $TAR_FILE $SCRATCH/&quot;
+                  echo &quot;Fetching performance metrics for test&quot;
+                  eval $GET_METRICS
+                  JSON_FILE_NAME=$(ls $PWD/$JOB_NAME*.json)
+                  cat $JSON_FILE_NAME &gt;&gt; $PWD/.autoport-scratch/test_perf_metrics.arti
+                  rm $TAR_FILE $JSON_FILE_NAME cmd_status
+                  exit $rc
+              fi</command>
+        </hudson.tasks.Shell>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+              if [ -n &quot;$CMD3&quot; ]; then
+                  source .autoport-scratch/.autoportrc
+                  if [ $JAVATYPE ]; then
+                      # Expecting value of JAVATYPE as 'ibm-java-sdk,7' or 'openjdk,7'
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
+                      echo &quot;Setting Java to $JAVATYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JAVATYPE&quot;
+                      JAVA_TYPE=`echo ${ADDR[0]}`
+                      JAVA_VERSION=`echo ${ADDR[1]}`
+                  fi
+                  if [ $JSTYPE ]; then
+                      # Expecting value of JSTYPE as 'ibm-sdk-nodejs,7' or ''
+                      # i.e [name,major-version] derived from managed list which
+                      # will populate the drop down.
+                      echo &quot;Setting JavaScript to $JSTYPE&quot;
+                      IFS=',' read -ra ADDR &lt;&lt;&lt; &quot;$JSTYPE&quot;
+                      JS_TYPE=`echo ${ADDR[0]}`
+                      JS_VERSION=`echo ${ADDR[1]}`
+                  fi
+                  source /etc/profile
+                  ARTI=&quot;.autoport-scratch/install_result.arti&quot;
+                  echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
+                  echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                &gt;&gt; $ARTI
+                  echo -e &quot;Autoport Install CMD: $CMD3&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  java -version 2&gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`mvn --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`ant -version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  V=`gradle --version`
+                  echo &quot;$V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type node &gt;&gt; $ARTI
+                  V=`node --version`
+                  echo &quot;node version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  type npm &gt;&gt; $ARTI
+                  V=`npm --version`
+                  echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot; &gt;&gt; $ARTI
+
+                  echo -e $CMD3 | tee .autoport-scratch/autoport_install_cmd;
+                  chmod a+x .autoport-scratch/autoport_install_cmd;
+                  source .autoport-scratch/autoport_install_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                  rc=$?
+                  echo &quot;Autoport Install CMD RC=$rc&quot; &gt;&gt; $ARTI
+                  exit $rc
+              fi</command>
+        </hudson.tasks.Shell>
+      </conditionalbuilders>
+    </org.jenkinsci.plugins.conditionalbuildstep.ConditionalBuilder>
+  </builders>
+  <publishers>
+    <hudson.tasks.ArtifactArchiver>
+      <artifacts>.autoport-scratch/*.arti</artifacts>
+      <allowEmptyArchive>false</allowEmptyArchive>
+      <onlyIfSuccessful>false</onlyIfSuccessful>
+      <fingerprint>false</fingerprint>
+      <defaultExcludes>true</defaultExcludes>
+    </hudson.tasks.ArtifactArchiver>
+    <hudson.plugins.postbuildtask.PostbuildTask plugin="postbuild-task@1.8">
+      <tasks>
+        <hudson.plugins.postbuildtask.TaskProperties>
+          <logTexts>
+            <hudson.plugins.postbuildtask.LogProperties>
+              <logText>Archiving artifacts</logText>
+              <operator>AND</operator>
+            </hudson.plugins.postbuildtask.LogProperties>
+          </logTexts>
+          <EscalateStatus>false</EscalateStatus>
+          <RunIfJobSuccessful>true</RunIfJobSuccessful>
+          <script>#!/bin/bash
+             # This script keeps the most recent KEEPBUILDS number of builds
+             # For example, if KEEPBUILDS=75 and there are 100 builds, it will
+             # remove the oldest 25 builds.
+             KEEPBUILDS=125
+             cwd=`pwd`
+             cd ..
+             pwd
+             echo &quot;Current directory: $cwd&quot;
+             numBuilds=`ls -crd * | wc -l`
+             buildsToRemove=$((numBuilds-$KEEPBUILDS))
+             if [ $buildsToRemove -lt 0 ]; then
+                 buildsToRemove=0
+             fi
+             echo &quot;Total number of builds: $numBuilds&quot;
+             echo &quot;Number of builds to remove: $buildsToRemove&quot;
+             if [ $buildsToRemove -gt 0 ]; then
+                 removeList=`ls -crd * | head -n $buildsToRemove`
+                 echo &quot;----- Start removeList ----- &quot;
+                 for i in $removeList
+                 do
+                     ls -ld $i
+                     sudo rm -rf $i
+                 done
+                 echo &quot;----- End removeList ----- &quot;
+             fi
+          </script>
+        </hudson.plugins.postbuildtask.TaskProperties>
+      </tasks>
+    </hudson.plugins.postbuildtask.PostbuildTask>
+  </publishers>
+  <buildWrappers>
+    <com.michelin.cio.hudson.plugins.copytoslave.CopyToSlaveBuildWrapper plugin="copy-to-slave@1.4.4">
+       <includes>smart_performance_plugin/*</includes>
+       <excludes></excludes>
+       <flatten>false</flatten>
+       <includeAntExcludes>false</includeAntExcludes>
+       <hudsonHomeRelative>false</hudsonHomeRelative>
+       <relativeTo>userContent</relativeTo>
+    </com.michelin.cio.hudson.plugins.copytoslave.CopyToSlaveBuildWrapper>
+    <EnvInjectBuildWrapper plugin="envinject@1.91.3">
+      <info>
+        <propertiesContent></propertiesContent>
+        <loadFilesFromMaster>false</loadFilesFromMaster>
+      </info>
+    </EnvInjectBuildWrapper>
+    <hudson.plugins.build__timeout.BuildTimeoutWrapper plugin="build-timeout@1.15.1">
+        <strategy class="hudson.plugins.build_timeout.impl.AbsoluteTimeOutStrategy">
+            <timeoutMinutes>720</timeoutMinutes>
+        </strategy>
+        <operationList/>
+    </hudson.plugins.build__timeout.BuildTimeoutWrapper>
+    <org.jenkinsci.plugins.preSCMbuildstep.PreSCMBuildStepsWrapper plugin="preSCMbuildstep@0.3">
+      <buildSteps>
+        <hudson.tasks.Shell>
+          <command>#!/bin/bash
+          DISTRIBUTION=`echo $OSNAME | awk -F" " '{print $1}'`
+          type git
+          can_continue=$?
+          if [ $can_continue -ne 0 ]; then
+             echo "git is not installed on this system, installing \"git\"."
+             case $DISTRIBUTION in
+             "Ubuntu")
+                sudo apt-get -y --force-yes install git
+             ;;
+             "RHEL"|"CentOS")
+                sudo yum -y install git
+             ;;
+             esac
+          fi
+          </command>
+        </hudson.tasks.Shell>
+      </buildSteps>
+        <failOnError>false</failOnError>
+    </org.jenkinsci.plugins.preSCMbuildstep.PreSCMBuildStepsWrapper>
+  </buildWrappers>
+</project>
