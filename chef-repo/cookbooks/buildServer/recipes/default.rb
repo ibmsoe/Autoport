@@ -2,6 +2,7 @@
 
 include_recipe 'buildServer::get_log'
 include_recipe 'buildServer::repo_settings'
+include_recipe 'buildServer::go_setup'
 include_recipe 'buildServer::buildtools'
 include_recipe 'buildServer::cmake'
 # Binary installations
