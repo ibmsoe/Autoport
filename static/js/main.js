@@ -2312,8 +2312,18 @@ function performanceDataCallback(data){
       var content = json_data[headers[i]];
       var mainKeys= getKeys(content);
       for (j=0;j<mainKeys.length;j++){
+        if(mainKeys[j]=="buildstatus" || mainKeys[j]=="teststatus"){
+          continue;
+        }
+        var projStatus = "";
+        if(mainKeys[j] == "Build"){
+          projStatus = "Status("+content["buildstatus"]+")";
+        }
+        if(mainKeys[j] == "Test"){
+          projStatus = "Status("+content["teststatus"]+")";
+        }
         var row = $('<tr></tr>').appendTo(tables[i]);
-        $('<td colspan="3" align="center" style="background-color:'+backgroundcolors[mainKeys[j]]+'; font-weight:bold"></td>').text(mainKeys[j]+" Performance Metrics").appendTo(row);
+        $('<td colspan="3" align="center" style="background-color:'+backgroundcolors[mainKeys[j]]+'; font-weight:bold"></td>').text(mainKeys[j]+" Performance Metrics,  "+projStatus).appendTo(row);
         if(content[mainKeys[j]].length!=undefined && content[mainKeys[j]].length>1){
           for (json in content[mainKeys[j]]){
             jsonobj = content[mainKeys[j]][json];

@@ -3234,16 +3234,20 @@ def getPerformanceData():
         for projectName in projectNames:
             build_file = None
             test_file = None
+            build_status = 'Unknown'
+            test_status = 'Unknown'
             projResp = {}
             if repo == 'local':
                 artiFileLocation = globals.localPathForTestResults+projectName
                 try:
                     build_file=open(artiFileLocation+'/build_perf_metrics.arti')
+                    build_status = open(artiFileLocation+'/build_status.arti').read().strip('\n')
                 except:
                     # Not raising exception
                     pass
                 try:
                     test_file = open(artiFileLocation+'/test_perf_metrics.arti')
+                    test_status = open(artiFileLocation+'/test_status.arti').read().strip('\n')
                 except:
                     # Not raising exception since we have build metrics to show
                     pass
@@ -3251,14 +3255,29 @@ def getPerformanceData():
                 artiFileLocation = globals.pathForTestResults+projectName
                 try:
                     build_file = catalog.readRemoteFile(artiFileLocation+'/build_perf_metrics.arti')
+                    build_status = catalog.readRemoteFile(artiFileLocation+'/build_status.arti').read().strip('\n')
                 except:
                     # Not raising exception
                     pass
                 try:
                     test_file = catalog.readRemoteFile(artiFileLocation+'/test_perf_metrics.arti')
+                    test_status = catalog.readRemoteFile(artiFileLocation+'/test_status.arti').read().strip('\n')
                 except:
                     # Not raising exception since we have build metrics to show
                     pass
+            if build_status == '0':
+                build_status = 'Success'
+            elif build_status != 'Unknown' and int(build_status)>0:
+                build_status = 'Fail'
+
+            if test_status == '0':
+                test_status = 'Success'
+            elif test_status != 'Unknown' and int(test_status)>0:
+                test_status = 'Fail'
+
+            projResp['buildstatus'] = build_status
+            projResp['teststatus'] = test_status
+
             if build_file is not None and build_file:
                 build_json = json.load(build_file)
                 projResp["Build"]=build_json
