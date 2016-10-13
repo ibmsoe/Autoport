@@ -435,6 +435,7 @@ if __name__ == "__main__":
                   SCRATCH=&quot;$PWD/.autoport-scratch&quot;
                   echo -e $CMD1 &gt;&gt; $SCRATCH/autoport_build_cmd;
                   ARTI=&quot;$SCRATCH/build_result.arti&quot;
+                  BUILD_STATUS_ARTI=&quot;$SCRATCH/build_status.arti&quot;
                   DEBUG=&quot;$SCRATCH/.debug&quot;
                   PERF_DIR=&quot;$SCRATCH/smart_performance_plugin&quot;
                   PERF_SCRIPT=&quot;$PERF_DIR/basic_perf_plugin.sh&quot;
@@ -480,6 +481,7 @@ if __name__ == "__main__":
                   echo -e $CMD1
                   eval $BUILD_PERF_CMD &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$(cat cmd_status)
+                  echo &quot;$rc&quot; &gt;&gt; $BUILD_STATUS_ARTI 
                   echo &quot;Autoport BUILD CMD RC=$rc&quot; &gt;&gt; $ARTI
                   TAR_FILE=$(ls $SCRATCH/*.tar.bz2.arti)
                   GET_METRICS=&quot;$POST_PERF_SCRIPT $TAR_FILE $SCRATCH/&quot;
@@ -518,6 +520,7 @@ if __name__ == "__main__":
                   echo &quot;source .autoport-scratch/.autoportrc&quot; &gt;&gt; $SCRATCH/autoport_test_cmd;
                   echo -e $CMD2 &gt;&gt; $SCRATCH/autoport_test_cmd;
                   ARTI=&quot;.autoport-scratch/test_result.arti&quot;
+                  TEST_STATUS_ARTI=&quot;$SCRATCH/test_status.arti&quot;
                   PERF_DIR=&quot;$SCRATCH/smart_performance_plugin&quot;
                   PERF_SCRIPT=&quot;$PERF_DIR/basic_perf_plugin.sh&quot;
                   TEST_PERF_CMD=&quot;$PERF_SCRIPT profilers=&quot;&quot; workload=&quot;autoport&quot; department_name=&quot;POSS&quot; cmd=&quot;$SCRATCH/autoport_test_cmd&quot; package=&quot;${JOB_NAME}&quot; output_dir=&quot;$SCRATCH&quot;&quot;
@@ -560,6 +563,7 @@ if __name__ == "__main__":
                   echo -e $CMD2
                   eval $TEST_PERF_CMD &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$(cat cmd_status)
+                  echo &quot;$rc&quot; &gt;&gt; $TEST_STATUS_ARTI
                   echo &quot;Autoport TEST CMD RC=$rc&quot; &gt;&gt; $ARTI
                   TAR_FILE=$(ls $SCRATCH/*.tar.bz2.arti)
                   GET_METRICS=&quot;$POST_PERF_SCRIPT $TAR_FILE $SCRATCH/&quot;
