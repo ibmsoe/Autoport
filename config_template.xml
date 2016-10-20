@@ -141,6 +141,7 @@
                   export TRAVIS_BUILD_NUMBER=${TRAVIS_BUILD_NUMBER:=1}
                   export TRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER:=1.1}
                   export TRAVIS_SECURE_ENV_VARS=${TRAVIS_SECURE_ENV_VARS:=false}
+                  export SCRATCH=$PWD/.autoport-scratch
 
                   if [ -e /etc/redhat-release ]; then
                       function add-apt-repository() {
@@ -347,7 +348,7 @@
                       return $rc
                   }
                   function getMakeTestTarget() {
-                      TEST=$(python $PWD/.autoport-scratch/makeFileParser.py)
+                      TEST=$(python $SCRATCH/makeFileParser.py)
                       echo "Autoport : Test Target deduced from makefile is : $TEST"
                   }'
                  ################################ End shell program to create autoport environment ###########################
@@ -493,7 +494,7 @@ if __name__ == "__main__":
                       JS_VERSION=`echo ${ADDR[1]}`
                   fi
                   source /etc/profile
-                  ARTI=&quot;.autoport-scratch/test_result.arti&quot;
+                  ARTI=&quot;$PWD/.autoport-scratch/test_result.arti&quot;
                   echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                   echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
@@ -527,9 +528,9 @@ if __name__ == "__main__":
                   echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  echo -e $CMD2 | tee .autoport-scratch/autoport_test_cmd;
-                  chmod a+x .autoport-scratch/autoport_test_cmd;
-                  source .autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
+                  echo -e $CMD2 | tee $PWD/.autoport-scratch/autoport_test_cmd;
+                  chmod a+x $PWD/.autoport-scratch/autoport_test_cmd;
+                  source $PWD/.autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$?
                   echo &quot;Autoport Test CMD RC=$rc&quot; &gt;&gt; $ARTI
                   exit $rc

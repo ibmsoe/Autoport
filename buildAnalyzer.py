@@ -903,7 +903,7 @@ def inferBuildSteps(listing, repo):
             langlist.append(sbt_def)
         elif f.name == 'package.json':
             langlist.append(base_js_def)      # Sometimes there is more CSS than JavaScript so base language is not recognized
-        elif f.name == 'Makefile':
+        elif f.name == 'Makefile' or f.name == 'makefile':
             makefile = f
         elif f.name in ('bootstrap.sh', 'autogen.sh'):
             bootstrap = f
@@ -950,7 +950,7 @@ def inferBuildSteps(listing, repo):
                 elif f.name == 'package.json':
                     subdirs.append(directory)
                     cmds.append(base_js_def)
-                elif f.name == 'Makefile':
+                elif f.name == 'Makefile' or f.name == 'makefile':
                     subdirs.append(directory)
                     makefile = f
                 elif f.name in ('bootstrap.sh', 'autogen.sh'):

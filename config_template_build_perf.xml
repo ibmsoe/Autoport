@@ -145,6 +145,7 @@
                   export TRAVIS_BUILD_NUMBER=${TRAVIS_BUILD_NUMBER:=1}
                   export TRAVIS_JOB_NUMBER=${TRAVIS_JOB_NUMBER:=1.1}
                   export TRAVIS_SECURE_ENV_VARS=${TRAVIS_SECURE_ENV_VARS:=false}
+                  export SCRATCH=$PWD/.autoport-scratch
 
                   if [ -e /etc/redhat-release ]; then
                       function add-apt-repository() {
@@ -351,7 +352,7 @@
                       return $rc
                   }
                   function getMakeTestTarget() {
-                      TEST=$(python $PWD/.autoport-scratch/makeFileParser.py)
+                      TEST=$(python $SCRATCH/makeFileParser.py)
                       echo "Autoport : Test Target deduced from makefile is : $TEST"
                   }'
                  ################################ End shell program to create autoport environment ###########################
