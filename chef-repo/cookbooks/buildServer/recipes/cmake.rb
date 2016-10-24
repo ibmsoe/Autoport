@@ -28,7 +28,10 @@ template '/etc/profile.d/cmake.sh' do
   mode '0644'
   variables(
     lazy {
-      { cmake_root: cmake_root[0] }
+      {
+        cmake_root: cmake_root[0],
+        install_prefix: ""
+      }
     }
   )
   ignore_failure true
@@ -40,3 +43,11 @@ template '/etc/profile.d/cmake.sh' do
   end
 end
 
+buildServer_log "cmake" do
+  name         "cmake"
+  log_location node['log_location']
+  log_record   "cmake"
+  action       :remove
+  ignore_failure true
+  only_if { Dir.exist?(cmake_root[0])}
+end

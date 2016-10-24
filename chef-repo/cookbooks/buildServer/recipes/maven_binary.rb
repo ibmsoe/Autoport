@@ -2,9 +2,9 @@
 # Pre-requiste is to install java.
 # This recipe also sets maven_home and sets default path variable for maven.
 
+include_recipe 'buildServer::get_log'
 include_recipe 'buildServer::java'
 Chef::Recipe.send(:include, CommandBuilder)
-Chef::Recipe.send(:include, ArchiveLog)
 
 version       = node['buildServer']['apache-maven']['version']
 install_dir   = node['buildServer']['apache-maven']['install_dir']

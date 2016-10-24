@@ -1,6 +1,6 @@
 # Recipe would uninstall/remove scala package installed via binary source
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 version       = node['buildServer']['scala']['version']
 install_dir   = node['buildServer']['scala']['install_dir']

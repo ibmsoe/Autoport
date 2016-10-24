@@ -31,8 +31,8 @@ if arch == 'ppc64le'
   #  end
   #end
 
-  cookbook_file '/etc/profile.d/at.sh' do
-    source 'at.sh'
+  template '/etc/profile.d/at.sh' do
+    source 'at.sh.erb'
     owner 'root'
     group 'root'
     mode '0644'

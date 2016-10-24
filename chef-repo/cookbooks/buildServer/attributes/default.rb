@@ -113,6 +113,12 @@ default['buildServer']['luajit']['version'] = '2.1.0'
 default['buildServer']['luajit']['install_dir'] = '/opt'
 default['buildServer']['luajit']['ext'] = ''
 
+# Attributes for cmake source installation
+default['buildServer']['cmake']['version'] = '2.6.1'
+default['buildServer']['cmake']['install_prefix'] = '/opt/cmake_install'
+default['buildServer']['cmake']['source_dir'] = '/opt'
+default['buildServer']['cmake']['ext'] = ''
+
 # Attributes for userpackages
 default['buildServer']['userpackages']={}
 default['buildServer']['debs']={}

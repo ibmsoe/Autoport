@@ -1,6 +1,6 @@
 # Recipe would uninstall/remove ant package installed via binary source
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 version       = node['buildServer']['apache-ant']['version']
 install_dir   = node['buildServer']['apache-ant']['install_dir']

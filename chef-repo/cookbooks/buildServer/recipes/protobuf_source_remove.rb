@@ -1,6 +1,6 @@
 # Recipe would uninstall/remove protobuf package installed via source.
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 version        = node['buildServer']['protobuf']['version']
 source_dir     = node['buildServer']['protobuf']['source_dir']

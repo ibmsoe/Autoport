@@ -45,6 +45,12 @@
             Build + Test
           </button>
         </a>
+        <a rv-on-click="batchState.buildAndTest" id="batchBuildPerfTestBtn">
+          <button rv-disabled="batchState.selectedBatchFile.location | isEmptyObject" type="button" id="batch_build_test"
+                 class="btn btn-primary" style="margin-left: 10px; margin-right: 10px; border-radius: 5px; float: left">
+            Build + Perf + Test
+          </button>
+        </a>
         <a rv-enabled="batchState.selectedBatchFile.location | isLocal"
           rv-on-click="batchState.archive">
           <button rv-enabled="batchState.selectedBatchFile.location | isLocal" type="button" class="btn btn-primary" id="batch_file_archive"

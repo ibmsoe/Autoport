@@ -1,6 +1,6 @@
 # Installs R using source and build method.
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 version      = node['buildServer']['R']['version']
 install_dir  = node['buildServer']['R']['install_dir']

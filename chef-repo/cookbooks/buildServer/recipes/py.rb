@@ -1,7 +1,7 @@
 # Installs python module "py" using source and build method.
 # source to be built is hosted at autoport_repo.
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 py_version = node['buildServer']['py']['version']
 py_ext = node['buildServer']['py']['ext']

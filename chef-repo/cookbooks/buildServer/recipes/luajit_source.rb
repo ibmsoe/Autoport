@@ -1,6 +1,6 @@
 # Installs luajit using source and build method.
 
-Chef::Recipe.send(:include, ArchiveLog)
+include_recipe 'buildServer::get_log'
 
 version      = node['buildServer']['luajit']['version']
 install_dir  = node['buildServer']['luajit']['install_dir']
@@ -13,7 +13,6 @@ prefix       = "/usr/local/luajit-#{version}"
 
 if ext.empty?
   ext = ArchiveLog.getExtension('LuaJIT', version)
-  puts ext
 end
 
 luajit_package = "LuaJIT-#{version}#{ext}"

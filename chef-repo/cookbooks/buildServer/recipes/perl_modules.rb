@@ -2,9 +2,9 @@
 # uploaded via autoport application. Each perl module uploaded
 # would be installed via source/build method.
 
-Chef::Recipe.send(:include, ArchiveLog)
-
+include_recipe 'buildServer::get_log'
 include_recipe 'buildServer::perl'
+
 arch = node['kernel']['machine']
 extract_location = node['buildServer']['perl']['extract_location']
 

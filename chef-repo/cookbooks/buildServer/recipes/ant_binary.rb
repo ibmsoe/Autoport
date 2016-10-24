@@ -3,8 +3,8 @@
 # This recipe also sets ant_home and sets default path variable for ant.
 
 Chef::Recipe.send(:include, CommandBuilder)
-Chef::Recipe.send(:include, ArchiveLog)
 
+include_recipe 'buildServer::get_log'
 include_recipe 'buildServer::java'
 
 version       = node['buildServer']['apache-ant']['version']

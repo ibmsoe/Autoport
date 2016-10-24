@@ -302,6 +302,13 @@ class Catalog:
             except IOError as e:
                 logger.warning("Can't remove directory " + remoteBuildPath + " : " + str(e))
 
+    def readRemoteFile(self, fileName):
+        try:
+            rawfile = self.__archiveFtpClient.open(fileName)
+            return rawfile
+        except IOError as e:
+            raise "File not found"
+
     def cleanTmp(self):
         total_dir_to_clean = len(self.__tmpdirs)
         file_position_cleared = []

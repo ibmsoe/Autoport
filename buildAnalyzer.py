@@ -661,10 +661,10 @@ def inferBuildSteps(listing, repo):
         'grep test': "go test",
         'grep install': "go get",
         'grep env': "",
-        'build': "go get -t;go build",
-        'test': "go test",
+        'build': "mkdir -p $WORKSPACE/go/src/github.com/%s $WORKSPACE/go/bin $WORKSPACE/go/pkg;rsync -r $WORKSPACE/* $WORKSPACE/go/src/github.com/%s --exclude go ;cd $WORKSPACE/go/src/github.com/%s;go get -v ./...;go install"%(repo.name,repo.name,repo.name),
+        'test': "cd $WORKSPACE/go/src/github.com/%s;go test"%(repo.name),
         'install': "go install",
-        'env' : "GOPATH=${WORKSPACE}\nGOBIN=${GOPATH}/bin",
+        'env' : "GOPATH=${WORKSPACE}/go:/opt/go GOBIN=$WORKSPACE/go/bin:/opt/go/bin",
         'artifacts': "*.arti ",
         'reason': "Primary language",
         'error': "",
@@ -884,7 +884,7 @@ def inferBuildSteps(listing, repo):
     langlist_length = len(langlist)
     for f in listing:
         if f.type == 'dir':
-            if f.name == "build" or f.name == "scripts":
+            if f.name == "build" or f.name == "scripts" or f.name == "src":
                 directory_feed.insert(0, f.path)
             else:
                 directory_feed.append(f.path)
@@ -903,7 +903,7 @@ def inferBuildSteps(listing, repo):
             langlist.append(sbt_def)
         elif f.name == 'package.json':
             langlist.append(base_js_def)      # Sometimes there is more CSS than JavaScript so base language is not recognized
-        elif f.name == 'Makefile':
+        elif f.name == 'Makefile' or f.name == 'makefile':
             makefile = f
         elif f.name in ('bootstrap.sh', 'autogen.sh'):
             bootstrap = f
@@ -924,7 +924,7 @@ def inferBuildSteps(listing, repo):
     subdirs = []
     if len(langlist) <= langlist_length and makefile == None and bootstrap == None and buildsh == None and travis == None:
         for directory in directory_feed:
-            if "doc" in directory or "book" in directory:
+            if "doc" in directory or "book" in directory or "example" in directory:
                 continue
             logger.info("Looking for build files at %s/%s" % (repo.html_url, directory))
             listing = repo.get_dir_contents(directory)
@@ -950,7 +950,7 @@ def inferBuildSteps(listing, repo):
                 elif f.name == 'package.json':
                     subdirs.append(directory)
                     cmds.append(base_js_def)
-                elif f.name == 'Makefile':
+                elif f.name == 'Makefile' or f.name == 'makefile':
                     subdirs.append(directory)
                     makefile = f
                 elif f.name in ('bootstrap.sh', 'autogen.sh'):

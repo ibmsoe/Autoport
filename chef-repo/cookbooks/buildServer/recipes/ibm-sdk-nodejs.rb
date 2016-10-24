@@ -1,3 +1,5 @@
+include_recipe 'buildServer::get_log'
+
 packages = node['buildServer']['ibm-sdk-nodejs']['packages']
 install_dir = node['buildServer']['ibm-sdk-nodejs']['install_dir']
 arch = node['kernel']['machine']

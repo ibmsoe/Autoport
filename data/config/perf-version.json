@@ -1,0 +1,7 @@
+{
+    "comment": "This is perf data.  IMPORTANT READ sharedData.py before updating",
+    "version": "1",
+    "sequence": "1",
+    "name": "perf-version.json",
+    "plugin-version": "1.2"
+}

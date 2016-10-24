@@ -127,6 +127,10 @@
                   if [ ! -d .autoport-scratch ]; then
                       mkdir .autoport-scratch
                   fi
+                  if [ -d smart_performance_plugin ]; then
+                      mv smart_performance_plugin .autoport-scratch
+                      chmod 755 .autoport-scratch/smart_performance_plugin/*
+                  fi
                   echo &quot;*&quot; &gt; .autoport-scratch/.gitignore
                   echo $META_CONTENTS &gt; .autoport-scratch/$META_NAME
 
@@ -429,19 +433,30 @@ if __name__ == "__main__":
                       JS_VERSION=`echo ${ADDR[1]}`
                   fi
                   source /etc/profile
-                  ARTI=&quot;$PWD/.autoport-scratch/build_result.arti&quot;
-                  echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
-                  echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
-                  echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
-                  echo &quot;Autoport JAVA_HOME:   $JAVA_HOME&quot; &gt;&gt; $ARTI
-                  echo &quot;Autoport NODEJS_HOME: $NODEJS_HOME&quot; &gt;&gt; $ARTI
-                  echo &quot;Autoport PATH:        $PATH&quot; &gt;&gt; $ARTI
-                  echo &quot;Autoport PROJURL:     $PROJECTURL&quot; &gt;&gt; $ARTI
-                  echo &quot;Autoport PROJVERS:    $PROJECTVERS&quot; &gt;&gt; $ARTI
-                  echo &quot;&quot;                &gt;&gt; $ARTI
-                  echo &quot;Autoport PROJENV:     $PROJENV&quot; &gt;&gt; $ARTI
-                  echo &quot;&quot;                &gt;&gt; $ARTI
+                  SCRATCH=&quot;$PWD/.autoport-scratch&quot;
+                  echo -e $CMD1 &gt;&gt; $SCRATCH/autoport_build_cmd;
+                  ARTI=&quot;$SCRATCH/build_result.arti&quot;
+                  BUILD_STATUS_ARTI=&quot;$SCRATCH/build_status.arti&quot;
+                  DEBUG=&quot;$SCRATCH/.debug&quot;
+                  PERF_DIR=&quot;$SCRATCH/smart_performance_plugin&quot;
+                  PERF_SCRIPT=&quot;$PERF_DIR/basic_perf_plugin.sh&quot;
+                  POST_PERF_SCRIPT=&quot;$PERF_DIR/post_process.py&quot;
+                  BUILD_PERF_CMD=&quot;$PERF_SCRIPT profilers=&quot;&quot; workload=&quot;autoport&quot; department_name=&quot;POSS&quot; cmd=&quot;$SCRATCH/autoport_build_cmd&quot; package=&quot;${JOB_NAME}&quot; output_dir=&quot;$SCRATCH&quot;&quot;
+
+                  echo &quot;Autoport HOST:           $HOSTNAME&quot; &gt; $ARTI
+                  echo &quot;Autoport IPADDR:         $IPADDR&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport O/S:            $OSNAME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport JAVA_HOME:      $JAVA_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport NODEJS_HOME:    $NODEJS_HOME&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PATH:           $PATH&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJURL:        $PROJECTURL&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJVERS:       $PROJECTVERS&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                   &gt;&gt; $ARTI
+                  echo &quot;Autoport PROJENV:        $PROJENV&quot; &gt;&gt; $ARTI
+                  echo &quot;&quot;                   &gt;&gt; $ARTI
                   echo -e &quot;Autoport Build CMD:   $CMD1&quot; &gt;&gt; $ARTI
+                  echo &quot;Autoport Build+Perf CMD: $BUILD_PERF_CMD&quot; &gt;&gt; $DEBUG
+                  echo &quot;&quot;                   &gt;&gt; $DEBUG
                   echo &quot;&quot; &gt;&gt; $ARTI
                   java -version 2&gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
@@ -463,18 +478,26 @@ if __name__ == "__main__":
                   echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  echo -e $CMD1 | tee $PWD/.autoport-scratch/autoport_build_cmd;
                   chmod a+x $PWD/.autoport-scratch/autoport_build_cmd;
-                  source $PWD/.autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
-                  rc=$?
+                  echo -e $CMD1
+                  eval $BUILD_PERF_CMD &gt;&gt; $ARTI 2&gt;&amp;1;
+                  rc=$(cat cmd_status)
+                  echo &quot;$rc&quot; &gt;&gt; $BUILD_STATUS_ARTI 
                   echo &quot;Autoport BUILD CMD RC=$rc&quot; &gt;&gt; $ARTI
+                  TAR_FILE=$(ls $SCRATCH/*.tar.bz2.arti)
+                  GET_METRICS=&quot;$POST_PERF_SCRIPT $TAR_FILE $SCRATCH/&quot;
+                  echo &quot;Autoport fetch build metric CMD:     $GET_METRICS&quot; &gt;&gt; $DEBUG
+                  echo &quot;Fetching performance metrics for build&quot;
+                  eval $GET_METRICS
+                  JSON_FILE_NAME=$(ls $PWD/$JOB_NAME*.json)
+                  cat $JSON_FILE_NAME &gt;&gt; $PWD/.autoport-scratch/build_perf_metrics.arti
+                  rm  $TAR_FILE $JSON_FILE_NAME cmd_status
                   exit $rc
               fi</command>
         </hudson.tasks.Shell>
         <hudson.tasks.Shell>
           <command>#!/bin/bash
               if [ -n &quot;$CMD2&quot; ]; then
-                  source .autoport-scratch/.autoportrc
                   if [ $JAVATYPE ]; then
                       # Expecting value of JAVATYPE as 'ibm-java-sdk,7' or 'openjdk,7'
                       # i.e [name,major-version] derived from managed list which
@@ -494,7 +517,16 @@ if __name__ == "__main__":
                       JS_VERSION=`echo ${ADDR[1]}`
                   fi
                   source /etc/profile
-                  ARTI=&quot;$PWD/.autoport-scratch/test_result.arti&quot;
+                  SCRATCH=&quot;$PWD/.autoport-scratch&quot;
+                  echo &quot;source .autoport-scratch/.autoportrc&quot; &gt;&gt; $SCRATCH/autoport_test_cmd;
+                  echo -e $CMD2 &gt;&gt; $SCRATCH/autoport_test_cmd;
+                  ARTI=&quot;.autoport-scratch/test_result.arti&quot;
+                  TEST_STATUS_ARTI=&quot;$SCRATCH/test_status.arti&quot;
+                  PERF_DIR=&quot;$SCRATCH/smart_performance_plugin&quot;
+                  PERF_SCRIPT=&quot;$PERF_DIR/basic_perf_plugin.sh&quot;
+                  TEST_PERF_CMD=&quot;$PERF_SCRIPT profilers=&quot;&quot; workload=&quot;autoport&quot; department_name=&quot;POSS&quot; cmd=&quot;$SCRATCH/autoport_test_cmd&quot; package=&quot;${JOB_NAME}&quot; output_dir=&quot;$SCRATCH&quot;&quot;
+                  POST_PERF_SCRIPT=&quot;$PERF_DIR/post_process.py&quot;
+
                   echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                   echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
@@ -528,11 +560,19 @@ if __name__ == "__main__":
                   echo &quot;npm version: $V&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
                   echo &quot;&quot; &gt;&gt; $ARTI
-                  echo -e $CMD2 | tee $PWD/.autoport-scratch/autoport_test_cmd;
                   chmod a+x $PWD/.autoport-scratch/autoport_test_cmd;
-                  source $PWD/.autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
-                  rc=$?
-                  echo &quot;Autoport Test CMD RC=$rc&quot; &gt;&gt; $ARTI
+                  echo -e $CMD2
+                  eval $TEST_PERF_CMD &gt;&gt; $ARTI 2&gt;&amp;1;
+                  rc=$(cat cmd_status)
+                  echo &quot;$rc&quot; &gt;&gt; $TEST_STATUS_ARTI
+                  echo &quot;Autoport TEST CMD RC=$rc&quot; &gt;&gt; $ARTI
+                  TAR_FILE=$(ls $SCRATCH/*.tar.bz2.arti)
+                  GET_METRICS=&quot;$POST_PERF_SCRIPT $TAR_FILE $SCRATCH/&quot;
+                  echo &quot;Fetching performance metrics for test&quot;
+                  eval $GET_METRICS
+                  JSON_FILE_NAME=$(ls $PWD/$JOB_NAME*.json)
+                  cat $JSON_FILE_NAME &gt;&gt; $PWD/.autoport-scratch/test_perf_metrics.arti
+                  rm $TAR_FILE $JSON_FILE_NAME cmd_status
                   exit $rc
               fi</command>
         </hudson.tasks.Shell>
@@ -656,6 +696,14 @@ if __name__ == "__main__":
     </hudson.plugins.postbuildtask.PostbuildTask>
   </publishers>
   <buildWrappers>
+    <com.michelin.cio.hudson.plugins.copytoslave.CopyToSlaveBuildWrapper plugin="copy-to-slave@1.4.4">
+       <includes>smart_performance_plugin/*</includes>
+       <excludes></excludes>
+       <flatten>false</flatten>
+       <includeAntExcludes>false</includeAntExcludes>
+       <hudsonHomeRelative>false</hudsonHomeRelative>
+       <relativeTo>userContent</relativeTo>
+    </com.michelin.cio.hudson.plugins.copytoslave.CopyToSlaveBuildWrapper>
     <EnvInjectBuildWrapper plugin="envinject@1.91.3">
       <info>
         <propertiesContent></propertiesContent>

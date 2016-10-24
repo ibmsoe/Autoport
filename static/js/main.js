@@ -5,8 +5,6 @@ var singleBuildEditor = "";
 var singleTestEditor = "";
 var singleEnvEditor = "";
 try {
-    google.load('search', '1');
-    
     buildEditor = ace.edit("generateSelectedBuild-editor");
     buildEditor.setTheme("ace/theme/chrome");
     buildEditor.getSession().setMode("ace/mode/sh");
@@ -60,6 +58,8 @@ try {
         fontFamily: "monospace",
         fontSize: "13px"
     });
+
+    google.load('search', '1');
 }
 catch(err) {
     console.log(err.message);
@@ -162,7 +162,7 @@ var globalState = {
                { ltest_results: localPathForTestResults, gtest_results: pathForTestResults,
                  lbatch_files: localPathForBatchFiles, gbatch_files: pathForBatchFiles,
                  github: githubToken, hostname: configHostname, username: configUsername, password: configPassword,
-                 jenkinsPassword: jenkinsPassword, usetextanalytics: useTextAnalytics, loglevel: logLevel
+                 usetextanalytics: useTextAnalytics, loglevel: logLevel
                },
                settingsCallback, "json").fail(settingsCallback);
     }
@@ -556,6 +556,10 @@ var batchState = {
 
     // Actions for individual batch files
     buildAndTest: function(ev, el) {
+        var isPerf = false;
+        if ($(this).attr('id') == "batchBuildPerfTestBtn"){
+            isPerf=true;
+        }
         batchState.loading = true;
         var servers = document.getElementById('batchBuildServers'),
             options = servers.getElementsByTagName('option'),
@@ -576,7 +580,7 @@ var batchState = {
         }
         else{
             $.post("runBatchFile", {batchName: batchState.selectedBatchFile.filename,
-                nodeCSV: selectedServers}, runBatchFileCallback, "json").fail(runBatchFileCallback);
+                nodeCSV: selectedServers, isPerf: isPerf}, runBatchFileCallback, "json").fail(runBatchFileCallback);
         }
     },
     detail: function(ev, el) {
@@ -1175,15 +1179,15 @@ var detailState = {
     },
     changeBuildOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
-        	singleBuildEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
+            singleBuildEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
         else if (ev.target.className === "generateSearch") {
-        	buildEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
+            buildEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
     },
     changeTestOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
-        	singleTestEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
+            singleTestEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
         else if (ev.target.className === "generateSearch") {
             testEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
@@ -1191,10 +1195,10 @@ var detailState = {
     },
     changeEnvOptions: function(ev) {
         if (ev.target.className === "singleSearch") {
-        	singleEnvEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
+            singleEnvEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
         else if (ev.target.className === "generateSearch") {
-        	envEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
+            envEditor.session.setValue(ev.target.text.replace(/;\s*/gi,';\n'));
         }
     },
     addToBatchFile: function(ev) {
@@ -1219,7 +1223,7 @@ var reportState = {
     listLocalProjects: function(ev) {
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
-
+        projectReportState.performanceTableReady = false;
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "local";
         projectReportState.loadingState.diffLoading = true;
@@ -1229,6 +1233,7 @@ var reportState = {
     listSFTPProjects: function(ev) {
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
+        projectReportState.performanceTableReady = false;
 
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "archived";
@@ -1239,6 +1244,7 @@ var reportState = {
     listAllProjects: function(ev) {
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
+        projectReportState.performanceTableReady = false;
 
         projectReportState.compareType = "project";
         projectReportState.compareRepo = "all";
@@ -1266,6 +1272,41 @@ var reportState = {
             success: removeProjectsCallback,
             dataType:'json'
         }).fail(removeProjectsCallback);
+    },
+    getPerformance: function(ev) {
+        projectReportState.performanceTableReady = false;
+        var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+        if(selectedProjects.length > 0 && selectedProjects.length <= 2){
+            var project_one = selectedProjects[0].name;
+            var fullName=selectedProjects[0].fullName;
+            var project_two = "";
+            if(selectedProjects.length > 1){
+                project_two = selectedProjects[1].name;
+                fullName = fullName + ","+selectedProjects[1].fullName;
+            }
+            if(project_two != "" && (project_one != project_two)){
+              var errData = {"status":"failure","error":"You can only run comparison on 2 common projects"};
+              showAlert("Selection error",errData);
+              return false;
+            }
+            var repo = selectedProjects[0].repository;
+            projectReportState.loadingState.diffLoading = true;
+            $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "getPerformanceData?projectNamesCSV="+fullName+"&repo="+repo,
+                success: performanceDataCallback,
+                dataType:'json'
+            }).fail(performanceDataCallback);
+        }
+        else{
+            var errData = {
+                           "status":"failure",
+                           "error":"You can only run comparison on 2 common projects or view stats of single project"
+                          };
+            showAlert("Selection error",errData);
+            return false;
+        }
     },
     setJobManagePanel: function(ev) {
         reportState.jobManagePanel = (reportState.jobManagePanel) ? false : true;
@@ -1838,6 +1879,7 @@ var projectReportState = {
     projectsTable: null,
     prjTableReady: false,
     prjCompareSingle: false,
+    performanceTableReady:false,
     testHistory: function() { // TODO single project or multiple?
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
         var sel = [];
@@ -1849,6 +1891,7 @@ var projectReportState = {
         //TODO - add loading bar
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
+        projectReportState.performanceTableReady = false;
         $.ajax({
                 type: "POST",
          contentType: "application/json; charset=utf-8",
@@ -1871,6 +1914,7 @@ var projectReportState = {
         //TODO - add loading bar
         projectReportState.prjCompareReady = false;
         projectReportState.prjTableReady = false;
+        projectReportState.performanceTableReady = false;
         $.ajax({
                 type: "POST",
          contentType: "application/json; charset=utf-8",
@@ -1896,6 +1940,7 @@ var projectReportState = {
             //TODO - add loading bar
             projectReportState.prjCompareReady = false;
             projectReportState.prjTableReady = false;
+            projectReportState.performanceTableReady = false;
             $.getJSON("getTestResults",
                       {
                         leftbuild: leftProject,
@@ -1963,6 +2008,7 @@ var projectReportState = {
         if (fireCall) {
             projectReportState.prjCompareReady = false;
             projectReportState.prjTableReady = false;
+            projectReportState.performanceTableReady = false;
             projectReportState.loadingState.diffLoading = true;
             $.getJSON("getDiffLogResults",
                       {
@@ -2216,6 +2262,7 @@ function processResultList(data) {
     projectReportState.selectedProjects = [];
     projectReportState.projects = [];
     projectReportState.loadingState.diffLoading = false;
+    toggleProjectReportButtons();
     $("#resultRemoveBtn").addClass("disabled");
     if (data === undefined || data.status === undefined || data.status != "ok") {
         showAlert("Error!", data);
@@ -2226,6 +2273,7 @@ function processResultList(data) {
         projectReportState.prjCompareReady = true;
 
         $('#testCompareSelectPanel').bootstrapTable('load', projectReportState.projects);
+        toggleProjectReportButtons();
     }
 }
 
@@ -2244,7 +2292,98 @@ function removeProjectsCallback(data){
         }
     }
 }
+function performanceDataCallback(data){
+    projectReportState.loadingState.diffLoading = false;
+    if(data.status != "ok"){
+        showAlert("Error:", data);
+        return;
+    }
+    $('#perfPrjHeader').text("");
+    var hasOwn = Object.prototype.hasOwnProperty;
 
+    var headers = getKeys(data.results);
+    var json_data = data.results;
+    var tables=[];
+    var backgroundcolors={"Build":"#dff0d8","Test":"#ffffcc"}
+    for (var i=0;i<headers.length;i++){
+      $('#perfPrjHeader').text($('#perfPrjHeader').text()+", "+headers[i]);
+      var table = $('<table class="table table-bordered" style="margin:5px auto" border="1"></table>').attr({ id: "perfTable"+i });
+      tables.push(table)
+      var content = json_data[headers[i]];
+      var mainKeys= getKeys(content);
+      for (j=0;j<mainKeys.length;j++){
+        if(mainKeys[j]=="buildstatus" || mainKeys[j]=="teststatus"){
+          continue;
+        }
+        var projStatus = "";
+        if(mainKeys[j] == "Build"){
+          projStatus = "Status("+content["buildstatus"]+")";
+        }
+        if(mainKeys[j] == "Test"){
+          projStatus = "Status("+content["teststatus"]+")";
+        }
+        var row = $('<tr></tr>').appendTo(tables[i]);
+        $('<td colspan="3" align="center" style="background-color:'+backgroundcolors[mainKeys[j]]+'; font-weight:bold"></td>').text(mainKeys[j]+" Performance Metrics,  "+projStatus).appendTo(row);
+        if(content[mainKeys[j]].length!=undefined && content[mainKeys[j]].length>1){
+          for (json in content[mainKeys[j]]){
+            jsonobj = content[mainKeys[j]][json];
+            tables[i] = prepareTable(jsonobj,tables[i]);
+          }
+        }else{
+           tables[i] = prepareTable(content[mainKeys[j]],tables[i]);
+        }
+      }
+    }
+
+    var keys = [];
+    var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
+    $('.perf-table-container-left').html("");
+    $('.perf-table-container-right').html("");
+    $('#perfPrjHeader_left').text("");
+    $('#perfPrjHeader_right').text("");
+    if(tables.length>0){
+        $('#perfPrjHeader_left').text(selectedProjects[0].name+", "+selectedProjects[0].os);
+        tables[0].appendTo(".perf-table-container-left");
+    }
+    if(tables.length>1){
+        $('#perfPrjHeader_right').text(selectedProjects[1].name+", "+selectedProjects[1].os);
+        tables[1].appendTo(".perf-table-container-right");
+    }
+    projectReportState.performanceTableReady = true;
+
+}
+function getKeys(json_data1){
+  var keys = [];
+  var hasOwn = Object.prototype.hasOwnProperty;
+  for (name in json_data1) {
+    if (hasOwn.call(json_data1, name)) {
+      keys.push(name);
+    }
+  }
+  return keys;
+}
+function prepareTable(jsonobj, mytable){
+  keys = getKeys(jsonobj);
+  if(keys=="" || keys.length==0){
+      var row1 = $('<tr><td align="center">No Data Available</td></tr>').appendTo(mytable);
+  }
+  for (key in keys){
+    var row = $('<tr></tr>').appendTo(mytable);
+    $('<td align="center" rowspan="2"></td>').text(keys[key]).appendTo(row);
+    var level2keys = getKeys(jsonobj[keys[key]]);
+    var keysdata = "";
+    var valuedata = "";
+    for(level2key in level2keys){
+      var val = level2keys[level2key];
+      keysdata = keysdata+'<td align="center">'+val+'</td>';
+      valuedata = valuedata+'<td align="center">'+jsonobj[keys[key]][val]+'</td>';
+    }
+    $(keysdata).appendTo(row);
+    var row1 = $('<tr></tr>').appendTo(mytable);
+    $(valuedata).appendTo(row1);
+  }
+  return mytable;
+}
 function removeBatchReportsCallback(data){
     console.log("In removeBatchReportsCallback, data=", data);
     if (data.status != "ok") {
@@ -2937,6 +3076,10 @@ function showDetail(data) {
              singleTestEditor.session.setValue(detailState.repo.build.selectedTest.replace(/;\s*/gi,';\n'));
              singleEnvEditor.session.setValue(detailState.repo.build.selectedEnv.replace(/;\s*/gi,';\n'));
              detailState.repo.addToJenkins = function(e) {
+                var isPerf=false;
+                if ($(this).attr('id') == "buildPerfTestBtn"){
+                    isPerf=true;
+                }
                 var buildInfo = detailState.repo.build;
 
                 var selectedBuild = singleBuildEditor.session.getValue();
@@ -2958,13 +3101,17 @@ function showDetail(data) {
                 if (javaScriptType == 'nodejs'){
                     javaScriptTypeVersion = '';
                 }
+                if(buildServers.length <= 0){
+                    showAlert("Error",{"status":"failure","error":"Please select build servers"});
+                    return false;
+                }
                 for (var i=0; i < buildServers.length; i++) {
                     console.log(detailState.repo.useVersion + " version");
                     $.post("createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion,
                            javaType: javaType+','+javaVersion, javaScriptType: javaScriptTypeVersion,
                            node: buildServers[i], selectedBuild: selectedBuild,
                            selectedTest: selectedTest, selectedEnv: selectedEnv,
-                           artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang},
+                           artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang, isPerf:isPerf},
                            addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
@@ -2990,6 +3137,10 @@ function showDetail(data) {
             detailState.generateRepo.javaType = detailState.supportedJavaListOptions[0];
 
             detailState.generateRepo.addToJenkins = function(e) {
+                var isPerf=false;
+                if ($(this).attr('id') == "buildPerfTestBtn"){
+                    isPerf=true;
+                }
                 var buildInfo = detailState.generateRepo.build;
 
                 var selectedBuild = buildEditor.session.getValue();
@@ -3003,7 +3154,9 @@ function showDetail(data) {
 
                 var el = $("#generateBuildServers")[0];
                 var buildServers = getSelectedValues(el);
-                var javaType = detailState.generateRepo.javaType.split(' ')[0];
+                if(detailState.generateRepo.javaType != undefined){
+                    var javaType = detailState.generateRepo.javaType.split(' ')[0];
+                }
                 var javaVersion = (detailState.supportedJavaList[detailState.generateRepo.javaType])?detailState.supportedJavaList[detailState.generateRepo.javaType]:7;
                 var javaScriptType = detailState.generateJavaScriptType.split(' ')[0];
                 var javaScriptVersion = (detailState.supportedJavaScriptList[detailState.generateJavaScriptType])?detailState.supportedJavaScriptList[detailState.generateJavaScriptType]:0;
@@ -3011,11 +3164,15 @@ function showDetail(data) {
                 if (javaScriptType == 'nodejs'){
                     javaScriptTypeVersion = '';
                 }
+                if(buildServers.length <= 0){
+                    showAlert("Error",{"status":"failure","error":"Please select build servers"});
+                    return false;
+                }
                 for (var i=0; i < buildServers.length; i++) {
                     $.post("createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion,
                             javaType: javaType+','+javaVersion, javaScriptType: javaScriptTypeVersion,
                             node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest,
-                            selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang},
+                            selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang, isPerf:isPerf},
                             addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
@@ -3722,11 +3879,13 @@ function toggleProjectReportButtons(){
         $("#testHistoryBtn").addClass("disabled");
         $("#testDetailBtn").addClass("disabled");
         $("#resultRemoveBtn").addClass("disabled");
+        $("#resultPerfBtn").addClass("disabled");
     }
     else {
         $("#testHistoryBtn").removeClass("disabled");
         $("#testDetailBtn").removeClass("disabled");
         $("#resultRemoveBtn").removeClass("disabled");
+        $("#resultPerfBtn").removeClass("disabled");
     }
     $("#resultArchiveBtn").addClass("disabled");
     for (var i = 0; i < selectedProjects.length; i++) {
@@ -4492,6 +4651,13 @@ $(document).ready(function() {
     //Initalize Project Results table
     $('#testCompareSelectPanel').bootstrapTable({
         data: []
+    });
+    $('#testCompareSelectPanel').on('check-all.bs.table', function (e, row) {
+        projectReportState.projects = row;
+        toggleProjectReportButtons();
+    });
+    $('#testCompareSelectPanel').on('uncheck-all.bs.table', function (e, row) {
+        toggleProjectReportButtons();
     });
     $('#testCompareSelectPanel').on('check.bs.table', function (e, row) {
         projectReportState.projects = row;
