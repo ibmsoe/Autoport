@@ -46,6 +46,7 @@ from project import Project
 from flask.ext.compress import Compress
 from requests.auth import HTTPBasicAuth
 from os import listdir
+from mongodb import MongoDB
 
 # Constants
 maxResults = 25
@@ -58,6 +59,9 @@ chefData = ChefData()
 sharedData = SharedData()
 chefData = ChefData()
 resParser = ResultParser()
+mongoClient = None
+if globals.enableKnowledgeBase:
+    mongoClient = MongoDB()
 
 # Initialize web application framework
 app = Flask(__name__, static_url_path='/autoport')
@@ -570,7 +574,7 @@ def detail(id, repo=None):
         })
 
     # Look for certain files to figure out how to build
-    build = inferBuildSteps(globals.cache.getDir(repo), repo) # buildAnalyzer.py
+    build = inferBuildSteps(globals.cache.getDir(repo), repo, mongoClient) # buildAnalyzer.py
 
     # Ignore errors related to build commands.  Need to show detailed project info
 
@@ -1189,7 +1193,8 @@ def createJob(i_id = None,
               i_artifacts = None,
               i_primaryLang = None,
               i_isBatchJob = False,
-              i_isPerf = False):
+              i_isPerf = False,
+              i_trackFile = None):
 
     # Randomly generate a job UID to append to the job name to guarantee uniqueness across jobs.
     # If a job already has the same hostname and UID, we will keep regenerating UIDs until a unique one
@@ -1309,6 +1314,18 @@ def createJob(i_id = None,
         isPerf = request.form["isPerf"] == 'true'
     except KeyError:
         isPerf = False
+    try:
+        if globals.enableKnowledgeBase:
+            trackFile = request.form["trackingFile"]
+            trackFileContent = request.form["trackFileContent"]
+            trackFileContent = json.loads(trackFileContent)
+            if len(trackFileContent.keys()) > 0:
+                with open('/tmp/'+trackFile, "w+") as jsonFile:
+                    jsonFile.write(json.dumps(trackFileContent))
+                    jsonFile.truncate()
+    except Exception as e:
+        print e
+        trackFile = None
 
     try:
         rc = createJob_common(localtime(), uid, id, tag, node, javaType, javaScriptType, selectedBuild,
@@ -1334,7 +1351,10 @@ def createJob(i_id = None,
         # Queue the job to the mover so that its build artifacts are transferred to this server
         if rcstatus == 'ok' and jobName:
             localDir = globals.localPathForTestResults + rc['artifactFolder']
-            args = [((rc['jobName'], localDir), {})]
+            if globals.enableKnowledgeBase and trackFile is not None:
+                args = [((rc['jobName'], localDir, None, trackFile), {})]
+            else:
+                args = [((rc['jobName'], localDir), {})]
             threadRequests = makeRequests(moveArtifacts, args)
             [globals.threadPool.putRequest(req) for req in threadRequests]
             return json.jsonify(status="ok", sjobUrl=rc['sjobUrl'], hjobUrl=rc['hjobUrl'])
@@ -1352,7 +1372,7 @@ def createJob(i_id = None,
 
 # Polls the Jenkins master to see when a job has completed and moves artifacts over to local
 # storage once/if they are available
-def moveArtifacts(jobName, localDir, moverCv=None):
+def moveArtifacts(jobName, localDir, moverCv=None, trackFile=None):
     logger.debug("In moveArtifacts, jobName=%s localDir=%s" % (jobName, localDir))
     outDir = ""
     checkBuildUrl = globals.jenkinsUrl + "/job/" + jobName + "/lastBuild/api/json"
@@ -1451,7 +1471,53 @@ def moveArtifacts(jobName, localDir, moverCv=None):
                     logger.debug("moveArtifacts: found artifacts %s %s" % (jobName, str(flist)))
                     for f in flist:
                         mover.get(f, localDir + f)
-                    outDir = localDir                           # Transfer success
+                    outDir = localDir
+
+                    try:
+                        build_status = open(localDir+'/build_status.arti').read().strip('\n')
+                        test_status = open(localDir+'/test_status.arti').read().strip('\n')
+                    except IOError as e:
+                        build_status = 1
+                        test_status = 1
+
+                    try:
+                        if globals.enableKnowledgeBase and trackFile:
+                            repoURL = ""
+                            nodeNamePattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)')
+                            nodeName = nodeNamePattern.match(jobName).group(3)
+                            trackFileJson={}
+                            with open('/tmp/'+trackFile, "r") as jsonFile:
+                                logger.debug("moveArtifacts: Reading trackfile %s" %(trackFile))
+                                trackFileJson = json.loads(jsonFile.read())
+                                trackFileJson['count'] = int(trackFileJson['count'])-1
+                                trackFileJson['nodes'][nodeName]['build_status'] = build_status
+                                trackFileJson['nodes'][nodeName]['test_status'] = test_status
+                            if int(trackFileJson['count']) == 0:
+                                logger.debug("moveArtifacts: Accumulating build and test results " \
+                                             "of all the selected nodes for the repo url = %s, " \
+                                             "version = %s" %(trackFileJson['url'],trackFileJson['version']))
+                                build_nodes = []
+                                test_nodes = []
+                                for nodeKey in trackFileJson['nodes'].keys():
+                                    if int(trackFileJson['nodes'][nodeKey]['build_status']) == 0:
+                                        build_nodes.append(nodeKey)
+                                    if int(trackFileJson['nodes'][nodeKey]['test_status']) == 0:
+                                       test_nodes.append(nodeKey)
+                                saveOrUpdateDB(trackFileJson['url'], trackFileJson['version'],
+                                               trackFileJson['build_cmd'], build_nodes, \
+                                               trackFileJson['test_cmd'], test_nodes, trackFileJson['env'])
+                            logger.debug("moveArtifacts: Writing back to file %s" %(trackFile))
+                            logger.debug("moveArtifacts: trackFile = "+ str(trackFileJson))
+                            with open('/tmp/'+trackFile, "w") as jsonFile:
+                                jsonFile.write(json.dumps(trackFileJson))
+                                jsonFile.truncate()
+                    except IOError as e:
+                        logger.warning("moveArtifacts: failed to perform operation on " \
+                                       "trackfile=%s" %(trackFile))
+                    except Exception as e:
+                        logger.warning("moveArtifacts: failed to perform operation " \
+                                       "specific to Autoport knowledge-base")
+
                 except IOError as e:
                     logger.warning("moveArtifacts: failed to transfer artifacts %s" % str(flist))
                     logger.debug("moveArtifacts: Error %s" % (str(e)))
@@ -1473,6 +1539,140 @@ def moveArtifacts(jobName, localDir, moverCv=None):
         logger.debug("Leaving moveArtifacts, outDir=%s" % (outDir))
 
     return outDir
+
+def saveOrUpdateDB(repoURL, repoVersion, buildCMD, buildNodes, testCMD, testNodes, projectENV):
+    # Updates or insert a record in Autoport knowledge-base.
+    logger.debug("In saveOrUpdateDB repoURL=%s repoVersion=%s" % (repoURL, repoVersion))
+    repoURL = repoURL.replace('.','_')
+    repoVersion = repoVersion.replace('.','_')
+    key = repoURL + '.' + repoVersion
+    query_dict = { key : { '$exists' : True } }
+    currentDate = datetime.datetime.now().strftime ("%Y-%m-%d %H:%M:%S")
+    record = mongoClient.queryForRecord(query_dict)
+    if record.count() > 0:
+        record = record.next()
+        projectRecord = record[repoURL][repoVersion]
+        isUpdateAvailable = False
+        '''
+         Update Conditions:
+         Pre Condition: a) Job has passed with selected build and test command.
+                        b) Record already exsist for a given project and version with
+                           build_cmd: buildX
+                           test_cmd testX
+                           build_nodes: Node array on which build has passed with buildX
+                           test_nodes: Node array on which test has passsed with testX
+
+         i) Build Command = buildX, Test Command = testX, selected nodes not in build_nodes,
+            then update build_nodes and test_nodes with new selected nodes.
+        ii) Build Command = buildX  Test Command = testY, selected nodes not in build_nodes,
+            then update only build_nodes
+       iii) Build Command = buildY , Test Command = testY, number of selected nodes is greater than
+            build_nodes, then update selected_nodes as build_nodes and build_cmd = buildY and test_cmd = testY
+        iv) Build Command = buildY , Test Command = testY, number of selected nodes is equal to build_nodes
+            and selected nodes are greater than test_nodes , then update test_nodes and build_nodes with
+            selected nodes and build_cmd to buildY and test_cmd to testY
+        '''
+        if projectRecord['build_cmd'] == buildCMD:
+            bNodes = eligibleNodesToUpdate(projectRecord['build_nodes'], buildNodes)
+            if bNodes is not None and len(bNodes) > 0:
+                record[repoURL][repoVersion]['build_nodes'] = projectRecord['build_nodes'] + bNodes
+                isUpdateAvailable = True
+            if projectRecord['test_cmd'] == testCMD:
+                tNodes = eligibleNodesToUpdate(projectRecord['test_nodes'], testNodes)
+                if tNodes is not None and len(tNodes) > 0:
+                   record[repoURL][repoVersion]['test_nodes'] = projectRecord['test_nodes'] + tNodes
+                   isUpdateAvailable = True
+            elif len(testNodes) > len(projectRecord['test_nodes']):
+                record[repoURL][repoVersion]['test_nodes'] = testNodes
+                record[repoURL][repoVersion]['test_cmd'] = testCMD
+                isUpdateAvailable = True
+        else:
+            if (len(buildNodes) == len(projectRecord['build_nodes']) and \
+               len(testNodes) > len(projectRecord['test_nodes'])) or \
+               (len(buildNodes) > len(projectRecord['build_nodes'])):
+                record[repoURL][repoVersion]['build_nodes'] = buildNodes
+                record[repoURL][repoVersion]['test_nodes'] = testNodes
+                record[repoURL][repoVersion]['build_cmd'] = buildCMD
+                record[repoURL][repoVersion]['test_cmd'] = testCMD
+                isUpdateAvailable = True
+        if isUpdateAvailable:
+            logger.debug("saveOrUpdateDB: update available for " \
+                         "repoURL=%s repoVersion=%s" % (repoURL, repoVersion))
+            if projectRecord['env'] != projectENV:
+                record[repoURL][repoVersion]['env'] = projectENV
+            record[repoURL][repoVersion]['modified_date'] = currentDate
+            mongoClient.updateRecord(query_dict, record)
+            logger.debug("saveOrUpdateDB: updated record with " \
+                         "repoURL=%s repoVersion=%s successfully" % (repoURL, repoVersion))
+    else:
+        logger.debug("saveOrUpdateDB: creating new record for " \
+                     "repoURL=%s repoVersion=%s" % (repoURL, repoVersion))
+        record = {}
+        data = {}
+        data['build_cmd'] = buildCMD.strip()
+        data['test_cmd'] = testCMD.strip()
+        data['modified_date'] = currentDate
+        data['date_of_creation'] = currentDate
+        data['build_nodes'] = buildNodes
+        data['test_nodes'] = testNodes
+        data['env'] = projectENV.strip()
+        record.update({repoURL:{repoVersion:data}})
+        mongoClient.insertRecord(record)
+        logger.debug("saveOrUpdateDB: created new record for " \
+                     "repoURL=%s repoVersion=%s" % (repoURL, repoVersion))
+
+    logger.debug("Leaving saveOrUpdateDB repoURL=%s repoVersion=%s" % (repoURL, repoVersion))
+
+
+def eligibleNodesToUpdate(existingNodes, currentNodes):
+    # get all the nodes that are eligible to be updated in the exsisting
+    # knowledge-base record
+    temp_nodes=[]
+    for node in currentNodes:
+        if node not in existingNodes:
+            temp_nodes.append(node)
+    return temp_nodes
+
+
+@app.route("/autoport/getRecommendationInfo", methods=['GET', 'POST'])
+def getRecommendationInfo():
+    '''
+    This routine is used to query Autoport knowledge-base and
+    provide recommendations for build and test commands for a
+    specific version of a project, based on the builds done in
+    the past.
+    '''
+    if not globals.enableKnowledgeBase:
+        return json.jsonify(status="ok", recommendations=''), 200
+    try:
+        repoURL = request.args.get("repoURL","")
+    except KeyError:
+        return json.jsonify(status="failure", error="repoURL is required!"), 401
+
+    try:
+        repoVersion = request.args.get("version","")
+    except KeyError:
+        return json.jsonify(status="failure", error="version is required!"), 401
+
+    repoURL = repoURL.replace('.','_')
+    repoVersion = repoVersion.replace('.','_')
+    query_dict = { repoURL+'.'+repoVersion : { '$exists' : True } }
+    record = mongoClient.queryForRecord(query_dict)
+    if record.count() > 0:
+        record = record.next()
+        reDict = record[repoURL][repoVersion]
+        reDict['build_cmd'] = reDict['build_cmd'].replace('\n',' ')
+        reDict['test_cmd'] = reDict['test_cmd'].replace('\n',' ')
+        reDict['env'] = reDict['env']
+        logger.debug("getRecommendationInfo: Recommendations for repoURL=%s and" \
+                    "repoVersion=%s : build_cmd=%s test_cmd=%s" \
+                    "env=%s" %(repoURL, repoVersion, reDict['build_cmd'], reDict['test_cmd'], reDict['env']))
+        return json.jsonify(status="ok", recommendations=reDict), 200
+    else:
+        logger.debug("getRecommendationInfo: No recommendation found for repoURL=%s and" \
+                     "repoVersion=%s" %(repoURL, repoVersion))
+        return json.jsonify(status="ok", recommendations=''), 200
+
 
 # Like MoveArtifacts except it is designed to return immediately if a job is not completed.
 def moveArtifactsTry(jobName, localDir):
@@ -3355,7 +3555,9 @@ def startAutoport(p = None):
         if dirname.startswith('/tmp/autoport_'):
             logger.debug("Deleting: " + dirname)
             shutil.rmtree(dirname, ignore_errors=True)
-
+        for f in filenames:
+            if f.startswith('autoport_'):
+                os.remove('/tmp/'+f)
     if p:
         p.add_argument("-p", "--public", action="store_true",
                    help="specifies for the web server to listen over the public network,\

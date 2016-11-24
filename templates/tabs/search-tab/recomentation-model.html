@@ -1,0 +1,79 @@
+<div class="modal fade" id="recomendationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="modalLabel">Additional Info From Knowledge Base</h4>
+            </div>
+            <div class='modal-body' id="recomendationModalContainer">
+                <input type="hidden" id="isPerfRecommendation" value="no"/>
+                <div class="alert alert-success">Below are the Build and Test commands retireved from the Autoport Knowledge Base for the specifed project. Please refer the Nodes field in the below table where the build had suceeded in the past.
+                </div>
+
+                <!-- Start Recommendation Prompt -->
+                <table class="table panel panel-default" id="recommendationInfoTable">
+                    <tbody>
+                        <tr>
+                            <td>Package Name</td>
+                            <td>
+                                <a rv-href="detailState.recommendationInfo.url" target="_blank">{detailState.recommendationInfo.packageName}</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Version</td>
+                            <td>
+                                <div style="color: #4f9fcf;">{detailState.recommendationInfo.packageVersion}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Build Nodes</td>
+                            <td>
+                                <div style="color: #4f9fcf;">{detailState.recommendationInfo.build_nodes}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Test Nodes</td>
+                            <td>
+                                <div style="color: #4f9fcf;">{detailState.recommendationInfo.test_nodes}</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Build Command</td>
+                            <td>
+                                <div style="color: #4f9fcf">{detailState.recommendationInfo.build_cmd}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Test Command</td>
+                            <td>
+                                <div style="  color: #4f9fcf;">
+                                {detailState.recommendationInfo.test_cmd}
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Environment Variable <span class="glyphicon glyphicon-info-sign" data-toggle="tooltip" title="Environment variables separated by blanks or newlines applied as-is"></span></td>
+                            <td>
+                                <textarea rv-text="detailState.recommendationInfo.env" rv-value="detailState.recommendationInfo.env" style="width:350px;height:40px">{detailState.recommendationInfo.env}</textarea>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <span style="color:red">Do you want to use knowledge base recomendation?</span>
+                <div>
+                   <div class="radio-inline">
+                       <label style="font-weight:100 !important"><input type="radio" id="recommendationYesRadioBtn" name="recommendationRadioBtn"/>Yes</label>
+                   </div>
+                   <div class="radio-inline">
+                       <label style="font-weight:100 !important"><input type="radio" name="recommendationRadioBtn" id="recommendationNoRadioBtn" checked/>No</label>
+                   </div>
+                </div>
+                <!-- End Recommendation Prompt -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="showModifyButton" rv-on-click="detailState.submitRecommendationToJenkins" class="btn btn-primary">Continue</button>
+            </div>
+
+        </div>
+    </div>
+</div>

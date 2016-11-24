@@ -6,6 +6,7 @@ import utils
 import yaml
 import re
 
+
 # General strategy is to create a list of language definitions from which build
 # and test commands are generated.  Each successive definition that is added to
 # the list provides a better commnd line that is more specific to the project.
@@ -42,7 +43,7 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
 
     # Symbols used as prompts
     promptsStr = '$#>%'
-    
+
     # Symbols in commands we don't allow.  Not a proper list.  We have limitations such
     # as $VAR to prevent expanded environment variables which we don't support yet
     noContainsStr = '$'
@@ -80,7 +81,7 @@ def text_analytics_cmds(project, projectLang, grepStack, searchKey):
                     # check for command prompt symbols at beginning of line
                     if line.lstrip()[0] in promptsStr:
                         line = line.lstrip()[1:].lstrip()
-                    
+
                     for command in commands:
                                                                     # TODO: validate start of command line
                         if len(line.split(' ')) <= max_words and\
@@ -455,7 +456,7 @@ def interpretTravis(repo, travisFile, travis_def):
 
     return travis_flag
 
-def inferBuildSteps(listing, repo):
+def inferBuildSteps(listing, repo, mongoClient=None):
     if not listing or not repo:
         return { 'success': False, 'error': "Github I/O error" }
 
@@ -1073,7 +1074,7 @@ def inferBuildSteps(listing, repo):
                             # Look next for 'VAR=' form. .eg VAR=7
                             delim = [";", " ", "#", "\n"]    # denotes end of environment variable
                             strFound = buildFilesParser(readmeStr, env, delim)
-                            if strFound.find('"'):           # This was ruled out above in first check 
+                            if strFound.find('"'):           # This was ruled out above in first check
                                 strFound = ""                # String should not have embedded quote
                         if strFound:
                             build_info['envOptions'].append(strFound)
@@ -1107,6 +1108,57 @@ def inferBuildSteps(listing, repo):
                         build_info['installOptions'].insert(len(build_info), '[TextAnalytics]' + command)
                     else:
                         build_info['installOptions'].insert(0, '[TextAnalytics]' + command)
+    if globals.enableKnowledgeBase and mongoClient is not None:
+        logger.debug("inferBuildSteps: knowledge base is enabled")
+        repoURL = repo.html_url
+        repoVersion = 'current'
+        repoURL = repoURL.replace('.','_')
+        query_dict = { repoURL+'.'+repoVersion : { '$exists' : True } }
+        logger.debug("inferBuildSteps: Fetching recommendation for repoURL = %s,\
+                      repoVersion = %s" %(repo.html_url,repoVersion))
+        record = mongoClient.queryForRecord(query_dict)
+        build_info.update({'recommendations':''})
+        if record.count() > 0:
+            try:
+                logger.debug("inferBuildSteps: Recommendation for repoURL = %s," \
+                              "repoVersion = %s found" %(repo.html_url,repoVersion))
+                record = record.next()
+                recomendationDict = record[repoURL][repoVersion]
+                retVal = compareNodes(recomendationDict['build_nodes'])
+                recomendationDict['build_cmd'] = recomendationDict['build_cmd'].replace('\n',' ')
+                recomendationDict['test_cmd'] = recomendationDict['test_cmd'].replace('\n',' ')
+                recomendationDict['env'] = recomendationDict['env']
+                if retVal:
+                    if recomendationDict['build_cmd'] not in build_info['buildOptions']:
+                        build_info['buildOptions'].append(recomendationDict['build_cmd'])
+                        build_info['reason'] = 'Autoport Knowledge Base'
+                        if recomendationDict['test_cmd'] and \
+                           recomendationDict['test_cmd'] not in build_info['testOptions']:
+                            build_info['testOptions'].append(recomendationDict['test_cmd'])
+                        if recomendationDict['env'] and \
+                           recomendationDict['env'] not in build_info['envOptions']:
+                            build_info['envOptions'].append(recomendationDict['env'])
+                    else:
+                        if build_info['buildOptions'][-1] != recomendationDict['build_cmd']:
+                            build_info['buildOptions'].remove(recomendationDict['build_cmd'])
+                            build_info['buildOptions'].append(recomendationDict['build_cmd'])
+                            build_info['reason'] = 'Autoport Knowledge Base'
+                            if recomendationDict['test_cmd'] and \
+                               recomendationDict['test_cmd'] not in build_info['testOptions']:
+                                build_info['testOptions'].remove(recomendationDict['test_cmd'])
+                                build_info['testOptions'].append(recomendationDict['test_cmd'])
+                            if recomendationDict['env'] and \
+                               recomendationDict['env'] not in build_info['envOptions']:
+                                build_info['envOptions'].remove(recomendationDict['env'])
+                                build_info['envOptions'].append(recomendationDict['env'])
+
+                if record[repoURL][repoVersion]['build_cmd'] not in build_info['buildOptions']:
+                    recomendationDict.update({'url':repo.html_url})
+                    recomendationDict.update({'packageName':repo.name})
+                    recomendationDict.update({'packageVersion':'current'})
+                    build_info['recommendations'] = recomendationDict
+            except Exception as e:
+                logger.warning("inferBuildSteps: recommendations error %s" %(str(e)))
 
     # Make the build, test, and env options of the last added element the default options
     # as those are the most likely to be correct
@@ -1126,6 +1178,16 @@ def inferBuildSteps(listing, repo):
     logger.debug("Leaving inferBuildSteps, proj=%s, install cmd=%s" % (repo.name, build_info['selectedInstall']))
 
     return build_info
+
+# This routine is used to compare the selected nodes with
+# total number of slave nodes available
+def compareNodes(nodes):
+   matched = True
+   for node in globals.nodeLabels:
+       if node not in nodes:
+           matched = False
+   return matched
+
 
 # Build Files Parser - Looks for string searchTerm in string fileBuf and then
 # iterates over list of delimiters and finds the one with the smallest index,

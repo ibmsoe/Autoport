@@ -1136,6 +1136,8 @@ var detailState = {
     generateJavaScriptTypeOptions: "",
     isBuildMultiLine:false,
     isTestMultiLine:false,
+    recommendationInfo: {},
+    recommendationSelectedModel: "",
     backToResults: function(ev) {
         var idName = ev.target.id;
         if (idName === "singleDetailBackButton") {
@@ -1206,6 +1208,42 @@ var detailState = {
         searchState.single.exportReady = true;
         detailState.ready = false;
         detailState.autoSelected = false;
+    },
+    // Onchange event listener for version in single/multi search panel
+    onChangeVersion:function(data) {
+        var panelName = data;
+        var url = detailState.repo.url;
+        var version = detailState.repo.useVersion.toLowerCase();
+         $.ajax({
+                type: "GET",
+                contentType: "application/json; charset=utf-8",
+                url: "getRecommendationInfo?repoURL="+url+"&version="+version,
+                success: function(data){
+                             recommendationInfoCallback(data, panelName);
+                         },
+                dataType:'json'
+            }).fail(recommendationInfoCallback);
+    },
+    submitRecommendationToJenkins:function(e) {
+        if($('#recommendationYesRadioBtn').is(":checked")){
+            if(detailState.recommendationSelectedModel == "single"){
+                singleBuildEditor.session.setValue(detailState.recommendationInfo.build_cmd.replace(/;\s*/gi,';\n'));
+                singleTestEditor.session.setValue(detailState.recommendationInfo.test_cmd.replace(/;\s*/gi,';\n'));
+                singleEnvEditor.session.setValue(detailState.recommendationInfo.env.replace(/;\s*/gi,';\n'));
+                detailState.repo.addToJenkins(false);
+            }else if(detailState.recommendationSelectedModel == "multi"){
+                 buildEditor.session.setValue(detailState.recommendationInfo.build_cmd.replace(/\\n/gi,'\n'));
+                 testEditor.session.setValue(detailState.recommendationInfo.test_cmd.replace(/\\n/gi,'\n'));
+                 envEditor.session.setValue(detailState.recommendationInfo.env.replace(/\\n/gi,'\n'));
+                 detailState.generateRepo.addToJenkins(false);
+            }
+        }else{
+             if(detailState.recommendationSelectedModel == "single"){
+                 detailState.repo.addToJenkins(false);
+             }else if(detailState.recommendationSelectedModel == "multi"){
+                 detailState.generateRepo.addToJenkins(false);
+             }
+        }
     }
 };
 
@@ -3064,12 +3102,79 @@ function getSelectedValues(select) {
     }
     return result;
 }
-
+// Callback method for retriving recommendation info from knowledge base
+function recommendationInfoCallback(data, panel){
+    if (data.status !== "ok") {
+         showAlert("Bad response while retriving recommendation info!", data);
+    }else{
+        detailState.recommendationInfo = data.recommendations;
+        if(detailState.recommendationInfo != ''){
+           var buildOptions = [];
+           var testOptions = [];
+           var envOptions = [];
+           if(panel == 'single'){
+               buildOptions = detailState.repo.build.buildOptions;
+               testOptions = detailState.repo.build.testOptions;
+               envOptions = detailState.repo.build.envOptions;
+               detailState.recommendationInfo.packageName = detailState.repo.name;
+               detailState.recommendationInfo.packageVersion = detailState.repo.useVersion;
+           }else{
+               buildOptions = detailState.generateRepo.build.buildOptions;
+               testOptions = detailState.generateRepo.build.testOptions;
+               envOptions = detailState.generateRepo.build.envOptions;
+               detailState.recommendationInfo.packageName = detailState.generateRepo.name;
+               detailState.recommendationInfo.packageVersion = detailState.generateRepo.useVersion;
+           }
+           var buildCmdMatched = false;
+           for(var i=0;i<buildOptions.length;i++){
+               if(detailState.recommendationInfo.build_cmd == buildOptions[i]){
+                   buildCmdMatched = true;
+               }
+           }
+           var nodesMatched = true;
+           for(var i=0;i<jenkinsState.nodeLabels.length;i++){
+               var matched = false;
+               for(var j=0;j<detailState.recommendationInfo.build_nodes.length; j++){
+                   if(jenkinsState.nodeLabels[i] == detailState.recommendationInfo.build_nodes[j]){
+                       matched = true;
+                   }
+               }
+               if(!matched){
+                   nodesMatched = false;
+                   break;
+               }
+           }
+           if(nodesMatched){
+               buildOptions.splice(buildOptions.indexOf(detailState.recommendationInfo.build_cmd));
+               testOptions.splice(testOptions.indexOf(detailState.recommendationInfo.test_cmd));
+               envOptions.splice(envOptions.indexOf(detailState.recommendationInfo.env));
+               buildOptions.push(detailState.recommendationInfo.build_cmd);
+               testOptions.push(detailState.recommendationInfo.test_cmd);
+               envOptions.push(detailState.recommendationInfo.env);
+               if (panel == 'single'){
+                   singleBuildEditor.session.setValue(detailState.recommendationInfo.build_cmd.replace(/;\s*/gi,';\n'));
+                   singleTestEditor.session.setValue(detailState.recommendationInfo.test_cmd.replace(/;\s*/gi,';\n'));
+                   singleEnvEditor.session.setValue(detailState.recommendationInfo.env.replace(/;\s*/gi,';\n'));
+               }else{
+                  buildEditor.session.setValue(detailState.recommendationInfo.build_cmd.replace(/;\s*/gi,';\n'));
+                  testEditor.session.setValue(detailState.recommendationInfo.test_cmd.replace(/;\s*/gi,';\n'));
+                  envEditor.session.setValue(detailState.recommendationInfo.env.replace(/;\s*/gi,';\n'));
+               }
+               detailState.recommendationInfo = {};
+           }
+        }
+    }
+}
 // Sets up and opens detail view for a repo
 function showDetail(data) {
     if (data.status !== "ok" || data.type !== "detail") {
         showAlert("Bad response while creating detail view!", data);
     } else {
+         if (data.repo.build.recommendations != undefined && data.repo.build.recommendations !=""){
+             detailState.recommendationInfo = data.repo.build.recommendations;
+         } else {
+             detailState.recommendationInfo = undefined;
+         }
         if (data.panel === "single") {
              detailState.repo = data.repo;
              singleBuildEditor.session.setValue(detailState.repo.build.selectedBuild.replace(/;\s*/gi,';\n'));
@@ -3080,18 +3185,53 @@ function showDetail(data) {
                 if ($(this).attr('id') == "buildPerfTestBtn"){
                     isPerf=true;
                 }
+                var skipRecommendation = false;
+                var includeRecommendation = $('#recommendationYesRadioBtn').is(":checked");
+                if(e != undefined && !e){
+                    skipRecommendation = true;
+                    if($('#isPerfRecommendation').val() == 'yes'){
+                        isPerf = true;
+                    }
+                }
+                if(!skipRecommendation && detailState.recommendationInfo != undefined){
+                    var build_cmd = detailState.recommendationInfo.build_cmd;
+                    if(build_cmd != detailState.repo.build.selectedBuild.replace(/;\s*/gi,';\\n')){
+                          if(isPerf){
+                             $('#isPerfRecommendation').val('yes');
+                          }
+                          $('#recommendationYesRadioBtn').attr('checked', false);
+                          $('#recommendationNoRadioBtn').prop('checked', 'checked');
+                          $('#recomendationModal').modal();
+                          detailState.recommendationSelectedModel = "single";
+                          return;
+                    }
+                }else{
+                     $( '#recomendationModal' ).modal( 'hide' ).data( 'bs.modal', null );
+                     $('#recommendationYesRadioBtn').attr('checked', false);
+                     $('#recommendationNoRadioBtn').prop('checked', 'checked');
+                }
                 var buildInfo = detailState.repo.build;
-
-                var selectedBuild = singleBuildEditor.session.getValue();
+                var selectedBuild = "";
+                var selectedTest = "";
+                var selectedEnv = "";
+                if(includeRecommendation!=undefined && includeRecommendation){
+                    selectedBuild = detailState.recommendationInfo.build_cmd.replace(/;\s*/gi,';\n');
+                    selectedTest = detailState.recommendationInfo.test_cmd.replace(/;\s*/gi,';\n');
+                    selectedEnv = detailState.recommendationInfo.env.replace(/;\s*/gi,';\n');
+                }else{
+                    selectedBuild = singleBuildEditor.session.getValue();
+                    selectedTest = singleTestEditor.session.getValue();
+                    selectedEnv = singleEnvEditor.session.getValue();
+                }
                 selectedBuild = selectedBuild === "NA" ? "" : selectedBuild;
 
-                var selectedTest = singleTestEditor.session.getValue();
                 selectedTest = selectedTest === "NA" ? "" : selectedTest;
 
-                var selectedEnv = singleEnvEditor.session.getValue();
                 selectedEnv = selectedEnv === "NA" ? "" : selectedEnv;
 
                 var el = $("#singleBuildServers")[0];
+                var timeStamp = Math.floor(Date.now() / 1000);
+                var trackingFile = "autoport_"+detailState.repo.name+"_"+detailState.repo.useVersion+"_"+timeStamp+".json"
                 var buildServers = getSelectedValues(el);
                 var javaType = detailState.javaType.split(' ')[0];
                 var javaVersion = (detailState.supportedJavaList[detailState.javaType])?detailState.supportedJavaList[detailState.javaType]:7;
@@ -3105,18 +3245,42 @@ function showDetail(data) {
                     showAlert("Error",{"status":"failure","error":"Please select build servers"});
                     return false;
                 }
+                var trackFileContent = {};
+                var nodesArray = [];
                 for (var i=0; i < buildServers.length; i++) {
                     console.log(detailState.repo.useVersion + " version");
+                    if(i == 0){
+                        var nodes = "";
+                        for(var j=0; j < buildServers.length; j++){
+                           var node = buildServers[j];
+                           if(nodes == ""){
+                               nodes =  "'"+node+"':{'build_status':1,'test_status':1}";
+                           }else{
+                               nodes = nodes + "," + "'"+node+"':{'build_status':1,'test_status':1}";
+                            }
+                        }
+                        var jsonStr = "{'track_file'}";
+                        trackFileContent['count'] = buildServers.length;
+                        trackFileContent['build_cmd'] = selectedBuild;
+                        trackFileContent['test_cmd'] = selectedTest;
+                        trackFileContent['env'] = selectedEnv;
+                        trackFileContent['version'] = detailState.repo.useVersion.toLowerCase();
+                        trackFileContent['url'] = detailState.repo.url;
+                        //trackFileContent['nodes'] = nodes;
+                        trackFileContent['nodes'] = JSON.parse(JSON.stringify(eval("({" + nodes+ "})")));;
+                        trackFileContent = JSON.stringify(trackFileContent);
+                    }
                     $.post("createJob", {id: detailState.repo.id, tag: detailState.repo.useVersion,
                            javaType: javaType+','+javaVersion, javaScriptType: javaScriptTypeVersion,
                            node: buildServers[i], selectedBuild: selectedBuild,
-                           selectedTest: selectedTest, selectedEnv: selectedEnv,
-                           artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang, isPerf:isPerf},
+                           selectedTest: selectedTest, selectedEnv: selectedEnv,trackingFile:trackingFile,
+                           artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang, isPerf:isPerf, trackFileContent:trackFileContent},
                            addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
             detailState.repo.updateVersion = function(e) {
                 detailState.repo.useVersion = e.target.innerHTML;
+                detailState.onChangeVersion('single');
             };
             searchState.single.loadingState.loading = false;
             detailState.ready = true;
@@ -3135,12 +3299,47 @@ function showDetail(data) {
             testEditor.session.setValue(detailState.generateRepo.build.selectedTest.replace(/;\s*/gi,';\n'));
             envEditor.session.setValue(detailState.generateRepo.build.selectedEnv.replace(/;\s*/gi,';\n'));
             detailState.generateRepo.javaType = detailState.supportedJavaListOptions[0];
-
             detailState.generateRepo.addToJenkins = function(e) {
                 var isPerf=false;
                 if ($(this).attr('id') == "buildPerfTestBtn"){
                     isPerf=true;
                 }
+                var includeRecommendation = $('#recommendationYesRadioBtn').is(":checked");
+                var skipRecommendation = false;
+                if(e!=undefined && !e){
+                    skipRecommendation = true;
+                    if($('#isPerfRecommendation').val() == 'yes'){
+                        isPerf = true;
+                    }
+                }
+                if(!skipRecommendation && detailState.recommendationInfo != undefined){
+                    var build_cmd = detailState.recommendationInfo.build_cmd;
+                    if(build_cmd != detailState.generateRepo.build.selectedBuild.replace(/;\s*/gi,';\\n')){
+                          if(isPerf){
+                              $('#isPerfRecommendation').val('yes');
+                          }
+                          $('#recommendationYesRadioBtn').attr('checked', false);
+                          $('#recommendationNoRadioBtn').prop('checked', 'checked');
+                          $('#recomendationModal').modal();
+                          detailState.recommendationSelectedModel = "multi";
+                          return;
+                    }
+                }else{
+                     $( '#recomendationModal' ).modal( 'hide' ).data( 'bs.modal', null );
+                     $('#recommendationYesRadioBtn').attr('checked', false);
+                     $('#recommendationNoRadioBtn').prop('checked', 'checked');
+                }
+
+                if(includeRecommendation!=undefined && includeRecommendation){
+                    selectedBuild = detailState.recommendationInfo.build_cmd.replace(/;\s*/gi,';\n');
+                    selectedTest = detailState.recommendationInfo.test_cmd.replace(/;\s*/gi,';\n');
+                    selectedEnv = detailState.recommendationInfo.env.replace(/;\s*/gi,';\n');
+                }else{
+                    selectedBuild = singleBuildEditor.session.getValue();
+                    selectedTest = singleTestEditor.session.getValue();
+                    selectedEnv = singleEnvEditor.session.getValue();
+                }
+ 
                 var buildInfo = detailState.generateRepo.build;
 
                 var selectedBuild = buildEditor.session.getValue();
@@ -3168,16 +3367,42 @@ function showDetail(data) {
                     showAlert("Error",{"status":"failure","error":"Please select build servers"});
                     return false;
                 }
+                var timeStamp = Math.floor(Date.now() / 1000);
+                var trackingFile = "autoport_"+detailState.generateRepo.name+"_"+detailState.generateRepo.useVersion+"_"+timeStamp+".json"
+                var trackFileContent = {};
                 for (var i=0; i < buildServers.length; i++) {
+                    console.log(detailState.generateRepo.useVersion + " version");
+                    if(i == 0){
+                        var nodes = "";
+                        for(var j=0; j < buildServers.length; j++){
+                           var node = buildServers[j];
+                           if(nodes == ""){
+                               nodes =  "'"+node+"':{'build_status':1,'test_status':1}";
+                           }else{
+                               nodes = nodes + "," + "'"+node+"':{'build_status':1,'test_status':1}";
+                            }
+                        }
+                        var jsonStr = "{'track_file'}";
+                        trackFileContent['count'] = buildServers.length;
+                        trackFileContent['build_cmd'] = selectedBuild;
+                        trackFileContent['test_cmd'] = selectedTest;
+                        trackFileContent['env'] = selectedEnv;
+                        trackFileContent['version'] = detailState.generateRepo.useVersion.toLowerCase();
+                        trackFileContent['url'] = detailState.generateRepo.url;
+                        //trackFileContent['nodes'] = nodes;
+                        trackFileContent['nodes'] = JSON.parse(JSON.stringify(eval("({" + nodes+ "})")));;
+                        trackFileContent = JSON.stringify(trackFileContent);
+                       }
                     $.post("createJob", {id: detailState.generateRepo.id, tag: detailState.generateRepo.useVersion,
-                            javaType: javaType+','+javaVersion, javaScriptType: javaScriptTypeVersion,
-                            node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest,
+                            javaType: javaType+','+javaVersion, javaScriptType: javaScriptTypeVersion,trackingFile:trackingFile,
+                            node: buildServers[i], selectedBuild: selectedBuild, selectedTest: selectedTest,trackFileContent:trackFileContent,
                             selectedEnv: selectedEnv, artifacts: buildInfo.artifacts, primaryLang: buildInfo.primaryLang, isPerf:isPerf},
                             addToJenkinsCallback, "json").fail(addToJenkinsCallback);
                 }
             };
             detailState.generateRepo.updateVersion = function(e) {
                 detailState.generateRepo.useVersion = e.target.innerHTML;
+                detailState.onChangeVersion('multiple');
             };
             detailState.generateRepo.selectGenerateJavaType = function(ev) {
                 var selection = $(ev.target).text().toLowerCase();
