@@ -1144,12 +1144,16 @@ def inferBuildSteps(listing, repo, mongoClient=None):
                             build_info['buildOptions'].append(recomendationDict['build_cmd'])
                             build_info['reason'] = 'Autoport Knowledge Base'
                             if recomendationDict['test_cmd'] and \
-                               recomendationDict['test_cmd'] not in build_info['testOptions']:
+                               recomendationDict['test_cmd'] in build_info['testOptions']:
                                 build_info['testOptions'].remove(recomendationDict['test_cmd'])
                                 build_info['testOptions'].append(recomendationDict['test_cmd'])
+                            elif recomendationDict['test_cmd']:
+                                build_info['testOptions'].append(recomendationDict['test_cmd'])
                             if recomendationDict['env'] and \
-                               recomendationDict['env'] not in build_info['envOptions']:
+                               recomendationDict['env'] in build_info['envOptions']:
                                 build_info['envOptions'].remove(recomendationDict['env'])
+                                build_info['envOptions'].append(recomendationDict['env'])
+                            elif recomendationDict['env']:
                                 build_info['envOptions'].append(recomendationDict['env'])
 
                 if record[repoURL][repoVersion]['build_cmd'] not in build_info['buildOptions']:
