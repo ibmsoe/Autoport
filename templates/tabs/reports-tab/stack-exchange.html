@@ -1,0 +1,99 @@
+<div class="modal fade" id="stackExchangeModal" style="width:800px;margin:0 auto" tabindex="-1">
+   <div class="modal-dialog" style="width: auto;">
+      <div class="modal-content">
+         <div class="modal-header">
+            <div class="row">
+               <div class="col-sm-6">
+                  <h4 class="modal-title" id="stackExchangeModalLabel">Search Results From Stack Exchange</h4>
+               </div>
+
+               <div class="col-sm-6">
+                  <div id="search_container">
+                    <div class="input-group stackExchangeSearchBox">
+                      <input type="text" class="form-control"  placeholder="Search" id="stackExchangeInputBox" rv-value="projectReportState.stackExchangeSearchString">
+                      <span class="input-group-addon">
+                        <button type="submit" rv-on-click="projectReportState.stackExchangeSearch">
+                            <span class="glyphicon glyphicon-search"></span>
+                        </button>
+                      </span>
+                   </div>
+                 </div>
+               </div>
+            </div>
+         </div>
+         <div class="modal-body">
+            <div id="stackExchangeLoader">
+               {% include "tabs/reports-tab/stack-exchange-loading.html" %}
+            </div>
+            <div id="stackExchangeContainer" class="hide">
+               <div class="alert alert-success">
+                 Following are the search results relevant to the error text selected.
+                 Please refer the tags, votes, view-count and answers for each question to
+                 find the best suited result for your project. You can also edit the selected text
+                 in the above search box to get related results.
+               </div>
+               <table class="table panel panel-default" id="stackExchangeTable"
+               data-pagination="true" data-click-to-select="true" data-page-size="5">
+               <thead>
+               </thead>
+               <tbody rv-each-result="projectReportState.stackExchangeDataResults">
+                  <tr class="result-row">
+                     <td style="padding:1px">
+                        <div class="row">
+                           <div class="col-sm-4">
+                              <div class="stackExchangeBadge">
+                                 <div><span class="badge">{result.votes}</span>Votes</div>
+                              </div>
+                              <div class="stackExchangeBadge">
+                                 <div><span class="badge">{result.answers}</span>Answers</div>
+                              </div>
+                              <div class="stackExchangeBadge">
+                                 <div><span class="badge">{result.views}</span>Views</div>
+                              </div>
+                           </div>
+                           <div class="col-sm-8">
+                              <div class="row">
+                                 <div>
+                                    <a target="_blank" rv-href="result.url" rv-text="result.title"></a>
+                                 </div>
+                                 <div>
+                                    <ul style="padding-left: 0 !important">
+                                       <li rv-each-tag="result.tags" style="display:inline-block">
+                                          <span class="label label-default">{tag}</span>
+                                       </li>
+                                    </ul>
+                                 </div>
+                              </div>
+                           </div>
+                        </div>
+                     </td>
+                  </tr>
+               </tbody>
+               </table>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <ul class="pagination" style="margin:0px !important">
+                        <li id="showStackExchangePage1" class="active" rv-on-click="projectReportState.onChangeStackExchangePagination" data-on-click="one"><a href="#">1</a></li>
+                        <li id="showStackExchangePage2" rv-on-click="projectReportState.onChangeStackExchangePagination" data-on-click="two"><a href="#">2</a></li>
+                     </ul>
+                  </div>
+                  <div class="col-sm-6">
+                     <button type="button" class="btn btn-primary pull-right" rv-on-click="projectReportState.closeStackExchangePopup">Close</button>
+                  </div>
+               </div>
+            </div>
+            <div id="stackExchangeEmptyContainer" class="hide">
+               <div class="alert alert-danger">
+                  <span class="glyphicon glyphicon-exclamation-sign" aria-hidden="true"></span>
+                  No Search Results Found
+               </div>
+               <div class="row">
+                  <div class="col-sm-6">
+                     <button type="button" class="btn btn-primary pull-right" rv-on-click="projectReportState.closeStackExchangePopup">Close</button>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
+   </div>
+</div>

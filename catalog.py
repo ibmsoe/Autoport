@@ -9,6 +9,7 @@ import errno
 import globals
 from stat import S_ISDIR
 from log import logger
+import json
 
 resultPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)\.(\d\d\d\d-\d\d-\d\d-h\d\d-m\d\d-s\d\d)')
 
@@ -211,6 +212,20 @@ class Catalog:
             msg = "getSFTPResults: Exception " + str(e)
             logger.debug(msg)
             return None
+
+    def getMetaDataForJob(self, repo, build):
+        '''
+        Fetching meta.arti file content for a given project
+        '''
+        meta_file = {}
+        if repo == 'local':
+            artiFileLocation = globals.localPathForTestResults+build
+            with open(artiFileLocation+'/meta.arti') as metaFile:
+                meta_file = json.loads(metaFile.read())
+        else:
+            artiFileLocation = globals.pathForTestResults+build
+            meta_file = self.readRemoteFile(artiFileLocation+'/meta.arti')
+        return meta_file
 
     def archiveResults(self, builds):
         status = "ok"

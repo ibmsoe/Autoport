@@ -65,6 +65,16 @@ catch(err) {
     console.log(err.message);
 }
 
+function onClickErrorText(errorText, diffPart){
+     if(projectReportState.stackExchangeQueryInProgress){
+         return false;
+     }
+     errorText = errorText.replace(/<\/?[^>]+(>|$)/g, "");
+     projectReportState.stackExchangeSearchString = errorText;
+     projectReportState.stackExchangeSearchDiffPart = diffPart;
+     projectReportState.stackExchangeSearch();
+}
+
 var globalState = {
     hasInit: false,
     cloudNodeInfo: [],
@@ -1918,6 +1928,14 @@ var projectReportState = {
     prjTableReady: false,
     prjCompareSingle: false,
     performanceTableReady:false,
+    leftDiffMetaData: {},
+    rightDiffMetaData: {},
+    stackExchangeDataResults: [],
+    stackExchangeData1: [],
+    stackExchangeData2: [],
+    stackExchangeQueryInProgress: false,
+    stackExchangeSearchString: "",
+    stackExchangeSearchDiffPart: "",
     testHistory: function() { // TODO single project or multiple?
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
         var sel = [];
@@ -2097,6 +2115,54 @@ var projectReportState = {
     backToList: function(ev) {
         projectReportState.prjCompareReady = true;
         projectReportState.prjTableReady = false;
+    },
+    // API invocation for stack exchange search
+    stackExchangeSearch: function(evt) {
+         projectReportState.stackExchangeSearchDiffPart = $('#stackExchangeInputBox').val();
+         var metaData = undefined;
+         if(projectReportState.stackExchangeSearchDiffPart == "left"){
+           metaData = projectReportState.leftDiffMetaData;
+         }else{
+            metaData = projectReportState.rightDiffMetaData;
+         }
+         var params = "?selectedText="+projectReportState.stackExchangeSearchString;
+         params = params+"&jobName="+metaData['Package']
+         params = params + "&PrimaryLanguage="+metaData['Primary Language']
+         params = params + "&BuildCommand="+metaData['Build Command']
+         params = params + "&TestCommand="+metaData['Test Command']
+
+         projectReportState.stackExchangeQueryInProgress = true;
+         $('#stackExchangeModal').modal({backdrop: 'static', keyboard: false});
+         $('#logdiffModal').hide();
+         $("#stackExchangeContainer").hide();
+         $("#stackExchangeEmptyContainer").hide();
+         $("#stackExchangeLoader").show();
+         $.ajax({
+                 type: "GET",
+                 contentType: "application/json; charset=utf-8",
+                 url: "stackExchangeSearch"+params,
+                 success: stackExchangeCallback,
+                 dataType:'json'
+                }).fail(stackExchangeCallback);
+    },
+    // Event listener for stack exchange paginator
+    onChangeStackExchangePagination: function(page) {
+        projectReportState.stackExchangeDataResults = [];
+        if(page.currentTarget.dataset.onClick == "one"){
+           projectReportState.stackExchangeDataResults = projectReportState.stackExchangeData1;
+           $("#showStackExchangePage1").addClass("active");
+           $("#showStackExchangePage2").removeClass("active");
+        }else{
+           projectReportState.stackExchangeDataResults = projectReportState.stackExchangeData2;
+           $("#showStackExchangePage1").removeClass("active");
+           $("#showStackExchangePage2").addClass("active");
+        }
+    },
+    closeStackExchangePopup: function(evt){
+        $('#logdiffModal').show();
+        $('#stackExchangeModal').modal('hide').data('bs.modal',null);
+        projectReportState.stackExchangeSearchString = "";
+        projectReportState.stackExchangeSearchDiffPart = "";
     },
     loadingState: {
         diffLoading: false
@@ -2591,7 +2657,8 @@ function processLogCompareResults(data) {
     } else {
         var left = data.leftCol;
         var right = data.rightCol;
-
+        projectReportState.leftDiffMetaData = data.leftCol.metaData;
+        projectReportState.rightDiffMetaData = data.rightCol.metaData;
         var headerContent = "<table id=\"logdiffHeader\" >" +
                                  "<th style=\"border:none\">" +
                                       left['log'] + "<br />" +
@@ -3087,7 +3154,46 @@ function archiveCallback(data) {
         showAlert("Archive test results failed!", data);
     }
 }
-
+// Callback function for stackExchange search
+function stackExchangeCallback(data) {
+    $('#stackExchangeLoader').hide();
+    projectReportState.stackExchangeQueryInProgress = false;
+    if (data.status !== "ok") {
+        showAlert("Bad response while retriving data from stack exchange!", data);
+        $('#stackExchangeModal').modal('hide').data('bs.modal',null);
+        $('#logdiffModal').show();
+        projectReportState.stackExchangeSearchString = "";
+        projectReportState.stackExchangeSearchDiffPart = "";
+    }else {
+        if(data.results.searchData.length == 0){
+           $('#stackExchangeContainer').hide();
+           $("#stackExchangeEmptyContainer").removeClass('hide');
+           $('#stackExchangeEmptyContainer').show();
+           return false;
+        }
+        $("#stackExchangeContainer").removeClass('hide');
+        $('#stackExchangeContainer').show();
+        projectReportState.stackExchangeData1 = [];
+        projectReportState.stackExchangeData2 = [];
+        projectReportState.stackExchangeDataResults = [];
+        for (var i=0; i<data.results.searchData.length; i++) {
+            if(i>9){
+                break;
+            }
+            if(i <= 4){
+                projectReportState.stackExchangeData1.push(data.results.searchData[i]);
+            } else {
+                projectReportState.stackExchangeData2.push(data.results.searchData[i]);
+            }
+        }
+        if(data.results.searchData.length <= 5){
+            $('showStackExchangePage2').hide();
+        }else{
+            $('showStackExchangePage2').show();
+        }
+        projectReportState.stackExchangeDataResults = projectReportState.stackExchangeData1;
+    }
+}
 function getSelectedValues(select) {
     var result = [];
     var options = select && select.options;
@@ -3339,7 +3445,7 @@ function showDetail(data) {
                     selectedTest = singleTestEditor.session.getValue();
                     selectedEnv = singleEnvEditor.session.getValue();
                 }
- 
+
                 var buildInfo = detailState.generateRepo.build;
 
                 var selectedBuild = buildEditor.session.getValue();

@@ -64,6 +64,8 @@ def init():
     global dbPassword
     global dbName
     global dbCollectionName
+    global stackApiKey
+    global enableTagSearch
 
     # user configuration globals that are supported by the user interface
     githubToken = configOptions['githubtoken']
@@ -82,6 +84,8 @@ def init():
     threadPoolSize = int(configOptions['threadpoolsize'])
     useTextAnalytics = configOptions['usetextanalytics'] == 'True'
     enableKnowledgeBase = configOptions['enableknowledgebase'] == 'True'
+    stackApiKey = configOptions['stackapikey']
+    enableTagSearch = configOptions['enabletagsearch'] == 'True'
 
     # user configuration globals that are not supported by the user interface
     expiryForTmp = configOptions['expiryfortmp']
@@ -217,3 +221,7 @@ def init():
         dbPassword = configOptions['dbpassword']
         dbName = configOptions['dbname']
         dbCollectionName = configOptions['dbcollectionname']
+
+    # used for seraching errors in logs using stackExchange api
+    if not stackApiKey or "<" in stackApiKey:
+        stackApiKey = None
