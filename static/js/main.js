@@ -1932,10 +1932,12 @@ var projectReportState = {
     rightDiffMetaData: {},
     stackExchangeDataResults: [],
     stackExchangeData1: [],
-    stackExchangeData2: [],
+    stackExchangeData: [],
+    stackExchangePaginationArray: [],
     stackExchangeQueryInProgress: false,
     stackExchangeSearchString: "",
     stackExchangeSearchDiffPart: "",
+    stackExchangeDisplayData: [],
     testHistory: function() { // TODO single project or multiple?
         var selectedProjects = $('#testCompareSelectPanel').bootstrapTable('getSelections');
         var sel = [];
@@ -2147,15 +2149,31 @@ var projectReportState = {
     },
     // Event listener for stack exchange paginator
     onChangeStackExchangePagination: function(page) {
-        projectReportState.stackExchangeDataResults = [];
-        if(page.currentTarget.dataset.onClick == "one"){
-           projectReportState.stackExchangeDataResults = projectReportState.stackExchangeData1;
-           $("#showStackExchangePage1").addClass("active");
-           $("#showStackExchangePage2").removeClass("active");
+        projectReportState.stackExchangeDisplayData = [];
+        $("#stackExchangesearchPagination>li.active").removeClass("active");
+        var pageIndex = parseInt(page.currentTarget.innerText);
+        projectReportState.stackExchangePaginationArray[pageIndex-1].class="active";
+        $("#stackExchangesearchPagination #"+pageIndex+"").addClass("active");
+        var length = projectReportState.stackExchangeData.length;
+        var startIndex;
+        var endIndex;
+        if (pageIndex == 1){
+            startIndex = 0;
+            if (length > 5){
+                endIndex = 4;
+            } else {
+                endIndex = length-1;
+            }
         }else{
-           projectReportState.stackExchangeDataResults = projectReportState.stackExchangeData2;
-           $("#showStackExchangePage1").removeClass("active");
-           $("#showStackExchangePage2").addClass("active");
+             startIndex = (pageIndex - 1)*5;
+             startIndex = startIndex!=0?startIndex :0;
+             endIndex = 5*pageIndex-1;
+             if (endIndex > length){
+                 endIndex = length -1;
+             }
+        }
+        for(var i=startIndex; startIndex <= endIndex; startIndex++){
+            projectReportState.stackExchangeDisplayData.push(projectReportState.stackExchangeData[startIndex]);
         }
     },
     closeStackExchangePopup: function(evt){
@@ -3157,6 +3175,9 @@ function archiveCallback(data) {
 // Callback function for stackExchange search
 function stackExchangeCallback(data) {
     $('#stackExchangeLoader').hide();
+    projectReportState.stackExchangeDisplayData = [];
+    projectReportState.stackExchangeData = [];
+    projectReportState.stackExchangePaginationArray = [];
     projectReportState.stackExchangeQueryInProgress = false;
     if (data.status !== "ok") {
         showAlert("Bad response while retriving data from stack exchange!", data);
@@ -3173,25 +3194,30 @@ function stackExchangeCallback(data) {
         }
         $("#stackExchangeContainer").removeClass('hide');
         $('#stackExchangeContainer').show();
-        projectReportState.stackExchangeData1 = [];
-        projectReportState.stackExchangeData2 = [];
-        projectReportState.stackExchangeDataResults = [];
-        for (var i=0; i<data.results.searchData.length; i++) {
-            if(i>9){
-                break;
-            }
-            if(i <= 4){
-                projectReportState.stackExchangeData1.push(data.results.searchData[i]);
-            } else {
-                projectReportState.stackExchangeData2.push(data.results.searchData[i]);
-            }
+        var length = data.results.searchData.length;
+        var pageSize = 0;
+        if(length % 5 == 0){
+            pageSize = length/5;
+        }else {
+            pageSize = parseInt(length/5)+1;
         }
-        if(data.results.searchData.length <= 5){
-            $('showStackExchangePage2').hide();
-        }else{
-            $('showStackExchangePage2').show();
+        projectReportState.stackExchangeData = data.results.searchData;
+        for(var j=0; j<pageSize; j++){
+            var ob ={pageNumber:j+1};
+            if(projectReportState.stackExchangePaginationArray.length == 0){
+                ob.class = "active";
+            }else{
+                ob.class = "";
+            }
+            projectReportState.stackExchangePaginationArray.push(ob);
         }
-        projectReportState.stackExchangeDataResults = projectReportState.stackExchangeData1;
+        var endIndex = length;
+        if(length > 5){
+            endIndex = 4;
+        }
+        for(var i=0; i <= endIndex; i++){
+            projectReportState.stackExchangeDisplayData.push(projectReportState.stackExchangeData[i]);
+        }
     }
 }
 function getSelectedValues(select) {

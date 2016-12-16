@@ -36,7 +36,7 @@
                data-pagination="true" data-click-to-select="true" data-page-size="5">
                <thead>
                </thead>
-               <tbody rv-each-result="projectReportState.stackExchangeDataResults">
+               <tbody rv-each-result="projectReportState.stackExchangeDisplayData">
                   <tr class="result-row">
                      <td style="padding:1px">
                         <div class="row">
@@ -72,9 +72,8 @@
                </table>
                <div class="row">
                   <div class="col-sm-6">
-                     <ul class="pagination" style="margin:0px !important">
-                        <li id="showStackExchangePage1" class="active" rv-on-click="projectReportState.onChangeStackExchangePagination" data-on-click="one"><a href="#">1</a></li>
-                        <li id="showStackExchangePage2" rv-on-click="projectReportState.onChangeStackExchangePagination" data-on-click="two"><a href="#">2</a></li>
+                     <ul id="stackExchangesearchPagination" class="pagination" style="margin:0px !important">
+                        <li rv-each-val="projectReportState.stackExchangePaginationArray" rv-class="val.class" rv-on-click="projectReportState.onChangeStackExchangePagination" data-on-click="val" rv-id="val.pageNumber"><a href="#" rv-text="val.pageNumber">{val.pageNumber}</a></li>
                      </ul>
                   </div>
                   <div class="col-sm-6">
