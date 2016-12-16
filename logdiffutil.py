@@ -1,5 +1,5 @@
 
-def renderline(text, errorWords, packageDict):
+def renderline(text, errorWords, packageDict, diffPart):
     if 'failures: 0' in text.lower() or 'errors: 0' in text.lower():
         return text
 
@@ -20,9 +20,8 @@ def renderline(text, errorWords, packageDict):
             words = text.strip().split()
             for word in words:
                 if packageDict.has_key(word.lower()):
-                    text = (text.replace(word,"""<font style=\"background:#f9f900;\">%s</font>"""%(word)))
-            #return ("""<span><font style=\"background:#ff9797;\">%s</font></span>""" % text)
-            return ("""<font style=\"background:#ff9797;\">%s</font>""" % text)
+                    text = (text.replace(word,"""<font ondblclick=\"onClickErrorText(%s)\" style=\"background:#f9f900;\">%s</font>"""%(word,word)))
+            return ("""<font ondblclick=\"onClickErrorText('%s','%s')\" style=\"background:#ff9797;\">%s</font>""" % (text,diffPart,text))
     return text
 
 def getErrorWords(filename):

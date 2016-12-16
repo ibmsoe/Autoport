@@ -56,6 +56,7 @@ Note Power Linux Big Endian is not supported.  At the time of development, the C
         $ sudo pip install pytz
         $ sudo pip install python-novaclient
         $ sudo pip install pymongo
+        $ sudo pip install py-stackexchange
 
   4. Install and configure the Autoport source code and start Autoport
 

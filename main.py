@@ -23,6 +23,7 @@ import threading
 import paramiko
 import ntpath
 import shutil
+import stackexchange
 from sharedData import SharedData
 from chefData import ChefData
 from threadpool import makeRequests
@@ -47,6 +48,7 @@ from flask.ext.compress import Compress
 from requests.auth import HTTPBasicAuth
 from os import listdir
 from mongodb import MongoDB
+import time
 
 # Constants
 maxResults = 25
@@ -62,6 +64,10 @@ resParser = ResultParser()
 mongoClient = None
 if globals.enableKnowledgeBase:
     mongoClient = MongoDB()
+if globals.stackApiKey:
+    stackExc = stackexchange.Site(stackexchange.StackOverflow, globals.stackApiKey)
+else:
+    stackExc = stackexchange.Site(stackexchange.StackOverflow)
 
 # Initialize web application framework
 app = Flask(__name__, static_url_path='/autoport')
@@ -3493,7 +3499,6 @@ def getPerformanceData():
     except Exception as ex:
         json.jsonify(status='error', error=str(ex))
 
-
 @app.route('/autoport/getManagedList', methods=['GET','POST'])
 def getManagedList():
     try:
@@ -3501,6 +3506,94 @@ def getManagedList():
     except Exception as ex:
         managedList = {}
     return json.jsonify(status='ok', results = managedList)
+
+@app.route('/autoport/stackExchangeSearch', methods=['GET'])
+def stackExchangeSerach():
+    try:
+        selectedText = str(request.args.get("selectedText", ""))
+        specialSymbols = [ ':', '[',']', '*', '>', '<', '#',
+                           '$', '&', '(', ')', '%', '~' ]
+        # Removing special characters from the searchText, as special
+        # characters are leading to vauge results.
+        selectedText = selectedText.translate(None,''.join(specialSymbols))
+
+        # Fetching project related tags for "tagged" based search.
+        # Considering the package name, build tool and primary language as tags
+        jobName = request.args.get("jobName", "")
+        primaryLang = request.args.get("PrimaryLanguage", "")
+        buildCmd = request.args.get("BuildCommand", "")
+
+        pkgPattern = re.compile('(.*?)\.(.*?)\.(.*?)\.N-(.*?)\.(.*?)')
+        pkg = pkgPattern.match(jobName).group(4)
+        command = ''
+        build_keywords = ['maven', 'ant', 'npm', 'grunt', 'python',
+                          'gem', 'rake', 'make', 'bootstrap.sh',
+                          'autogen.sh', 'autoreconf', 'automake', 'aclocal',
+                          'scons', 'sbt', 'cmake', 'gradle', 'bundle']
+
+        for keyword in build_keywords:
+            if buildCmd.find(keyword) != -1:
+                command = keyword
+                break
+        results = []
+        # Preference given to search results, where query text is present
+        # as part of the title.
+        searchResults = stackExc.search(intitle=selectedText)
+        if len(searchResults) < 10:
+            # If the above api call does not return enough number of search records
+            # then applying advanced_search for a given query string
+            advanceSearchResults = stackExc.search_advanced(q=selectedText, \
+                                   sort='relevance')
+            if globals.enableTagSearch:
+                # Enabling tag based search. This is conditional based
+                # due to issues related to rate limit as per stackExchange.
+                tagResults = []
+                tagResults.append(stackExc.search_advanced(q=selectedText,\
+                                                         tagged=pkg, sort='relevance'))
+                tagResults.append(stackExc.search_advanced(q=selectedText,\
+                                                         tagged=command, sort='relevance'))
+                tagResults.append(stackExc.search_advanced(q=selectedText,\
+                                                         tagged=primaryLang, sort='relevance'))
+                for res in tagResults:
+                    if res is not None:
+                        results += res
+                if results:
+                    advanceSearchResults = res + advanceSearchResults
+            if len(advanceSearchResults) > 10:
+                if len(searchResults) > 0:
+                    searchResults = searchResults + advanceSearchResults
+                else:
+                    searchResults = advanceSearchResults
+            else:
+                # If sufficient records are not found, calling /similar API
+                if len(searchResults) < 10:
+                    similarResults = stackExc.similar(title=selectedText)
+                    if len(searchResults) > 0:
+                        searchResults = searchResults + similarResults
+                    else:
+                       searchResults = similarResults
+        returnJson = {}
+        arr=[]
+        i=0
+        for result in searchResults:
+            # Restricting result set to 10
+            if i == 10:
+                break
+            data = {}
+            data['tags'] = result.tags
+            data['title'] = result.title
+            data['url'] = result.url
+            data['votes'] = result.score
+            data['answers'] = result.answer_count
+            data['views'] = result.view_count
+            arr.append(data)
+            i = i+1
+        returnJson.update({"searchData":arr})
+        logger.info("before return == "+str(time.asctime()))
+        return json.jsonify(status = "ok", results = returnJson)
+    except Exception as ex:
+        logger.info("stackExchangeSearch Error: %s", ex)
+        return json.jsonify(status='error', error=str(ex))
 
 def autoportJenkinsInit(jenkinsUrl, jenkinsUsername, jenkinsKey):
     # This is called before starting the flask application.  It is responsible

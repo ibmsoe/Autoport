@@ -474,3 +474,21 @@ fieldset[disabled] .form-control {
     padding:0px 0px 0px 0px;
     outline: 0;
 }
+.stackExchangeSearchBox .input-group-addon{
+    background: white !important;
+}
+.stackExchangeSearchBox .form-control{
+    border-right:0;
+    box-shadow:0 0 0;
+    border-color:#ccc;
+}
+.stackExchangeSearchBox button{
+    border:0;
+    background:transparent;
+}
+.stackExchangeBadge {
+    width:50px !important;
+    position:relative;
+    display: inline-block;
+    text-align:center;
+}

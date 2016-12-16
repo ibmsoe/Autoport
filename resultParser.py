@@ -183,7 +183,7 @@ class ResultParser:
                             "skipped": { leftName: 0, rightName: 0 },
                             "duration": { leftName: 0, rightName: 0 }
                         }
-                    
+
                     res["results"][suite][test]["total"][leftName] = left_r["results"][suite][test]["total"]
                     res["results"][suite][test]["total"][rightName] = 0
                     res["results"][suite][test]["failures"][leftName] = left_r["results"][suite][test]["failures"]
@@ -286,13 +286,12 @@ class ResultParser:
             rightlog =["No %s file found!" % logName]
         errorWords = logdiffutil.getErrorWords('./data/rules/errorwords')
         packageDict = logdiffutil.buildPackageDict('./data/rules/LinuxPackageList')
-
         lefttext = ""
         for line in leftlog:
             text = (line.replace("&", "&amp;")
                         .replace("<", "&lt;")
                         .replace(">", "&gt;"))
-            text = logdiffutil.renderline(text, errorWords, packageDict)
+            text = logdiffutil.renderline(text, errorWords, packageDict, 'left')
             lefttext = lefttext + text
 
         righttext = ""
@@ -300,7 +299,7 @@ class ResultParser:
             text = (line.replace("&", "&amp;")
                         .replace("<", "&lt;")
                         .replace(">", "&gt;"))
-            text = logdiffutil.renderline(text, errorWords, packageDict)
+            text = logdiffutil.renderline(text, errorWords, packageDict, 'right')
             righttext = righttext + text
 
         diff_obj = diff_match_patch.diff_match_patch()
