@@ -430,6 +430,7 @@ if __name__ == "__main__":
                   fi
                   source /etc/profile
                   ARTI=&quot;$PWD/.autoport-scratch/build_result.arti&quot;
+                  BUILD_STATUS_ARTI=&quot;$SCRATCH/build_status.arti&quot;
                   echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                   echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
@@ -467,6 +468,7 @@ if __name__ == "__main__":
                   chmod a+x $PWD/.autoport-scratch/autoport_build_cmd;
                   source $PWD/.autoport-scratch/autoport_build_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$?
+                  echo &quot;$rc&quot; &gt;&gt; $BUILD_STATUS_ARTI
                   echo &quot;Autoport BUILD CMD RC=$rc&quot; &gt;&gt; $ARTI
                   exit $rc
               fi</command>
@@ -495,6 +497,7 @@ if __name__ == "__main__":
                   fi
                   source /etc/profile
                   ARTI=&quot;$PWD/.autoport-scratch/test_result.arti&quot;
+                  TEST_STATUS_ARTI=&quot;$SCRATCH/test_status.arti&quot;
                   echo &quot;Autoport HOST:        $HOSTNAME&quot; &gt; $ARTI
                   echo &quot;Autoport IPADDR:      $IPADDR&quot; &gt;&gt; $ARTI
                   echo &quot;Autoport O/S:         $OSNAME&quot; &gt;&gt; $ARTI
@@ -532,6 +535,7 @@ if __name__ == "__main__":
                   chmod a+x $PWD/.autoport-scratch/autoport_test_cmd;
                   source $PWD/.autoport-scratch/autoport_test_cmd &gt;&gt; $ARTI 2&gt;&amp;1;
                   rc=$?
+                  echo &quot;$rc&quot; &gt;&gt; $TEST_STATUS_ARTI
                   echo &quot;Autoport Test CMD RC=$rc&quot; &gt;&gt; $ARTI
                   exit $rc
               fi</command>

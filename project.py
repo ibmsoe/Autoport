@@ -146,12 +146,12 @@ class Project:
         Returns:
             Dictionary with comparison data for given projects.
         """
-
         if (not (leftBuild and rightBuild)):
             return {"error": "Invalid argument", "http_code": 400}
-
         leftDir = self.catalog.getResults(leftBuild, leftRepo)
+        leftMeta = self.catalog.getMetaDataForJob(leftRepo, leftBuild)
         rightDir = self.catalog.getResults(rightBuild, rightRepo)
+        rightMeta = self.catalog.getMetaDataForJob(rightRepo, rightBuild)
 
         if not leftDir:
             return {"error": leftBuild + "/" + logFile + " not found", "http_code": 401}
@@ -181,7 +181,8 @@ class Project:
             'pkgname': leftPkg,
             'pkgver': leftPkgVer,
             'date': leftDate,
-            'diffName': leftName
+            'diffName': leftName,
+            'metaData': leftMeta
         }
 
         try:
@@ -198,7 +199,8 @@ class Project:
             'pkgname': rightPkg,
             'pkgver': rightPkgVer,
             'date': rightDate,
-            'diffName': rightName
+            'diffName': rightName,
+            'metaData': rightMeta
         }
 
         try:

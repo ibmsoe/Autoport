@@ -57,6 +57,15 @@ def init():
     global threadPoolSize
     global useTextAnalytics
     global expiryForTmp
+    global enableKnowledgeBase
+    global connectionURL
+    global connectionPort
+    global dbUsername
+    global dbPassword
+    global dbName
+    global dbCollectionName
+    global stackApiKey
+    global enableTagSearch
 
     # user configuration globals that are supported by the user interface
     githubToken = configOptions['githubtoken']
@@ -74,6 +83,9 @@ def init():
     artifactsPathPrefix = configOptions['artifactspathprefix']
     threadPoolSize = int(configOptions['threadpoolsize'])
     useTextAnalytics = configOptions['usetextanalytics'] == 'True'
+    enableKnowledgeBase = configOptions['enableknowledgebase'] == 'True'
+    stackApiKey = configOptions['stackapikey']
+    enableTagSearch = configOptions['enabletagsearch'] == 'True'
 
     # user configuration globals that are not supported by the user interface
     expiryForTmp = configOptions['expiryfortmp']
@@ -201,3 +213,15 @@ def init():
         os_tenant_name = ""
         os_auth_url = ""
 
+    # used for enabling knowledge base feature
+    if enableKnowledgeBase:
+        connectionURL = configOptions['connectionurl']
+        connectionPort = configOptions['connectionport']
+        dbUsername = configOptions['dbusername']
+        dbPassword = configOptions['dbpassword']
+        dbName = configOptions['dbname']
+        dbCollectionName = configOptions['dbcollectionname']
+
+    # used for seraching errors in logs using stackExchange api
+    if not stackApiKey or "<" in stackApiKey:
+        stackApiKey = None
